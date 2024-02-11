@@ -15,8 +15,8 @@
 
 - source : The source.
 - id : The "ID" of the "SPLOITUS".
-- href : The "Github repository" related to the "SPLOITUS" "ID".
-- title : The title used on "SPLOITUS".
+- href : The "URI" of the "GITHUB REPOS" related to the "SPLOITUS" "ID".
+- title : The "TITLE" used on "SPLOITUS".
 
 ## Tools.
 
