@@ -1,4 +1,4 @@
-# CVER : SOURCES-EXPLOITDB.
+# CVER : SOURCES : SPLOITUS.
 
 ## JSON : code.
 
@@ -14,15 +14,14 @@
 ## JSON : detail.
 
 - source : The source.
-- id : The "ID" of the "EXPLOITDB".
-- href : The "URI" of the "EXPLOITDB" related to the "EXPLOITDB" "ID".
+- id : The "ID" of the "SPLOITUS".
+- href : The "URI" of the "GITHUB REPOS" related to the "SPLOITUS" "ID".
 - title : The "TITLE" used on "SPLOITUS".
 
 ## Tools.
 
-- https://sploitus.com
-- https://www.exploit-db.com
 - https://github.com
-
+- https://github.com/Rbcafe/CVER
+- https://sploitus.com
 
 
