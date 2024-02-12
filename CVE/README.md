@@ -7,7 +7,6 @@
 - NVD : The "NVD" related to the "CVE".
 - SPLOITUS : The "SPLOITUS" related to the "CVE".
 
-
 ## Tools.
 
 - https://github.com

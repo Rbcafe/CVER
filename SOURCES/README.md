@@ -6,7 +6,6 @@
 - NVD : The "NVD" sources from "2002" to "2024".
 - SPLOITUS : The "SPLOITUS" fetched elements.
 
-
 ## Tools.
 
 - https://www.exploit-db.com

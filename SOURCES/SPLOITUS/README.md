@@ -23,5 +23,3 @@
 - https://github.com
 - https://github.com/Rbcafe/CVER
 - https://sploitus.com
-
-
