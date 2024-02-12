@@ -1,6 +1,6 @@
 # CVER : SOURCES : SPLOITUS.
 
-## JSON : code.
+## JSON : SPLOITUS : code.
 
     [
       {
@@ -11,7 +11,7 @@
       }
     ]
 
-## JSON : detail.
+## JSON : SPLOITUS : detail.
 
 - source : The source.
 - id : The "ID" of the "SPLOITUS".
