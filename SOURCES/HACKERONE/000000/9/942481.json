@@ -1,0 +1,128 @@
+{
+  "id": 942481,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85NDI0ODE=",
+  "url": "https://hackerone.com/reports/942481",
+  "title": "Wordpress Users Disclosure (/wp-json/wp/v2/users/) on data.gov",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "medium",
+  "readable_substate": "Informative",
+  "created_at": "2020-07-25T15:48:16.952Z",
+  "submitted_at": "2020-07-25T15:48:16.952Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "nagli",
+    "url": "/nagli",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/8qutl64oet0kknvvritymh3e2k1p/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 50592,
+    "url": "https://hackerone.com/gsa_bbp",
+    "handle": "gsa_bbp",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/iyPFgzbsX86VXw5wJHyfPg9s/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/iyPFgzbsX86VXw5wJHyfPg9s/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "GSA Bounty",
+      "twitter_handle": null,
+      "website": "http://gsa.gov",
+      "about": ""
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-07-28T00:12:56.419Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-07-26T07:19:30.230Z",
+  "team_member_agreed_on_going_public_at": "2020-07-28T00:12:56.328Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nHello TTS Bug bounty team!\n\nI have found data.gov  User/admin usernames disclosed.\nUsing REST API, we can see all the WordPress users/author with some of their information.\n\n## Steps To Reproduce:\n\n  You can find the information disclosure by going to (data.gov/wp-json/wp/v2/users/)\n\nSupporting Video:\n{F922807}\n\nResponse:\n```javascript\n[{\"id\":600633,\"name\":\"Aaron Borden\",\"url\":\"\",\"description\":\"\",\"link\":\"https:\\/\\/www.data.gov\\/author\\/aaron-bordengsa-gov\\/\",\"slug\":\"aaron-bordengsa-gov\",\"avatar_urls\":etc....\n```\n## Fix:\nUse this code will hide the users list and give 404 as the result, while rest of the api calls keep running as they were.\n```javascript\nadd_filter( 'rest_endpoints', function( $endpoints ){\n    if ( isset( $endpoints['/wp/v2/users'] ) ) {\n        unset( $endpoints['/wp/v2/users'] );\n    }\n    if ( isset( $endpoints['/wp/v2/users/(?P<id>[\\d]+)'] ) ) {\n        unset( $endpoints['/wp/v2/users/(?P<id>[\\d]+)'] );\n    }\n    return $endpoints;\n});\n```\n## Similar reports:\n(https://hackerone.com/reports/356047)\n(https://hackerone.com/reports/370777)\n(https://hackerone.com/reports/772744)\n\nThank you very much.\n\n## Impact\n\nMalicious counterpart could collect the usernames disclosed (and the admin user) and be focused throughout BF attack (as the usernames are now known), making it less harder to penetrate the data.gov systems.",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 922807,
+      "file_name": "data.gov.mov",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ASnZEHFn3s6qGhr8i6uHFjUP?response-content-disposition=attachment%3B%20filename%3D%22data.gov.mov%22%3B%20filename%2A%3DUTF-8%27%27data.gov.mov&response-content-type=video%2Fquicktime&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3IMMHD7U%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T135058Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDckwknQq7fjHwY7%2FK9F%2BtvO9fLJDuG1NEZXXMxYw8hbwIhAM3er0SlLN2AYaRXWazeiwtSjADmim0DnY8YcGf4Y8SxKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5Igww2o2qmJ5MWkfa74sqjgUMDHXvf3xxgarNNUDSIN7iuGoSARtn65gvdJ4%2BO%2FkXeF39tTNpPNp3gbMxN08cJsUGQsiwR96l9CPUzLY7LHBxHFojvFr3ITM3J4EJtd3JktNeEkJgVr%2FsEnXuvSlNfFhDmvSEfMGUHb4UbVaVoFQ4SNJecAghbZ4R2R6eho8SeZVEYbq749PMxfWZg3uRG8JgtVyqoY1jpCk0kh4f43bzUZ6Tk0NwL6H2YD1r28GPSdM2NMS0DQHVK52MQWqHFxqvZOB0JavCD6yzZmm375qMFj70T9kjeA3ygDsQWnINhhNEokIipgBb9big4jerkxPZKXHkMEn8kTRjdpaGnqT31eS2Ap3%2BS%2B4%2BDmGqYt5cnry1J7sVtfs6SJBo2KwCm3ieX3J9ZiFPRwbpDrCFs0h81ZvXr03wFCruJw3pNftO4v61HT2vFYwafngQ66iRf4ccw2WitEv8dDqy88fiyfo8PkzIKNQIGf7F%2FGVErGB7zEj7qRAyMBXCY0PP4WHQscGLLucR9RYE1pVgzzs3BCA9j6D9M6C2DUCcO%2BW%2BQmZSaDSPS08WMv4oYHFXYggOIv%2FTINF9J4pMXNDPjCxtu2OWtH7uHoi1NNCNlUe9xnu5aYimPddy8D73j8KGddAo1w6IoKy4kpqEs8NU%2BXnLLIo%2F8OkgGBLEwmIu9T%2Bu6Oz7XkrYifOXYMDpFUfwTPN9W4JsrMXt%2F3wugpQN4Fk4kWsib7XEy1iPAo764glVM3P7J4XVtoYVee04ZiKms2%2FCu1rNFAWnpdtEP6RHFeEvOqGBX9C3g9xvfaapxWX1FccdWfkK68y%2Bh%2FMy24XhzUb14mI24ZTU9zIXOy%2BHFqYVkAOt7UQ1Gb4HE6VcsU%2B8JXcw5bStrgY6sAE07AhFgeocUOJkN2I%2Fu89%2FcNWBSx3BcejUfJX3Y1%2FMNQpv784p5QFf%2BWHp0%2BUGiFxL%2FYZ7bz0IANiUOzMv59zqaW%2FP4WOMYPVgyzZAVw3B2h%2B4laP9i2zcnD6y1B8D0yz1mg3ghUGJo8C0Z5LhCaAHi7hr3CmQatY39rwKj4%2BzrrqtAaWIIqOwkXgJ89Q5MnwR3YpKSnVnS%2BtFWl0%2BIltP2OXBDv%2Fq7N9nB1%2FEoAh%2FZA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=63450d5902e825f21d775a51b96a227ddb3444de32af8f97887d84c95244cd3b",
+      "file_size": 42461314,
+      "type": "video/quicktime",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 13,
+  "voters": [
+    "nagli",
+    "bibekshah",
+    "xnutronex",
+    "0nlymohammed",
+    "rashedul_css",
+    "atpugsec",
+    "bugpaina",
+    "karsec983",
+    "sharmw",
+    "hackzmank",
+    "and 3 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 81473,
+    "asset_type": "URL",
+    "asset_identifier": "www.data.gov",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

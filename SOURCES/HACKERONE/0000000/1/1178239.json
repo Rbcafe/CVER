@@ -1,0 +1,157 @@
+{
+  "id": 1178239,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTc4MjM5",
+  "url": "https://hackerone.com/reports/1178239",
+  "title": "session takeover via open protocol redirection on streamlabs.com",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2021-04-28T10:17:48.432Z",
+  "submitted_at": "2021-04-28T10:17:48.540Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "f_m",
+    "url": "/f_m",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/1nPfHVe9caw4Pq4Bq58RbLLM/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 32972,
+    "url": "https://hackerone.com/logitech",
+    "handle": "logitech",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/032/972/8aa1ae9384c034f209edabfd44bac468c0bbbcdb_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/032/972/8aa1ae9384c034f209edabfd44bac468c0bbbcdb_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Logitech",
+      "twitter_handle": "logitech",
+      "website": "https://www.logitech.com",
+      "about": "Logitech is a consumer electronics manufacturer, specialising in smart home and video collaboration equipment, gaming accessories and peripherals"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": true,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-09-01T15:49:43.285Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-06-01T11:48:43.721Z",
+  "team_member_agreed_on_going_public_at": "2021-09-01T15:49:43.107Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nHi Logitech team, on streamlabs.com the endpoint: `streamlabs.com/global/identity?popup=1&r=protocol://merch.streamlabs.com` redirect any authenticated user to a arbitrary protocol, and it merge the redirect link with an access_token.\n\n{F1281409}\n\nthis means that if a malicious app that handle the protocol is installed on the device the access token will be steal by this app and consequently a session takeover is possible on multiple streamlabs domain \n\n## Steps To Reproduce:\n\n\n  1. once authenticated on streamlabs.com go to: streamlabs.com/global/identity?popup=1&r=test://merch.streamlabs.com and intercept the request in burp.\n  2. grab the redirection link in the response(as a malicious app can do, especially on mobile systems), change the protocol to https and open it in a private browser window\n  3. finally in the private browser window go to: https://merch.streamlabs.com/ or https://streamlabs.com/<your_store_name> or https://streamlabs.com/my-portal?origin=cs\n\nin every case you will be logged in as the victim\n\n{F1281408}\n\n{F1281407}\n\n##possible fix\n\nimplement a protocol check on the redirection in this endpoint\n\n## Supporting Material/References:\n\ni attached 3 images\n\n## Impact\n\nsession takeover by  malicious apps(on mobile systems, it's more common)",
+  "bounty_amount": "200.0",
+  "formatted_bounty": "$200",
+  "weakness": {
+    "id": 53,
+    "name": "Open Redirect"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1281407,
+      "file_name": "2.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ay7bxc303a09ac2m1kmvittnlv4c?response-content-disposition=attachment%3B%20filename%3D%222.png%22%3B%20filename%2A%3DUTF-8%27%272.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T140956Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=de0ce3315abbbaef7e0561bb5aa677a528933dc21fcbbe7386bff403425c9a9e",
+      "file_size": 54174,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1281408,
+      "file_name": "1.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/gb8nb2ay41uzs4uc5fj33gdi8oq7?response-content-disposition=attachment%3B%20filename%3D%221.png%22%3B%20filename%2A%3DUTF-8%27%271.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T140956Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0cb81ce9dabe5fdb29a7743ed7719d5a5004ed17f564784c51d299634547fca7",
+      "file_size": 331979,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1281409,
+      "file_name": "redir.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ektue2gj3kq2n0y3onqt0a3hiaph?response-content-disposition=attachment%3B%20filename%3D%22redir.png%22%3B%20filename%2A%3DUTF-8%27%27redir.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T140956Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=24f95554e8ca7f5e5679082476d23561d2a3edacba6e8f6039af12890d806956",
+      "file_size": 158925,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 44,
+  "voters": [
+    "mr-medi",
+    "rootz491",
+    "jumpydata",
+    "pilvar",
+    "bombon",
+    "run_win",
+    "th4nu_0x0",
+    "dmc3",
+    "lauritz",
+    "ali",
+    "and 34 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 4.7,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 52462,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.streamlabs.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

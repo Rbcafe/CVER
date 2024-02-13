@@ -1,0 +1,111 @@
+{
+  "id": 167481,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjc0ODE=",
+  "url": "https://hackerone.com/reports/167481",
+  "title": "Android - Possible to intercept broadcasts about uploaded files",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-09-11T00:49:12.872Z",
+  "submitted_at": "2016-09-11T00:49:12.872Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "bagipro",
+    "url": "/bagipro",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/052/239/e2ad9e8b8b6b259834c21e7aefd2f3d04ccd3d23_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-03-23T17:12:48.422Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-03-23T17:12:48.390Z",
+  "team_member_agreed_on_going_public_at": "2017-03-23T16:53:18.902Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi.\nThere are the moments of sending unprotected broadcasts\nhttps://github.com/nextcloud/android/blob/master/src/com/owncloud/android/files/services/FileUploader.java#L1170\nhttps://github.com/nextcloud/android/blob/master/src/com/owncloud/android/files/services/FileUploader.java#L1116\nhttps://github.com/nextcloud/android/blob/master/src/com/owncloud/android/files/services/FileUploader.java#L1136\nhttps://github.com/nextcloud/android/blob/600225c7c9684295bfdb43bcf7d078113b8b2f73/src/com/owncloud/android/services/SyncFolderHandler.java#L186\nhttps://github.com/nextcloud/android/blob/600225c7c9684295bfdb43bcf7d078113b8b2f73/src/com/owncloud/android/services/SyncFolderHandler.java#L201\netc\nA malware can simply create a receiver:\n```xml\n<receiver android:exported=\"true\" android:enabled=\"true\" android:name=\".InterceptReceiver\">\n\t<intent-filter android:priority=\"999\">\n\t\t<action android:name=\"FileUploader.UPLOAD_START\"/>\n\t\t<action android:name=\"FileUploader.UPLOAD_FINISH\"/>\n\t\t<action android:name=\"FileUploader.UPLOADS_ADDED\"/>\n\t</intent-filter>\n</receiver>\n```\n(and other actions)\nAnd receive the broadcasts **first** than your own receivers\nMore info about priority here\nhttps://developer.android.com/guide/topics/manifest/intent-filter-element.html#priority\n\nIt will disclose info about account, file info, etc\n\nThe one thing you should do is to change all calls of ```Context.sendStickyBroadcast``` on ```LocalBroadcastManager.sendBroadcast``` and all calls of ```Context.registerReceiver``` on ```LocalBroadcastManager.registerReceiver```\nhttps://developer.android.com/reference/android/support/v4/content/LocalBroadcastManager.html\ninstead on using ```removeStickyBroadcast(intent);```\n",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2017-04-22T16:53:18.928Z",
+  "allow_singular_disclosure_after": -214946982.4810462,
+  "singular_disclosure_allowed": true,
+  "vote_count": 15,
+  "voters": [
+    "sheikhrishad0",
+    "kapytein",
+    "alesandroortiz",
+    "i5nipe",
+    "eveeez",
+    "ballx",
+    "sumit7",
+    "spetr0x",
+    "muhaddix",
+    "alxg",
+    "and 5 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

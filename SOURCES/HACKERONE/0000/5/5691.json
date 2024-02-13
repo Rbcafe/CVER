@@ -1,0 +1,101 @@
+{
+  "id": 5691,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81Njkx",
+  "url": "https://hackerone.com/reports/5691",
+  "title": "Password reset token leakage through referrer at https://app.c2fo.com/password/reset/",
+  "state": "Closed",
+  "substate": "informative",
+  "readable_substate": "Informative",
+  "created_at": "2014-04-02T21:42:52.229Z",
+  "submitted_at": "2014-04-02T21:42:52.229Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "internetwache",
+    "url": "/internetwache",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/637/e5a294547160a5c885e21dacc358769675c8b0e9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 75,
+    "url": "https://hackerone.com/c2fo",
+    "handle": "c2fo",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/075/9038c81afd77c8dfdc322ba5cef5f512d1ce62b7_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/075/9038c81afd77c8dfdc322ba5cef5f512d1ce62b7_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "C2FO",
+      "twitter_handle": null,
+      "website": "https://c2fo.com/",
+      "about": "Revolutionizing working capital to make businesses better."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2014-04-15T02:39:05.517Z",
+  "bug_reporter_agreed_on_going_public_at": "2014-04-14T20:59:22.118Z",
+  "team_member_agreed_on_going_public_at": "2014-04-15T02:39:05.369Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi there,\r\n\r\nanother bug I came across. There's a possible password reset token leakage on the password reset page. \r\n\r\n###Steps to reproduce\r\n\r\n1. Go to https://app.c2fo.com/password-reset and request a new password (with your existing test account)\r\n2. Click on the password reset link which you'll receive via email\r\n\r\nThe url bar should look like that: ```https://app.c2fo.com/password/reset/XXXX0de607bdbc2df949a7da49fabcfXXXXX```\r\n\r\nSo far so good.  You should see the logo of \"Truste certified blabla\" at the bottom. \r\n\r\nThe logo is linked to the following url: ```https://privacy.truste.com/privacy-seal/Pollen,-Inc-/validation?rid=46f28cc9-128f-431a-8fff-6d19427150d9```. \r\n\r\nAs you can see it's a link from a \"https\" page to a \"https\" url. That means that the referrer will be send to the target. That means that the password reset token will be leaked to the \"truste\"-company through the referrer.\r\n\r\nClicking on the logo should send the following request (including the referrer):\r\n\r\n```\r\nGET /privacy-seal/Pollen,-Inc-/validation?rid=46f28cc9-128f-431a-8fff-6d19427150d9 HTTP/1.1\r\nHost: privacy.truste.com\r\n[...snip...]\r\nReferer: https://app.c2fo.com/password/reset/XXXX0de607bdbc2df949a7da49fabcfXXXXX\r\n[...snip...]\r\nConnection: keep-alive\r\n```\r\n\r\nA bad boy webmaster at the \"truste\"-company could collect the reset urls/token from the access.log.\r\n\r\n###How to fix\r\nI'd recommend to either remove the logo from this particular page or remove the link to the third-party company. \r\n\r\nBest regards,\r\nSebastian",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2014-05-14T20:44:54.669Z",
+  "allow_singular_disclosure_after": -307723235.53131133,
+  "singular_disclosure_allowed": true,
+  "vote_count": 1,
+  "voters": [
+    "shivammusic"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

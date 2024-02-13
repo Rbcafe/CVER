@@ -1,0 +1,159 @@
+{
+  "id": 306607,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMDY2MDc=",
+  "url": "https://hackerone.com/reports/306607",
+  "title": "[html-pages] Path Traversal in html-pages module allows to read any file from the server with curl",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2018-01-19T00:52:41.776Z",
+  "submitted_at": "2018-01-19T00:52:41.776Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "bl4de",
+    "url": "/bl4de",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/622/285a07d9de896d5840ce1b556236272b751658e3_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 23949,
+    "url": "https://hackerone.com/nodejs-ecosystem",
+    "handle": "nodejs-ecosystem",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Node.js third-party modules",
+      "twitter_handle": "",
+      "website": "https://nodejs.org/en/security/",
+      "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2018-3744"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-05-19T12:55:48.532Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2018-05-19T12:55:35.263Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\n\nThis report is about Directory Traversal vulnerability I found in ```html-pages``` module.\n\n\n**Module:** \n\nhtml-pages is a module which allows to browse directories and  serve static files in the browser. The vulnerability exists in the latest available version (2.0.7)\n\nLink to npm page: https://www.npmjs.com/package/html-pages\n\n**Summary:** \n\nWhen html-pages server is run, browser does not allow toread files from arbitrary locations. However, I've noticed that using simple bypasses with ```%2e``` (.) or ```%2f``` (/) I can easily go up in the directory tree. \nBut it's not possible to open any file in the browser, due to characters used in the path, only directory listing is available:\n\n{F255390}\n\n\nHowever, with simple ```curl``` call we can read any file on the remote server where ```html-pages``` runs:\n\n```\n$ curl -v --path-as-is http://localhost:8000/../../../../../Users/bl4de/.vimrc\n```\n\n{F255392}\n\nHere is the part of the code, which read directory content, but does not validate against Directory Traversal in any way, which literally makes ```root``` config setting useless:\n\nhttps://github.com/danielcardoso/html-pages/blob/master/lib/server.js#L122\n\n\nThis vulnerability can be exploited regardless of some ```html-pages``` configuration settings, like ```root```. All files on the server can be read by malicious user.\n\n\n## Steps To Reproduce:\n\n- install ```html-pages```\n\n```\n$ npm install html-pages\n```\n\n- create simple application which uses ```html-pages``` for serving static files from local server:\n\n```javascript\nconst pages = require('html-pages')\n\nconst pagesServer = pages(__dirname, {\n    port: 8000,\n    'directory-index': '',\n    'root': './',\n    'no-clipboard': true,\n    ignore: ['.git', 'node_modules']\n})\n```\n\n- run application:\n\n```\n$ node app.js\n```\n\n- open the browser and go to ```127.0.0.1:8000``` You should see all directories and files in the directory, where ```app.js``` was run. Now, try to modify url into something like ```127.0.0.1:8000/.%2e/.%2e/``` - now content of directory two levels up in the file tree should be displayed. Try to open any directory or file (if available) by clicking on its name.\n\nYou should notice that application actually hangs on. \n\n- from the terminal, execute following command (please adjust numbers of ../ to your system):\n\n```\n$ curl -v --path-as-is http://127.0.0.1:8000/../../../../../etc/passwd\n```\n\nYou should see the content of ```/etc/passwd``` file:\n\n{F255391}\n\n## Supporting Material/References:\n\nConfiguration I've used to find this vulnerability:\n\n- macOS HighSierra 10.13.2\n- node 8.9.3\n- npm 5.5.1\n- curl 7.54.0\n\n## Wrap up\n\nI hope this report will help to keep Node ecosystem more safe. If you have any questions about any details of this finding, please let me know in comment.\n\nThank you\n\nRegards,\n\nRafal 'bl4de' Janicki\n\n## Impact\n\n## Impact:\n\nThis vulnerability allows malisious user to read content of any file on machine where similar to presented app is running. This might expose vectors to attack system with Remote Code Execution, reveals files with usernames and passwords and many other possibilites.",
+  "weakness": {
+    "id": 19,
+    "name": "Path Traversal"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 255390,
+      "file_name": "1.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/255/390/43cd49c7e5464062c145a59be3100d6c56374434/1.png?response-content-disposition=attachment%3B%20filename%3D%221.png%22%3B%20filename%2A%3DUTF-8%27%271.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6SCAH72%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125724Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDu%2B5Pwo%2F34eoeVeuWsr%2Ff9B54eFSJHpHqs9we%2BjQAH6gIhALp00VqCzQ3yXDicmppc8nMEwhMltHZsqN0RcGzFE1GqKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igwkers7f9aKGbx%2BvDcqjwVWDMAhBUKhOq6mxVC7xmKOa%2FU2AiQBQKvDNaKfEmdipLMP6n95LC8VlOQ3Ca%2B7a8IxSNPEW%2FMJrckmzRQkQn5Pvo7LyCxG1l6k7KZzOYPdFRTU7P2FcXBvM6OhRy8ERlHZ1Ufnved4qCHN0953KV512I88RdKF2UQ9KA9EEzg3ey2SzXbnBk2JKsmpPRc0sUDb4ZMn4GDyk%2B2mbDjFILmQt6lr%2B6v0UoAJ%2B7v4%2F%2F852Q6Ruj9P1iez9HOSmDy3175zVvNBeZ4WctM1b8jW6o%2BmI4wZT%2FgWlgSufI1k6yaDWkc%2FE3Bn%2BpLvQoQXU80KrdN1Yr3AjY%2BuRyqxmectMc5y%2Br2%2F%2FwomOAO3I7t5j85rAvGeCLnU1ZAYisFSaSSgAJ%2BfsZD3xX9YCITIgC401%2F5etOaBcdLCaIxhXTp4wk5QS7eRBWvkzPZGEUcM52Rtz1NPZ0uXWarmK9P4ZIqYLWu82nHAH0wf3c3zd07rclVWahRXRkxP0wL3906s66oMXu%2FAgOj02dajNNZpgK8AaMKZXh5LU98RMkHWul32xDirzkDtJ6wBhMOXNHeLLut%2FijTOpDPFtCEBcHCr43hYLb1oSRkvigVVHtwhd%2BDjkszCy1F3hxu7H2ujIa9DoZ20hfrH4QAdqgLvpCC5kvd9Mdm9%2Fx13AdQjdUqxw2uU5HHCcUUMvji7mFcM0YKL33beYGIrXk5AJSUULfcFoq3Vln%2FoLmEL9STeERNxXuI9ijvLiCJCbUpcqNlCitD7ewAHGbNSSxgqcuRKjxMizmXSxM5uuuRQlbl7%2BOU8q4LcVoDIFjj15cH0GRJIGCdM2OT1aQG%2F%2FURgsiaYaysR3DfHV5zWoNx%2FNh%2FdRuvtdIdbsxviMKq0ra4GOrABb%2BYWX5qJazI%2FwiuYHFwT6C%2FymmUklRtb8O7FwtNQp8ZsagCHes2g1O8LOYf5T0%2FOXV0bp7oUjKh25bYYogztfc9XxMWj9SG%2BcrOe8OCs8YNKO4wu1gapV5ceXDZq%2FbF7bPsNEkzubLAYNEzVpO8uqKPZd6oKWBP%2Frue89n87JX%2FKDXf2RuT5sO6X4%2FoVBQryJS%2B7K2SqOzxLHHOKg0mmsmeYRh0fWGzJhtEb%2B0a4xOk%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6a8c179fff18f239e4fe7cbe1866a4ac0672177360a55da2da3bfe2cda6bf6dd",
+      "file_size": 385295,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 255391,
+      "file_name": "3.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/255/391/dcd72150639a52155275cd88055744f074c68ef5/3.png?response-content-disposition=attachment%3B%20filename%3D%223.png%22%3B%20filename%2A%3DUTF-8%27%273.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6SCAH72%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125724Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDu%2B5Pwo%2F34eoeVeuWsr%2Ff9B54eFSJHpHqs9we%2BjQAH6gIhALp00VqCzQ3yXDicmppc8nMEwhMltHZsqN0RcGzFE1GqKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igwkers7f9aKGbx%2BvDcqjwVWDMAhBUKhOq6mxVC7xmKOa%2FU2AiQBQKvDNaKfEmdipLMP6n95LC8VlOQ3Ca%2B7a8IxSNPEW%2FMJrckmzRQkQn5Pvo7LyCxG1l6k7KZzOYPdFRTU7P2FcXBvM6OhRy8ERlHZ1Ufnved4qCHN0953KV512I88RdKF2UQ9KA9EEzg3ey2SzXbnBk2JKsmpPRc0sUDb4ZMn4GDyk%2B2mbDjFILmQt6lr%2B6v0UoAJ%2B7v4%2F%2F852Q6Ruj9P1iez9HOSmDy3175zVvNBeZ4WctM1b8jW6o%2BmI4wZT%2FgWlgSufI1k6yaDWkc%2FE3Bn%2BpLvQoQXU80KrdN1Yr3AjY%2BuRyqxmectMc5y%2Br2%2F%2FwomOAO3I7t5j85rAvGeCLnU1ZAYisFSaSSgAJ%2BfsZD3xX9YCITIgC401%2F5etOaBcdLCaIxhXTp4wk5QS7eRBWvkzPZGEUcM52Rtz1NPZ0uXWarmK9P4ZIqYLWu82nHAH0wf3c3zd07rclVWahRXRkxP0wL3906s66oMXu%2FAgOj02dajNNZpgK8AaMKZXh5LU98RMkHWul32xDirzkDtJ6wBhMOXNHeLLut%2FijTOpDPFtCEBcHCr43hYLb1oSRkvigVVHtwhd%2BDjkszCy1F3hxu7H2ujIa9DoZ20hfrH4QAdqgLvpCC5kvd9Mdm9%2Fx13AdQjdUqxw2uU5HHCcUUMvji7mFcM0YKL33beYGIrXk5AJSUULfcFoq3Vln%2FoLmEL9STeERNxXuI9ijvLiCJCbUpcqNlCitD7ewAHGbNSSxgqcuRKjxMizmXSxM5uuuRQlbl7%2BOU8q4LcVoDIFjj15cH0GRJIGCdM2OT1aQG%2F%2FURgsiaYaysR3DfHV5zWoNx%2FNh%2FdRuvtdIdbsxviMKq0ra4GOrABb%2BYWX5qJazI%2FwiuYHFwT6C%2FymmUklRtb8O7FwtNQp8ZsagCHes2g1O8LOYf5T0%2FOXV0bp7oUjKh25bYYogztfc9XxMWj9SG%2BcrOe8OCs8YNKO4wu1gapV5ceXDZq%2FbF7bPsNEkzubLAYNEzVpO8uqKPZd6oKWBP%2Frue89n87JX%2FKDXf2RuT5sO6X4%2FoVBQryJS%2B7K2SqOzxLHHOKg0mmsmeYRh0fWGzJhtEb%2B0a4xOk%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2bab39d5cf3f355d9413ce1f9aeb6ac8f3cb65145516657840ac9e8fb0e9e5b3",
+      "file_size": 459852,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 255392,
+      "file_name": "2.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/255/392/495ee21e86fbd4cb5c162564dbb48efbb7f3137d/2.png?response-content-disposition=attachment%3B%20filename%3D%222.png%22%3B%20filename%2A%3DUTF-8%27%272.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6SCAH72%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125724Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDu%2B5Pwo%2F34eoeVeuWsr%2Ff9B54eFSJHpHqs9we%2BjQAH6gIhALp00VqCzQ3yXDicmppc8nMEwhMltHZsqN0RcGzFE1GqKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igwkers7f9aKGbx%2BvDcqjwVWDMAhBUKhOq6mxVC7xmKOa%2FU2AiQBQKvDNaKfEmdipLMP6n95LC8VlOQ3Ca%2B7a8IxSNPEW%2FMJrckmzRQkQn5Pvo7LyCxG1l6k7KZzOYPdFRTU7P2FcXBvM6OhRy8ERlHZ1Ufnved4qCHN0953KV512I88RdKF2UQ9KA9EEzg3ey2SzXbnBk2JKsmpPRc0sUDb4ZMn4GDyk%2B2mbDjFILmQt6lr%2B6v0UoAJ%2B7v4%2F%2F852Q6Ruj9P1iez9HOSmDy3175zVvNBeZ4WctM1b8jW6o%2BmI4wZT%2FgWlgSufI1k6yaDWkc%2FE3Bn%2BpLvQoQXU80KrdN1Yr3AjY%2BuRyqxmectMc5y%2Br2%2F%2FwomOAO3I7t5j85rAvGeCLnU1ZAYisFSaSSgAJ%2BfsZD3xX9YCITIgC401%2F5etOaBcdLCaIxhXTp4wk5QS7eRBWvkzPZGEUcM52Rtz1NPZ0uXWarmK9P4ZIqYLWu82nHAH0wf3c3zd07rclVWahRXRkxP0wL3906s66oMXu%2FAgOj02dajNNZpgK8AaMKZXh5LU98RMkHWul32xDirzkDtJ6wBhMOXNHeLLut%2FijTOpDPFtCEBcHCr43hYLb1oSRkvigVVHtwhd%2BDjkszCy1F3hxu7H2ujIa9DoZ20hfrH4QAdqgLvpCC5kvd9Mdm9%2Fx13AdQjdUqxw2uU5HHCcUUMvji7mFcM0YKL33beYGIrXk5AJSUULfcFoq3Vln%2FoLmEL9STeERNxXuI9ijvLiCJCbUpcqNlCitD7ewAHGbNSSxgqcuRKjxMizmXSxM5uuuRQlbl7%2BOU8q4LcVoDIFjj15cH0GRJIGCdM2OT1aQG%2F%2FURgsiaYaysR3DfHV5zWoNx%2FNh%2FdRuvtdIdbsxviMKq0ra4GOrABb%2BYWX5qJazI%2FwiuYHFwT6C%2FymmUklRtb8O7FwtNQp8ZsagCHes2g1O8LOYf5T0%2FOXV0bp7oUjKh25bYYogztfc9XxMWj9SG%2BcrOe8OCs8YNKO4wu1gapV5ceXDZq%2FbF7bPsNEkzubLAYNEzVpO8uqKPZd6oKWBP%2Frue89n87JX%2FKDXf2RuT5sO6X4%2FoVBQryJS%2B7K2SqOzxLHHOKg0mmsmeYRh0fWGzJhtEb%2B0a4xOk%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c14a2948add80d8f03168f6fc8592aee6b3829b30f79326f95cea5430a602c0d",
+      "file_size": 4061594,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-06-18T12:55:35.393Z",
+  "allow_singular_disclosure_after": -178502508.97907522,
+  "singular_disclosure_allowed": true,
+  "vote_count": 11,
+  "voters": [
+    "spam404",
+    "apapedulimu",
+    "eveeez",
+    "mrd7",
+    "linkks",
+    "cr4xerbik4sh",
+    "0x08",
+    "evgenij168",
+    "clypto",
+    "lolpop",
+    "and 1 more..."
+  ],
+  "severity": {
+    "rating": "critical",
+    "score": 9.5,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "changed",
+      "confidentiality": "high",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 4917,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "html-pages",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "id": 210875,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMTA4NzU=",
+  "url": "https://hackerone.com/reports/210875",
+  "title": "use of unsafe host header leads to open redirect",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2017-03-05T15:05:05.461Z",
+  "submitted_at": "2017-03-05T15:05:05.461Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "exception",
+    "url": "/exception",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/100/852/b1f7d559f94f85152099c4a3426ec92010ceba40_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 2143,
+    "url": "https://hackerone.com/rockstargames",
+    "handle": "rockstargames",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/143/db40b290ac0adcde231da85c33a668f610e6f4df_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/143/db40b290ac0adcde231da85c33a668f610e6f4df_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Rockstar Games",
+      "twitter_handle": "RockstarGames",
+      "website": "http://www.rockstargames.com/",
+      "about": "Publishers of such popular games as Grand Theft Auto, Max Payne, Red Dead Redemption, L.A. Noire, Bully & more."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-05-01T14:20:41.291Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-04-01T14:20:27.223Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi guys\n\nI noticed you are using unsafe host header in generating short links.\n\n#Details \nFirst i navigated to my account \n`https://socialclub.rockstargames.com/member/xerojuzto`\n\nThen i created a new message , and i clicked on share button which shortens the url for example \n\nFrom `https://socialclub.rockstargames.com/member/xerojuzto/feed/3073813190982488067` \nto `http://rsg.ms/517ae7c`\n\nI fetched the http requests to find the end-point which is used to shorten urls.\n`https://socialclub.rockstargames.com/some_dirs/share/Person/getcontent?_=1488723542848`\n\nthe end-point is taking all the url parts before `/Share/Person` and creates a short link corresponding to this cut url.\n\nI Guess the code looks like \n```\n<?php\n$actual_link = \"https://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]\";\n$trimed_link=explode($actual_link,\"/Share\");\n\n$short=DB_Create_short_link($trimed_link);\necho $short;\n?>\n```\nDid you notice the usage of `HTTP_HOST` which  is variable and could be changed by sending different host header values , this will result in creating malicious urls.\n\nThe following request \n```\nGET /feed/102126489/activity/3073813190982488067/share/Person/getcontent?_=1488723542848 HTTP/1.1\nHost: socialclub.rockstargames.com\n```\nIs meant to shorten `/feed/102126489/activity/3073813190982488067` to `http://rsg.ms/517ae7c`   but due to not sharing my wall , it will create another redirect to my profile `https://socialclub.rockstargames.com/member/xerojuzto`\n\n#Exploiting\nI tried to manipulate the host header to force it to redirect the client  to my domain\n\n```\nGET /feed/102126489/activity/2960911889698885091/share/Person/getcontent?_=1488725310707 HTTP/1.1\nHost: socialclub.rockstargames.com.this.is.my.domain.evil.net\n```\n\nand it resulted in creating `http://rsg.ms/5350b75` if you visited it , you would be redirected to \n\n`https://socialclub.rockstargames.com.this.is.my.domain.evil.net/member/xerojuzto/feed/2960911889698885091` \nWhich is not your domain.\n\n#Consequences\n1- Phishing attacks\n2- Open redirects\n3- Cache poisoning and password reset leakage (Limited)\n\n#Steps to reproduce\n1- Log into your account at socialclub\n2- Navigate to your profile\n3- Post a new message\n4- Set up a proxy server (i used burp)\n5- Configure your browser(firefox in my case) to work with the proxy server\n6- Click on share button \n7- Intercept the request\n8- Manipulate the host header and copy the generated shorten url (ex: rsg.ms/5350b75)\n9- Visit it and you will see a redirect to the injected domain.\n\nyou can visit `http://rsg.ms/5350b75` , if you need a video just shout me .\n\n\n#Fix\n- If you are shortening urls from only `socialclub` , then you should correctly validate the host header \n-If you are using many domains \n   you should create a white list for them before constructing urls.\n\n\n#Ref \nhttp://www.skeletonscribe.net/2013/05/practical-http-host-header-attacks.html\n\n\n\nBest regards\nYasser\n\n\n\n\n\n\n\n\n\n\n",
+  "bounty_amount": "300.0",
+  "formatted_bounty": "$300",
+  "weakness": {
+    "id": 57,
+    "name": "Violation of Secure Design Principles"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 166441,
+      "file_name": "RSG_Request.http",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/166/441/8fbf9a23b0e6e72f6ff469a5df3d6519ad1b7616/RSG_Request.http?response-content-disposition=attachment%3B%20filename%3D%22RSG_Request.http%22%3B%20filename%2A%3DUTF-8%27%27RSG_Request.http&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQY5SNTJY%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T123633Z&X-Amz-Expires=2744&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCop3Q63LW7Yv49h39we4XGKTgB9I7F6pJKpNEAG5240gIhAKwETGKrJzPr%2F7fM%2BGdJgnL4ieElyx642F%2B3bdwtyvMVKrIFCHAQAxoMMDEzNjE5Mjc0ODQ5IgxiJGR4b42ipezn2VQqjwWrA2dov7Kt2r6FlNqmUOd9MA4HZlBgL1aIs2MOL60HKsdB5AZvyhHiEBPXVQr4PRTgTp8Fi9ZMOPf3CAhXGbJjM9jp592k%2F7TreupWqubvRT868TwIa44%2BRxJqPSZCl254kSE6JQrHSLo4RI9TDYlrpANeUojlGlKylV9eTlYBndbRNzlqIOcwxONXEsxR818hC8%2BGtnVFIgATvsbSUH%2BiA0x7Lb32jiQVuy0oeZBUN5jX9t7XP7Jk7ecQsNQPi9QCNGheWGZgWQ8ddzaHm4csId42PSTSRLaQP5ntNNmd%2FZS5od6u37mLHNfS9V4v9e4pxXeT5WZtttJzE9Yys%2B8fmie4dZbg%2Bv2v%2Fp9p8KxHKm1rF7WKTRhCxwktkUkOyx9MAzKZeWr8PwnbUFm1cwRFNbUP8uLqBodTvabXBErW6EX1Kk50mcS1S2FwIz0UDayFMkzQ9KzbaWRrp3FrqWXtp5Z5yNZL%2BTlIv0TZiulPPU%2FaB6Q7FMNaN921cTtaFEpww368Ewb0eSXe76I3OkpT%2FGX%2FHtCYgzigJ7e5Vfb5IJgxhYd41G%2F0hpmJ%2FQ6wQyMFULMjyfrt8087O6e4BNzCrtGdfGH9m6KVsCGCh3lGYnc8VpsjPZjdftmAxBw9yds%2BVPnA62EUqSGd%2FoMQiStjwsf1c29bJFnctk2xMx4DUMKIWZoJ23jxOXwehPc7n14JsfnnVVG7RszDWeOdW624nWGdzWza36%2FDlclzHITfSbJTysPSrpPNaFgc0AnmZlVyb2thOsjfVj2wNKEOJa%2FAOjbcdoHiPxxPnQ0r1cfza05F92Aej%2FcNcVmqgKZwhrm7HX%2BYc1IKfOOz7M4P7Bhh7Ia6AcN95bPhcWLTZrmOMOGnrK4GOrABPXk11jqiK7cEnzOjvWGuSWl85sW7hizljGLFnEQMe4PXo5MCLGc8x7feomShfmj0rx927DYI79pdEmRhxSFaO9lFyhtZETXKtv3%2FvyXRabiLAGZzzkBQDRZUn%2Fr%2Fic3VGYzVuS6LhjMPI3o9Jo49wbqCEKynJJ5On5e3b2almIO4JNp3PvEktFAODdzTkgUrByaeTnasF6%2B80vs8pNG22RpLdF0sqmofolZbs%2F8BX30%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ec7e245ee582b537a6e1aaa675711ddca9153b24ae5eb87e298c9da505e8a38e",
+      "file_size": 1382,
+      "type": "text/plain",
+      "moderated": null
+    },
+    {
+      "id": 166443,
+      "file_name": "RS_req_resp.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/166/443/b9e7c9827927936755a6168e029b0a0276cbdd16/RS_req_resp.png?response-content-disposition=attachment%3B%20filename%3D%22RS_req_resp.png%22%3B%20filename%2A%3DUTF-8%27%27RS_req_resp.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQY5SNTJY%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T123633Z&X-Amz-Expires=2744&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCop3Q63LW7Yv49h39we4XGKTgB9I7F6pJKpNEAG5240gIhAKwETGKrJzPr%2F7fM%2BGdJgnL4ieElyx642F%2B3bdwtyvMVKrIFCHAQAxoMMDEzNjE5Mjc0ODQ5IgxiJGR4b42ipezn2VQqjwWrA2dov7Kt2r6FlNqmUOd9MA4HZlBgL1aIs2MOL60HKsdB5AZvyhHiEBPXVQr4PRTgTp8Fi9ZMOPf3CAhXGbJjM9jp592k%2F7TreupWqubvRT868TwIa44%2BRxJqPSZCl254kSE6JQrHSLo4RI9TDYlrpANeUojlGlKylV9eTlYBndbRNzlqIOcwxONXEsxR818hC8%2BGtnVFIgATvsbSUH%2BiA0x7Lb32jiQVuy0oeZBUN5jX9t7XP7Jk7ecQsNQPi9QCNGheWGZgWQ8ddzaHm4csId42PSTSRLaQP5ntNNmd%2FZS5od6u37mLHNfS9V4v9e4pxXeT5WZtttJzE9Yys%2B8fmie4dZbg%2Bv2v%2Fp9p8KxHKm1rF7WKTRhCxwktkUkOyx9MAzKZeWr8PwnbUFm1cwRFNbUP8uLqBodTvabXBErW6EX1Kk50mcS1S2FwIz0UDayFMkzQ9KzbaWRrp3FrqWXtp5Z5yNZL%2BTlIv0TZiulPPU%2FaB6Q7FMNaN921cTtaFEpww368Ewb0eSXe76I3OkpT%2FGX%2FHtCYgzigJ7e5Vfb5IJgxhYd41G%2F0hpmJ%2FQ6wQyMFULMjyfrt8087O6e4BNzCrtGdfGH9m6KVsCGCh3lGYnc8VpsjPZjdftmAxBw9yds%2BVPnA62EUqSGd%2FoMQiStjwsf1c29bJFnctk2xMx4DUMKIWZoJ23jxOXwehPc7n14JsfnnVVG7RszDWeOdW624nWGdzWza36%2FDlclzHITfSbJTysPSrpPNaFgc0AnmZlVyb2thOsjfVj2wNKEOJa%2FAOjbcdoHiPxxPnQ0r1cfza05F92Aej%2FcNcVmqgKZwhrm7HX%2BYc1IKfOOz7M4P7Bhh7Ia6AcN95bPhcWLTZrmOMOGnrK4GOrABPXk11jqiK7cEnzOjvWGuSWl85sW7hizljGLFnEQMe4PXo5MCLGc8x7feomShfmj0rx927DYI79pdEmRhxSFaO9lFyhtZETXKtv3%2FvyXRabiLAGZzzkBQDRZUn%2Fr%2Fic3VGYzVuS6LhjMPI3o9Jo49wbqCEKynJJ5On5e3b2almIO4JNp3PvEktFAODdzTkgUrByaeTnasF6%2B80vs8pNG22RpLdF0sqmofolZbs%2F8BX30%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=346182f89e9e6dc69653c9fdc606d1898f54c52a446ebcbecad952146be6f1b2",
+      "file_size": 87855,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-05-01T14:20:27.268Z",
+  "allow_singular_disclosure_after": -214179366.0699174,
+  "singular_disclosure_allowed": true,
+  "vote_count": 20,
+  "voters": [
+    "adn",
+    "zombiehelp54",
+    "its_afolic",
+    "mahmoud0x00",
+    "brodie_codie",
+    "supernatural",
+    "malcolmx",
+    "geeknik",
+    "eveeez",
+    "m16",
+    "and 10 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 430,
+    "asset_type": "URL",
+    "asset_identifier": "socialclub.rockstargames.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

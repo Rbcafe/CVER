@@ -1,0 +1,121 @@
+{
+  "id": 676710,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82NzY3MTA=",
+  "url": "https://hackerone.com/reports/676710",
+  "title": "Http response is not ended although underlying socket is already destroyed",
+  "state": "Closed",
+  "substate": "informative",
+  "readable_substate": "Informative",
+  "created_at": "2019-08-19T16:11:10.534Z",
+  "submitted_at": "2019-08-19T16:11:10.534Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "verdaster",
+    "url": "/verdaster",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 22984,
+    "url": "https://hackerone.com/nodejs",
+    "handle": "nodejs",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/022/984/e600648ace4a8553247bce967d461a030aa81d49_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/022/984/e600648ace4a8553247bce967d461a030aa81d49_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Node.js",
+      "twitter_handle": "nodejs",
+      "website": "https://nodejs.org",
+      "about": "The Node.js JavaScript Runtime"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-01-15T19:58:51.621Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-01-15T19:58:51.575Z",
+  "team_member_agreed_on_going_public_at": "2020-01-14T23:30:33.936Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary:**\nWhen node server receives http request and hooks to end, finish and error events are attached on response object to handle cases when response is closed/ended but underlying socket is abruptly terminated then none of those events is fired. This leads to state when response seems to be still alive, although it's internal state of connection is destroyed. So basically after socket is destroyed this event is not propagated to http response object.\n\n**Description:**\nThis can lead to two states:\n\n1) If response is handled locally it remains open and if used to eg. stream data from file it keeps file handle opened until server is stopped.\n\n2) In case of request proxying another response stream remains open which can lead to DOS on target server where the request is proxyed to. In case of Apache httpd the server stops responding after certain number of such requests if no timeout is configured.\n\nIn both cases the system becomes unusable after certain time, based on incoming traffic and remains in this state until restarted.\n\n## Steps To Reproduce:\n\n  1. start node http server (server.js)\n  2. connect with example client (client.js)\n  3. http request will remain active although underlying socket is already destroyed until scheduled timeout kicks in and emits error which triggers attached error handler\n\n## Impact:\nAttack can possibly lead to open handles exhausting or in case of request proxying to eg. Apache httpd DOS attack.\n\n## Supporting Material/References:\n\nBelow are details about platform tested and code to reproduce with proxy example in attachments. I have used stream's utility function pipeline to handle emitted events on streams.\n\nVersion: v12.8.1\nPlatform: 4.15.0-58-generic #54~16.04.1-Ubuntu x86_64 GNU/Linux\nSubsystem: net/http\n\n## Impact\n\nDOS attack and resource exhausting.",
+  "weakness": {
+    "id": 48,
+    "name": "Denial of Service"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 559294,
+      "file_name": "client.js",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/wNiFDxQYCyu3zHo16XHqFjQQ?response-content-disposition=attachment%3B%20filename%3D%22client.js%22%3B%20filename%2A%3DUTF-8%27%27client.js&response-content-type=application%2Fx-javascript&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVWHFSNNE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132656Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZLzSSHKxWIGhQtGT81DYUaazxK%2BA4b%2BeBse1XlfNIBwIgfPS8dRNp%2FxmFBCNrWLDxkracRrBYrm5cEg%2BjJDXIvNsqsgUIdRADGgwwMTM2MTkyNzQ4NDkiDNaBwIyE1dVL1zGF0iqPBeiofcLE831cuz%2Fg3%2FBj%2BOAUaL0qSPB0iFluwPLKGuVB6sGEff4eb%2BhiIZV7BGnszG7nUhp9GzIuA1YXeX1txWBdpF9oemEmi5NywysgHkWri0j4Huf8Kqc0veGGY9SjOhiXwycQ8YsHi0vPSebpPPXh0TfZnOU4brttYbmYDQt11ba4sYpdhFcGj2JT98cBsee%2Fc5T7bN4P2XDVhPiRuRw9aGFMqvz1hVd7umv69rNFED1JWINyJdd5C%2F6agSSB8sgbH71ksUBWB6gZbJY81x4rscmVfXXofwqa8PBk5Og2PopEsHO5gC2m6ONQs7oHx%2FwcPVQk3JG%2BUI5vzVw25Vs4%2BdZdhcmlVKrn%2B%2FAnPLwb1UVjUdIZ1Bh2A7dxoauy7mugTmVoaADIScHYKRRYQ6ymOT%2B5HZKcppxrXZOnvSp0bLZxAWUdNfX%2BptG8LPBB0HFsGwGHJM3e67F2eH8OPbwOv4CEGzSDxBRn5jAtojFIeM0zYT71ER7JqwYdvVMhHEmS6yzxVkocSBRdqjcwtHkc%2F3o0qHipZYK%2FYAM9qv8hFeWan6Sa185DBwXF3TgIsvbA%2Fcjp8pWqNUeqtz6soCDoRJUku0qJamW5nH6N7sH%2BtO5tJv6FlKTWPWglmSjgtpptDiSnxBFAQX9CJ8spiVo69mOdSoiBjJLiBs9VWBWsOKdxglim0NnAzaWeTydCoRC1TZO3P1tZhKm4UqA86wCtToWZwff54BVenmfxX29vKT622UzSbI49YSFrYIcmrAYj0mP7dMKGXpl0tZCD4BdH226Uje%2FjlE7N5BpXxeyGKIWjtnsKMm2g%2BMxP7x2yGOeguUUjYzkWYTTS1FwwtYRKn3lLwjDgiYO0bzSZF0Ew1bitrgY6sQHIue94FUiYiMOMkDJ9Ayf9fPYms2aIIAO2H9bXmuaR5lH9obA9b%2FPrvjiRxAZ6lxqcr%2B9QPKlzkknLInDxqbq5txCl1Rij1JaLqv%2B4UxnGRb8ZIpj0ICFXmBBF2kEefQwHF5kj7QtGSa2JcGxgdtN3u7o%2BaXyb07mhLfzaH6hd1QUtvhvVRlbD%2FIk%2F25jmafq1vwS1a1GzXy59j%2BKSs8AfLJwUQzk9Ye%2BpIrlwwlAnAww%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5c23b9c7792a4a7692f92fa3d99988d99b2818ca413e3a06ebe35891ff3810f5",
+      "file_size": 285,
+      "type": "application/x-javascript",
+      "moderated": null
+    },
+    {
+      "id": 559295,
+      "file_name": "server.js",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/FbFPMdK9WwRnSQM5tH6fWH46?response-content-disposition=attachment%3B%20filename%3D%22server.js%22%3B%20filename%2A%3DUTF-8%27%27server.js&response-content-type=application%2Fx-javascript&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVWHFSNNE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132656Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZLzSSHKxWIGhQtGT81DYUaazxK%2BA4b%2BeBse1XlfNIBwIgfPS8dRNp%2FxmFBCNrWLDxkracRrBYrm5cEg%2BjJDXIvNsqsgUIdRADGgwwMTM2MTkyNzQ4NDkiDNaBwIyE1dVL1zGF0iqPBeiofcLE831cuz%2Fg3%2FBj%2BOAUaL0qSPB0iFluwPLKGuVB6sGEff4eb%2BhiIZV7BGnszG7nUhp9GzIuA1YXeX1txWBdpF9oemEmi5NywysgHkWri0j4Huf8Kqc0veGGY9SjOhiXwycQ8YsHi0vPSebpPPXh0TfZnOU4brttYbmYDQt11ba4sYpdhFcGj2JT98cBsee%2Fc5T7bN4P2XDVhPiRuRw9aGFMqvz1hVd7umv69rNFED1JWINyJdd5C%2F6agSSB8sgbH71ksUBWB6gZbJY81x4rscmVfXXofwqa8PBk5Og2PopEsHO5gC2m6ONQs7oHx%2FwcPVQk3JG%2BUI5vzVw25Vs4%2BdZdhcmlVKrn%2B%2FAnPLwb1UVjUdIZ1Bh2A7dxoauy7mugTmVoaADIScHYKRRYQ6ymOT%2B5HZKcppxrXZOnvSp0bLZxAWUdNfX%2BptG8LPBB0HFsGwGHJM3e67F2eH8OPbwOv4CEGzSDxBRn5jAtojFIeM0zYT71ER7JqwYdvVMhHEmS6yzxVkocSBRdqjcwtHkc%2F3o0qHipZYK%2FYAM9qv8hFeWan6Sa185DBwXF3TgIsvbA%2Fcjp8pWqNUeqtz6soCDoRJUku0qJamW5nH6N7sH%2BtO5tJv6FlKTWPWglmSjgtpptDiSnxBFAQX9CJ8spiVo69mOdSoiBjJLiBs9VWBWsOKdxglim0NnAzaWeTydCoRC1TZO3P1tZhKm4UqA86wCtToWZwff54BVenmfxX29vKT622UzSbI49YSFrYIcmrAYj0mP7dMKGXpl0tZCD4BdH226Uje%2FjlE7N5BpXxeyGKIWjtnsKMm2g%2BMxP7x2yGOeguUUjYzkWYTTS1FwwtYRKn3lLwjDgiYO0bzSZF0Ew1bitrgY6sQHIue94FUiYiMOMkDJ9Ayf9fPYms2aIIAO2H9bXmuaR5lH9obA9b%2FPrvjiRxAZ6lxqcr%2B9QPKlzkknLInDxqbq5txCl1Rij1JaLqv%2B4UxnGRb8ZIpj0ICFXmBBF2kEefQwHF5kj7QtGSa2JcGxgdtN3u7o%2BaXyb07mhLfzaH6hd1QUtvhvVRlbD%2FIk%2F25jmafq1vwS1a1GzXy59j%2BKSs8AfLJwUQzk9Ye%2BpIrlwwlAnAww%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=efba467c7e9c96bc5d0d7823da70c93c795b2fd7e8fb96fa98949a928b2f5e9d",
+      "file_size": 1350,
+      "type": "application/x-javascript",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 1,
+  "voters": [
+    "root_hunterho"
+  ],
+  "structured_scope": {
+    "databaseId": 666,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/nodejs/node",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

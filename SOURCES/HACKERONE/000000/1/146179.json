@@ -1,0 +1,102 @@
+{
+  "id": 146179,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNDYxNzk=",
+  "url": "https://hackerone.com/reports/146179",
+  "title": "REG: Content provider information leakage",
+  "state": "Closed",
+  "substate": "informative",
+  "readable_substate": "Informative",
+  "created_at": "2016-06-21T07:24:01.841Z",
+  "submitted_at": "2016-06-21T07:24:01.841Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "zeroknife",
+    "url": "/zeroknife",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/040/542/b75f8924d65374016ee8a5b4969ef27fc4ff2675_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-06-24T08:48:39.291Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-06-24T04:58:14.980Z",
+  "team_member_agreed_on_going_public_at": "2016-06-24T08:48:39.059Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Issue :\nWhile analyzing your code of manifest.xml i found a issue related to content provider information leakage .\n\nIssue description :\n\nYour content provider settings will allowing any other app on the device to access it (AndroidManifest.xml). You should modify the attribute to [exported=\"false\"] or set at least \"signature\" protectionalLevel permission if you don't want to.\n\nwhere i found the issue :\n\n provider => com.owncloud.android.providers.FileContentProvider\n provider => com.owncloud.android.ui.adapter.DiskLruImageCacheFileProvider\n\nWhats the impact : \n\nother apps can read the contents,the malformed application can be used to extract information from the content provider .\n\nCode from your manifest.xml kinldy note that **exported=true**  :\n<service\n            android:name=\".authentication.AccountAuthenticatorService\"\n            android:exported=\"true\" >\n            <intent-filter android:priority=\"100\" >\n                <action android:name=\"android.accounts.AccountAuthenticator\" />\n            </intent-filter>\n  <meta-data\n                android:name=\"android.accounts.AccountAuthenticator\"\n                android:resource=\"@xml/authenticator\" />\n        </service>\n        <service\n            android:name=\".syncadapter.FileSyncService\"\n            android:exported=\"true\" >\n            <intent-filter>\n                <action android:name=\"android.content.SyncAdapter\" />\n            </intent-filter>\n    <meta-data\n                android:name=\"android.content.SyncAdapter\"\n                android:resource=\"@xml/syncadapter_files\" />\n        </service>\n  <provider\n            android:name=\".providers.FileContentProvider\"\n            android:authorities=\"@string/authority\"\n            android:enabled=\"true\"\n            android:exported=\"false\"\n            android:label=\"@string/sync_string_files\"\n            android:syncable=\"true\" />\n\n<provider\n            android:name=\".providers.UsersAndGroupsSearchProvider\"\n            android:authorities=\"com.nextcloud.android.providers.UsersAndGroupsSearchProvider\"\n            android:enabled=\"true\"\n            android:exported=\"false\"\n            android:label=\"@string/search_users_and_groups_hint\" />\n<activity\n            android:name=\".authentication.AuthenticatorActivity\"\n            android:exported=\"true\"\n            android:launchMode=\"singleTask\"\n            android:theme=\"@style/Theme.ownCloud.noActionBar\" >\n            <intent-filter>\n                <action android:name=\"android.intent.action.VIEW\" />\n <category android:name=\"android.intent.category.DEFAULT\" />\n                <category android:name=\"android.intent.category.BROWSABLE\" />\n<data android:scheme=\"@string/oauth2_redirect_scheme\" />\n            </intent-filter>\n            <intent-filter>\n                <action android:name=\"com.owncloud.android.workaround.accounts.CREATE\" />\n<category android:name=\"android.intent.category.DEFAULT\" />\n            </intent-filter>\n</activity>\n\n\nreferences : \n\n(1)https://www.nowsecure.com/mobile-security/ebay-android-content-provider-injection-vulnerability.html\n(2)http://blog.trustlook.com/2013/10/23/ebay-android-content-provider-information-disclosure-vulnerability/\n(3)http://www.wooyun.org/bugs/wooyun-2010-039169\n\nLet me know incase of any other concerns\n\n\n",
+  "weakness": {
+    "id": 58,
+    "name": "Command Injection - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 4,
+  "voters": [
+    "sreekanth123",
+    "zeroknife",
+    "antonio1",
+    "dyabla"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "id": 3370,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMzcw",
+  "url": "https://hackerone.com/reports/3370",
+  "title": "Directory traversal attack in view resolver",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2014-03-06T11:13:20.634Z",
+  "submitted_at": "2014-03-06T11:13:20.634Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "lautis",
+    "url": "/lautis",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 22,
+    "url": "https://hackerone.com/rails",
+    "handle": "rails",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/022/5e2b46658c8b86bed62f574d8e1793f353cbbc63_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/022/5e2b46658c8b86bed62f574d8e1793f353cbbc63_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Ruby on Rails",
+      "twitter_handle": "rails",
+      "website": "http://rubyonrails.org/security",
+      "about": "Web development that doesn't hurt."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2014-0130"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2015-07-09T19:15:27.083Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-07-09T19:15:26.661Z",
+  "team_member_agreed_on_going_public_at": "2015-06-16T19:07:55.100Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "There seems to be two cases that allow directory traversal when using wildcard URL segments that allow rendering view outside view paths.\r\n\r\nFor example, let say there is a route\r\n\r\n\tget '/help/(*action)’, controller: ‘help’\r\n\r\nand a matching controller\r\n\r\n\tclass HelpController < ApplicationController\r\n\tend\r\n\r\nThis renders all views that are in 'app/views/help’ (assuming default view paths) even when matching action method is not defined.\r\n\r\nIf an attacker made a request `GET /help/../../../Gemfile`, ActionView::FileSystemResolver returns Gemfile from project root as the matching view. This simple case can be prevented using Rack::Protection::PathTraversal middleware, but it is not enabled by default in Rails. Also, there could be other mechanisms that may result in rendering views that are outside view path. Not sure if that’s the expected behaviour, but this surprised me.\r\n\r\nHowever, Rack::Protection::PathTraversal can be bypassed using backslashes: `GET /help/%5c../%5c../%5c../Gemfile`. The resolver uses Dir.glob, which escapes backslashes unless File::FNM_NOESCAPE flag is used. Rack::Protection::PathTraversal won’t intercept `'\\../'` and the resolver treats `'\\../`' as `'../'`.\r\n\r\nAttached are fixes for the mentioned vulnerabilities with test cases.",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 4047,
+      "file_name": "0001-Do-not-escape-backslashes-in-view-paths.patch",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/004/047/60fee926e77c2f23eeeda55cf16bdba7d7a44a0c/0001-Do-not-escape-backslashes-in-view-paths.patch?response-content-disposition=attachment%3B%20filename%3D%220001-Do-not-escape-backslashes-in-view-paths.patch%22%3B%20filename%2A%3DUTF-8%27%270001-Do-not-escape-backslashes-in-view-paths.patch&response-content-type=text%2Fx-c%2B%2B&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2MPOSDGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T112444Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCBbMU%2B267qveSZjBTX7ems7plNjeRB6ghD4pLJYoxoNQIhAOB1OSi6O%2Fdo0XBpeF6JncYBFY%2B3LuUhN87iPIpANtG6KrIFCG8QAxoMMDEzNjE5Mjc0ODQ5IgyTVupFrPXFhTCscDcqjwX3tBGrIxV1zh7UC%2F4Jr3riyPw49dAeC5kRAlOtteJbZE7w38%2Bz4nQNyxwc0EDGaQF7ShQBfd%2BZUHPanKu9xreSHilAC48s6ipy0W6liWIA716VdwLzxs61TAwjVY5Dn5NcJX6Q3ESCcUgNOvCDp5WtNJIC8hjUvq%2FIfZNGgSU8EEE3ZhddGlH637YMsQmHoURN7ZdlmqOjTdTjp1ZmGwSf4gfCfxcBa7RWhKXxfMjNXP9W%2B7Q4lzx9iyRB9bAKQ4vzqfzKuIzUvErDi7g1BejVCAMSpc3neh6LHUPLL09kycCd7wAIkU7M%2B1YSEpwoAGZjPw1YxjIXbkUjkViJH7tHQuO4Y2MDuCX9kPdXFdl1iTN%2BQFQHzJUlJnpzreuX8gCvgxp69xs2UrjoNcSh%2FutYkUp8hxyzddNzX4DncxeeiM5bDDyE%2FiM9XoHAfxZIZotmhUdHCXdIwfJOxL0rm9j1SkozgxU5pKQ%2FMqFAw9ktT4uCJOpF4hQqSIO3Al5aEOuHYpsL%2FvTUa0CWR23BN5Oso%2FwqP4o%2BpqfE5SGocS58oIvDbg%2BUSZgbOd%2FASTpH0%2BdbT75BjpWMniqmLAdLfz%2B9HoKI4%2B%2Bu1VE9nn3tEdJdpoT8plVaCnWqo6gsxkH1xRgD3LIQnGiOB3VBJMae5D%2B3SINIj%2F02Ts9Sk9HfzDcHasyi33Rbfa2Z6Cybqm9RjGjM9NZxVc6VNJAbR65Dz9a86PbI1BXTro4UwUsRNpwkFO2dAcHb8%2BKZBxPXEAHTC%2BofM5%2BCgN25GFIFvtqv6dqg7qhR09%2B2yIbEFl3Jl0CO2tqOCuUg8fXONobnIcyzyJ5drnRry8Hja0ZBfbS5kAfZw6b00jsYTbyK27fWrclbMLiSrK4GOrABSlUIRQH7wV3jiBwm%2BeWqVFr0C9fXdkEWssmuTS38vAJfNkTBbi3JGXNRIeiEwLy8Ure25FlVwG2TP52pXfh0Nc96Cu8PlYAOMCGlg2RvQKToTUDyNjN%2FvhVk%2B2ldWDLLFAMrKgMam5Gdy5PJO6eVDmNGMuI5wUXvzyUPjR9cvsWGe75MDpFAn9K8YC%2FVr8w8lUemxqjYZSER8ZFwYOVS4G6%2BJQ0efx3tmFba4J9Wekc%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=62bec20047cbe3a04cc037867a3197114747e9ffb65b1ae816b2c2d71e9b9cda",
+      "file_size": 1918,
+      "type": "text/x-c++",
+      "moderated": null
+    },
+    {
+      "id": 4048,
+      "file_name": "0002-Ensure-that-templates-are-within-view-paths.patch",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/004/048/98f951bb9438a0a229b807d445c35f950ddc4cdd/0002-Ensure-that-templates-are-within-view-paths.patch?response-content-disposition=attachment%3B%20filename%3D%220002-Ensure-that-templates-are-within-view-paths.patch%22%3B%20filename%2A%3DUTF-8%27%270002-Ensure-that-templates-are-within-view-paths.patch&response-content-type=text%2Fx-c%2B%2B&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2MPOSDGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T112444Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCBbMU%2B267qveSZjBTX7ems7plNjeRB6ghD4pLJYoxoNQIhAOB1OSi6O%2Fdo0XBpeF6JncYBFY%2B3LuUhN87iPIpANtG6KrIFCG8QAxoMMDEzNjE5Mjc0ODQ5IgyTVupFrPXFhTCscDcqjwX3tBGrIxV1zh7UC%2F4Jr3riyPw49dAeC5kRAlOtteJbZE7w38%2Bz4nQNyxwc0EDGaQF7ShQBfd%2BZUHPanKu9xreSHilAC48s6ipy0W6liWIA716VdwLzxs61TAwjVY5Dn5NcJX6Q3ESCcUgNOvCDp5WtNJIC8hjUvq%2FIfZNGgSU8EEE3ZhddGlH637YMsQmHoURN7ZdlmqOjTdTjp1ZmGwSf4gfCfxcBa7RWhKXxfMjNXP9W%2B7Q4lzx9iyRB9bAKQ4vzqfzKuIzUvErDi7g1BejVCAMSpc3neh6LHUPLL09kycCd7wAIkU7M%2B1YSEpwoAGZjPw1YxjIXbkUjkViJH7tHQuO4Y2MDuCX9kPdXFdl1iTN%2BQFQHzJUlJnpzreuX8gCvgxp69xs2UrjoNcSh%2FutYkUp8hxyzddNzX4DncxeeiM5bDDyE%2FiM9XoHAfxZIZotmhUdHCXdIwfJOxL0rm9j1SkozgxU5pKQ%2FMqFAw9ktT4uCJOpF4hQqSIO3Al5aEOuHYpsL%2FvTUa0CWR23BN5Oso%2FwqP4o%2BpqfE5SGocS58oIvDbg%2BUSZgbOd%2FASTpH0%2BdbT75BjpWMniqmLAdLfz%2B9HoKI4%2B%2Bu1VE9nn3tEdJdpoT8plVaCnWqo6gsxkH1xRgD3LIQnGiOB3VBJMae5D%2B3SINIj%2F02Ts9Sk9HfzDcHasyi33Rbfa2Z6Cybqm9RjGjM9NZxVc6VNJAbR65Dz9a86PbI1BXTro4UwUsRNpwkFO2dAcHb8%2BKZBxPXEAHTC%2BofM5%2BCgN25GFIFvtqv6dqg7qhR09%2B2yIbEFl3Jl0CO2tqOCuUg8fXONobnIcyzyJ5drnRry8Hja0ZBfbS5kAfZw6b00jsYTbyK27fWrclbMLiSrK4GOrABSlUIRQH7wV3jiBwm%2BeWqVFr0C9fXdkEWssmuTS38vAJfNkTBbi3JGXNRIeiEwLy8Ure25FlVwG2TP52pXfh0Nc96Cu8PlYAOMCGlg2RvQKToTUDyNjN%2FvhVk%2B2ldWDLLFAMrKgMam5Gdy5PJO6eVDmNGMuI5wUXvzyUPjR9cvsWGe75MDpFAn9K8YC%2FVr8w8lUemxqjYZSER8ZFwYOVS4G6%2BJQ0efx3tmFba4J9Wekc%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=3f4617adfc7756d8108ea8a1a95b06f8452e39022714129072dcc0edf5c17eb8",
+      "file_size": 2424,
+      "type": "text/x-c++",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2015-07-16T19:07:55.419Z",
+  "allow_singular_disclosure_after": -270749809.5589348,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "trazer",
+    "cryptographer",
+    "shivammusic",
+    "spetr0x",
+    "dyabla"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

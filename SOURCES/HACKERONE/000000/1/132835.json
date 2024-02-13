@@ -1,0 +1,111 @@
+{
+  "id": 132835,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMzI4MzU=",
+  "url": "https://hackerone.com/reports/132835",
+  "title": "Cache-Control Misconfiguration Leads to Sensitive Information Leakage",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-04-20T09:16:30.163Z",
+  "submitted_at": "2016-04-20T09:16:30.163Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "geekboy",
+    "url": "/geekboy",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/003/547/b8825b0ae39f962fbe7813bf40d4efe19d018ee9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-02-18T01:47:58.812Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-02-18T01:47:58.724Z",
+  "team_member_agreed_on_going_public_at": "2017-02-18T01:40:39.362Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\n\nThis is a issue related with cache and information disclosure. Generally when a user is logged out, the session gets terminated and no data is of the previous session is accessible. But when cache control is not configured correctly, Sensitive data leak over browser even after user have logged out. \n\nNewrelic is not completely vulnerable to this issue and there are pages where cache-control is marked as no-store, however there were several pages containing sensitive info (EG: API KEYS, Billing Info) which are not secured against this vulnerability.\n\nReproduction Steps: (POC Attached)\n\n1) Login to Newrelic main-site \n2) Navigate to Any Vulnerable Page Containing Sensitive Info\n3) For Instance, these are some pages I could collect to easily explain you the issue,\n\ni) https://rpm.newrelic.com/accounts/1311363/integrations?page=api_keys\nii) https://rpm.newrelic.com/accounts/1311363/payments\niii) https://rpm.newrelic.com/accounts/1311363/integrations?page=data_sharing\niv) many more pages are vulnerable\n\nNote: After you're done, just log out directly from this page\n4) Once logged out, hit the 'Back' Button in browser\n\nNote: This issue supports all modern browsers\n\nObservation: You will notice you are landed back to the authenticated page, although it will look authenticated, it wont actually be but you will still be able to read/copy the sensitive info that page contains. This is just about sensitive data leakage as any attacker / malicious-user could do the same with the victim's account.\n\nAlthough the exploitation involves physical access to the victim's PC, I have several scenarios where you will find that this issue can't be left as the responsibility of the user to be taken care of.\n\n1) In a office scenario it is not very difficult to access someone's PC \n2) In a laptop case, someone can get their hands on to it quite easily\n\nAs Newrelic is all about data and analytics, I believe this this is a issue which definitely needs to be fixed. I'd like to help you to fix it so below are the remediation details.\n\nRemediation :\n\nYour devops can implement these headers to mitigate this issue, however there could be better alternatives also which they might want to fit instead of this one. This is just a suggestion :)\n\nheader(\"Cache-Control: no-store, no-cache, must-revalidate\");\n\nHere, \"no-store\" is most important to be implemented.\n\nRequest Note: Even after my explanation, if you believe this issue is not important to be addressed then please mark the report as 'Informative' and not 'N/A'.",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2017-03-20T01:40:39.384Z",
+  "allow_singular_disclosure_after": -217852036.75119606,
+  "singular_disclosure_allowed": true,
+  "vote_count": 28,
+  "voters": [
+    "whhackersbr",
+    "geekboy",
+    "savitar0x01",
+    "bugdiscloseguys",
+    "pyae_phyo",
+    "mpz",
+    "abhhithehacker",
+    "eveeez",
+    "vulnh0lic",
+    "securitybreaker",
+    "and 18 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

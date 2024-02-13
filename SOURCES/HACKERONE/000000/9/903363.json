@@ -1,0 +1,130 @@
+{
+  "id": 903363,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85MDMzNjM=",
+  "url": "https://hackerone.com/reports/903363",
+  "title": "No Rate Limiting On Phone Number Login Leads to Login Bypass",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2020-06-19T21:43:32.331Z",
+  "submitted_at": "2020-06-19T21:43:32.331Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "done11",
+    "url": "/done11",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 23970,
+    "url": "https://hackerone.com/smule",
+    "handle": "smule",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/970/86155a522b43459fc587e2ff56745e1f531e823e_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/970/86155a522b43459fc587e2ff56745e1f531e823e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Smule",
+      "twitter_handle": "smule",
+      "website": "https://www.smule.com",
+      "about": "Smule is making music social, interactive, and collaborative again. "
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2020-07-24T02:19:27.893Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-06-24T02:19:17.058Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hey Team,\n\n### Introduction:\n\nA rate limiting algorithm is used to check if the user session has to be limited based on the information in the session cache. In case a client made too many requests within a given time frame.\n\n### Description:\n\nI was able to Bypass Authentication of any user by enumerating the **One Time Password** as there was no Rate Limiting at the Endpoint where the **One Time Password** was being checked.\n\n### Steps To Reproduce:\n\n1 .  Go to this [link](https://web.smule.com/s/explore#login).\n2 . Create an account ,Enter the relevant pin for activation of the account.\n3. Now for logging in to the account check the option of  Sign In with phone number.\n4. Capture this request in Burp Suite.\n\n```\nPOST /user/json/phone_login HTTP/1.1\nHost: web.smule.com\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0\nAccept: application/json, text/plain, */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: https://web.smule.com/s/explore\nContent-Type: application/x-www-form-urlencoded\nX-CSRF-Token: 2ag62pPLPByBn5MIAKIJY6SJF4jhBXaO4rFkk1HquzA=\nX-Smulen: 4c22718d4d9980731de84649b903429c\nContent-Length: 93\nConnection: close\nCookie: connection_info=eyJjb3VudHJ5IjoiUEsiLCJob21lUG9wIjoiYXNoIn0%3D--190203865a084a1be6f7ec4f9d94f59f7c9c223b; smule_id_production=eyJ3ZWJfaWQiOiI1Zjc2YjYzYi0wNmIyLTQzYWEtYjZkMC00YWFkODU3YTM3ZGEiLCJ0el9vZmZzZXQiOiIxODAwMCIsInNlc3Npb25faWQiOiJnNF8xMV9DYStEemkwZyt1TEE0L2hzc0tMMVhJd2xxczFCRTVVdndZbExJaHpJNnhER1hGZ0MxL1p6RXc9PSIsInBsYXllcl9pZCI6MjQ1NDM3NTA3NywiZGF1X3RzIjoxNTkyNTk3OTQxfQ%3D%3D--7f9ea24781b589e82ee50552e579d54bacd91c20; _smule_web_session=BAh7B0kiD3Nlc3Npb25faWQGOgZFVEkiJWJiNTgzNTk0Y2ZhOTBjMmU2Yzg3MWRhM2E4YzQwOTgwBjsAVEkiEF9jc3JmX3Rva2VuBjsARkkiMTJhZzYycFBMUEJ5Qm41TUlBS0lKWTZTSkY0amhCWGFPNHJGa2sxSHF1ekE9BjsARg%3D%3D--ca3e6dd2aad6b33e2233ad1ac2bfc65b8437d9c8; _ga=GA1.2.1130621888.1592558335; _gid=GA1.2.1444310976.1592558335; smule_cookie_banner_disabled=true; L=N; feed_status=%7B%22last_check%22%3Anull%2C%22last_read%22%3Anull%2C%22has_activity%22%3Afalse%2C%22is_vip%22%3Afalse%2C%22is_staff%22%3Afalse%2C%22activity_count%22%3A0%2C%22has_sing%22%3Afalse%2C%22has_account_page%22%3Afalse%7D; logged_out=1; smule_autoplay={%22enabled%22:true}; py={%22globalVolume%22:true%2C%22volume%22:0.5}; _fbp=fb.1.1592558735596.1910798227\n\npin_id=5159d8bd-8b96-469e-960f-4b88fc779ae0&pin_code=5062&tz_offset=18000&entered_birth_date=\n```\n5. Send this request to Intruder and run a iteration of the number since Rate Limit is not there, We get a 200 OK response with every request when valid **One Time Password** hit the request we can check this with length in intruder, because valid request length is different than other requests.\n\n6. Use the **One Time Password** for login.\n\n## Impact\n\nAn attacker could login to any user he wants as long as he knows the number of the victim. Which is basically owning all accounts.",
+  "weakness": {
+    "id": 27,
+    "name": "Improper Authentication - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 874950,
+      "file_name": "Screenshot_from_2020-06-19_14-39-22.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/8Qywo1PxYAuNMFVsoNXqcEPM?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2020-06-19_14-39-22.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2020-06-19_14-39-22.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3IMMHD7U%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134810Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDckwknQq7fjHwY7%2FK9F%2BtvO9fLJDuG1NEZXXMxYw8hbwIhAM3er0SlLN2AYaRXWazeiwtSjADmim0DnY8YcGf4Y8SxKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5Igww2o2qmJ5MWkfa74sqjgUMDHXvf3xxgarNNUDSIN7iuGoSARtn65gvdJ4%2BO%2FkXeF39tTNpPNp3gbMxN08cJsUGQsiwR96l9CPUzLY7LHBxHFojvFr3ITM3J4EJtd3JktNeEkJgVr%2FsEnXuvSlNfFhDmvSEfMGUHb4UbVaVoFQ4SNJecAghbZ4R2R6eho8SeZVEYbq749PMxfWZg3uRG8JgtVyqoY1jpCk0kh4f43bzUZ6Tk0NwL6H2YD1r28GPSdM2NMS0DQHVK52MQWqHFxqvZOB0JavCD6yzZmm375qMFj70T9kjeA3ygDsQWnINhhNEokIipgBb9big4jerkxPZKXHkMEn8kTRjdpaGnqT31eS2Ap3%2BS%2B4%2BDmGqYt5cnry1J7sVtfs6SJBo2KwCm3ieX3J9ZiFPRwbpDrCFs0h81ZvXr03wFCruJw3pNftO4v61HT2vFYwafngQ66iRf4ccw2WitEv8dDqy88fiyfo8PkzIKNQIGf7F%2FGVErGB7zEj7qRAyMBXCY0PP4WHQscGLLucR9RYE1pVgzzs3BCA9j6D9M6C2DUCcO%2BW%2BQmZSaDSPS08WMv4oYHFXYggOIv%2FTINF9J4pMXNDPjCxtu2OWtH7uHoi1NNCNlUe9xnu5aYimPddy8D73j8KGddAo1w6IoKy4kpqEs8NU%2BXnLLIo%2F8OkgGBLEwmIu9T%2Bu6Oz7XkrYifOXYMDpFUfwTPN9W4JsrMXt%2F3wugpQN4Fk4kWsib7XEy1iPAo764glVM3P7J4XVtoYVee04ZiKms2%2FCu1rNFAWnpdtEP6RHFeEvOqGBX9C3g9xvfaapxWX1FccdWfkK68y%2Bh%2FMy24XhzUb14mI24ZTU9zIXOy%2BHFqYVkAOt7UQ1Gb4HE6VcsU%2B8JXcw5bStrgY6sAE07AhFgeocUOJkN2I%2Fu89%2FcNWBSx3BcejUfJX3Y1%2FMNQpv784p5QFf%2BWHp0%2BUGiFxL%2FYZ7bz0IANiUOzMv59zqaW%2FP4WOMYPVgyzZAVw3B2h%2B4laP9i2zcnD6y1B8D0yz1mg3ghUGJo8C0Z5LhCaAHi7hr3CmQatY39rwKj4%2BzrrqtAaWIIqOwkXgJ89Q5MnwR3YpKSnVnS%2BtFWl0%2BIltP2OXBDv%2Fq7N9nB1%2FEoAh%2FZA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d4b7550b42c0ec4b5ce2d4f615d2fa3f4d956a7cf2afcaaa9ea70e481d216eea",
+      "file_size": 146698,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-07-24T02:19:17.107Z",
+  "allow_singular_disclosure_after": -112274933.10338123,
+  "singular_disclosure_allowed": true,
+  "vote_count": 46,
+  "voters": [
+    "tess",
+    "ali",
+    "shubham_srt",
+    "hannanhaseeb",
+    "ashhhh",
+    "irwanjugabro",
+    "thwin_htet",
+    "rac_fckscty",
+    "sam",
+    "0xlinuxinet",
+    "and 36 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 8863,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.smule.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

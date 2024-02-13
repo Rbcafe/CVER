@@ -1,0 +1,140 @@
+{
+  "id": 309648,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMDk2NDg=",
+  "url": "https://hackerone.com/reports/309648",
+  "title": "[simplehttpserver] Stored XSS in file names leads to malicious JavaScript code execution when directory listing is output in HTML",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2018-01-26T22:06:10.553Z",
+  "submitted_at": "2018-01-26T22:06:10.553Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "bl4de",
+    "url": "/bl4de",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/622/285a07d9de896d5840ce1b556236272b751658e3_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 23949,
+    "url": "https://hackerone.com/nodejs-ecosystem",
+    "handle": "nodejs-ecosystem",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Node.js third-party modules",
+      "twitter_handle": "",
+      "website": "https://nodejs.org/en/security/",
+      "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2018-3716"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-02-26T21:44:29.711Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2018-02-26T21:44:21.586Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi Guys,\n\n**simplehttpserver** allows to embed HTML in file names, which (in certain conditions) might lead to execute malicious JavaScript.\n\n**Module:** \n\n'simpehttpserver' is simple imitiation of python's SimpleHTTPServer and intended for testing, development and debugging purposes\n\nhttps://www.npmjs.com/package/simpehttpserver\n\n**Description**\n\nThis issue is another example of lack of output sanitization. \nHere's source code, which allows to embed HTML in file name and run attack presented in PoC section (./node_modules/simplehttpserver/simplehttpserver.js, lines 106-117):\n\n\n```javascript\n\n    // Check for each file if it's a directory or a file\n    var q = async.queue(function(item, cb) {\n        fs.stat(path.join(pathname, item), function(err, stat) {\n           if ( !stat ) cb();\n           if ( stat.isDirectory() ) {\n               ulist.push('<li><a href=\"'+item+'/\">'+item+'/</a></li>')\n           } else {\n               ulist.push('<li><a href=\"'+item+'\">'+item+'</a></li>')\n           }\n            cb();\n        });\n    }, 4);\n```\n\nAs you can see, ```item``` is output directly into HTML without any sanitization.\n\n## PoC - Steps To Reproduce:\n\nIn the directory which will be served via ```simple-server```, create file with following name:\n\n```\njavascript:alert('You are pwned!')\n```\n\nRun ```simplehttpserver``` in directory with file with changed filename:\n\n```\n$ ./node_modules/simplehttpserver/cli.js\nListening 0.0.0.0:8000 web root dir /Users/bl4de/playground/node_bugbounty_playground\n```\n\nand open ```http://127.0.0.1:8000``` in the browser.\n\nTry to open file with name ```javascript:alert('You are pwned!')``` by clicking it.\n\n{F257774}\n\n## Supporting Material/References:\n\nConfiguration I've used to find this vulnerability:\n\n- macOS HighSierra 10.13.3\n- node 8.9.3\n- npm 5.5.1\n- curl 7.54.0\n\n## Wrap up\n\nI hope this report will help to keep Node ecosystem more safe. If you have any questions about any details of this finding, please let me know in comment.\n\nThank you\n\nRegards,\n\nRafal 'bl4de' Janicki\n\n\n## Impact:\n\nThis vulnerability can be used to eg. download malware via \"drive-by-download\" attacks. Also, as described in other modules I've reported similar vulnerabilty, an iframe with malicious JS file loaded from external resource can be executed.\n\n## Impact\n\nThis vulnerability can be used to eg. download malware via \"drive-by-download\" attacks. Also, as described in other modules where I've reported similar vulnerabilty, an iframe with malicious JS file loaded from external resource can be executed.",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 257774,
+      "file_name": "1.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/257/774/765865c330ab81a7d1795a9e9b3713633c653a79/1.png?response-content-disposition=attachment%3B%20filename%3D%221.png%22%3B%20filename%2A%3DUTF-8%27%271.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125747Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c5c0c4196ded9b37d10469d3bd9d4af41d1778bdfe12a36b17f393eccdfe5744",
+      "file_size": 462993,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-03-28T21:44:21.736Z",
+  "allow_singular_disclosure_after": -185555606.11758515,
+  "singular_disclosure_allowed": true,
+  "vote_count": 8,
+  "voters": [
+    "muon4",
+    "apapedulimu",
+    "dudez",
+    "eveeez",
+    "13ern",
+    "khaledibnalwalid",
+    "madhuri_jan02",
+    "tkye"
+  ],
+  "severity": {
+    "rating": "critical",
+    "score": 9.6,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "changed",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 5780,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "simplehttpserver",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

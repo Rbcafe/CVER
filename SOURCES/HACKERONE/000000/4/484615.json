@@ -1,0 +1,143 @@
+{
+  "id": 484615,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80ODQ2MTU=",
+  "url": "https://hackerone.com/reports/484615",
+  "title": "Unsanitized user photo paths allow local file read",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2019-01-23T11:16:20.844Z",
+  "submitted_at": "2019-01-23T11:16:20.844Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "alb3r7",
+    "url": "/alb3r7",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/076/180/ce539542de07b2104fe48c7eca2af3cb3d583dca_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17443,
+    "url": "https://hackerone.com/vanilla",
+    "handle": "vanilla",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Vanilla",
+      "twitter_handle": "vanilla",
+      "website": "http://vanillaforums.com",
+      "about": "Vanilla is a powerfully simple discussion forum you can easily customize to make as unique as your community."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-07-13T04:27:29.324Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-06-13T04:27:26.252Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary:**\nWhen we register a new user, we can set the photo of user.  If we set a milicious path, we can delete the profile photo of others\n\n**Description:**\nThere is an episode of register.\napplications/dashboard/controllers/class.entrycontroller.php\n```\n    private function registerBasic() {\n        $this->View = 'registerbasic';\n        Gdn::userModel()->addPasswordStrength($this);\n\n        if ($this->Form->isPostBack() === true) {\n            // Add validation rules that are not enforced by the model\n            $this->UserModel->defineSchema();\n            $this->UserModel->Validation->applyRule('Name', 'Username', $this->UsernameError);\n            $this->UserModel->Validation->applyRule('TermsOfService', 'Required', t('You must agree to the terms of service.'));z\n            $this->UserModel->Validation->applyRule('Password', 'Required');\n            $this->UserModel->Validation->applyRule('Password', 'Strength');\n            $this->UserModel->Validation->applyRule('Password', 'Match');\n            // $this->UserModel->Validation->applyRule('DateOfBirth', 'MinimumAge');\n\n            $this->fireEvent('RegisterValidation');\n\n            try {\n                $values = $this->Form->formValues(); //1\n                $values = $this->UserModel->filterForm($values, true); //2\n                unset($values['Roles']);\n                $authUserID = $this->UserModel->register($values);//3\n```\nGet form values and filter many fields in UserModel. But I find there are 23 fields in GDN_User remains\n```\nAbout\nBanned\nConfirmed\nCountBookmarks\nCountDrafts\nCountUnreadConversations\nCountUnreadDiscussions\nDateOfBirth\nDateSetInvitations\nEmail\nGender\nHashMethod\nHourOffset\nInviteUserID\nLocation\nName\nPassword\nPhoto\nPoints\nShowEmail\nTitle\nUserID\nVerified\n```\nIn UserModel::removePicture, it delete the local file according to photo field. But in step 2, it call changeBasename to add prefix 'p' in basename. So we can only delete the filename starts with 'p' in uploads directory\n```\n    public function removePicture($userID) {\n        // Grab the current photo.\n        $user = $this->getID($userID, DATASET_TYPE_ARRAY); //1\n        $photo = $user['Photo'];\n\n        // Only attempt to delete a physical file, not a URL.\n        if (!isUrl($photo)) {\n            $profilePhoto = changeBasename($photo, 'p%s'); //2\n            $upload = new Gdn_Upload();\n            $upload->delete($profilePhoto); //3\n        }\n\n        // Wipe the Photo field.\n        $this->setField($userID, 'Photo', null);\n    }\n```\n\n## Steps to reproduce:\n\n1. find other user's photo url to delete (eg: uploads/userpics/868/pT8SSG8E4EYSK.png)\n2. register a new user and intercept the request\n3. add a field `Photo`, set the value as `userpics/868/T8SSG8E4EYSK.png`(without prefix p)\n4. login, and request /vanilla/index.php?p=/profile/removepicture/**yourusername**&tk=**yourtk**&deliveryType=ALL\nThen the local file uploads/userpics/868/pT8SSG8E4EYSK.png will be deleted\n\n## Anything else we should know?\nBecause of the path restriction, only filepath matchs `uploads/*/p*` can be deleted.\nWhitelist may better than blacklist, only a few fields should be permitted to insert into database where registration\n\n## Impact\n\nbe able to delete profile photo of others",
+  "bounty_amount": "300.0",
+  "formatted_bounty": "$300",
+  "weakness": {
+    "id": 65,
+    "name": "Business Logic Errors"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 411066,
+      "file_name": "3.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/411/066/9bf86e66a34b1f9aed9b5575171ece7356f01364/3.png?response-content-disposition=attachment%3B%20filename%3D%223.png%22%3B%20filename%2A%3DUTF-8%27%273.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131654Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=fe5ee1f9801fa642ed19ca8bac041f55230cbdf9f7a02bf0cf3130210e5214dc",
+      "file_size": 58867,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2019-07-13T04:27:26.349Z",
+  "allow_singular_disclosure_after": -144838168.09448764,
+  "singular_disclosure_allowed": true,
+  "vote_count": 31,
+  "voters": [
+    "0xbeefed",
+    "hunter",
+    "bl4de",
+    "tess",
+    "spam404",
+    "ali",
+    "aryan2808",
+    "ahiezer",
+    "pablov",
+    "cryptographer",
+    "and 21 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 7.6,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "low",
+      "availability": "low"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 14809,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/vanilla/vanilla/",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

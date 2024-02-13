@@ -1,0 +1,130 @@
+{
+  "id": 272379,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNzIzNzk=",
+  "url": "https://hackerone.com/reports/272379",
+  "title": "Password reset token leak on third party website via Referer header",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2017-09-27T12:35:22.111Z",
+  "submitted_at": "2017-09-27T12:35:22.111Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "akaash_pantherdefence",
+    "url": "/akaash_pantherdefence",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/158/466/09b6cf7aee7af9935345adf666f89c9e603d6ea3_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 9520,
+    "url": "https://hackerone.com/aspen",
+    "handle": "aspen",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/009/520/f7b32b7e3ac40975de7a2e718dcecb2c59c229cd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/009/520/f7b32b7e3ac40975de7a2e718dcecb2c59c229cd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Aspen",
+      "twitter_handle": "aspen_io",
+      "website": "http://aspen.io/",
+      "about": "A python web framework based on filesystem dispatch and simplates."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-09-27T17:34:07.598Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-09-27T17:34:07.536Z",
+  "team_member_agreed_on_going_public_at": "2017-09-27T16:43:52.979Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi Security Team,\n*******************************************\n#Description\n\nIt has been identified that the application is leaking referrer token to third party sites. In this case it was found that the password reset token is being leaked to third party sites which is a issue knowing the fact that it can allow any malicious users to use the token and reset the passwords of the victim.\n\n#Steps To Reproduce:-\n1) Request a password reset link for a valid account\n2) Click on the reset link\n3) Before resetting the password click on the github link footer section\n4) You will notice the following request in burpsuit\n\n#REQUEST:\nGET /rtfd/readthedocs.org HTTP/1.1\nHost: github.com\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:55.0) Gecko/20100101 Firefox/55.0\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate, br\nReferer: https://readthedocs.org/accounts/password/reset/key/1zp5-4pt-8163732eb05d188994ec/\nCookie: COOKIE\nConnection: close\nUpgrade-Insecure-Requests: 1\n\n\nAs you can see in the referrer the reset token is getting leaked to third party sites. So, the person who has the complete control over that particular third party site can compromise the user accounts easily.\n{F224492}\n\n#Solution:\nFor remediation, you should stop the third party sites to show the referrer header by adding rel=\"noopener noreferrer\" to external links in the footer. or check the reference below.\n\nRef: https://mathiasbynens.github.io/rel-noopener/\n*************************************************************\nBest Regards\n*Akaash Sharma :)*\n",
+  "weakness": {
+    "id": 57,
+    "name": "Violation of Secure Design Principles"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 224492,
+      "file_name": "POC_img.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/224/492/6ecb6bbd6722cc392c45a0d6a55b3d9b5bc904ac/POC_img.jpg?response-content-disposition=attachment%3B%20filename%3D%22POC_img.jpg%22%3B%20filename%2A%3DUTF-8%27%27POC_img.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5DNGZVVG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125111Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCICHLJPsWBp5sr6QP325sn3QmpUNWJkG1Rn9WpoDeqIg3AiEAiF8%2BSn1jT5ntK2r0sSCmNUGX9ZemOesqgbKFIUBuyWMqsAUIdhADGgwwMTM2MTkyNzQ4NDkiDD5dvB5yVZqhTClUciqNBapM8w3AEMj9vUut8ipBYyxkUXmIzrvgZ28gnqyQ6mhhFeeoPRU%2FpSxAJl9%2BpYrNip4ItC3BkgYDlk9abNplTrvNVi9OhutOp4ZE1wWKJlPpOzKXUOBoUe%2FRWzdh9xwCJuGDbGkQ7ngPegxy3y6LCFP5wP6sjVHLhEaT7e6L88U08XjQmZEZxAGGE5IESnoSUeW4EvOXBp5DQcR1t39zozskg4dISh5C2Ff6jgUnjDu9sYdoZA7dJgdByDPIA4VjLFdTVEjklaMXr4YtD7wTmG9hWanDSlJ11qBRruTBFPloL6Kq2YKCTOj8wC0UP9ctvuxeNwV7QKFhmu8bB6csA5mvLVxUvoelFVuLgYYhtCHZDGPo54Dzbn5soqg%2FJjzSexzqrvBtELxoPLfeuC9o2KpP0lfY7eBpdmAqxwpFPSBaxPJ66SICOozWWbpDqIqnFrnvz%2BXEMOe5z7dsDsKieBfX52kLKmUuAGG9Tv0jWo8CMlR7jOkbaaLMpho6b6rMGTGHucZmDgIYIwvcdVrd1njiiPPNTxx6qoUNz0WdZUAlGWBtiCv4fABRuY7ZjWGOAD0PFPT8FsbFoQ6mkw28XZaoMR735I%2FMJlHvafhgKlPNFVKsVzF%2F3GpLM7ECVpPoLq9VNtYgjHnuZ0U6e4r9781nElHBM1WdTrWia%2F9%2FJIwTVLKAnxWWWscJrGFA8kraj4Xrc3KPePGa2suQ5Fim1jPzWeLA%2Bfr7aEab%2FJVFYU%2F%2BIs0KPZarsTUlG%2B656GYmZcf%2Fa2gbirYZQRBwlZlZahqG0l8iMLSK0TCfJOwBIAuJd7wWISVFGCV0aYj458Ker2Pjca9HvyzcI8qiuhyhF68QiOr9MFM67rM70ExPMPHFra4GOrEB58pDHOC4avlR6xYMRYlBCOP%2F5dyV6PT6gr9Vs5I8zhf3jjEkzka6Au6GNesJTj11PvvCjC1fFqxeJeAvkQZYn2pzivrXx7RBTeI6fAxztLLN3Lu9uyUpmO1SqciT2zDRX2wO0JTz6DtjgCLlfMq%2FHCRF8EoZi0alN2KMbAkJBqtFpznpmUaem89ejwzJcKJLTQiW1rXarR6VZiM7isz2KsMf5L4b0KstHgl%2Fux6s5iUg&X-Amz-SignedHeaders=host&X-Amz-Signature=3cf3e00c095d3199d53f00ceecdd71f6b9e3eebb7540de7dd46318890fb9b3bb",
+      "file_size": 535307,
+      "type": "image/jpeg",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-10-27T16:43:53.023Z",
+  "allow_singular_disclosure_after": -198706038.404782,
+  "singular_disclosure_allowed": true,
+  "vote_count": 28,
+  "voters": [
+    "sameerphad72",
+    "shubham_srt",
+    "0nlymohammed",
+    "apapedulimu",
+    "edoverflow",
+    "gamliel",
+    "r3y",
+    "eveeez",
+    "f1ras",
+    "khizer47",
+    "and 18 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 1926,
+    "asset_type": "URL",
+    "asset_identifier": "core.aspen.io",
+    "max_severity": "medium"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,173 @@
+{
+  "id": 1727221,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzI3MjIx",
+  "url": "https://hackerone.com/reports/1727221",
+  "title": "Improper CSRF token validation allows attackers to access victim's accounts linked to Hackerone",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2022-10-08T11:11:49.623Z",
+  "submitted_at": "2022-10-08T11:11:49.758Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "medmahmoudi",
+    "url": "/medmahmoudi",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/4j3g59ickevgfs0f2vgcn552wjxw/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": true,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-06-19T20:15:24.936Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-06-19T20:15:24.808Z",
+  "team_member_agreed_on_going_public_at": "2023-06-19T14:44:08.047Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "### Overview:\n\nOrganisations in Hackerone can automate their workflow by integrating their accounts with their existing tools like Github or Jira. Most of these integrations are built on top of Tray.io's embedded product.\n\nAccording to this [article](https://tray.io/customers/story/hackerone). Hackerone has established Tray Embedded as central integration hub to deliver high-quality customer integration.\n\n### Flawed Authorization flow\n\nI have created two sandbox Hackerone accounts and picked the github integration for testing. This [link](https://docs.hackerone.com/programs/github-integration.html) explains very well how to setup the integration on your account.\n\nWhen we click on \"New Authentication\", an exchange starts between Hackeron's integration authentication server and the service provider. \n\n{F1976245}\n\nThe authentication integration server is ```hackerone.integration-authentication.com```. The following are steps of the authorization flow:\n\n1. The flow starts with a POST request to\n```hackerone.integration-authentication.com/session```\n\n {F1976252}\n\nThe response contains two tokens: ***session*** and ***csrf***. \n\n2. The frontend takes those values and uses them to send a request to the oauth2 endpoint to generate the authorization link.\n\n```\nhttps://hackerone.integration-authentication.com/oauth2/auth/:authentication_id?csrf=QDXo8g3vciWTiV9Mm1L-VpYl6hKQCE-4ORmMFliZNh8=&scope=read:org%20repo&session=78NgOnCMPISn0LPw4Zto5HFSRLJwJyLaJqqi6_bFmXU=\n```\n\n {F1976253}\n\n3. Following the redirection takes us to the authorization page of the service provider\n\n {F1976255}\n\nIf we choose to Authorize Hackerone, we will get redirected to the token callback endpoint:\n```\nhackerone.integration-authentication.com/oauth2/token?code=47b070b577c905d66124&state=507dad3e-aa80-4fee-8ec1-a04ad95aea83%2CQDXo8g3vciWTiV9Mm1L-VpYl6hKQCE-4ORmMFliZNh8%3D%2C%2Chackerone.integration-configuration.com%2Cproduction%2C78NgOnCMPISn0LPw4Zto5HFSRLJwJyLaJqqi6_bFmXU%3D\n```\n \n\nThis endpoint validates the code received from Github, the backend relies on the ***state*** parameter to determine to which user should the Github access token be appropriated. Then it redirects us to the callback endpoint ```https://hackerone.integration-configuration.com/auth/cb?id=507dad3e-aa80-4fee-8ec1-a04ad95aea83``` which sends a postmessage to the embedded iframe to validate the integration on the client side.\n\nBy analyzing these requests, I found that step 2 was not well protected against cross site forgery attacks. The unproper validation of the CSRF token puts all Hackerone's customers at a big risk. With one click from the victim, the attacker couldtrick the victim to link their Github(or any other integration built on top of Tray.io) to the attacker's account.\n\n### POC:\n{F1976267}\n\n\n### Reproduction Steps:\n. Attacker creates a program then starts setting up a an integration(for example Github)\n\n. Attacker keeps forwarding requests until a GET request similar to\n\n```\nhttps://hackerone.integration-authentication.com/oauth2/auth/<Auth ID>?csrf=F_Sr5vd7hWMLSkZoubYOTMbwROI922ZU6q1S4fEF43E=&scope=read:org%20repo&session=1iydW3sIKpyTGxhG8lxeWY9ddzaUknoUJT9Rr51ptMc=\n```\n\n. Attacker copies the request's url then drops it. He then sends it to the victim and hopes for the best\n\n. Victim clicks on the link\n\nTwo options:\n1. if the victim has already linked the company's Github to the Hackerone. Github won't ask for user's conscent. The victim would be redirected the callback endpoint\n\n```\nhttps://hackerone.integration-configuration.com/auth/cb?id=<Auth ID>\n```\n\nThe victim would have no idea of what happened\n\n2. The app would ask the user if they'd give their conscent to Hackerone. If the victim trusts Hackerone, there is a high chance they would click Yes.\n\n. Once the victim's authorization is finished. The attacker can change the location of authentication window to \n\n```\nhttps://hackerone.integration-configuration.com/auth/cb?id=<Auth ID>\n```\n\nThis step is just to convince the frontend that the authorization has successfully finished.\nThe victim's account is linked to the attacker's account now. Depending on the scope of each integration, there is a wide variety of post exploitation scenarios the attackers could use.\n\n## Impact\n\nOnce the victim's app is connected to the attacker's hackerone account, there are a lot of post exploitation scenarios an attacker can use. The tray's graphql basically gives the attacker the option to make unauthorized arbitrary calls to the API of the application is question. What makes this vulnerability critical is that it could be reproduced on multiple integrations.\n\nWhat an attacker could do for example is prepare a list of exploit links and prepares a javascript code that opens all the links is seperate windows. Each link would try taking over a specific integration. This way, the attacker could take multiple integrations at once with one user click.\n\n### Post Exploitation:\n\nOne of those options is using the Tray.io's graphql. Tray.io has a graphql for its customers that takes care of requesting the integration API's for them.\n \nFor example, the query to fetch the the victim's github repositories, including the private ones is similar to this one:\n\n```\nPOST /graphql HTTP/2\nHost: tray.io\nContent-Length: 512\nSec-Ch-Ua: \"Not;A=Brand\";v=\"99\", \"Chromium\";v=\"106\"\nAccept: */*\nContent-Type: application/json\nSec-Ch-Ua-Mobile: ?0\nAuthorization: Bearer aad14176400b44bb97b703b4ae1077a5c84c3b7f97e34f5383643c1c8a22cdf4\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.5249.91 Safari/537.36\nSec-Ch-Ua-Platform: \"Windows\"\nOrigin: https://hackerone.integration-configuration.com\nSec-Fetch-Site: cross-site\nSec-Fetch-Mode: cors\nSec-Fetch-Dest: empty\nReferer: https://hackerone.integration-configuration.com/\nAccept-Encoding: gzip, deflate\nAccept-Language: en-US,en;q=0.9\n\n{\"operationName\":\"CallConnector\",\"variables\":{\"input\":{\"connector\":\"github\",\"version\":\"2.2\",\"operation\":\"raw_http_request\",\"authId\":\"22583997-4aa0-4bb8-87cb-28326dc97868\",\"input\":\"{\\\"method\\\":\\\"GET\\\",\\\"parse_response\\\":\\\"true\\\",\\\"include_raw_body\\\":\\\"false\\\",\\\"url\\\":{\\\"endpoint\\\":\\\"/user/repos?per_page=50&page=1&affiliation=owner%2Ccollaborator%2Corganization_member\\\"}}\"}},\"query\":\"mutation CallConnector($input: ConnectorCallInput!) {\\n  callConnector(input: $input) {\\n    output\\n    __typename\\n  }\\n}\\n\"}\n```",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1976245,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/4sgfldlfkovrow7p3kvfv76mruwz?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTJFGACUK%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143122Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQC3Tuf8wTsJ6HgA%2BHqgp20HmgXBHMAQ4OqTlZ9OWuKgBAIhAOvE8XTU%2BSdcCSz5sVQojGBmKatUQGh%2FA44vLbcP%2Fm%2BUKrIFCHcQAxoMMDEzNjE5Mjc0ODQ5IgzTJhZOFm4GMgT4x1sqjwW0Te4aWJuWaHDaUOwX6BTUT%2BWVM7TuVfL8jOUvJxOlkS5Lf9jEW4%2BJe6myFMRPfV3cl1jHvXdCpoZr1VDiUBakEFhwbZYmiggKueZ0JgXLv54dWJdSFx9%2BtHXdqHC5YIw8pd87hEyCWO0WVSMpU0BwL2LA12LitDPxLhy%2B1P1MKa4B8%2BolMTizbUobGSsjQpn0J03hOTYz0qMWq%2FrQBiVm4PkGhIKoPogNoueiK1FvIuGSZcrBW7I2morIEv%2B4RhCIO%2FtWPjY1Fb8vi9NQA3nVCyQ5tdSqOepqkBTUxeoREnHEvrBmcoYQDjb7R%2B0W6sA68Njxz3CqAehylnajasZOJ2DEtuipCSGNuiZSMQvkMyWdJPuUvbCwj3Hi4v9k4CyGrxZE5lIlr7fEPofWh5bufWhEAaVokadugrpSNkxC9ixU7g5OW72Npc4%2B%2FNJVwHUNDMfB4%2BqEHwn78jEGr058QH5MJiTtGFgjqIAO%2BqKsudB%2BrUHqDGsSqwTMqLSKDzvoTA7asoZMtr4dX1qcP9FXNNgHeMbOPYpPYHxGE8LY7AtAVgJMRwVF9aXrKF6vuFcFCvFIkCvLe1cE%2BJA%2Fng51Fzl0pkQmrdUa9Q%2Bh0BBJEUGLxzgjbpmEYBQBbJtSmYE1zOUsBLqKMaP%2F89PSSIxtWO6EXcpdND9bY71nEm%2FnTCVm6eR2IhxLleobZcD%2B8IUEahLjhTIcHxHghoAcOD1LC1WptK97c4lcGIkxUvzK2vkMdF4%2BWJCwwx%2B2lXSVUzCL2tvwxa%2BbkZ%2FJMvfgSy8rgkVG%2Fc7pzQKgoq3bEEnI4zhQJFANhNg8Lfec1FA1jO%2FvLzqoKR0Bla7K0r9BN%2Bxx5t5GDyGWAX4%2BdZIbMHbSMKn1ra4GOrAB%2BHYBGCq1%2BXZHyPtMlkND6b47v1CWX0jODxdKSccUpq9J1lB8OTDs8mvUAytBUPQZIFFXueEQhrZOc6CniIEFp1YyioNPcbCjcoDKzh9umDgfiq%2FemPxWdVqSpUn3piAIl5iFC704ZMHpEM68pz0ePrup8Ej3liid1kztmk2d82LQRl4AOLmnFNfmSk1j%2Fm0m8fsw96lJbJTcdjYiCigdYCatevndBo6m5MO1WyoxPtw%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=190d01327c29439ff338e0452ba166de8559a413317483ada4dbe7051e4e9869",
+      "file_size": 12105,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1976252,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/133t2uxs3ux4u5xoz3gi4imyrhw2?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTJFGACUK%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143122Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQC3Tuf8wTsJ6HgA%2BHqgp20HmgXBHMAQ4OqTlZ9OWuKgBAIhAOvE8XTU%2BSdcCSz5sVQojGBmKatUQGh%2FA44vLbcP%2Fm%2BUKrIFCHcQAxoMMDEzNjE5Mjc0ODQ5IgzTJhZOFm4GMgT4x1sqjwW0Te4aWJuWaHDaUOwX6BTUT%2BWVM7TuVfL8jOUvJxOlkS5Lf9jEW4%2BJe6myFMRPfV3cl1jHvXdCpoZr1VDiUBakEFhwbZYmiggKueZ0JgXLv54dWJdSFx9%2BtHXdqHC5YIw8pd87hEyCWO0WVSMpU0BwL2LA12LitDPxLhy%2B1P1MKa4B8%2BolMTizbUobGSsjQpn0J03hOTYz0qMWq%2FrQBiVm4PkGhIKoPogNoueiK1FvIuGSZcrBW7I2morIEv%2B4RhCIO%2FtWPjY1Fb8vi9NQA3nVCyQ5tdSqOepqkBTUxeoREnHEvrBmcoYQDjb7R%2B0W6sA68Njxz3CqAehylnajasZOJ2DEtuipCSGNuiZSMQvkMyWdJPuUvbCwj3Hi4v9k4CyGrxZE5lIlr7fEPofWh5bufWhEAaVokadugrpSNkxC9ixU7g5OW72Npc4%2B%2FNJVwHUNDMfB4%2BqEHwn78jEGr058QH5MJiTtGFgjqIAO%2BqKsudB%2BrUHqDGsSqwTMqLSKDzvoTA7asoZMtr4dX1qcP9FXNNgHeMbOPYpPYHxGE8LY7AtAVgJMRwVF9aXrKF6vuFcFCvFIkCvLe1cE%2BJA%2Fng51Fzl0pkQmrdUa9Q%2Bh0BBJEUGLxzgjbpmEYBQBbJtSmYE1zOUsBLqKMaP%2F89PSSIxtWO6EXcpdND9bY71nEm%2FnTCVm6eR2IhxLleobZcD%2B8IUEahLjhTIcHxHghoAcOD1LC1WptK97c4lcGIkxUvzK2vkMdF4%2BWJCwwx%2B2lXSVUzCL2tvwxa%2BbkZ%2FJMvfgSy8rgkVG%2Fc7pzQKgoq3bEEnI4zhQJFANhNg8Lfec1FA1jO%2FvLzqoKR0Bla7K0r9BN%2Bxx5t5GDyGWAX4%2BdZIbMHbSMKn1ra4GOrAB%2BHYBGCq1%2BXZHyPtMlkND6b47v1CWX0jODxdKSccUpq9J1lB8OTDs8mvUAytBUPQZIFFXueEQhrZOc6CniIEFp1YyioNPcbCjcoDKzh9umDgfiq%2FemPxWdVqSpUn3piAIl5iFC704ZMHpEM68pz0ePrup8Ej3liid1kztmk2d82LQRl4AOLmnFNfmSk1j%2Fm0m8fsw96lJbJTcdjYiCigdYCatevndBo6m5MO1WyoxPtw%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7e10f6a34bb28d0f5ec699dd96efb6072fcfad6f494178873be4313c4dc1d2fa",
+      "file_size": 160178,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1976253,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/1xnwz7fv50mcgw4d8wlkufhelt0f?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTJFGACUK%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143122Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQC3Tuf8wTsJ6HgA%2BHqgp20HmgXBHMAQ4OqTlZ9OWuKgBAIhAOvE8XTU%2BSdcCSz5sVQojGBmKatUQGh%2FA44vLbcP%2Fm%2BUKrIFCHcQAxoMMDEzNjE5Mjc0ODQ5IgzTJhZOFm4GMgT4x1sqjwW0Te4aWJuWaHDaUOwX6BTUT%2BWVM7TuVfL8jOUvJxOlkS5Lf9jEW4%2BJe6myFMRPfV3cl1jHvXdCpoZr1VDiUBakEFhwbZYmiggKueZ0JgXLv54dWJdSFx9%2BtHXdqHC5YIw8pd87hEyCWO0WVSMpU0BwL2LA12LitDPxLhy%2B1P1MKa4B8%2BolMTizbUobGSsjQpn0J03hOTYz0qMWq%2FrQBiVm4PkGhIKoPogNoueiK1FvIuGSZcrBW7I2morIEv%2B4RhCIO%2FtWPjY1Fb8vi9NQA3nVCyQ5tdSqOepqkBTUxeoREnHEvrBmcoYQDjb7R%2B0W6sA68Njxz3CqAehylnajasZOJ2DEtuipCSGNuiZSMQvkMyWdJPuUvbCwj3Hi4v9k4CyGrxZE5lIlr7fEPofWh5bufWhEAaVokadugrpSNkxC9ixU7g5OW72Npc4%2B%2FNJVwHUNDMfB4%2BqEHwn78jEGr058QH5MJiTtGFgjqIAO%2BqKsudB%2BrUHqDGsSqwTMqLSKDzvoTA7asoZMtr4dX1qcP9FXNNgHeMbOPYpPYHxGE8LY7AtAVgJMRwVF9aXrKF6vuFcFCvFIkCvLe1cE%2BJA%2Fng51Fzl0pkQmrdUa9Q%2Bh0BBJEUGLxzgjbpmEYBQBbJtSmYE1zOUsBLqKMaP%2F89PSSIxtWO6EXcpdND9bY71nEm%2FnTCVm6eR2IhxLleobZcD%2B8IUEahLjhTIcHxHghoAcOD1LC1WptK97c4lcGIkxUvzK2vkMdF4%2BWJCwwx%2B2lXSVUzCL2tvwxa%2BbkZ%2FJMvfgSy8rgkVG%2Fc7pzQKgoq3bEEnI4zhQJFANhNg8Lfec1FA1jO%2FvLzqoKR0Bla7K0r9BN%2Bxx5t5GDyGWAX4%2BdZIbMHbSMKn1ra4GOrAB%2BHYBGCq1%2BXZHyPtMlkND6b47v1CWX0jODxdKSccUpq9J1lB8OTDs8mvUAytBUPQZIFFXueEQhrZOc6CniIEFp1YyioNPcbCjcoDKzh9umDgfiq%2FemPxWdVqSpUn3piAIl5iFC704ZMHpEM68pz0ePrup8Ej3liid1kztmk2d82LQRl4AOLmnFNfmSk1j%2Fm0m8fsw96lJbJTcdjYiCigdYCatevndBo6m5MO1WyoxPtw%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0232973369bf886b5bb700eb86c81e93cff308050fff790751eee76ef54722cd",
+      "file_size": 177486,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1976255,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/vaa2bc7ri6op2ics1rp8s7lfnl1x?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTJFGACUK%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143122Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQC3Tuf8wTsJ6HgA%2BHqgp20HmgXBHMAQ4OqTlZ9OWuKgBAIhAOvE8XTU%2BSdcCSz5sVQojGBmKatUQGh%2FA44vLbcP%2Fm%2BUKrIFCHcQAxoMMDEzNjE5Mjc0ODQ5IgzTJhZOFm4GMgT4x1sqjwW0Te4aWJuWaHDaUOwX6BTUT%2BWVM7TuVfL8jOUvJxOlkS5Lf9jEW4%2BJe6myFMRPfV3cl1jHvXdCpoZr1VDiUBakEFhwbZYmiggKueZ0JgXLv54dWJdSFx9%2BtHXdqHC5YIw8pd87hEyCWO0WVSMpU0BwL2LA12LitDPxLhy%2B1P1MKa4B8%2BolMTizbUobGSsjQpn0J03hOTYz0qMWq%2FrQBiVm4PkGhIKoPogNoueiK1FvIuGSZcrBW7I2morIEv%2B4RhCIO%2FtWPjY1Fb8vi9NQA3nVCyQ5tdSqOepqkBTUxeoREnHEvrBmcoYQDjb7R%2B0W6sA68Njxz3CqAehylnajasZOJ2DEtuipCSGNuiZSMQvkMyWdJPuUvbCwj3Hi4v9k4CyGrxZE5lIlr7fEPofWh5bufWhEAaVokadugrpSNkxC9ixU7g5OW72Npc4%2B%2FNJVwHUNDMfB4%2BqEHwn78jEGr058QH5MJiTtGFgjqIAO%2BqKsudB%2BrUHqDGsSqwTMqLSKDzvoTA7asoZMtr4dX1qcP9FXNNgHeMbOPYpPYHxGE8LY7AtAVgJMRwVF9aXrKF6vuFcFCvFIkCvLe1cE%2BJA%2Fng51Fzl0pkQmrdUa9Q%2Bh0BBJEUGLxzgjbpmEYBQBbJtSmYE1zOUsBLqKMaP%2F89PSSIxtWO6EXcpdND9bY71nEm%2FnTCVm6eR2IhxLleobZcD%2B8IUEahLjhTIcHxHghoAcOD1LC1WptK97c4lcGIkxUvzK2vkMdF4%2BWJCwwx%2B2lXSVUzCL2tvwxa%2BbkZ%2FJMvfgSy8rgkVG%2Fc7pzQKgoq3bEEnI4zhQJFANhNg8Lfec1FA1jO%2FvLzqoKR0Bla7K0r9BN%2Bxx5t5GDyGWAX4%2BdZIbMHbSMKn1ra4GOrAB%2BHYBGCq1%2BXZHyPtMlkND6b47v1CWX0jODxdKSccUpq9J1lB8OTDs8mvUAytBUPQZIFFXueEQhrZOc6CniIEFp1YyioNPcbCjcoDKzh9umDgfiq%2FemPxWdVqSpUn3piAIl5iFC704ZMHpEM68pz0ePrup8Ej3liid1kztmk2d82LQRl4AOLmnFNfmSk1j%2Fm0m8fsw96lJbJTcdjYiCigdYCatevndBo6m5MO1WyoxPtw%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ef519e79b4abba5c7f2c6fb07d35648fccc668abd86eab993f4168cfaed6ae02",
+      "file_size": 84513,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1976267,
+      "file_name": "PoC_Hackerone.webm",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/cwvt8etlwu8xmh461pkf1z3sf2z4?response-content-disposition=attachment%3B%20filename%3D%22PoC_Hackerone.webm%22%3B%20filename%2A%3DUTF-8%27%27PoC_Hackerone.webm&response-content-type=video%2Fwebm&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTJFGACUK%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143122Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQC3Tuf8wTsJ6HgA%2BHqgp20HmgXBHMAQ4OqTlZ9OWuKgBAIhAOvE8XTU%2BSdcCSz5sVQojGBmKatUQGh%2FA44vLbcP%2Fm%2BUKrIFCHcQAxoMMDEzNjE5Mjc0ODQ5IgzTJhZOFm4GMgT4x1sqjwW0Te4aWJuWaHDaUOwX6BTUT%2BWVM7TuVfL8jOUvJxOlkS5Lf9jEW4%2BJe6myFMRPfV3cl1jHvXdCpoZr1VDiUBakEFhwbZYmiggKueZ0JgXLv54dWJdSFx9%2BtHXdqHC5YIw8pd87hEyCWO0WVSMpU0BwL2LA12LitDPxLhy%2B1P1MKa4B8%2BolMTizbUobGSsjQpn0J03hOTYz0qMWq%2FrQBiVm4PkGhIKoPogNoueiK1FvIuGSZcrBW7I2morIEv%2B4RhCIO%2FtWPjY1Fb8vi9NQA3nVCyQ5tdSqOepqkBTUxeoREnHEvrBmcoYQDjb7R%2B0W6sA68Njxz3CqAehylnajasZOJ2DEtuipCSGNuiZSMQvkMyWdJPuUvbCwj3Hi4v9k4CyGrxZE5lIlr7fEPofWh5bufWhEAaVokadugrpSNkxC9ixU7g5OW72Npc4%2B%2FNJVwHUNDMfB4%2BqEHwn78jEGr058QH5MJiTtGFgjqIAO%2BqKsudB%2BrUHqDGsSqwTMqLSKDzvoTA7asoZMtr4dX1qcP9FXNNgHeMbOPYpPYHxGE8LY7AtAVgJMRwVF9aXrKF6vuFcFCvFIkCvLe1cE%2BJA%2Fng51Fzl0pkQmrdUa9Q%2Bh0BBJEUGLxzgjbpmEYBQBbJtSmYE1zOUsBLqKMaP%2F89PSSIxtWO6EXcpdND9bY71nEm%2FnTCVm6eR2IhxLleobZcD%2B8IUEahLjhTIcHxHghoAcOD1LC1WptK97c4lcGIkxUvzK2vkMdF4%2BWJCwwx%2B2lXSVUzCL2tvwxa%2BbkZ%2FJMvfgSy8rgkVG%2Fc7pzQKgoq3bEEnI4zhQJFANhNg8Lfec1FA1jO%2FvLzqoKR0Bla7K0r9BN%2Bxx5t5GDyGWAX4%2BdZIbMHbSMKn1ra4GOrAB%2BHYBGCq1%2BXZHyPtMlkND6b47v1CWX0jODxdKSccUpq9J1lB8OTDs8mvUAytBUPQZIFFXueEQhrZOc6CniIEFp1YyioNPcbCjcoDKzh9umDgfiq%2FemPxWdVqSpUn3piAIl5iFC704ZMHpEM68pz0ePrup8Ej3liid1kztmk2d82LQRl4AOLmnFNfmSk1j%2Fm0m8fsw96lJbJTcdjYiCigdYCatevndBo6m5MO1WyoxPtw%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=3f4f64d1c811cb945829f99a89123bf9c842507dac4a19bf0a592aea11d62e80",
+      "file_size": 60978525,
+      "type": "video/webm",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-07-19T14:44:08.145Z",
+  "allow_singular_disclosure_after": -18056834.3227894,
+  "singular_disclosure_allowed": true,
+  "vote_count": 146,
+  "voters": [
+    "mokusou",
+    "ra5h",
+    "shishtawy_sec",
+    "cxzer0",
+    "luakt",
+    "david96",
+    "shreyaschavhan",
+    "cucumbersalad",
+    "abdallah_samir",
+    "ejc",
+    "and 136 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 7.4,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 3,
+    "asset_type": "URL",
+    "asset_identifier": "hackerone.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

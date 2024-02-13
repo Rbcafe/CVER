@@ -1,0 +1,108 @@
+{
+  "id": 123078,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjMwNzg=",
+  "url": "https://hackerone.com/reports/123078",
+  "title": "https://rpm.newrelic.com/login vulnerable to host header attack",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-03-14T20:36:09.615Z",
+  "submitted_at": "2016-03-14T20:36:09.615Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "geeknik",
+    "url": "/geeknik",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/7xfGZCKCxUuGLYGfuUZM3XyY/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-03-20T01:40:06.482Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2017-02-18T01:39:48.397Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "It appears that https://rpm.newrelic.com/login is vulnerable to a host header attack flaw whereas the HTTP Host header can be controlled by a malicious user.\n\nPOC:\n```\ncurl -H \"Host: rpm.newrelic.com\" -H \"X-Forwarded-Host: geeknik.com\" https://rpm.newrelic.com/login\n```\n\nResult:\n```\n<html><body>You are being <a href=\"https://geeknik.com/auth/newrelic?origin=%2Flogin\">redirected</a>.</body></html>\n```\n\nAs you can see here, if the malicious user controls the HTTP Host header, they can redirect users to a malicious login page where their credentials could potentially be captured. Granted, this is an edge case, but it is still an issue where malicious users can cause your web application(s) to behave in unexpected ways. \n\nThe web application should use the SERVER_NAME instead of the Host header. It should also create a dummy vhost that catches all requests with unrecognized Host headers. This can also be done under Nginx by specifying a non-wildcard SERVER_NAME.",
+  "weakness": {
+    "id": 53,
+    "name": "Open Redirect"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2017-03-20T01:39:48.435Z",
+  "allow_singular_disclosure_after": -217851718.81024128,
+  "singular_disclosure_allowed": true,
+  "vote_count": 8,
+  "voters": [
+    "delimitry",
+    "geeknik",
+    "r3y",
+    "eveeez",
+    "spetr0x",
+    "atik-rahman",
+    "dyabla",
+    "adsence771"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

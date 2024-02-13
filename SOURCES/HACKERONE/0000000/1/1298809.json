@@ -1,0 +1,121 @@
+{
+  "id": 1298809,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjk4ODA5",
+  "url": "https://hackerone.com/reports/1298809",
+  "title": "Senseitive data Related to Shopify Host -> https://shopify.zendesk.com/",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "none",
+  "readable_substate": "Resolved",
+  "created_at": "2021-08-11T02:05:14.900Z",
+  "submitted_at": "2021-08-11T02:05:14.977Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "sam_exploit",
+    "url": "/sam_exploit",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/332/455/4b7c9f5be51feba9d1b921c96e6f7e9aba8b09b5_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 1382,
+    "url": "https://hackerone.com/shopify",
+    "handle": "shopify",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/fjjiC5585s8WoDGHv2M5okbJ/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/fjjiC5585s8WoDGHv2M5okbJ/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Shopify",
+      "twitter_handle": "",
+      "website": "https://www.shopify.com",
+      "about": "Shopify is a multi-channel commerce platform that helps people sell online, in-store, and everywhere in between."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-11-08T15:12:32.366Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-11-08T15:12:32.259Z",
+  "team_member_agreed_on_going_public_at": "2021-10-21T18:45:07.454Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "###Description :\nGithub is truly awesome service but its unwise to put sensitive data in public repo as i was found a repo committed ***1 houre ago*** contain ***Senseitive data (Credentials && ZRT_API_KEY && JWT_SECRET*** related to ***this Host -> https://shopify.zendesk.com/*** leaked publicly in github, and clearly this is not intended to be public.\n\n\n###Explanation :\n\nWhile searching in github repos for sub-domains realted to ***Zendesk***, I found this a ***Shopify*** Sub domains -> ***https://shopify.zendesk.com/***\n\n\nhttps://github.com/█████/extension/manifest.json\n```\n        {\n            \"matches\": [\"https://shopify.zendesk.com/agent/tickets/*\"],\n            \"js\": [\"contentScript/contentScript.js\"]\n        }\n\n    \"options_page\": \"popup/options/options.html\",\n    \"host_permissions\": [\n        \"http://localhost:4000/*\",\n        \"http://127.0.0.1/*\"\n```\n\nhttps://github.com/█████████/extension/background.js\n```\n    // chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {\n    //     const tab = tabs[0];\n    //     const url = new URL(tab.url);\n    //     const domain = url.hostname;\n    //     if (domain === 'shopify.zendesk.com') {\n    //         chrome.action.enable();\n    //     } else {\n    //         chrome.action.disable();\n    //     }\n    // });\n\n    /*\n    const checkDomain = () => {\n        chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {\n            const activeTab = tabs[0];\n            const url = new URL(activeTab.url);\n            const domain = url.hostname;\n            if (domain === 'shopify.zendesk.com') {\n                chrome.action.enable();\n            } else {\n                chrome.action.disable();\n            }\n\n\nasync function fetchPostCall(type, path, bodyData, callback) {\n    const url = `http://localhost:4000/${path}`\n \n    fetch(url, {\n        method: type,\n        body: JSON.stringify(bodyData),\n        headers: {    \n            'Accept': 'application/json',\n            'Content-Type': 'application/json; charset=utf-8'\n        }\n        }).then(resp => resp.json())\n        .then(data => {\n            chrome.cookies.set({\n                url: 'http://localhost:4000/extension/login',\n                name: 'token',\n                value: data.token,\n                httpOnly: true\n              });\n            callback(data)\n        })\n```\n\nhttps://github.com/█████/extension/popup/public/js/controls.js\n```\n    if (domain === 'shopify.zendesk.com') {\n      chrome.storage.local.set({\n        ticketInitiated: true,\n        isRunning: true,\n        isNotified: false\n      });\n\n    const url = `http://localhost:4000/ticket`;\n\n    fetch(url, {\n      method: 'POST',\n      body: JSON.stringify(bodyData),\n      headers: {\n        Accept: 'application/json',\n        'Content-Type': 'application/json; charset=utf-8'\n      }\n    })\n```\n\n\nas you see in the Repo above the user mentined for ***localhost site and Token*** for connection, ***But digging more in the user repo i found a Senseitive data (Credentials && ZRT_API_KEY && JWT_SECRET***\n\n\nhttps://github.com/██████████\n```\nPORT=4000\nNODE_ENV=DEVELOPMENT\n\nDB_LOCAL_URI=mongodb://127.0.0.1:27017/TicketTracker\n\nSENDGRID_API_KEY=███████\nSENDGRID_FROM_EMAIL=████████\nWELCOME_USER_TEMPLATE=███████\nRESET_PASSWORD_TEMPLATE=█████\n\nBCRYPT_SALT=10\nCRYPTO_SECRET=███\n\nJWT_SECRET=████\nJWT_EXPIRE_TIME=30d\nCOOKIE_SECRET=██████\nCOOKIE_EXPIRE_TIME=30\nZRT_API_KEY=█████████\n```\n\n## Impact\n\nSuch information is intended to private not public, it's highly recommended to check and revoke this repo after your assessment.",
+  "bounty_amount": "500.0",
+  "formatted_bounty": "$500",
+  "weakness": {
+    "id": 33,
+    "name": "Cleartext Storage of Sensitive Information"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 26,
+  "voters": [
+    "drsniper",
+    "dnelsaka",
+    "ali",
+    "mr-hakhak",
+    "akashhamal0x01",
+    "h4x0r_dz",
+    "0xrahul",
+    "ganofins",
+    "legendxtion",
+    "th30neand0nly",
+    "and 16 more..."
+  ],
+  "severity": {
+    "rating": "none",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 73212,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.shopifycloud.com",
+    "max_severity": "medium"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

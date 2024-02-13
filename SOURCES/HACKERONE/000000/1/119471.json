@@ -1,0 +1,128 @@
+{
+  "id": 119471,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTk0NzE=",
+  "url": "https://hackerone.com/reports/119471",
+  "title": "DOMXSS in Tweetdeck",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-02-29T15:15:46.940Z",
+  "submitted_at": "2016-02-29T15:15:46.940Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "filedescriptor",
+    "url": "/filedescriptor",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 61,
+    "url": "https://hackerone.com/x",
+    "handle": "x",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "X (Formerly Twitter)",
+      "twitter_handle": "XSecurity",
+      "website": "https://x.com",
+      "about": "X helps you create and share ideas and information instantly, without barriers."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-04-02T16:32:42.040Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-03-03T16:32:37.054Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\nI would like to report a DOMXSS issue in TweetDeck.\n\n#Details\nIn Tweetdeck, a tweet contains info of what client (app) the user used to sent the tweet. The render process is vulnerable to DOMXSS.\n\nIn https://ton.twimg.com/tweetdeck-web/web/dist/bundle.6f91b4e832.js, the following line is responsible for retrieving the client website:\n\n```javascript\n                case \"followSourceLink\":\n                    TD.util.openURL($(n.getMainTweet().source).attr(\"href\"));\n                    break;\n```\n\nwhere ```n.getMainTweet().source``` is the client name. This name can be controlled through changing the application name (picture attached), and arbitrary characters can be inserted (including angle brackets).  Moving on, ```$()``` is a jQuery DOMXSS sink. If we inject a payload like ```<svg onload=alert(document.domain)>``` then XSS will be executed showing the executing domain.\n\nSo to sum up,\n1. Attacker creates an application where the app name is a XSS payload.\n2. Attacker uses the app to post a tweet, then the tweet contains a malicious info of which app the tweet is sent from\n3. Victim clicks on the app info and XSS triggers.\n\n#PoC\n1. Make sure you are using latest IE (otherwise CSP kicks in)\n2. Follow @attackerfoobar or search for the user on TweetDeck\n3. Expand the first tweet, click \"Click here to get followers ❤️\" (which is a bait app name)\n4. XSS executes\n\nVideo demonstration is also attached.\n\n#Fix\nProbably sanitize ```n.getMainTweet().source``` before putting it into ```$()```.",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 75882,
+      "file_name": "appname.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/075/882/b1852462f6151e5fde1eb31802165bdaea35df31/appname.png?response-content-disposition=attachment%3B%20filename%3D%22appname.png%22%3B%20filename%2A%3DUTF-8%27%27appname.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2JWCBEGQ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T115948Z&X-Amz-Expires=2354&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQC%2FUOBUX4k3hk3E%2Be6snO9LPeTekkyoO2NoMEQpFLXEBwIhAJtkXXn5eL0ikTtvqv%2F2fgGtuhZUPvLulWFuhYzEiLfuKrAFCG8QAxoMMDEzNjE5Mjc0ODQ5Igx%2BsOWizWfx0tzigpsqjQUuFNaEEdzMHGeLBy6s%2Bkoye8hS0hWPfE4WrdAunw9kpHYBx3YQZH%2FutD5pqzkJ0%2FpSWNbJpNfcWoCwQfdsMFN%2F3JTaogDPpUe%2FUAwScnqabVUL9jhgbAfxzoi6vdePXcWwC3rPpDdJZOWII30adweaKN3r73pvMjzWQOzrFwQRQ2qqkd6ueKTpUI%2Fv4YvwK2UEvpnWlXVfdWza8QTDZ%2BVAhjMIgYhtNwiWvsrwTlWirEbz9gqK%2FzOzBvugRZ98k6lTo4fLL9%2F23SfytoJCVdDDIwGtU9XGeEckRTNfnCgQgTT%2FZaoU54aipxAM0Bk2%2FOy9qyQgNo%2Bc4a%2BtxjohyY6lmRwPOUw0Pc6tciCZLAfzTSCwKGLeWeoHYecu2a8TObYqts0FTVzlDxQi0dXbDKcGkreaslLTdMzFIWj7k%2FvKf0zZ7SIjn5wlEWYmpN6UNwCGxRlHEIiWuB874izqCmy7qw9LCJb0ZLpm1%2FSPsUBljWnIWg8YKhR5G%2BlRT4AnTpGmbQ1duSnA4UOAFqFF9ooGKFMwleUudDqIrFYn0NrgGkKuZ0FyHukrzdoftt2m1CLmNvKjrzoE0ES2uqov8Tj9QQRIEQFjtg7I5ZpK9maHPpHk4CLN0O0Y4rauWiSIHQif1cMtqKARg%2BcskG0crI1mZl2Me%2BZZ8g9Jr6A9TO%2BG6B%2BAuHvyOlBnEQo9ApBQ4g3JZp7uSyRCH7wyxu5avVfWBP0kR4X6PVPNS2njxovFuRYhrsoaOxr5qCj6HG4uUNqbsm3ZbdAMFLxXzT5KEhmDSNZSAkWhXSd3CbLn6PLU3H1wZKL%2BRTr3YWP6V%2BPBJOgG3%2F1%2FtAW8La4mIXOfKOuKrxAT6UJ%2F3ezUbaPUnzCVlKyuBjqwAYUQRBNZktTPJUzRxaZYc7FlEKaYCo56JYwdR1VwuNznpSAuwrJmZ8ZvnXNFJPLlJdcNccsiJ5fTCzfeWcf9BpY1wSj3EzyoYZKwzbfX52pXogACNTVaQkOfGOJAlQQWdAcneFKpYzmbv463sdm5nxdVudTTpGAS2KhfaCeHX8P%2BR4cx6Nfp5GhC4hDj4dSg1VosbQKNMaotjyBFcyuRuboj987f2kN16pdIanTNBi4a&X-Amz-SignedHeaders=host&X-Amz-Signature=74f88f3fe3285c6f06a909758342fcfdfce4e866265a4bfb0d7017e7b7931b1f",
+      "file_size": 86248,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 75883,
+      "file_name": "Recording__1.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/075/883/03271b7aa7516ea591a932c3e321192145b491bf/Recording__1.mp4?response-content-disposition=attachment%3B%20filename%3D%22Recording__1.mp4%22%3B%20filename%2A%3DUTF-8%27%27Recording__1.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2JWCBEGQ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T115948Z&X-Amz-Expires=2354&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQC%2FUOBUX4k3hk3E%2Be6snO9LPeTekkyoO2NoMEQpFLXEBwIhAJtkXXn5eL0ikTtvqv%2F2fgGtuhZUPvLulWFuhYzEiLfuKrAFCG8QAxoMMDEzNjE5Mjc0ODQ5Igx%2BsOWizWfx0tzigpsqjQUuFNaEEdzMHGeLBy6s%2Bkoye8hS0hWPfE4WrdAunw9kpHYBx3YQZH%2FutD5pqzkJ0%2FpSWNbJpNfcWoCwQfdsMFN%2F3JTaogDPpUe%2FUAwScnqabVUL9jhgbAfxzoi6vdePXcWwC3rPpDdJZOWII30adweaKN3r73pvMjzWQOzrFwQRQ2qqkd6ueKTpUI%2Fv4YvwK2UEvpnWlXVfdWza8QTDZ%2BVAhjMIgYhtNwiWvsrwTlWirEbz9gqK%2FzOzBvugRZ98k6lTo4fLL9%2F23SfytoJCVdDDIwGtU9XGeEckRTNfnCgQgTT%2FZaoU54aipxAM0Bk2%2FOy9qyQgNo%2Bc4a%2BtxjohyY6lmRwPOUw0Pc6tciCZLAfzTSCwKGLeWeoHYecu2a8TObYqts0FTVzlDxQi0dXbDKcGkreaslLTdMzFIWj7k%2FvKf0zZ7SIjn5wlEWYmpN6UNwCGxRlHEIiWuB874izqCmy7qw9LCJb0ZLpm1%2FSPsUBljWnIWg8YKhR5G%2BlRT4AnTpGmbQ1duSnA4UOAFqFF9ooGKFMwleUudDqIrFYn0NrgGkKuZ0FyHukrzdoftt2m1CLmNvKjrzoE0ES2uqov8Tj9QQRIEQFjtg7I5ZpK9maHPpHk4CLN0O0Y4rauWiSIHQif1cMtqKARg%2BcskG0crI1mZl2Me%2BZZ8g9Jr6A9TO%2BG6B%2BAuHvyOlBnEQo9ApBQ4g3JZp7uSyRCH7wyxu5avVfWBP0kR4X6PVPNS2njxovFuRYhrsoaOxr5qCj6HG4uUNqbsm3ZbdAMFLxXzT5KEhmDSNZSAkWhXSd3CbLn6PLU3H1wZKL%2BRTr3YWP6V%2BPBJOgG3%2F1%2FtAW8La4mIXOfKOuKrxAT6UJ%2F3ezUbaPUnzCVlKyuBjqwAYUQRBNZktTPJUzRxaZYc7FlEKaYCo56JYwdR1VwuNznpSAuwrJmZ8ZvnXNFJPLlJdcNccsiJ5fTCzfeWcf9BpY1wSj3EzyoYZKwzbfX52pXogACNTVaQkOfGOJAlQQWdAcneFKpYzmbv463sdm5nxdVudTTpGAS2KhfaCeHX8P%2BR4cx6Nfp5GhC4hDj4dSg1VosbQKNMaotjyBFcyuRuboj987f2kN16pdIanTNBi4a&X-Amz-SignedHeaders=host&X-Amz-Signature=ba4b1cdb6f0ed331f07cfa60a9a14c65a724adf31772c3a24ae99c3cbae0c7f4",
+      "file_size": 386814,
+      "type": "video/mp4",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-04-02T16:32:37.110Z",
+  "allow_singular_disclosure_after": -216674831.8247267,
+  "singular_disclosure_allowed": true,
+  "vote_count": 50,
+  "voters": [
+    "delimitry",
+    "run_win",
+    "bl4de",
+    "adn",
+    "ta8ahi",
+    "spam404",
+    "gerben_javado",
+    "ngalog",
+    "ysx",
+    "apapedulimu",
+    "and 40 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

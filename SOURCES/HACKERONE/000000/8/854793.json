@@ -1,0 +1,136 @@
+{
+  "id": 854793,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84NTQ3OTM=",
+  "url": "https://hackerone.com/reports/854793",
+  "title": "No rate limiting for confirmation email lead to email flooding and leads to enumeration of emails in publishers.basicattentiontoken.org",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2020-04-21T06:13:15.394Z",
+  "submitted_at": "2020-04-21T06:13:15.394Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "root_geek",
+    "url": "/root_geek",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/frnc6sb0sdzkli8v1u9cim5q85z8/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15688,
+    "url": "https://hackerone.com/brave",
+    "handle": "brave",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Brave Software",
+      "twitter_handle": "brave",
+      "website": "https://brave.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-11-09T20:30:54.417Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-10-09T07:36:36.689Z",
+  "team_member_agreed_on_going_public_at": "2020-11-09T20:30:54.302Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "There is no bruteforce protection here https://publishers.basicattentiontoken.org/publishers when i try to changes email's contact account.\nAlso the actual thing is when I put an existing email in the above url's \"publisher[pending_email]\" parameter I get an error response status (400 Bad Request)\nBut if i put non-existing email, i get \"200 OK\" status. As this do not have any bruteforce protection an attacker may get all the emails of the publishers.basicattentiontoken.org.\n\n####How to reproduce\n1.Use Burp Suite and capture below request upon navigation to https://publishers.basicattentiontoken.org/publishers/settings?locale=en# at changes emails contact\n2.Click on Save button after entering email address\n{code}\nPOST /publishers HTTP/1.1\nHost: publishers.basicattentiontoken.org\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0\nAccept: application/json\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: https://publishers.basicattentiontoken.org/publishers/settings\nX-CSRF-Token: K3ImpMdB22SFYupK9nbc9IEubpRgmVTYVKQ/HnPFcbglcbkSKBb5wdJ4GCx436E1TuPddMUZR0u5Nh0f9r6pJQ==\nX-Requested-With: XMLHttpRequest\nContent-Type: multipart/form-data; boundary=---------------------------115523927333677217472699996749\nOrigin: https://publishers.basicattentiontoken.org\nContent-Length: 466\nDNT: 1\nConnection: close\nCookie: _publishers_session=ed2071cd116ba7c96b346bb91a89720e; __cfduid=d906d4d29ca3e5455a66f2a903dea07071587447187; _pk_testcookie..undefined=1; _pk_testcookie.6.8f93=1; _pk_id.6.8f93=2ad1aec69df84899.1587447189.1.1587447535.1587447189.; _pk_ses.6.8f93=1\n\n-----------------------------115523927333677217472699996749\nContent-Disposition: form-data; name=\"publisher[name]\"\n\nVictim User\n-----------------------------115523927333677217472699996749\nContent-Disposition: form-data; name=\"publisher[pending_email]\"\n\nvictimuser280@gmail.com\n-----------------------------115523927333677217472699996749\nContent-Disposition: form-data; name=\"_method\"\n\npatch\n-----------------------------115523927333677217472699996749--\n\n{code}\n3.Send the captured request to Intruder and repeat the request in loop\n3.Set the payload position into email address parameter with list of any random email address (option to enumerate email exist/non-exist)\n4.Victim will get email flooding as much as payload has generated in his/her mailbox\n\n####Remediation:\nRate limiting should be implemented\n\n####References:\nhttps://hackerone.com/reports/297359\nhttps://hackerone.com/reports/39486\nhttps://hackerone.com/reports/751604\nhttps://hackerone.com/reports/774050\nhttps://hackerone.com/reports/245147\n\n## Impact\n\nEmail flooding and bruteforcing",
+  "weakness": {
+    "id": 57,
+    "name": "Violation of Secure Design Principles"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 797134,
+      "file_name": "Capture2.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/f7ytkFGD3ad2oEUT2eoGHyiv?response-content-disposition=attachment%3B%20filename%3D%22Capture2.PNG%22%3B%20filename%2A%3DUTF-8%27%27Capture2.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4S26OA6W%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134235Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBrwAoewzxY3bz1ssFSdtEyK39n4ige2HCt%2FqgWXMxo6AiEA8W9QZL7h8ed7oBtuSQFGPQDGjUswee0LimM2YHTA1jMqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDIMSY8w9rHi0W5K3diqPBbjGizLrTlN6ZGbFF9LhBmPFJ1m5swtpZ7QtuQ1ecm6xRS32Vw6P29QnZ1nCvXxHRHo6hca4PRPlC%2F0SuWjzk0o8NKsd8UrMzywQ79MxoK3cqCgX8WV8kEyJZ1wthUKdW7fS3ASByTHh9EDJx35aAAaV%2FjyX21PDJbVpBrxSai%2BI8NCYDMrESdXzFg96JAx0%2FwVm%2BdX91kGoUyEspJy20Nir3f1bZWjC7MdtcCOSsjRRpflXb4gfaH%2BL1WT1rmstsNmGjj3W3W7TeYhR6pZtPFJdtb6k%2FghNKP4k29rXq2vgyXJX%2BVcohZ1zGAdsXYKgnKO2Y3m%2BPX7s9J%2BEwjIpNQnCTqqMY1fdtAuglpVQs9wOIOz5AsX%2F3fV3pu%2FvQSQRA8Du6Cj%2BeC4F1CXAi0KT8j%2B0b0OBcdCMFF7x0ZDWnp2IvcnhJbnULpfzrU3BcnLBK5G1w73sljokf7mqqRRV2mJeZ0Ksp5PbOgcxO2a9zF3%2F8KWFXZX25btNrQCkx2iy6DjaS4wWdbHTtaTyA9KPaMdPFCZK0C8QMd1EIcXXBkK42tdRHldBFv0Qtop0xhubZI7kmNI9gIAuHZhtoU%2F051v4TKLQUh2TAOI42M0%2BTEJLZph2o6AOjkFRtLNFt7YY1LhWRiyVjOtaBUNN8WQ3Qh3vWd2mGOGt3XUF8k06PdeLUGh8KHoKU7J50qkgwAmhpZgQn9UvombEZfjpL9rMdjKsr48SewAEp5ii613cBEjgvmV9GqfxRnaBt9%2BBnmZqq%2Bqdlb6QUuoAocNShZpYRVRCujWv0rbK5%2BJsewBiul9SD4qpCHDP0iLsOH3MbGI4L4Vl8HvxUyotCrHJVcTbSu85yQg3fmRmZR%2FKVxNQjZkwy8atrgY6sQF65KaBWFLOPDup9JZh9E6aRNnp6nOc2RJjfDBuEZqnqO%2FE0eIR6%2FMnB5jQvVkuHRSmXTStKVhFSTodnbxf6Jx%2FV%2Bb7oAvc4YN%2FjwysEYMAdJ7G1ipFcWKNk%2Fy8IJiu93NTzXgZ%2BUcmX9FJKhedbl1puxNoeG9%2FJnYsNGqtzqjFHuyw9oeW7ona11lhu%2Bwq%2BU434QKAOt%2FmsX3wWtY1amD8a%2F8TawrYCNcXdx0m%2F%2FsKhD8%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=fe2e033e344523f3d48e8770932f57949835a957f55d5ae93923e14b6ff17361",
+      "file_size": 17462,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 797135,
+      "file_name": "Capture.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/5jhD2qBjDhUeBEdmtZK6vtUz?response-content-disposition=attachment%3B%20filename%3D%22Capture.PNG%22%3B%20filename%2A%3DUTF-8%27%27Capture.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4S26OA6W%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134235Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBrwAoewzxY3bz1ssFSdtEyK39n4ige2HCt%2FqgWXMxo6AiEA8W9QZL7h8ed7oBtuSQFGPQDGjUswee0LimM2YHTA1jMqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDIMSY8w9rHi0W5K3diqPBbjGizLrTlN6ZGbFF9LhBmPFJ1m5swtpZ7QtuQ1ecm6xRS32Vw6P29QnZ1nCvXxHRHo6hca4PRPlC%2F0SuWjzk0o8NKsd8UrMzywQ79MxoK3cqCgX8WV8kEyJZ1wthUKdW7fS3ASByTHh9EDJx35aAAaV%2FjyX21PDJbVpBrxSai%2BI8NCYDMrESdXzFg96JAx0%2FwVm%2BdX91kGoUyEspJy20Nir3f1bZWjC7MdtcCOSsjRRpflXb4gfaH%2BL1WT1rmstsNmGjj3W3W7TeYhR6pZtPFJdtb6k%2FghNKP4k29rXq2vgyXJX%2BVcohZ1zGAdsXYKgnKO2Y3m%2BPX7s9J%2BEwjIpNQnCTqqMY1fdtAuglpVQs9wOIOz5AsX%2F3fV3pu%2FvQSQRA8Du6Cj%2BeC4F1CXAi0KT8j%2B0b0OBcdCMFF7x0ZDWnp2IvcnhJbnULpfzrU3BcnLBK5G1w73sljokf7mqqRRV2mJeZ0Ksp5PbOgcxO2a9zF3%2F8KWFXZX25btNrQCkx2iy6DjaS4wWdbHTtaTyA9KPaMdPFCZK0C8QMd1EIcXXBkK42tdRHldBFv0Qtop0xhubZI7kmNI9gIAuHZhtoU%2F051v4TKLQUh2TAOI42M0%2BTEJLZph2o6AOjkFRtLNFt7YY1LhWRiyVjOtaBUNN8WQ3Qh3vWd2mGOGt3XUF8k06PdeLUGh8KHoKU7J50qkgwAmhpZgQn9UvombEZfjpL9rMdjKsr48SewAEp5ii613cBEjgvmV9GqfxRnaBt9%2BBnmZqq%2Bqdlb6QUuoAocNShZpYRVRCujWv0rbK5%2BJsewBiul9SD4qpCHDP0iLsOH3MbGI4L4Vl8HvxUyotCrHJVcTbSu85yQg3fmRmZR%2FKVxNQjZkwy8atrgY6sQF65KaBWFLOPDup9JZh9E6aRNnp6nOc2RJjfDBuEZqnqO%2FE0eIR6%2FMnB5jQvVkuHRSmXTStKVhFSTodnbxf6Jx%2FV%2Bb7oAvc4YN%2FjwysEYMAdJ7G1ipFcWKNk%2Fy8IJiu93NTzXgZ%2BUcmX9FJKhedbl1puxNoeG9%2FJnYsNGqtzqjFHuyw9oeW7ona11lhu%2Bwq%2BU434QKAOt%2FmsX3wWtY1amD8a%2F8TawrYCNcXdx0m%2F%2FsKhD8%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=89d9219140658ca8b22343ee1ad8e381b30f90d9cac3525529127e7d3daf6aa5",
+      "file_size": 49876,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 16,
+  "voters": [
+    "m0chan",
+    "ali",
+    "encodedguy",
+    "topenga",
+    "akashhamal0x01",
+    "h4x0r_dz",
+    "what_web",
+    "cryptographer",
+    "shivammusic",
+    "agavnad",
+    "and 6 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 7967,
+    "asset_type": "URL",
+    "asset_identifier": "creators.basicattentiontoken.org",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

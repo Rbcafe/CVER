@@ -1,0 +1,141 @@
+{
+  "id": 397545,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zOTc1NDU=",
+  "url": "https://hackerone.com/reports/397545",
+  "title": "Malformed .BMP file in Counter-Strike 1.6 may cause shellcode injection",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-08-21T06:33:12.777Z",
+  "submitted_at": "2018-08-21T06:33:12.777Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "kohtep2010",
+    "url": "/kohtep2010",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/ZLr6Jvt7ixmtsP1vjXVwpdye/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 23363,
+    "url": "https://hackerone.com/valve",
+    "handle": "valve",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/363/c78d46a7d0ea39e3a15a7c19c1a48634f2571eb9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/363/c78d46a7d0ea39e3a15a7c19c1a48634f2571eb9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Valve",
+      "twitter_handle": "",
+      "website": "https://www.valvesoftware.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-02-27T18:43:10.663Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-03-23T07:10:55.347Z",
+  "team_member_agreed_on_going_public_at": "2020-02-27T18:43:10.579Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "With the vulnerability of the GoldSource Engine, the server is able to perform remote code execution on the client, overwriting the stack when reading the BMP file. The problem is in the LoadBMP8 function, which is executed when the player connects to the server, by loading the \"overviews\\%MAPNAME%.bmp\" file. If we send a badly formed file to this function, then we will be able to rewrite the stack of the function by setting the own code in the stack and passing program control to it.\n\nI've wrote a program that compiles file like that. The shellcode, which runs on the stack, starts the \"calc.exe\" process with the WinExec function.\n\nFor the client to execute this file, the server must send this file to the client. The server can do this if map that is not present on the client is launched. The server must load a map with random name, for example, \"definitely_missing_client_map.bsp\". In this case, the name of the BMP file must also be \"definitely_missing_client_map.bmp\" and it must be in \"overviews\" folder. You also must create the \"overviews\\definitely_missing_client_map.txt\" file, which is overview description. The nonstandard name of the map prompts the client to download the missing files (bsp, bmp and txt). Upon completion, when the client is able to see the map, the BMP file will be loaded and the binary code from BMP file will be executed on the stack.\n\nI've attached the source code of \"compiler\" to the message. You can find more detailed instructions in the code comments. You need to compile this project in \"Release\" configuration and then start this project. After that, malformed \"de_dust2.bmp\" file will be produced.\n\n## Impact\n\nAn attacker can execute remote code on the client's machine.",
+  "bounty_amount": "2000.0",
+  "formatted_bounty": "$2,000",
+  "weakness": {
+    "id": 3,
+    "name": "Classic Buffer Overflow"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 335941,
+      "file_name": "HL1-BmpSploit.zip",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/335/941/c10d065018feaa13fba5bd38cdc1ca222006ea04/HL1-BmpSploit.zip?response-content-disposition=attachment%3B%20filename%3D%22HL1-BmpSploit.zip%22%3B%20filename%2A%3DUTF-8%27%27HL1-BmpSploit.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6K7XUSGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130945Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIA5oUTkOsy%2B%2BNZW%2FsEPkxVR9Nn0bKUQajhMaZJnQUOJJAiBNVU4iwU4izaH0MK0tElopJO3KoogTT8%2FbdWX%2FkbKzuyqyBQh2EAMaDDAxMzYxOTI3NDg0OSIMERsjeYIiXpoQB0OmKo8FUViIVri3eJCOgeD2QGMLKPs4F1%2FjbhNffMNUt%2BfvAGSphgvZY2tU246xkvKwwDTX6TnzUNLh3iGOcuouArS3RIWbEfHSiDDu6%2BVZPx3Wz1I%2FCwS%2BKPH5NwJsBp0BibvHEHHji%2FALBDiXO8PioToytjyaEQNaXmQuLAn84CAb4QekxzofZnprn52iHUoXFyJNf%2Fq3ZqvA4jb30mJAxCPIjnPde1tkpNSGuAfsmY%2ByQYlN7sWxpq5yV%2BTU%2Bz0rt1WjtctGsd6w1yt88Dd%2Br74P8m7ROn2Z0ptQw5A%2BWNmX1Wanb7ILpRxe8QeaZaokqgxiSrVfnWtNKgnVUga2Z0moK4hOWv539koLmT4PBBuxJlSyZWyeMoBemGmSCiOxOKwmrf%2BCK%2FG1BpNYsaCmjPVr2A49O9rh48uqEFc8uvejj87y8pQoGWAlFjsxe1QzTC0haaEIYGygiAnZI6IKmy2%2BNlrPwjgcdHQnc15lnYbAokFqg1uW1UzqkUE4c44dN5JbBhzJaJz14CGqvz2LbrkrxeapW3SunevCGGfJdcClV%2F0zJwxxOPm7TYbX7PHfVKaL7pLvGt6ShxVaeJzf1nAj8m2nfGj9L5WdfZ6Sb9aD7w08GXkqVBejxqPrEzu%2Fin49ua4mt8x0hItGe5i0jUq8p%2BuZQ93zKwP09dFgsV6qPlGtXKwW1fddd9jt%2Bnnp1fwfIxbu4spfYa8nFjzgPqH7T%2F%2FJQgaw6dXm%2Fi4%2FblBIP3pX1Sf8fOovW1YithPw4Jt%2FdibdeIaKPPXUhJeeypNj7zindWYEDmbdjQ6xKgYfOTCGv3Kveuz%2BrIe58j5hhTO6SOGM5oLaEPjukGlkwR0S6pSULxstSwXhSCM4K2grCjC%2Fvq2uBjqyASBnlNoKKu8wzQ1P%2F0BlH14PlBBt%2Fm%2BFzSC4hnyN21lioiA3qg372zbcFqxrMin8PkMDjYnDERYVShxZWmk7L62lyLmDmK6ddoZeeuZn0a%2BBvBT61yW5%2Fafe16Wi38LTWHakxXOTJqfqznIB1OO6RKIWbBpba3WDGpf5V64%2B0hKThL7teXpfRzoD3U%2BjQs%2B7q62Fy7YrQ7qeIWla%2FIkEaOKDajC8wFKHIsPw6ZwsIvBIndQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=61cf6678fa47871f6127ad190fdcf73e078afc80763955495d0a20e9122520cd",
+      "file_size": 9421,
+      "type": "application/zip",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 318,
+  "voters": [
+    "fygonzalo",
+    "keshavkejriwal",
+    "johnberzi",
+    "overjt",
+    "njbooher",
+    "7urb0",
+    "kekkegenkai",
+    "saulius",
+    "manu_pranav",
+    "putsi",
+    "and 308 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.8,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 1289,
+    "asset_type": "DOWNLOADABLE_EXECUTABLES",
+    "asset_identifier": "hl.exe",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "id": 188078,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODgwNzg=",
+  "url": "https://hackerone.com/reports/188078",
+  "title": "Command Execution because of extension handling",
+  "state": "Closed",
+  "substate": "duplicate",
+  "severity_rating": "high",
+  "readable_substate": "Duplicate",
+  "created_at": "2016-12-03T20:49:12.765Z",
+  "submitted_at": "2016-12-03T20:49:12.765Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "paulos__",
+    "url": "/paulos__",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/008/601/abf2077609ef0546be8676abd1bec49aaefc9ff2_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15688,
+    "url": "https://hackerone.com/brave",
+    "handle": "brave",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Brave Software",
+      "twitter_handle": "brave",
+      "website": "https://brave.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-08-10T05:10:31.716Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-07-23T22:15:06.507Z",
+  "team_member_agreed_on_going_public_at": "2017-08-10T05:10:31.679Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "\n## Summary:\n\nHello,\n\nUsing this bug an attacker can execute commands as the current user using brave & gain complete shell capabilities (and all possibilities associated) \n\n## Details:\n\nThe issue is in the way the application handles website TLDs. typically in windows, `.com` represents an application, much similar like `.exe` - when Brave saves a website (Ctrl+S) - it uses the name of the website.\n\nFor PoC purpose I used `.bat` TLDs because they are much easier to show a poc with instead of binary application garbage data. \n\nSo Assume a user visits http://paulos.bat with the contents of:\n```js\n@echo off\ncalc\n```\n\nAnd saves the page, this will save the website as `paulos.bat` - which when executed - actually opens batch and executes calculator.\n\n## Bypassing Mitigations\n\nIn Windows, Microsoft warns users when they execute applications that are downloaded, this can simply be bypassed by sending filenames with words like `Update` or `Setup`... yeah, I can't believe this works too.\n\nSo say a user visits `https://malicioussetup.com` and saves the site - note this site changed its contents from whatever it was to binary-garbage & microsoft will allow executing it - eventually causing code execution.\n\nThis is clearly a chain of low priority issues that cause command execution. :) (POC \n\n## Products affected: \n\n * Tested in Latest Brave Windows (I suspect OSX, iOS & Android may also be affected)\n\n## Recommended Fix:\n\n Add .html/htm to the index page (/index.html) to mitigate this easily\n\n## Supporting Material/References:\n\n  * POC image attached\n  * POC video (Private): https://youtu.be/ret4pJArYSU\n\nI think you should fix this ASAP! as anyone can register `.com` sites to abuse it.\n\nThanks,\nPaulos",
+  "weakness": {
+    "id": 58,
+    "name": "Command Injection - Generic"
+  },
+  "original_report_id": 182557,
+  "original_report_url": "https://hackerone.com/reports/182557",
+  "attachments": [
+    {
+      "id": 140157,
+      "file_name": "win7poc.JPG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/140/157/e4d1acd505d3f86d1b5700a5191a76af095b9529/win7poc.JPG?response-content-disposition=attachment%3B%20filename%3D%22win7poc.JPG%22%3B%20filename%2A%3DUTF-8%27%27win7poc.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSJAEOSEA%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122910Z&X-Amz-Expires=1339&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFGoM7UVkpoUFXOwmBO1YCW3cw%2F4NyxP2Yan%2BgrkBav8AiEAyCUaZteSGAOL1VybC9wE4FNtA9ZRB0rOhRCfRb1SJtUqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDK4laJFhO348YrQkpSqPBT0JpdttzMzvj7d49wHxo6XKhZp6ShyKPYUpw0Uq4AHmWnLgN8g%2BsTPzAignfCeJBrRSLMJVkOL0W5ter7990DhqIASPNW1EZwrDyGA7kuePP%2BF4tcrX3LO0OOR6gGZx9EtA5T7iJB1DFapuW5N7q%2F51A5Mu7ZLK0NaZo8zhsohgiWzzyR2iluk%2FLl3XGm%2Fa6%2BcTwHua%2BNjD%2F97XLRv1zF3YE7sSdAY3bunMdQ6NaH%2BxtZj7FOWcsouUYmSWYMItq7rFc2QX6eLL04LoQhGF%2BsAlIJRuG9morj%2FzbUBeITu4Wjw1YqZoqh4stcI25Q3hf6RXlfWGW%2FpPgFVXTaKeiqdUSu86Hp0mtdhvWjZ%2F3frTMpqYRrp2a1mbGWETUc5Uf0mzI3H5oA%2B3GNQfu3cWaPp6Vj5kQ0fBwtej92wxqBKYcwQGX1OqkYgzXEkCCIsQfZxhAaPTN%2FtgMRJ58JVzNuHtKdPerJm1tZ8fQ6tljGtPSMxjFhDzyA9m9NHez5izRf7KqXOVO9vYJFw%2Fi00wL4IHCuGJag8I%2Fxka6p1qKR%2BLgjmHhEme4qKwVcZHLFn9ks9Opq5yjYs0%2BDnJLzW8EoTTImazBY6PuaPKcKQY8cuOfRLUWHjfDoiEvtTVUk8hNiRL7PEmq8TnurN%2BlvDbNHfB1bc7T4OkQ0bkDfDKxp%2Bw6kMpFfLzp3zMh4sVkCicAf8phxPfZ3ImBweoHetjdWVM%2FAaqoQFfIvSuNFRLjBRBvd1PbhmnN5Jq5WNPDsGhoXmnlt9dIMyM30uqRrm5JWVLqPt5x3tJ%2F6XEKfiDRzBMK4wT7DJ94Iud7aggpV%2BQl9JVRf86hwRXR9rFbvmmDTUka9kitEZLd%2FlL7mfvrF8wlKGsrgY6sQG6xY6iPHcuzMUPYlF%2BiPLSQhv%2F6pGqgLnKtUql08pwI3ttBcBcKWvZH4WOc5lXL1qEfHHkJQ1HwYwKvH5vG3URLBINtmvkDZGhy%2F605sBLv1QwPSjd91a2Orn1TKno6iqHfQCQTcPrP0NyRztLXpdgkxXv3JyY%2FNXpBhGdrABNb%2BwkB78q7U4iWLt6tducslFnRZ4D7lUbbNW%2FhxyDCkCcwec2EWKyZiZLijLaLBQG2P4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7e23992c315a20aea4ff1b2f9a2cd12a7a03b5909daac56eb8ca2b4157c23f2c",
+      "file_size": 71016,
+      "type": "image/jpeg",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 8,
+  "voters": [
+    "mdv",
+    "supernatural",
+    "madrobot",
+    "khizer47",
+    "sa1tama0",
+    "shinkurt",
+    "paulos__",
+    "costis"
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.8,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "high"
+    }
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

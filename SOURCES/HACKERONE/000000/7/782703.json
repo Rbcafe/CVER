@@ -1,0 +1,128 @@
+{
+  "id": 782703,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83ODI3MDM=",
+  "url": "https://hackerone.com/reports/782703",
+  "title": "Account owner/admin can't actually delete personal users' API keys",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2020-01-24T17:06:59.102Z",
+  "submitted_at": "2020-01-24T17:06:59.102Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "skavans",
+    "url": "/skavans",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-08-13T15:38:07.241Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-08-11T09:41:17.298Z",
+  "team_member_agreed_on_going_public_at": "2020-08-13T15:38:07.126Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hey team,\n\nAn account owner/admin should be able to remove API keys belonging to other users in a case of, for instance, they are compromised. This sentence is confirmed by your own docs:\n{F695035}\nHowever, the account owner/admin can't actually do this so he can't protect the account data from being leaked/modified by using such a leaked API key by an attacker.\n\n##Steps to reproduce\n1) Sign in NR with the owner/admin account\n2) Navigate to Account settings -> Users and roles.\n3) Navigate to some other user, choose \"API keys\" tab\n4) If there are no API keys created for this user, create a new one with \"New API key\"\n5) Press the \"Trash bin\" icon near some API key, confirm the deletion and make sure the information message confirming the successful deletion is shown:\n{F695041}\n6) Refresh the page and make sure **the key is still there**. Besides the inability to remove the key itself, there is a misleading message notifying that the operation was successful!\n7) Optionally, you can sign in the NR with the key owner and try to use this key using https://api.newrelic.com/graphiql. You will see that the key is still fully functional.\n\nThe root cause of this bug is that personal API keys are hidden from view by everybody else besides the key owner (including the account admin and even the owner). When account owner/admin navigates to another user's API keys page, this user's keys are returned from the webserver in a truncated form (e.g. \"NRAK-123...\"). Then, when the owner/admin tries to delete one of these keys, the GraphQL deletion request looks like below:\n```graphql\nmutation {\n apiDeleteKey(actingAccountId: 2385914, actingUserId: 2552670, keyString: \"NRAK-8HA...\") \n}\n```\nAnd the server response is:\n```json\n{\"data\":{\"apiDeleteKey\":null},\"errors\":[{\"locations\":[{\"column\":7,\"line\":2}],\"message\":\"Unable to delete the provided API key.\",\"path\":[\"apiDeleteKey\"]}]}\n```\nThe API key ID, which is used for key deletion, is the `keyString` (the key itself). However, since other users' keys are returned for account owner/admin in a truncated form, these IDs are actually broken and can't be used for key management. Thus, the account owner/admin can't remove other users' keys at all because there is no way for him to find out this ID entirely.\n\n##Mitigation\nActually, the other users' keys truncation is the right decision because every key can be used for getting access not only to the single current account but to *every account the key owner has access to*. So, the whole key string disclosure can lead to unauthorized access to another account for this current account owner/admin in a case when a key owner also has access to another account.\nI think that the correct way to fix this vulnerability is to add some *another* ID to API keys, which will be used for key management. In such a case, when the account owner/admin navigates to other user's API keys page, he will receive the truncated key strings (so he won't be able to use these keys) and the plainly disclosed keys' IDs (he will be able to delete these keys proving these IDs in a GraphQL mutation).\n\n## Impact\n\nAccount owner/admin can't delete other users' API keys.",
+  "weakness": {
+    "id": 57,
+    "name": "Violation of Secure Design Principles"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 695035,
+      "file_name": "______________2020-01-24___19.28.56.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/MxnZ1vdZLFopTM9AgteTf6tb?response-content-disposition=attachment%3B%20filename%3D%22______________2020-01-24___19.28.56.png%22%3B%20filename%2A%3DUTF-8%27%27______________2020-01-24___19.28.56.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVWHFSNNE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133614Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZLzSSHKxWIGhQtGT81DYUaazxK%2BA4b%2BeBse1XlfNIBwIgfPS8dRNp%2FxmFBCNrWLDxkracRrBYrm5cEg%2BjJDXIvNsqsgUIdRADGgwwMTM2MTkyNzQ4NDkiDNaBwIyE1dVL1zGF0iqPBeiofcLE831cuz%2Fg3%2FBj%2BOAUaL0qSPB0iFluwPLKGuVB6sGEff4eb%2BhiIZV7BGnszG7nUhp9GzIuA1YXeX1txWBdpF9oemEmi5NywysgHkWri0j4Huf8Kqc0veGGY9SjOhiXwycQ8YsHi0vPSebpPPXh0TfZnOU4brttYbmYDQt11ba4sYpdhFcGj2JT98cBsee%2Fc5T7bN4P2XDVhPiRuRw9aGFMqvz1hVd7umv69rNFED1JWINyJdd5C%2F6agSSB8sgbH71ksUBWB6gZbJY81x4rscmVfXXofwqa8PBk5Og2PopEsHO5gC2m6ONQs7oHx%2FwcPVQk3JG%2BUI5vzVw25Vs4%2BdZdhcmlVKrn%2B%2FAnPLwb1UVjUdIZ1Bh2A7dxoauy7mugTmVoaADIScHYKRRYQ6ymOT%2B5HZKcppxrXZOnvSp0bLZxAWUdNfX%2BptG8LPBB0HFsGwGHJM3e67F2eH8OPbwOv4CEGzSDxBRn5jAtojFIeM0zYT71ER7JqwYdvVMhHEmS6yzxVkocSBRdqjcwtHkc%2F3o0qHipZYK%2FYAM9qv8hFeWan6Sa185DBwXF3TgIsvbA%2Fcjp8pWqNUeqtz6soCDoRJUku0qJamW5nH6N7sH%2BtO5tJv6FlKTWPWglmSjgtpptDiSnxBFAQX9CJ8spiVo69mOdSoiBjJLiBs9VWBWsOKdxglim0NnAzaWeTydCoRC1TZO3P1tZhKm4UqA86wCtToWZwff54BVenmfxX29vKT622UzSbI49YSFrYIcmrAYj0mP7dMKGXpl0tZCD4BdH226Uje%2FjlE7N5BpXxeyGKIWjtnsKMm2g%2BMxP7x2yGOeguUUjYzkWYTTS1FwwtYRKn3lLwjDgiYO0bzSZF0Ew1bitrgY6sQHIue94FUiYiMOMkDJ9Ayf9fPYms2aIIAO2H9bXmuaR5lH9obA9b%2FPrvjiRxAZ6lxqcr%2B9QPKlzkknLInDxqbq5txCl1Rij1JaLqv%2B4UxnGRb8ZIpj0ICFXmBBF2kEefQwHF5kj7QtGSa2JcGxgdtN3u7o%2BaXyb07mhLfzaH6hd1QUtvhvVRlbD%2FIk%2F25jmafq1vwS1a1GzXy59j%2BKSs8AfLJwUQzk9Ye%2BpIrlwwlAnAww%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=62d1476ee5117cd9d9405c41ed94f74f6d505c6eb4a08099a38350f5f632c698",
+      "file_size": 171207,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 695041,
+      "file_name": "______________2020-01-24___19.36.05.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/s5g6TBtqggrqm24wdMt4WKUm?response-content-disposition=attachment%3B%20filename%3D%22______________2020-01-24___19.36.05.png%22%3B%20filename%2A%3DUTF-8%27%27______________2020-01-24___19.36.05.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVWHFSNNE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133614Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZLzSSHKxWIGhQtGT81DYUaazxK%2BA4b%2BeBse1XlfNIBwIgfPS8dRNp%2FxmFBCNrWLDxkracRrBYrm5cEg%2BjJDXIvNsqsgUIdRADGgwwMTM2MTkyNzQ4NDkiDNaBwIyE1dVL1zGF0iqPBeiofcLE831cuz%2Fg3%2FBj%2BOAUaL0qSPB0iFluwPLKGuVB6sGEff4eb%2BhiIZV7BGnszG7nUhp9GzIuA1YXeX1txWBdpF9oemEmi5NywysgHkWri0j4Huf8Kqc0veGGY9SjOhiXwycQ8YsHi0vPSebpPPXh0TfZnOU4brttYbmYDQt11ba4sYpdhFcGj2JT98cBsee%2Fc5T7bN4P2XDVhPiRuRw9aGFMqvz1hVd7umv69rNFED1JWINyJdd5C%2F6agSSB8sgbH71ksUBWB6gZbJY81x4rscmVfXXofwqa8PBk5Og2PopEsHO5gC2m6ONQs7oHx%2FwcPVQk3JG%2BUI5vzVw25Vs4%2BdZdhcmlVKrn%2B%2FAnPLwb1UVjUdIZ1Bh2A7dxoauy7mugTmVoaADIScHYKRRYQ6ymOT%2B5HZKcppxrXZOnvSp0bLZxAWUdNfX%2BptG8LPBB0HFsGwGHJM3e67F2eH8OPbwOv4CEGzSDxBRn5jAtojFIeM0zYT71ER7JqwYdvVMhHEmS6yzxVkocSBRdqjcwtHkc%2F3o0qHipZYK%2FYAM9qv8hFeWan6Sa185DBwXF3TgIsvbA%2Fcjp8pWqNUeqtz6soCDoRJUku0qJamW5nH6N7sH%2BtO5tJv6FlKTWPWglmSjgtpptDiSnxBFAQX9CJ8spiVo69mOdSoiBjJLiBs9VWBWsOKdxglim0NnAzaWeTydCoRC1TZO3P1tZhKm4UqA86wCtToWZwff54BVenmfxX29vKT622UzSbI49YSFrYIcmrAYj0mP7dMKGXpl0tZCD4BdH226Uje%2FjlE7N5BpXxeyGKIWjtnsKMm2g%2BMxP7x2yGOeguUUjYzkWYTTS1FwwtYRKn3lLwjDgiYO0bzSZF0Ew1bitrgY6sQHIue94FUiYiMOMkDJ9Ayf9fPYms2aIIAO2H9bXmuaR5lH9obA9b%2FPrvjiRxAZ6lxqcr%2B9QPKlzkknLInDxqbq5txCl1Rij1JaLqv%2B4UxnGRb8ZIpj0ICFXmBBF2kEefQwHF5kj7QtGSa2JcGxgdtN3u7o%2BaXyb07mhLfzaH6hd1QUtvhvVRlbD%2FIk%2F25jmafq1vwS1a1GzXy59j%2BKSs8AfLJwUQzk9Ye%2BpIrlwwlAnAww%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=70b8a75be6c25c26cc5182366ee6f3c3195ce2dd9ab9bfab3715427550fb3fe0",
+      "file_size": 107533,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-09-10T09:41:17.342Z",
+  "allow_singular_disclosure_after": -108100497.45596693,
+  "singular_disclosure_allowed": true,
+  "vote_count": 1,
+  "voters": [
+    "wi11"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 4405,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.newrelic.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

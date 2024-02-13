@@ -1,0 +1,132 @@
+{
+  "id": 530464,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81MzA0NjQ=",
+  "url": "https://hackerone.com/reports/530464",
+  "title": "Stored XSS in Profile Comments",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2019-04-07T05:49:32.437Z",
+  "submitted_at": "2019-04-07T05:49:32.437Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "klmunday",
+    "url": "/klmunday",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/480/267/c2322c402151db1b8a6b7474b47bfc4b1c415b4a_original.JPG/cccd3716a6d2e06174d2a41492445cb1d4bf85b4611a755bc810b9246a24d951"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17443,
+    "url": "https://hackerone.com/vanilla",
+    "handle": "vanilla",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Vanilla",
+      "twitter_handle": "vanilla",
+      "website": "http://vanillaforums.com",
+      "about": "Vanilla is a powerfully simple discussion forum you can easily customize to make as unique as your community."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-07-17T20:14:14.560Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-06-17T20:14:11.435Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary:**\nThe Profile Comments page which is responsible for listing a profile's recent comments is vulnerable to stored XSS as it renders the contents of recent comments without sanitizing them.\n\n## Steps to reproduce:\n\n1. Ensure you are logged in to a user account (no special permissions are needed)\n2. Go to any forum post\n3. Comment any valid javascript markup (e.g. `<script>alert(1)</script>`)\n4. From any account go to your users `Comments` page (`localhost/profile/comments/YOURUSER`)\n5. XSS should trigger\n\n## Video example:\n#F463844\n\nTo verify the comments listing contains the script, the page source can be viewed:\n#F463843\n\n## Anything else we should know?\nThe same root issue might also be causing a self-xss in `My drafts` if you create a post with the same contents (`<script>alert(1)</script>`) and save it as a draft, although this is out-of-scope since it only affects the original user.\n\n## Impact\n\nAn attacker could create a post or comment containing a payload and then send the link to their comments page to their victim. This if clicked would result in the victim triggering the payload without any other interaction other than loading the `comments` page. This is especially dangerous if an admin is targeted since the payload could trigger/read nearly anything the admin can do/read.",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 463843,
+      "file_name": "Vanilla_Comments_XSS.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/463/843/50b1ae7763c9d4ee7c793a3519b69dad3d88f585/Vanilla_Comments_XSS.png?response-content-disposition=attachment%3B%20filename%3D%22Vanilla_Comments_XSS.png%22%3B%20filename%2A%3DUTF-8%27%27Vanilla_Comments_XSS.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6K7XUSGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132052Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIA5oUTkOsy%2B%2BNZW%2FsEPkxVR9Nn0bKUQajhMaZJnQUOJJAiBNVU4iwU4izaH0MK0tElopJO3KoogTT8%2FbdWX%2FkbKzuyqyBQh2EAMaDDAxMzYxOTI3NDg0OSIMERsjeYIiXpoQB0OmKo8FUViIVri3eJCOgeD2QGMLKPs4F1%2FjbhNffMNUt%2BfvAGSphgvZY2tU246xkvKwwDTX6TnzUNLh3iGOcuouArS3RIWbEfHSiDDu6%2BVZPx3Wz1I%2FCwS%2BKPH5NwJsBp0BibvHEHHji%2FALBDiXO8PioToytjyaEQNaXmQuLAn84CAb4QekxzofZnprn52iHUoXFyJNf%2Fq3ZqvA4jb30mJAxCPIjnPde1tkpNSGuAfsmY%2ByQYlN7sWxpq5yV%2BTU%2Bz0rt1WjtctGsd6w1yt88Dd%2Br74P8m7ROn2Z0ptQw5A%2BWNmX1Wanb7ILpRxe8QeaZaokqgxiSrVfnWtNKgnVUga2Z0moK4hOWv539koLmT4PBBuxJlSyZWyeMoBemGmSCiOxOKwmrf%2BCK%2FG1BpNYsaCmjPVr2A49O9rh48uqEFc8uvejj87y8pQoGWAlFjsxe1QzTC0haaEIYGygiAnZI6IKmy2%2BNlrPwjgcdHQnc15lnYbAokFqg1uW1UzqkUE4c44dN5JbBhzJaJz14CGqvz2LbrkrxeapW3SunevCGGfJdcClV%2F0zJwxxOPm7TYbX7PHfVKaL7pLvGt6ShxVaeJzf1nAj8m2nfGj9L5WdfZ6Sb9aD7w08GXkqVBejxqPrEzu%2Fin49ua4mt8x0hItGe5i0jUq8p%2BuZQ93zKwP09dFgsV6qPlGtXKwW1fddd9jt%2Bnnp1fwfIxbu4spfYa8nFjzgPqH7T%2F%2FJQgaw6dXm%2Fi4%2FblBIP3pX1Sf8fOovW1YithPw4Jt%2FdibdeIaKPPXUhJeeypNj7zindWYEDmbdjQ6xKgYfOTCGv3Kveuz%2BrIe58j5hhTO6SOGM5oLaEPjukGlkwR0S6pSULxstSwXhSCM4K2grCjC%2Fvq2uBjqyASBnlNoKKu8wzQ1P%2F0BlH14PlBBt%2Fm%2BFzSC4hnyN21lioiA3qg372zbcFqxrMin8PkMDjYnDERYVShxZWmk7L62lyLmDmK6ddoZeeuZn0a%2BBvBT61yW5%2Fafe16Wi38LTWHakxXOTJqfqznIB1OO6RKIWbBpba3WDGpf5V64%2B0hKThL7teXpfRzoD3U%2BjQs%2B7q62Fy7YrQ7qeIWla%2FIkEaOKDajC8wFKHIsPw6ZwsIvBIndQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bbb6a223e24e8412376ce0226ca1a71c3dd97943057a82820f41cdf317aeb7a6",
+      "file_size": 139279,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 463844,
+      "file_name": "Vanilla_Comments_XSS.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/463/844/071ec8131dc032a21e6c98c64b1049489e7c25b9/Vanilla_Comments_XSS.mp4?response-content-disposition=attachment%3B%20filename%3D%22Vanilla_Comments_XSS.mp4%22%3B%20filename%2A%3DUTF-8%27%27Vanilla_Comments_XSS.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6K7XUSGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132052Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIA5oUTkOsy%2B%2BNZW%2FsEPkxVR9Nn0bKUQajhMaZJnQUOJJAiBNVU4iwU4izaH0MK0tElopJO3KoogTT8%2FbdWX%2FkbKzuyqyBQh2EAMaDDAxMzYxOTI3NDg0OSIMERsjeYIiXpoQB0OmKo8FUViIVri3eJCOgeD2QGMLKPs4F1%2FjbhNffMNUt%2BfvAGSphgvZY2tU246xkvKwwDTX6TnzUNLh3iGOcuouArS3RIWbEfHSiDDu6%2BVZPx3Wz1I%2FCwS%2BKPH5NwJsBp0BibvHEHHji%2FALBDiXO8PioToytjyaEQNaXmQuLAn84CAb4QekxzofZnprn52iHUoXFyJNf%2Fq3ZqvA4jb30mJAxCPIjnPde1tkpNSGuAfsmY%2ByQYlN7sWxpq5yV%2BTU%2Bz0rt1WjtctGsd6w1yt88Dd%2Br74P8m7ROn2Z0ptQw5A%2BWNmX1Wanb7ILpRxe8QeaZaokqgxiSrVfnWtNKgnVUga2Z0moK4hOWv539koLmT4PBBuxJlSyZWyeMoBemGmSCiOxOKwmrf%2BCK%2FG1BpNYsaCmjPVr2A49O9rh48uqEFc8uvejj87y8pQoGWAlFjsxe1QzTC0haaEIYGygiAnZI6IKmy2%2BNlrPwjgcdHQnc15lnYbAokFqg1uW1UzqkUE4c44dN5JbBhzJaJz14CGqvz2LbrkrxeapW3SunevCGGfJdcClV%2F0zJwxxOPm7TYbX7PHfVKaL7pLvGt6ShxVaeJzf1nAj8m2nfGj9L5WdfZ6Sb9aD7w08GXkqVBejxqPrEzu%2Fin49ua4mt8x0hItGe5i0jUq8p%2BuZQ93zKwP09dFgsV6qPlGtXKwW1fddd9jt%2Bnnp1fwfIxbu4spfYa8nFjzgPqH7T%2F%2FJQgaw6dXm%2Fi4%2FblBIP3pX1Sf8fOovW1YithPw4Jt%2FdibdeIaKPPXUhJeeypNj7zindWYEDmbdjQ6xKgYfOTCGv3Kveuz%2BrIe58j5hhTO6SOGM5oLaEPjukGlkwR0S6pSULxstSwXhSCM4K2grCjC%2Fvq2uBjqyASBnlNoKKu8wzQ1P%2F0BlH14PlBBt%2Fm%2BFzSC4hnyN21lioiA3qg372zbcFqxrMin8PkMDjYnDERYVShxZWmk7L62lyLmDmK6ddoZeeuZn0a%2BBvBT61yW5%2Fafe16Wi38LTWHakxXOTJqfqznIB1OO6RKIWbBpba3WDGpf5V64%2B0hKThL7teXpfRzoD3U%2BjQs%2B7q62Fy7YrQ7qeIWla%2FIkEaOKDajC8wFKHIsPw6ZwsIvBIndQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1f6dd7bba84ef5520e0282bb49f42c71059611b72adf9416671412514077cab0",
+      "file_size": 2316579,
+      "type": "video/mp4",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2019-07-17T20:14:11.512Z",
+  "allow_singular_disclosure_after": -144436001.04443845,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "ali",
+    "ronr",
+    "tiago-danin",
+    "bhavsec",
+    "jasonmknapp"
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 14809,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/vanilla/vanilla/",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

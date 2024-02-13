@@ -1,0 +1,125 @@
+{
+  "id": 497312,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80OTczMTI=",
+  "url": "https://hackerone.com/reports/497312",
+  "title": "Command injection by setting a custom search engine",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2019-02-17T16:00:52.893Z",
+  "submitted_at": "2019-02-17T16:00:52.893Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "peter_",
+    "url": "/peter_",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/138/324/94c560b36ae1a413b0c16f0f066405b8b8177f9d_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 36721,
+    "url": "https://hackerone.com/notepad-plus-plus",
+    "handle": "notepad-plus-plus",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/036/721/b8be93879279f14a49e5051a1a2794575fb1f3f8_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/036/721/b8be93879279f14a49e5051a1a2794575fb1f3f8_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Notepad++",
+      "twitter_handle": "notepad_plus",
+      "website": "https://notepad-plus-plus.org",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-05-07T22:46:18.602Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-04-07T22:46:08.755Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary:** Arbitrary commands can be injected when using the \"Search on Internet\" function with a malicious custom search engine. The custom search engine can be set through the GUI or the config files, with different attack scenarios.\n\n**Description:** The \"Search on Internet\" context menu functionality calls the `ShellExecute` function with the current search engine as argument. This can lead to arbitrary command execution.\n\nBy setting a command or a program (e.g. `cmd.exe /c \"your_command_here\"`) the command will be passed to `ShellExecute` and will be run. After the malicious search engine is set, the command will be executed *every time* the \"Search on Internet\" context menu functionality is used, instead of opening a web page in a browser.\n\nThe consequence is that any actor that can succesfully set the custom search engine can make the user execute any command.\n\nThere are two ways to set the custom search engine:\n\n* in the GUI, from \"Settings\" > \"Preferences\" > \"Search Engine\"\n* from the `config.xml` file, by editing the following fields in the `GuiConfig` tag with `name=\"searchEngine\"`:\n\t* set `searchEngineCustom` to the command to execute\n\t* set `searchEngineChoice=0` to use the custom search engine\n\n## The vulnerability\n\nIn `PowerEditor\\src\\NppCommands.cpp`, line 452:\n\n```\n    case IDM_EDIT_SEARCHONINTERNET:\n    {\n[...]\n      if (nppGui._searchEngineChoice == nppGui.se_custom)\n      {\n[...]\n        {\n          url = nppGui._searchEngineCustom.c_str();\n        }\n      }\n[...]\n      Command cmd(url.c_str());\n      cmd.run(_pPublicInterface->getHSelf());  \n```\n\nIn `PowerEditor\\src\\WinControls\\StaticDialog\\RunDlg\\RunDlg.cpp`, line 169:\n\n```\nHINSTANCE Command::run(HWND hWnd)\n{\n[...]\n    HINSTANCE res = ::ShellExecute(hWnd, TEXT(\"open\"), cmd2Exec, args2Exec, TEXT(\".\"), SW_SHOW);\n```\n\n`::ShellExecute` is called on arguments that can be controlled by malicious users, without any validation.\n\nWhen a HTTP url is used as search engine, `ShellExecute` will see that the argument starts with \"http://\" or \"https://\" and open the default web browser. This is not guaranteed if the argument does not start with one of these two prefixes.\n\nThe `IDM_EDIT_SEARCHONINTERNET` code assumes that `url` is a well-formed HTTP url, but no checks are made to verify this. This makes it possible to pass arbitrary strings to `ShellExecute` and execute arbitrary commands for any actor that can modify the custom search engine.\n\n\n## Steps To Reproduce:\nIn our proof of concept, we chose to open a calculator by providing `cmd.exe /c calc.exe` as custom search engine.\n\n  1. Copy the provided `config.xml` file to `%APPDATA%\\Notepad++`\n  2. Run Notepad++\n  3. Right-click anywhere in the text field\n  4. Select \"Search on Internet\"\n\nThe default Windows calculator will open.\n\n## Suggested fix\nA possible fix is to check if the url actually starts with \"http://\" or \"https://\" when executing the \"Search on Internet\" function, before the `cmd.run` call.\n\nThis should guarantee that the default web browser will be opened instead of running arbitrary commands (NB: no filename can contain `:` or `/` on Windows).\n\n## Supporting Material/References:\n\n### Debug info of tested executables\nThe executables were downloaded from the nightly build at [https://ci.appveyor.com/project/donho/notepad-plus-plus](https://ci.appveyor.com/project/donho/notepad-plus-plus)\n\n```\nNotepad++ v7.6.3   (32-bit)\nBuild time : Feb 16 2019 - 23:07:35\nPath : C:\\Users\\Pietro\\Downloads\\npp.7.6.3.bin.minimalist\\notepad++.exe\nAdmin mode : OFF\nLocal Conf mode : ON\nOS : Windows 10 (64-bit)\nPlugins : none\n```\n\n```\nNotepad++ v7.6.3   (64-bit)\nBuild time : Feb 17 2019 - 02:47:42\nPath : C:\\Users\\Pietro\\Downloads\\npp.7.6.3.bin.minimalist64\\notepad++.exe\nAdmin mode : OFF\nLocal Conf mode : ON\nOS : Windows 10 (64-bit)\nPlugins : none\n```\n\n## Impact\n\nSince this is vulnerability can lead to arbitrary command execution, users risk complete loss of integrity, confidentiality and availability. An attacker may read, delete and modify any files that are accessible with the program's permission, and execute arbitrary code.\n\nUsers may be persuaded to use a custom config file, for instance if provided as a example config file on the Internet, or if the user believes it would solve a problem with the config they have.\n\nMoreover, a malicious program running with the user's permissions may directly write to %APPDATA% and trigger the vulnerability.",
+  "weakness": {
+    "id": 58,
+    "name": "Command Injection - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 425560,
+      "file_name": "config.xml",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/425/560/056994b07120f10b36a6ca17ceb968bfea2b9b01/config.xml?response-content-disposition=attachment%3B%20filename%3D%22config.xml%22%3B%20filename%2A%3DUTF-8%27%27config.xml&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTRSPJQEY%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131804Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIANREuSO5xRo5uYh9p3fj5lFZASOM0CJaqF9aRTyqP1tAiBMs6gYtXIgibXyOqYUXBJZxA%2Fdza4ke6K%2F%2F0b5E9m1RSqwBQh2EAMaDDAxMzYxOTI3NDg0OSIM8OmUCbC3Pqq1SyEDKo0F3cO4ThOa4uitsGZnpJd4WSWYKi0%2F5mL8qwHwgq3ZuZ1aNUqEK3JGtjDNNtehYQzb3K%2BVzvT15T5E0DeN3sE8NL7KIl3i0Dx5W04t%2FCwofuZVDH6Rwez2OIyLRGEiHKo%2FP%2FkbGO6J7x9mVhWTOKS2bFg4igbBGqP%2Bi2aedUT3vluiB7ukP1cc428RmdmCV%2BuhSI6mu%2Fx6zanZ8MjIY1iRcGFyRSvjl0iN9Apkcqbj2H8R4UNg8b2kqipVUPR0IhWE4Repf%2B6oHnySIQcgKlfP60eivKF7%2BDxEpCbVDsb91wMe67XzEaDtj4q3yEkaR59%2FnN0%2Fg51i8gvLHyAK2aB8UWfJhpojdnN%2FB%2BaF6aGM1Zep47eAH4cQQWhMZ2I26LKQhm7iwRj6IEHbgHd2m6nHPOKHU2uWuHo13GDorNeQWMI%2FABbIu1tC%2FBPGMydY2v4uUNIntKjUUw%2BXSGO9A9lk6BbiANo%2BTxvrgKzjhYstigi28K%2FJy2l%2B50z3nW5D8NMHVXHTF9%2FfZJj2T3gBRe9rfchTv6%2Bbpy1%2Bn8nOxmudj%2B9inUeddHC6rtgTt35Y1V%2FQuDeghaOCTLBIQIRUj2dXMLrSvM6ipTuqtOLpxyjWPKhlGteSd9sRZ2GulqFnPco4IJ18%2Fn03rD%2FZTFvntG5nnCfDUN1rKUSiHRLc%2Be2fxn1LToFrzjJFDRvOSJIM%2FpzLFcAYL8tTTyFBkIKfd049EasT8fD7XkmUkbP9SU%2Fz3oask16Cc%2FxTEDv733bE%2B2WRdqbzle4n0HY%2F8WFiXHg%2FcBG11MfaIEqM74wTZ5xO8lGQRD8qVunQROTT4innfbTfWRrrpjWEVYNiOx7p4%2BZ0qgpFMn9%2F3hcTkdABX%2BMwpcOtrgY6sgEIuPpZKWB6MctyieUs6Zf8b%2FX4IKPm%2BfhMeS2tI0il7r2OReIXdjDVkC4sQOPEZhbn%2BDfZAXOoMl6LPgx5C10nOg8D%2BTLxqQZt9rcPO7a6NY6DuIvhZo5c4RdVjEGuOfc%2FAROg4UmbOf0zkue94sBg8VslzPwR4H20rwyBYQqkWxtaGVbZKYCCbNb6IEpuSkgMadMJvwHOmUUOWS2k1Jnl6yQZixJKKroR7DQEK1J3Lebd&X-Amz-SignedHeaders=host&X-Amz-Signature=64845cc81b05b6117c976cf84452ad5fdb3c8bd4fd514f06ceb52c76ec55dfa7",
+      "file_size": 5131,
+      "type": "application/xml",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2019-05-07T22:46:08.825Z",
+  "allow_singular_disclosure_after": -150561115.8261992,
+  "singular_disclosure_allowed": true,
+  "vote_count": 49,
+  "voters": [
+    "foobar7",
+    "ali",
+    "mik317",
+    "asad0x01_",
+    "savitar0x01",
+    "f_m",
+    "brucedh",
+    "whitesector",
+    "smelt",
+    "felipeandrianpeixoto",
+    "and 39 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

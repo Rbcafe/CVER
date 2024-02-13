@@ -1,0 +1,193 @@
+{
+  "id": 1245165,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjQ1MTY1",
+  "url": "https://hackerone.com/reports/1245165",
+  "title": "CSS Injection via Client Side Path Traversal + Open Redirect leads to personal data exfiltration on Acronis Cloud",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2021-06-26T15:13:39.566Z",
+  "submitted_at": "2021-06-26T15:13:39.767Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mr-medi",
+    "url": "/mr-medi",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/lrpank8b3nj3269oa4vjq32oc8f4/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13428,
+    "url": "https://hackerone.com/acronis",
+    "handle": "acronis",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Acronis",
+      "twitter_handle": "Acronis",
+      "website": "https://www.acronis.com",
+      "about": "Acronis sets the standard for cyber protection through its backup, anti-ransomware and cyber infrastructure"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2022-11-04T19:38:40.125Z",
+  "bug_reporter_agreed_on_going_public_at": "2022-11-04T19:38:40.018Z",
+  "team_member_agreed_on_going_public_at": "2022-04-19T12:46:33.381Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary\n\nHi team, I hope everything goes well.\nI have found a CSS Injection in Acronis Cloud Management Console`https://mc-beta-cloud.acronis.com/mc` via the `color_scheme` GET parameter.\n\n## Description:\n\nThe flow work as I will comment below.\n\nIf we go to the URL` https://mc-beta-cloud.acronis.com/mc/?color_scheme=PARAMETER` we can see by looking at the javascript code that it will get the `color_scheme` GET parameter and will make a GET request concatenating the previous value to the URL of the CSS file, in this case is the following URL `https://mc-beta-cloud.acronis.com/mc/theme.PARAMETER.css` to request the CSS file and load it.\n\nYou can see it in the following image the request made to load the CSS commented bellow:\n\n{F1354281}\n\nSince the front end doesn't sanitize the values `.` and `/` its possible to perform a `path traversal `to request the CSS file from other path. \nFor example, if you go to:\n`https://mc-beta-cloud.acronis.com/mc/?color_scheme=%2F..%2F..%2FPARAMETER`\n\nYou will notice a GET request is being made to the following URL, confirming the `Relative Path Overwrite` issue:\n`https://mc-beta-cloud.acronis.com/PARAMETER.css?v=24.0.10942`\n\nYou can see it in the following image too:\n\n{F1354280}\n\n\nThis little issue by itself doesn't appear to be any security issue but if we combine it with a `open redirect` it could be possible to make a request to the vulnerable endpoint to the open redirect and redirect to the domain where the evil CSS file is stored, this attack is possible because when we load any CSS file by default it follows all the redirects specified in the HTTP header `Location`.\n\nWhile looking at the HTTP requests to see if I could find any open redirect and demonstrate the impact I notice one interesting API endpoint \n`https://mc-beta-cloud.acronis.com/api/2/idp/authorize/?client_id=fb2bf44e-ac14-444a-b2a9-e5e81fe73b80&redirect_uri=%2Fhci%2Fcallback&response_type=code&scope=openid&state=http://localhost&nonce=bhgjuvrrvpwauibleqhvfqat`.\nNotice the `state` GET parameter is controllable by the user so we can specify any external domain where to redirect the user.\n\nLet's see the response to the previous request:\n{F1354247}\n\nAnd if we follow the `Location` HTTP header to the endpoint `https://mc-beta-cloud.acronis.com/hci/callback?code=FSNuJgJAWX2HOVFg%3D%3D&state=http://localhost` we can confirm the `Open Redirect` issue:\n\n{F1354248}\n\nI have been digging into it and by creating other account I confirmed that if any user make a request to the first endpoint with the same GET parameters as `client_id`,  `redirect_uri`, `response_type`, `scope`,  `state` and `nonce` it will be redirected to `http://localhost` so once we know that there is no need to guess any user parameter as `client_id` makes the attack more easy because the user only needs to visit a link with a crafted `color_scheme` parameter and the same parameters for the open redirect seen bellow.\n\n\nOnce we confirmed the `Relative Path Overwrite` and `Open Redirect` let's put it all together to make the exploit.\nWe know that when we load any CSS file it follows all the redirects specified in the HTTP header `Location` so if we are able to overwrite the relative path to the vulnerable Open Redirect endpoint, redirecting the user to the CSS file of my domain we can exfiltrate user personal information by using CSS properties.\n\nBy putting together these two tricks if the `color_sheme` have the value:\n\n`%2F..%2F..%2F..%2Fapi%2F2%2Fidp%2Fauthorize%2F%3Fclient_id%3Dfb2bf44e-ac14-444a-b2a9-e5e81fe73b80%26redirect_uri%3D%252Fhci%252Fcallback%26response_type%3Dcode%26scope%3Dopenid%26state%3Dhttp%253A%252F%252Flocalhost%252Fcss%252Fcore.css%26nonce%3Dbhgjuvrrvpwauibleqhvfqat`\n\nYou will notice that the first thing we do in the previous payload is `Overwrite the Relative Path` to the root directory. Then we specify the endpoint vulnerable to the `Open redirect` and in this vulnerable endpoint redirect the user to `http://localhost/core/css.css` where is in my case the evil CSS file stored.\nAs a result the browser will load it and we can perform the exfiltration of personal data.\n\nThe final URL to load the external CSS will looks like this:\n\n`https://mc-beta-cloud.acronis.com/mc/?color_sheme=%2F..%2F..%2F..%2Fapi%2F2%2Fidp%2Fauthorize%2F%3Fclient_id%3Dfb2bf44e-ac14-444a-b2a9-e5e81fe73b80%26redirect_uri%3D%252Fhci%252Fcallback%26response_type%3Dcode%26scope%3Dopenid%26state%3Dhttp%253A%252F%252Flocalhost%252Fcss%252Fcore.css%26nonce%3Dbhgjuvrrvpwauibleqhvfqat`\nMake sure you correctly URL encode it.\n\n\nIn my previous report of CSS Injection #1054406 the vulnerable endpoint is `https://mc-beta-cloud.acronis.com/mc/branding-scheme.html` which is used just to show the final result of the page with some custom style, if you take a look at the `DOM` of the previous URL there is no personal information related so the severity of the issue is reduced but in this scenario is different since the `DOM` have many hash related to the `customer` and `partners` ID's \n\nIn this way, if we specify our CSS file in a domain hosted by us we can perform the CSRF attack via GET requests by loading an external image using CSS properties like background-image or exfiltrate user information like his IP, Referer header or User Agent.\nIn my explanation I used my local server but you can check it out in any external domain you own.\n\n## Steps To Reproduce\n\n  1- Host the following CSS file in your server, in my example  called it core.css.\n```css\nhtml\n{\n  background-color: black;\n  color: green;\n}\n```\nIn my case I hosted it in the `css` folder of my local server, so the `state` GET of the payload parameter must be `http://loalhost/css/core.css`\n  2- Go to `https://mc-beta-cloud.acronis.com` and login in your Acronis Cloud account as a `partner`.\n  3- Finally, go to `https://mc-beta-cloud.acronis.com/mc/?color_sheme=%2F..%2Fapi%2F2%2Fidp%2Fauthorize%2F%3Fclient_id%3Dfb2bf44e-ac14-444a-b2a9-e5e81fe73b80%26redirect_uri%3D%252Fhci%252Fcallback%26response_type%3Dcode%26scope%3Dopenid%26state%3Dhttp%253A%252F%252Flocalhost%252Fcss%252Fcore.css%26nonce%3Dbhgjuvrrvpwauibleqhvfqat` and \n\nYou could see the following CSS injected:\n\n{F1354330}\n\nAnd the request of the CSS made:\n\n{F1354338}\n\n\nBest regards and have a nice day,\n@mr-medi\n\n## Impact\n\nData exfiltration via CSS properties as `background-image` its possible as you can see in the following link `https://github.com/maxchehab/CSS-Keylogging/`.\n\nI will dig to see what more information about the user I can exfiltrate apart from the Hashes of partners and customer accounts.",
+  "bounty_amount": "250.0",
+  "formatted_bounty": "$250",
+  "weakness": {
+    "id": 63,
+    "name": "Cross-site Scripting (XSS) - DOM"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1354247,
+      "file_name": "open-redirect1.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/7qvjwnrnar0udpv8mihu8vgx9du3?response-content-disposition=attachment%3B%20filename%3D%22open-redirect1.png%22%3B%20filename%2A%3DUTF-8%27%27open-redirect1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3DOTL4Z4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T141357Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCP1h%2BMnyvDRDa6h%2F4zIodqh2MzJlGISvpnoEvR4kc2fgIgP8fAE6zkU2xDXiIdq36r00FCUyYf6OQc2MuvlpSL6zgqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDJ2sbhPrB5o6p2UkMiqPBcMZAZzMf1lo6ftFZmyVLqm8Hg2J3xbj6a3GuTLabMbNJWiA%2FZsFo0hE3gxRPbyAqhG6FJuKINNLYiqNvOekzW8sar88psZuM%2FX9%2FNoLvFSAVVJpHHBKNZUcwzDsSG6dL68X0%2F81p9YWjmvjokQY%2B9nuD7359WQ659K26Fclw65VMeRybJ1hUyi2a%2FyS4P%2FH0PoUc1H0vEsvCcDRZFSU2VqX6BFziwRAbmxLuUXTN5m%2F5hWF5b3%2BkgFf3EOVPo%2BXtyBL0zsVvefLcDnkTyLYtjGuMSoKMfdzhMUUnoy%2FSkL%2FnqSrrhe9QDnvuA12WJYXs7dXUtOgD1FweSHqkAlJgnKNM8PYSjJnvj8q9w4J7BBdDstdMKFug3p2hl8P0Z3ewTKwgYQFTrJSgQ5k2oIl05GLUuZEuGlOhqiAdJ0VSwCyoN%2BcsLtWKUwcF5i%2BGCo6ppjPFD80qdzVR70b4ApfmQxVQXMoqtkj6LQcYtZ%2BagRqhM%2BtszUfSlLJd2TtHW1cmvfHpY38mbjTqSHEOfCoz%2FpdesWuHOFHT%2FPgVGOwrKnQpNMV%2FyR1KqF%2B%2F4CD%2FGMR2tktKBwuNfh2OlxQvwD2aE8XvEC%2B4mc3056ID7XSvkKVVQ5FPigZOQTgvmJ494qVF7ehsKzqTF%2B9hAoK4S6zfV7Rj7ZQPgHv3om4hYuHsgUcaD29IgjjBb7uAyiaX%2BnWynmxhoDSjS8R%2BX%2Fh548W%2F5oeVorlsLKwzmcY%2Fn5eCd84hK21TQBO83%2FN5WvC2Rjqcrcse3ypMcrNI7pSoyAYBbW7BZ7x1FSQkjJ0k9%2BmmuCWHGFTK1yvtjTnkqMZorU8FXNTbF9f5hhpv%2FD%2Bx%2FaaWxL40nM7EEpqTFiYBitKsZow7cCtrgY6sQExtT%2FZOBwnOUsXGGVn22KELl38mJ%2B5OivmNc%2Fgks2i4L3ET0mxTFvDVZpjL316NVv%2FbrIj%2Fy2VtfGofe3Raptm7CsozbMN%2FwB4%2F%2B1rcHUIoVQ8JJTc06nsi5aVYzNhXnbrwhbQkoT0dxKYDFETL%2B6%2F051XAavIrnvB5CtHwa5YaT7z83h5GNqUOlmAh9%2BiDFNSkfEsNFaYzGytNE8syYguoEi7iDkqQjn2z2qwL4LrkcU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ce78983ce91f1f300bb96b59ec98eb90a9f4dcdf9b2f7dd6f7aeb25fc431c7dc",
+      "file_size": 176733,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1354248,
+      "file_name": "open-redirect-confirm.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/zloml0c5ooauel6k3jylkt4v49s0?response-content-disposition=attachment%3B%20filename%3D%22open-redirect-confirm.png%22%3B%20filename%2A%3DUTF-8%27%27open-redirect-confirm.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3DOTL4Z4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T141357Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCP1h%2BMnyvDRDa6h%2F4zIodqh2MzJlGISvpnoEvR4kc2fgIgP8fAE6zkU2xDXiIdq36r00FCUyYf6OQc2MuvlpSL6zgqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDJ2sbhPrB5o6p2UkMiqPBcMZAZzMf1lo6ftFZmyVLqm8Hg2J3xbj6a3GuTLabMbNJWiA%2FZsFo0hE3gxRPbyAqhG6FJuKINNLYiqNvOekzW8sar88psZuM%2FX9%2FNoLvFSAVVJpHHBKNZUcwzDsSG6dL68X0%2F81p9YWjmvjokQY%2B9nuD7359WQ659K26Fclw65VMeRybJ1hUyi2a%2FyS4P%2FH0PoUc1H0vEsvCcDRZFSU2VqX6BFziwRAbmxLuUXTN5m%2F5hWF5b3%2BkgFf3EOVPo%2BXtyBL0zsVvefLcDnkTyLYtjGuMSoKMfdzhMUUnoy%2FSkL%2FnqSrrhe9QDnvuA12WJYXs7dXUtOgD1FweSHqkAlJgnKNM8PYSjJnvj8q9w4J7BBdDstdMKFug3p2hl8P0Z3ewTKwgYQFTrJSgQ5k2oIl05GLUuZEuGlOhqiAdJ0VSwCyoN%2BcsLtWKUwcF5i%2BGCo6ppjPFD80qdzVR70b4ApfmQxVQXMoqtkj6LQcYtZ%2BagRqhM%2BtszUfSlLJd2TtHW1cmvfHpY38mbjTqSHEOfCoz%2FpdesWuHOFHT%2FPgVGOwrKnQpNMV%2FyR1KqF%2B%2F4CD%2FGMR2tktKBwuNfh2OlxQvwD2aE8XvEC%2B4mc3056ID7XSvkKVVQ5FPigZOQTgvmJ494qVF7ehsKzqTF%2B9hAoK4S6zfV7Rj7ZQPgHv3om4hYuHsgUcaD29IgjjBb7uAyiaX%2BnWynmxhoDSjS8R%2BX%2Fh548W%2F5oeVorlsLKwzmcY%2Fn5eCd84hK21TQBO83%2FN5WvC2Rjqcrcse3ypMcrNI7pSoyAYBbW7BZ7x1FSQkjJ0k9%2BmmuCWHGFTK1yvtjTnkqMZorU8FXNTbF9f5hhpv%2FD%2Bx%2FaaWxL40nM7EEpqTFiYBitKsZow7cCtrgY6sQExtT%2FZOBwnOUsXGGVn22KELl38mJ%2B5OivmNc%2Fgks2i4L3ET0mxTFvDVZpjL316NVv%2FbrIj%2Fy2VtfGofe3Raptm7CsozbMN%2FwB4%2F%2B1rcHUIoVQ8JJTc06nsi5aVYzNhXnbrwhbQkoT0dxKYDFETL%2B6%2F051XAavIrnvB5CtHwa5YaT7z83h5GNqUOlmAh9%2BiDFNSkfEsNFaYzGytNE8syYguoEi7iDkqQjn2z2qwL4LrkcU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2b71504f7847d154fa53acc38694a5b3b4ad2c1628d65e18ee2b5c17ccc5de24",
+      "file_size": 170628,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1354280,
+      "file_name": "path-traversal-confirmed.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/twqygp07d5rm4x5axdemyljioymk?response-content-disposition=attachment%3B%20filename%3D%22path-traversal-confirmed.png%22%3B%20filename%2A%3DUTF-8%27%27path-traversal-confirmed.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3DOTL4Z4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T141357Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCP1h%2BMnyvDRDa6h%2F4zIodqh2MzJlGISvpnoEvR4kc2fgIgP8fAE6zkU2xDXiIdq36r00FCUyYf6OQc2MuvlpSL6zgqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDJ2sbhPrB5o6p2UkMiqPBcMZAZzMf1lo6ftFZmyVLqm8Hg2J3xbj6a3GuTLabMbNJWiA%2FZsFo0hE3gxRPbyAqhG6FJuKINNLYiqNvOekzW8sar88psZuM%2FX9%2FNoLvFSAVVJpHHBKNZUcwzDsSG6dL68X0%2F81p9YWjmvjokQY%2B9nuD7359WQ659K26Fclw65VMeRybJ1hUyi2a%2FyS4P%2FH0PoUc1H0vEsvCcDRZFSU2VqX6BFziwRAbmxLuUXTN5m%2F5hWF5b3%2BkgFf3EOVPo%2BXtyBL0zsVvefLcDnkTyLYtjGuMSoKMfdzhMUUnoy%2FSkL%2FnqSrrhe9QDnvuA12WJYXs7dXUtOgD1FweSHqkAlJgnKNM8PYSjJnvj8q9w4J7BBdDstdMKFug3p2hl8P0Z3ewTKwgYQFTrJSgQ5k2oIl05GLUuZEuGlOhqiAdJ0VSwCyoN%2BcsLtWKUwcF5i%2BGCo6ppjPFD80qdzVR70b4ApfmQxVQXMoqtkj6LQcYtZ%2BagRqhM%2BtszUfSlLJd2TtHW1cmvfHpY38mbjTqSHEOfCoz%2FpdesWuHOFHT%2FPgVGOwrKnQpNMV%2FyR1KqF%2B%2F4CD%2FGMR2tktKBwuNfh2OlxQvwD2aE8XvEC%2B4mc3056ID7XSvkKVVQ5FPigZOQTgvmJ494qVF7ehsKzqTF%2B9hAoK4S6zfV7Rj7ZQPgHv3om4hYuHsgUcaD29IgjjBb7uAyiaX%2BnWynmxhoDSjS8R%2BX%2Fh548W%2F5oeVorlsLKwzmcY%2Fn5eCd84hK21TQBO83%2FN5WvC2Rjqcrcse3ypMcrNI7pSoyAYBbW7BZ7x1FSQkjJ0k9%2BmmuCWHGFTK1yvtjTnkqMZorU8FXNTbF9f5hhpv%2FD%2Bx%2FaaWxL40nM7EEpqTFiYBitKsZow7cCtrgY6sQExtT%2FZOBwnOUsXGGVn22KELl38mJ%2B5OivmNc%2Fgks2i4L3ET0mxTFvDVZpjL316NVv%2FbrIj%2Fy2VtfGofe3Raptm7CsozbMN%2FwB4%2F%2B1rcHUIoVQ8JJTc06nsi5aVYzNhXnbrwhbQkoT0dxKYDFETL%2B6%2F051XAavIrnvB5CtHwa5YaT7z83h5GNqUOlmAh9%2BiDFNSkfEsNFaYzGytNE8syYguoEi7iDkqQjn2z2qwL4LrkcU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d25a60f5000cbf2b38aa9851e69b5c06c3db2118d71fd8dd0ba7b924fd6fb60d",
+      "file_size": 181933,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1354281,
+      "file_name": "path-traversal.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/uzpwanxf0yp5enjybydo0rv5b9ls?response-content-disposition=attachment%3B%20filename%3D%22path-traversal.png%22%3B%20filename%2A%3DUTF-8%27%27path-traversal.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3DOTL4Z4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T141357Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCP1h%2BMnyvDRDa6h%2F4zIodqh2MzJlGISvpnoEvR4kc2fgIgP8fAE6zkU2xDXiIdq36r00FCUyYf6OQc2MuvlpSL6zgqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDJ2sbhPrB5o6p2UkMiqPBcMZAZzMf1lo6ftFZmyVLqm8Hg2J3xbj6a3GuTLabMbNJWiA%2FZsFo0hE3gxRPbyAqhG6FJuKINNLYiqNvOekzW8sar88psZuM%2FX9%2FNoLvFSAVVJpHHBKNZUcwzDsSG6dL68X0%2F81p9YWjmvjokQY%2B9nuD7359WQ659K26Fclw65VMeRybJ1hUyi2a%2FyS4P%2FH0PoUc1H0vEsvCcDRZFSU2VqX6BFziwRAbmxLuUXTN5m%2F5hWF5b3%2BkgFf3EOVPo%2BXtyBL0zsVvefLcDnkTyLYtjGuMSoKMfdzhMUUnoy%2FSkL%2FnqSrrhe9QDnvuA12WJYXs7dXUtOgD1FweSHqkAlJgnKNM8PYSjJnvj8q9w4J7BBdDstdMKFug3p2hl8P0Z3ewTKwgYQFTrJSgQ5k2oIl05GLUuZEuGlOhqiAdJ0VSwCyoN%2BcsLtWKUwcF5i%2BGCo6ppjPFD80qdzVR70b4ApfmQxVQXMoqtkj6LQcYtZ%2BagRqhM%2BtszUfSlLJd2TtHW1cmvfHpY38mbjTqSHEOfCoz%2FpdesWuHOFHT%2FPgVGOwrKnQpNMV%2FyR1KqF%2B%2F4CD%2FGMR2tktKBwuNfh2OlxQvwD2aE8XvEC%2B4mc3056ID7XSvkKVVQ5FPigZOQTgvmJ494qVF7ehsKzqTF%2B9hAoK4S6zfV7Rj7ZQPgHv3om4hYuHsgUcaD29IgjjBb7uAyiaX%2BnWynmxhoDSjS8R%2BX%2Fh548W%2F5oeVorlsLKwzmcY%2Fn5eCd84hK21TQBO83%2FN5WvC2Rjqcrcse3ypMcrNI7pSoyAYBbW7BZ7x1FSQkjJ0k9%2BmmuCWHGFTK1yvtjTnkqMZorU8FXNTbF9f5hhpv%2FD%2Bx%2FaaWxL40nM7EEpqTFiYBitKsZow7cCtrgY6sQExtT%2FZOBwnOUsXGGVn22KELl38mJ%2B5OivmNc%2Fgks2i4L3ET0mxTFvDVZpjL316NVv%2FbrIj%2Fy2VtfGofe3Raptm7CsozbMN%2FwB4%2F%2B1rcHUIoVQ8JJTc06nsi5aVYzNhXnbrwhbQkoT0dxKYDFETL%2B6%2F051XAavIrnvB5CtHwa5YaT7z83h5GNqUOlmAh9%2BiDFNSkfEsNFaYzGytNE8syYguoEi7iDkqQjn2z2qwL4LrkcU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=94c5b1a06de3054e66ca9e419c7caaffdc9f7bc069ce9d04b934dcb6428f996c",
+      "file_size": 182270,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1354330,
+      "file_name": "css-injection.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/b2wk7xurmg4tgtlyl5hs7cz4mnfi?response-content-disposition=attachment%3B%20filename%3D%22css-injection.png%22%3B%20filename%2A%3DUTF-8%27%27css-injection.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3DOTL4Z4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T141357Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCP1h%2BMnyvDRDa6h%2F4zIodqh2MzJlGISvpnoEvR4kc2fgIgP8fAE6zkU2xDXiIdq36r00FCUyYf6OQc2MuvlpSL6zgqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDJ2sbhPrB5o6p2UkMiqPBcMZAZzMf1lo6ftFZmyVLqm8Hg2J3xbj6a3GuTLabMbNJWiA%2FZsFo0hE3gxRPbyAqhG6FJuKINNLYiqNvOekzW8sar88psZuM%2FX9%2FNoLvFSAVVJpHHBKNZUcwzDsSG6dL68X0%2F81p9YWjmvjokQY%2B9nuD7359WQ659K26Fclw65VMeRybJ1hUyi2a%2FyS4P%2FH0PoUc1H0vEsvCcDRZFSU2VqX6BFziwRAbmxLuUXTN5m%2F5hWF5b3%2BkgFf3EOVPo%2BXtyBL0zsVvefLcDnkTyLYtjGuMSoKMfdzhMUUnoy%2FSkL%2FnqSrrhe9QDnvuA12WJYXs7dXUtOgD1FweSHqkAlJgnKNM8PYSjJnvj8q9w4J7BBdDstdMKFug3p2hl8P0Z3ewTKwgYQFTrJSgQ5k2oIl05GLUuZEuGlOhqiAdJ0VSwCyoN%2BcsLtWKUwcF5i%2BGCo6ppjPFD80qdzVR70b4ApfmQxVQXMoqtkj6LQcYtZ%2BagRqhM%2BtszUfSlLJd2TtHW1cmvfHpY38mbjTqSHEOfCoz%2FpdesWuHOFHT%2FPgVGOwrKnQpNMV%2FyR1KqF%2B%2F4CD%2FGMR2tktKBwuNfh2OlxQvwD2aE8XvEC%2B4mc3056ID7XSvkKVVQ5FPigZOQTgvmJ494qVF7ehsKzqTF%2B9hAoK4S6zfV7Rj7ZQPgHv3om4hYuHsgUcaD29IgjjBb7uAyiaX%2BnWynmxhoDSjS8R%2BX%2Fh548W%2F5oeVorlsLKwzmcY%2Fn5eCd84hK21TQBO83%2FN5WvC2Rjqcrcse3ypMcrNI7pSoyAYBbW7BZ7x1FSQkjJ0k9%2BmmuCWHGFTK1yvtjTnkqMZorU8FXNTbF9f5hhpv%2FD%2Bx%2FaaWxL40nM7EEpqTFiYBitKsZow7cCtrgY6sQExtT%2FZOBwnOUsXGGVn22KELl38mJ%2B5OivmNc%2Fgks2i4L3ET0mxTFvDVZpjL316NVv%2FbrIj%2Fy2VtfGofe3Raptm7CsozbMN%2FwB4%2F%2B1rcHUIoVQ8JJTc06nsi5aVYzNhXnbrwhbQkoT0dxKYDFETL%2B6%2F051XAavIrnvB5CtHwa5YaT7z83h5GNqUOlmAh9%2BiDFNSkfEsNFaYzGytNE8syYguoEi7iDkqQjn2z2qwL4LrkcU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f8204c30aacf0eff29399b3249f1c8b5dd30c991d046ba0fd1127a8a625f2f95",
+      "file_size": 70531,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1354338,
+      "file_name": "request.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/l8mosgjqe4ji3mhc91apro0bc6t9?response-content-disposition=attachment%3B%20filename%3D%22request.png%22%3B%20filename%2A%3DUTF-8%27%27request.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3DOTL4Z4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T141357Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCP1h%2BMnyvDRDa6h%2F4zIodqh2MzJlGISvpnoEvR4kc2fgIgP8fAE6zkU2xDXiIdq36r00FCUyYf6OQc2MuvlpSL6zgqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDJ2sbhPrB5o6p2UkMiqPBcMZAZzMf1lo6ftFZmyVLqm8Hg2J3xbj6a3GuTLabMbNJWiA%2FZsFo0hE3gxRPbyAqhG6FJuKINNLYiqNvOekzW8sar88psZuM%2FX9%2FNoLvFSAVVJpHHBKNZUcwzDsSG6dL68X0%2F81p9YWjmvjokQY%2B9nuD7359WQ659K26Fclw65VMeRybJ1hUyi2a%2FyS4P%2FH0PoUc1H0vEsvCcDRZFSU2VqX6BFziwRAbmxLuUXTN5m%2F5hWF5b3%2BkgFf3EOVPo%2BXtyBL0zsVvefLcDnkTyLYtjGuMSoKMfdzhMUUnoy%2FSkL%2FnqSrrhe9QDnvuA12WJYXs7dXUtOgD1FweSHqkAlJgnKNM8PYSjJnvj8q9w4J7BBdDstdMKFug3p2hl8P0Z3ewTKwgYQFTrJSgQ5k2oIl05GLUuZEuGlOhqiAdJ0VSwCyoN%2BcsLtWKUwcF5i%2BGCo6ppjPFD80qdzVR70b4ApfmQxVQXMoqtkj6LQcYtZ%2BagRqhM%2BtszUfSlLJd2TtHW1cmvfHpY38mbjTqSHEOfCoz%2FpdesWuHOFHT%2FPgVGOwrKnQpNMV%2FyR1KqF%2B%2F4CD%2FGMR2tktKBwuNfh2OlxQvwD2aE8XvEC%2B4mc3056ID7XSvkKVVQ5FPigZOQTgvmJ494qVF7ehsKzqTF%2B9hAoK4S6zfV7Rj7ZQPgHv3om4hYuHsgUcaD29IgjjBb7uAyiaX%2BnWynmxhoDSjS8R%2BX%2Fh548W%2F5oeVorlsLKwzmcY%2Fn5eCd84hK21TQBO83%2FN5WvC2Rjqcrcse3ypMcrNI7pSoyAYBbW7BZ7x1FSQkjJ0k9%2BmmuCWHGFTK1yvtjTnkqMZorU8FXNTbF9f5hhpv%2FD%2Bx%2FaaWxL40nM7EEpqTFiYBitKsZow7cCtrgY6sQExtT%2FZOBwnOUsXGGVn22KELl38mJ%2B5OivmNc%2Fgks2i4L3ET0mxTFvDVZpjL316NVv%2FbrIj%2Fy2VtfGofe3Raptm7CsozbMN%2FwB4%2F%2B1rcHUIoVQ8JJTc06nsi5aVYzNhXnbrwhbQkoT0dxKYDFETL%2B6%2F051XAavIrnvB5CtHwa5YaT7z83h5GNqUOlmAh9%2BiDFNSkfEsNFaYzGytNE8syYguoEi7iDkqQjn2z2qwL4LrkcU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1fff4bab810bf46514883ae3065458cf091f6b3b11143cde29b4d09bf9e3fb47",
+      "file_size": 156811,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 22,
+  "voters": [
+    "gregxsunday",
+    "mr-medi",
+    "p4n7h3rx",
+    "shreyaschavhan",
+    "jumpydata",
+    "0xcyborg",
+    "zy9ard3",
+    "imranhudaa",
+    "dhakal_ananda",
+    "xsky",
+    "and 12 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 13849,
+    "asset_type": "URL",
+    "asset_identifier": "beta-cloud.acronis.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 214402,
+      "category": "researcher",
+      "content": "https://mr-medi.github.io/research/2022/11/04/practical-client-side-path-traversal-attacks.html",
+      "user": {
+        "id": 761888,
+        "username": "mr-medi",
+        "name": "𝕄edi",
+        "bio": "",
+        "cleared": false,
+        "verified": true,
+        "website": "https://mr-medi.github.io",
+        "location": "",
+        "created_at": "2019-09-27T21:21:14.864Z",
+        "url": "https://hackerone.com/mr-medi",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/lrpank8b3nj3269oa4vjq32oc8f4/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/lrpank8b3nj3269oa4vjq32oc8f4/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/lrpank8b3nj3269oa4vjq32oc8f4/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

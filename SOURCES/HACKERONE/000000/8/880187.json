@@ -1,0 +1,195 @@
+{
+  "id": 880187,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84ODAxODc=",
+  "url": "https://hackerone.com/reports/880187",
+  "title": "Near to Infinite loop when changing Group's name that has API token as Team Member",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2020-05-22T02:43:54.512Z",
+  "submitted_at": "2020-05-22T02:43:54.512Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "wlucenasec",
+    "url": "/wlucenasec",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/qK2L4SQ6goP5Lq2q4h2qJG4P/cccd3716a6d2e06174d2a41492445cb1d4bf85b4611a755bc810b9246a24d951"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2020-07-23T21:54:16.366Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-07-23T21:54:16.209Z",
+  "team_member_agreed_on_going_public_at": "2020-07-23T16:56:36.492Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary:**\n\nThe  `https://hackerone.com` contains an iteration or loop with an exit condition that is near to infinite loop. If the loop can be influenced by an attacker, this weakness could allow attackers to consume excessive resources such as CPU or memory and even a DoS attack.\n\n**Description:**\nHello Security team,\n\nI  have a test Enterprise Program `https://hackerone.com/tonight_ptdkf` enabled in my second H1 account. Last days I have been hunting on the program features and I have founded a weird behavior that can consume excessive resources on the platform.\n\nUnder the `group management` feature the program administrator can add a new `group` to segregate the permissions. The website runs the following function to create the group on the platform.\n\n```javascript\n{\n            Object(u.a)(a, e);\n            var t = Object(c.a)(a);\n            function a() {\n                var e;\n                return Object(o.a)(this, a),\n                (e = t.call(this)).teamMemberGroups = new bO,\n                e.teamMemberGroup = new fO,\n                e.availablePermissions = [],\n                e.currentTeam = new Lf,\n                e.teamMembers = new PO,\n                e.fetched = !1,\n                e.savingTeamMemberGroupMembers = !1,\n                e.selectedTeamMemberGroups = {},\n                e\n            }\n```\n```javascript\n{\n                key: \"new\",\n                value: function(e) {\n                    var t = this;\n                    this.loadResources(e).always((function() {\n                        t.fetched = !0,\n                        t.teamMemberGroup = new fO,\n                        t.availablePermissions = t.currentTeam.get(\"available_permissions\"),\n                        t.trigger(\"change\")\n                    }\n                    ))\n                }\n\n```\n Once the group is created its can be read in `JSON` format throuhg the page `https://hackerone.com/[YOUR_PROGRAM]/groups.json`, as example below:\n\n```javascript\n{\n\t\"id\":95038,\n\t\"key\":null,\n\t\"name\":\"Testing\",\n\t\"team_members_count\":0,\n\t\"permissions\":[\n\t],\n\t\"immutable\":false,\n\t\"team_member_ids\":[\n\t]\n}\n```\n{F838205}\n\nFrom the `group management` page the program administrator can add only users to that group, can't add API token to that group from there.\n\n{F838206}\n\nBut the API token can be added to that group through `https://hackerone.com/[YOUR_PROGRAM]/api`.\n\n{F838209}\n\nClicking on **Manage groups** is possible to add this API token to the previously created group.\n\n{F838210}\n\nOnce you save that, you can read this API token permission/groups in `JSON` format too, just goint to `https://hackerone.com/[Your_Program]/team_members/[The team member ID of your API toke].json`\n\nJust like before, the same data will be displayed.\n\n```javascript\n{\n\t\"id\":95038,\n\t\"key\":null,\n\t\"name\":\"Testing\",\n\t\"team_members_count\":0,\n\t\"permissions\":[\n\t],\n\t\"immutable\":false,\n\t\"team_member_ids\":[\n\t]\n}\n```\nAlso, the `group` will be displayed under API Token page.\n\n{F838211}\n\nThe issue comes when we `change` this `group` name that is linked to the API Token. So, in my test I changed from `Testing` to `AAABC2`.\n\nMore than `500` repeated JSON key `{\"id\":95004,\"key\":null,\"name\":\"AAABC2\",\"team_members_count\":0,\"permissions\":[],\"immutable\":false,\"team_member_ids\":[]}` due to the loop issue.\n\n{F838226}\n\nAs far as I understood from a static code analysis, the loop that is causing this issue is:\n\n```javascript\n!function(e) {\n    function t(t) {\n        for (var n, s, l = t[0], o = t[1], c = t[2], m = 0, d = []; m < l.length; m++)\n            s = l[m],\n            Object.prototype.hasOwnProperty.call(r, s) && r[s] && d.push(r[s][0]),\n            r[s] = 0;\n        for (n in o)\n            Object.prototype.hasOwnProperty.call(o, n) && (e[n] = o[n]);\n        for (u && u(t); d.length; )\n            d.shift()();\n        return i.push.apply(i, c || []),\n        a()\n    }\n```\n{F838219}\n### Steps To Reproduce\n\n* Add a new group under group management of your program\n* Under the API Token, link your API to the group created in the previous step \n* Go back to the group management and change the group name\n\nNote: Sometimes that server will not be able to handle the large repeated infomation in this loop when changing the group name and will response `500`.\n\n{F838230}\n\n## Impact\n\nIf the loop can be influenced by an attacker, this weakness could allow attackers to consume excessive resources such as CPU or memory and even a DoS attack.",
+  "bounty_amount": "2500.0",
+  "formatted_bounty": "$2,500",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 838205,
+      "file_name": "group_management.JPG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/rPfGjsJDpqF7GVW75c7nRy78?response-content-disposition=attachment%3B%20filename%3D%22group_management.JPG%22%3B%20filename%2A%3DUTF-8%27%27group_management.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134503Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=25347c00747a924f68f799d365f9bd53e476b7fd6880a93412023bbfc8beabe7",
+      "file_size": 39284,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 838206,
+      "file_name": "members.JPG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/sM7R6tEBrMy9ezyq7hgbxfrV?response-content-disposition=attachment%3B%20filename%3D%22members.JPG%22%3B%20filename%2A%3DUTF-8%27%27members.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134503Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c00e7a73d9fa47b07678d3b630daae918092f78785ebb7a83fb1bf91c2b2d29e",
+      "file_size": 22958,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 838209,
+      "file_name": "API_Tokens.JPG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/SBMH4bSkiuajEW6C3f9dWYcc?response-content-disposition=attachment%3B%20filename%3D%22API_Tokens.JPG%22%3B%20filename%2A%3DUTF-8%27%27API_Tokens.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134503Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7186c3961cc75d30933b62e0a59a433aa174e9065c60f60c11945c18e5e20eae",
+      "file_size": 18622,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 838210,
+      "file_name": "members_2.JPG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/f1k5o1a4uYpMsXAXZfomyd1a?response-content-disposition=attachment%3B%20filename%3D%22members_2.JPG%22%3B%20filename%2A%3DUTF-8%27%27members_2.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134503Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a744fc01358169f82a5369ea938dd3dd9218c7b682ea1c87cf07fb5de2eb3bc0",
+      "file_size": 28436,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 838211,
+      "file_name": "API_Token_Member.JPG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/sEjNmnzUjQaAjcMNQNRdsUei?response-content-disposition=attachment%3B%20filename%3D%22API_Token_Member.JPG%22%3B%20filename%2A%3DUTF-8%27%27API_Token_Member.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134503Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=228057741d80662a52c6bdf2d5d4af3417c69f7de6fe6ccc20cf187b49781c96",
+      "file_size": 19375,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 838219,
+      "file_name": "function_loop.JPG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/sSMqAMogniEssgJoEwiaLd7A?response-content-disposition=attachment%3B%20filename%3D%22function_loop.JPG%22%3B%20filename%2A%3DUTF-8%27%27function_loop.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134503Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ba2589735920c707462378f971c1e29d02d4aabb426b27b20900ca2850ea5bb9",
+      "file_size": 34946,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 838226,
+      "file_name": "loop_json.JPG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/vkGamaK7G319dT5WhrWwZy6A?response-content-disposition=attachment%3B%20filename%3D%22loop_json.JPG%22%3B%20filename%2A%3DUTF-8%27%27loop_json.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134503Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=653a9fe0fbe9c964a27e25d0a10a983a603d9b00ad15ac9726b7751695ce80f4",
+      "file_size": 328500,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 838230,
+      "file_name": "response_500.JPG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/8L71X14i3GzKMPQYwo8Rw9Mq?response-content-disposition=attachment%3B%20filename%3D%22response_500.JPG%22%3B%20filename%2A%3DUTF-8%27%27response_500.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134503Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a4653602f38d3176d18b6a96e09182838a7a58feb577312c587dfd2d6cbd5337",
+      "file_size": 41866,
+      "type": "image/jpeg",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-08-22T16:56:36.714Z",
+  "allow_singular_disclosure_after": -109716507.1098864,
+  "singular_disclosure_allowed": true,
+  "vote_count": 72,
+  "voters": [
+    "omarelfarsaoui",
+    "badcracker",
+    "centaurus",
+    "base_64",
+    "rook1337",
+    "trieulieuf9",
+    "hulkvision_",
+    "ali",
+    "mik317",
+    "mr-hakhak",
+    "and 62 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 4.2,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "none",
+      "availability": "low"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 3,
+    "asset_type": "URL",
+    "asset_identifier": "hackerone.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

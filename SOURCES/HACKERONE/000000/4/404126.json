@@ -1,0 +1,141 @@
+{
+  "id": 404126,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80MDQxMjY=",
+  "url": "https://hackerone.com/reports/404126",
+  "title": "[buttle] Unsafe rendering of Markdown files",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2018-09-02T19:45:30.201Z",
+  "submitted_at": "2018-09-02T19:45:30.201Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "skyn3t",
+    "url": "/skyn3t",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/224/816/14988b1087907275d769481dc45fe6576ce0d206_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 23949,
+    "url": "https://hackerone.com/nodejs-ecosystem",
+    "handle": "nodejs-ecosystem",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Node.js third-party modules",
+      "twitter_handle": "",
+      "website": "https://nodejs.org/en/security/",
+      "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-01-06T00:18:00.020Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2018-12-07T00:17:57.568Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "I would like to report Cross Site Scripting vulnerablity in buttle module\nIt allows to execute arbitary javascript due to unsafe rendering of markdown files.\n\n# Module\n\n**module name:** buttle\n**version:** 0.2.0\n**npm page:** `https://www.npmjs.com/package/buttle`\n\n## Module Description\n\nAnother static file server? Why buttle? Well... if you came here looking for a blazing fast server of static files, something with caching and compression options then you're in luck, that does exist! It just isn't buttle.\n\nButtle is tailored for use in development. It has baked in live reloading for html and markdown files. It'll on-the-fly convert your LESS filess to CSS... and cache nothing because it assumes you're actively hacking away. With buttle you can test drive that angular app you just cloned or maybe have your test runner page refresh whenever a source file is changed.\n\n\n## Module Stats\n\n~0 weekly downloads\n\n# Vulnerability\n\n## Vulnerability Description\n\nbuttle uses `kramed` for parsing and rendering markdown. By default kramed does not sanitize html. An uninformed user may assume the output of markdown to be sanitized and thus become vulnerable to XSS by rendering malicious markdown files.\n \nSee https://github.com/jtrussell/buttle/blob/master/lib/mid-buttle.js\n\n```js\n// line no 8\n  var md = require('kramed');\n  md.setOptions({\n    gfm: true\n  });\n\nreturn function(req, res, next) {\n    var url = req.url;\n    if(/\\.md$/i.test(url) || /\\.markdown/i.test(url)) {\n      fs.exists(j(dir, url), function(exists) {\n        if(exists) {\n          fs.readFile(j(dir, url), {encoding: 'utf8'}, function(err, data) {\n            if(err) { return res.end(err.message); }\n            res.end(wrapInHtml(md(data)));\n          });\n        } else {\n          next();\n        }\n      });\n    } else {\n      next();\n    }\n  };\n```\n\n## Steps To Reproduce:\n\n* install buttle:\n`$ npm i buttle`\n\n* run buttle:\n`./node_modules/buttle/bin/buttle -p 8080`\n\n* add a malicious markdown file in the server directory (`test.md` attached) and open it in browser.\n\n## Patch\n\n`kramed` provides an option `sanitize` which is set to `false` by default.\nEither set the `santize` option to `true` in line no 11 of [mid-buttle.js](https://github.com/jtrussell/buttle/blob/master/lib/mid-buttle.js) or inform the user to safely handle markdown files by displaying an apropriate warning.\n\n## Supporting Material/References:\n\nYandex 18.7.0.2767 beta (64-bit)\nUbuntu 16.04\nnode v10.9.0\nnpm 6.4.1\n\n\n# Wrap up\n\n> Select Y or N for the following statements:\n\n- I contacted the maintainer to let them know: N\n- I opened an issue in the related repository: N\n\n\nPS: [`kramed`](https://github.com/GitbookIO/kramed) package is a fork of another library `marked` and is unmaintained since last 2 years.\n\n## Impact\n\nUser is exposed to unsafely rendered markdown files which may lead to execution of arbitrary JS",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 341513,
+      "file_name": "test.md",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/341/513/e5324d81811db2fb164da0c773530666f2278721/test.md?response-content-disposition=attachment%3B%20filename%3D%22test.md%22%3B%20filename%2A%3DUTF-8%27%27test.md&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6K7XUSGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131031Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIA5oUTkOsy%2B%2BNZW%2FsEPkxVR9Nn0bKUQajhMaZJnQUOJJAiBNVU4iwU4izaH0MK0tElopJO3KoogTT8%2FbdWX%2FkbKzuyqyBQh2EAMaDDAxMzYxOTI3NDg0OSIMERsjeYIiXpoQB0OmKo8FUViIVri3eJCOgeD2QGMLKPs4F1%2FjbhNffMNUt%2BfvAGSphgvZY2tU246xkvKwwDTX6TnzUNLh3iGOcuouArS3RIWbEfHSiDDu6%2BVZPx3Wz1I%2FCwS%2BKPH5NwJsBp0BibvHEHHji%2FALBDiXO8PioToytjyaEQNaXmQuLAn84CAb4QekxzofZnprn52iHUoXFyJNf%2Fq3ZqvA4jb30mJAxCPIjnPde1tkpNSGuAfsmY%2ByQYlN7sWxpq5yV%2BTU%2Bz0rt1WjtctGsd6w1yt88Dd%2Br74P8m7ROn2Z0ptQw5A%2BWNmX1Wanb7ILpRxe8QeaZaokqgxiSrVfnWtNKgnVUga2Z0moK4hOWv539koLmT4PBBuxJlSyZWyeMoBemGmSCiOxOKwmrf%2BCK%2FG1BpNYsaCmjPVr2A49O9rh48uqEFc8uvejj87y8pQoGWAlFjsxe1QzTC0haaEIYGygiAnZI6IKmy2%2BNlrPwjgcdHQnc15lnYbAokFqg1uW1UzqkUE4c44dN5JbBhzJaJz14CGqvz2LbrkrxeapW3SunevCGGfJdcClV%2F0zJwxxOPm7TYbX7PHfVKaL7pLvGt6ShxVaeJzf1nAj8m2nfGj9L5WdfZ6Sb9aD7w08GXkqVBejxqPrEzu%2Fin49ua4mt8x0hItGe5i0jUq8p%2BuZQ93zKwP09dFgsV6qPlGtXKwW1fddd9jt%2Bnnp1fwfIxbu4spfYa8nFjzgPqH7T%2F%2FJQgaw6dXm%2Fi4%2FblBIP3pX1Sf8fOovW1YithPw4Jt%2FdibdeIaKPPXUhJeeypNj7zindWYEDmbdjQ6xKgYfOTCGv3Kveuz%2BrIe58j5hhTO6SOGM5oLaEPjukGlkwR0S6pSULxstSwXhSCM4K2grCjC%2Fvq2uBjqyASBnlNoKKu8wzQ1P%2F0BlH14PlBBt%2Fm%2BFzSC4hnyN21lioiA3qg372zbcFqxrMin8PkMDjYnDERYVShxZWmk7L62lyLmDmK6ddoZeeuZn0a%2BBvBT61yW5%2Fafe16Wi38LTWHakxXOTJqfqznIB1OO6RKIWbBpba3WDGpf5V64%2B0hKThL7teXpfRzoD3U%2BjQs%2B7q62Fy7YrQ7qeIWla%2FIkEaOKDajC8wFKHIsPw6ZwsIvBIndQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=79be8b82c19cc00e6fbfcdc4abb9b9c9f7de215191eb05ad738201035636999d",
+      "file_size": 98,
+      "type": "text/plain",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2019-01-06T00:17:57.676Z",
+  "allow_singular_disclosure_after": -161095954.2087583,
+  "singular_disclosure_allowed": true,
+  "vote_count": 16,
+  "voters": [
+    "sameerphad72",
+    "bl4de",
+    "dhakal_ananda",
+    "savitar0x01",
+    "skyn3t",
+    "khizer47",
+    "japz",
+    "vaverka",
+    "b73772bded7541989b54f6a",
+    "taluk",
+    "and 6 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 2.2,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "local",
+      "attack_complexity": "high",
+      "privileges_required": "low",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 8249,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "buttle",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

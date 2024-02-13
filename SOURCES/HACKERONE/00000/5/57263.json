@@ -1,0 +1,101 @@
+{
+  "id": 57263,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81NzI2Mw==",
+  "url": "https://hackerone.com/reports/57263",
+  "title": "Rank Creation function not validating user inputs.",
+  "state": "Closed",
+  "substate": "informative",
+  "readable_substate": "Informative",
+  "created_at": "2015-04-18T22:15:28.429Z",
+  "submitted_at": "2015-04-18T22:15:28.429Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "1234123123",
+    "url": "/1234123123",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 361,
+    "url": "https://hackerone.com/wordpoints",
+    "handle": "wordpoints",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/361/a0559c0ee47289ddff142d66426b278b32961dc9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/361/a0559c0ee47289ddff142d66426b278b32961dc9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "WordPoints",
+      "twitter_handle": "",
+      "website": "",
+      "about": "Open source points plugin for WordPress."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2015-06-04T18:58:38.653Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-06-04T17:23:26.047Z",
+  "team_member_agreed_on_going_public_at": "2015-06-04T18:58:25.545Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "SQL Injection Attack,  command injection and arbitrary code execution Possible.\r\n\r\nBy source code review, I found that rank creation parameters (name, type, group) for wordpoints_add_rank() in ranks.php are not sanitized or validated. It may allow an attacker to Inject arbitrary code during rank creation which is then passed to SQL for database update leading to SQL Injection Attack.\r\n\r\n$inserted = $wpdb->insert(\r\n\t\t$wpdb->wordpoints_ranks\r\n\t\t, array(\r\n\t\t\t'name'       => $name,\r\n\t\t\t'type'       => $type,\r\n\t\t\t'rank_group' => $group,\r\n\t\t\t'blog_id'    => $wpdb->blogid,\r\n\t\t\t'site_id'    => $wpdb->siteid,\r\n\t\t)\r\n\t);\r\n\r\n$rank_id = (int) $wpdb->insert_id;\r\n\r\n\tforeach ( $meta as $meta_key => $meta_value ) {\r\n\t\twordpoints_add_rank_meta( $rank_id, $meta_key, $meta_value );\r\n\t}\r\n\r\n\r\nSimilarly for retrieving Rank by get_data() in class-wordpoints-rank.php using specially crafted ID may lead database exposure) \r\npublic static function get_data( $id ) {\r\n\r\n\t\t$rank_data = wp_cache_get( $id, 'wordpoints_ranks' );\r\n\t\tif ( false !== $rank_data ) {\r\n\t\t\treturn $rank_data;\r\n\t\t}\r\n\t\tglobal $wpdb;\r\n\t\t$rank_data = $wpdb->get_row(\r\n\t\t\t$wpdb->prepare(\r\n\t\t\t\t\"\r\n\t\t\t\t\tSELECT id, name, type, rank_group, blog_id, site_id\r\n\t\t\t\t\tFROM {$wpdb->wordpoints_ranks}\r\n\t\t\t\t\tWHERE id = %d\r\n\t\t\t\t\"\r\n\t\t\t\t, $id\r\n\t\t\t)\r\n\t\t);\r\n\t\tif ( null === $rank_data ) {\r\n\t\t\treturn false;\r\n\t\t}\r\n\t\twp_cache_add( $rank_data->id, $rank_data, 'wordpoints_ranks' );\r\n\t\treturn $rank_data;\r\n\t}\r\n}\r\n\r\n Note: Data from user or cache cannot be trusted and properly validate before passing to function or database:\r\n\r\nRefer: http://php.net/manual/en/filter.filters.sanitize.php\r\nCommand Injection : https://www.owasp.org/index.php/Command_Injection\r\nPHP SQL Injection: http://php.net/manual/en/security.database.sql-injection.php\r\n",
+  "weakness": {
+    "id": 58,
+    "name": "Command Injection - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2015-07-04T17:23:26.517Z",
+  "allow_singular_disclosure_after": -271793747.5653768,
+  "singular_disclosure_allowed": true,
+  "vote_count": 1,
+  "voters": [
+    "shivammusic"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

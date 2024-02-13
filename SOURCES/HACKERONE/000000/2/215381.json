@@ -1,0 +1,120 @@
+{
+  "id": 215381,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMTUzODE=",
+  "url": "https://hackerone.com/reports/215381",
+  "title": "CSRF on Periscope Web OAuth authorization endpoint ",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2017-03-22T16:01:27.460Z",
+  "submitted_at": "2017-03-22T16:01:27.460Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "filedescriptor",
+    "url": "/filedescriptor",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 61,
+    "url": "https://hackerone.com/x",
+    "handle": "x",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "X (Formerly Twitter)",
+      "twitter_handle": "XSecurity",
+      "website": "https://x.com",
+      "about": "X helps you create and share ideas and information instantly, without barriers."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-07-26T23:02:48.018Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-07-20T16:00:28.912Z",
+  "team_member_agreed_on_going_public_at": "2017-07-26T23:02:47.960Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\nI would like to report an issue in the OAuth authorization endpoint on Periscope Web. This allows a malicious 3rd party application to gain full API access to a victim's Periscope account.\n\n#Details\nPeriscope has developer APIs that allow a 3rd party application to access resources on behalf of a user. The authorizion page is like this https://www.periscope.tv/oauth?client_id=█████████&redirect_uri=https://getmevo.com/oauth/periscope\n\nIt was found that the authorize endpoint does not have any protection against CSRF. The request to authorize a 3rd party application to access one's Periscope account is as follows:\n```http\nPOST https://www.periscope.tv/oauthAuthorize HTTP/1.1\nHost: www.periscope.tv\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36\nContent-Type: application/x-www-form-urlencoded\nCookie: sid=[...]\n\nclient_id=████&redirect_uri=https%3A%2F%2Fgetmevo.com%2Foauth%2Fperiscope?abc\n```\nAs one can see, there is no CSRF token or Origin validation.\n\nAfter a 3rd party application gets the *authorization code* from *redirect_uri*, it can then exchange it for an access token.\n\n#Impact\nSince the Developer APIs are not public, I have no information what the APIs can perform. Based on the the description on the authorization page however, it looks intimidating that it has **full access** to an account.\n{F170579}\nAt minimum, I found endpoints that allow creating a broadcast (https://public-api.periscope.tv/v1/broadcast/create), tweeting it (https://public-api.periscope.tv/v1/broadcast/publish) and deleting a broadcast (https://public-api.periscope.tv/v1/broadcast/delete).\n\n#PoC\n1. Make sure you are logged into Periscope Web (https://periscope.tv)\n2. Go to http://innerht.ml/pocs/periscope-oauth-csrf/\n3. You will be redirected to something like https://getmevo.com/oauth/periscope?code=abcde&state=, copy the *code* value in the parameter\n4. Go to http://innerht.ml/pocs/periscope-oauth-csrf/code.php?code=abcde and replace the above code in the parameter\n5. A tweet will be posted in your timeline with a broadcast\n\nThe behind the scene is:\n1. Exchange *code* for *access_token* (https://public-api.periscope.tv/v1/oauth/token)\n2. Create a broadcast (https://public-api.periscope.tv/v1/broadcast/create)\n3. Publish it (https://public-api.periscope.tv/v1/broadcast/publish)\n\nNote that a real attack does not require user interaction. In this PoC the manual copying of *code* is because I don't have a 3rd party Periscope application. \n\n#Fix\nAdd CSRF protection",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 170579,
+      "file_name": "periscope-fullaccess.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/170/579/3e178eb084c267491a3e41fddee17c764739889e/periscope-fullaccess.PNG?response-content-disposition=attachment%3B%20filename%3D%22periscope-fullaccess.PNG%22%3B%20filename%2A%3DUTF-8%27%27periscope-fullaccess.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2TXGU4NH%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T123739Z&X-Amz-Expires=1896&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZXXLTvdjrV9%2BXTrnagiitpTSxdTNfuwI8JoO87a374wIgGdKdQ7YeIephBMysf3wfpXJkd8udROvqz%2BslCFnteH4qsgUIcBADGgwwMTM2MTkyNzQ4NDkiDJwtqkOHj%2Bhq7hwpISqPBc3oQJzChWjZ7bKD%2BccTmt7LiDYwnp%2FaW49dMRirZ9pIhrCa7YZHTLZ9RBv6n9DI4zg1cmDjgAWLZcLoHEU6HMSY4TZiQ6JhkTxfHY9%2BW8gIq%2FN6zwvc28EGhPI0bXtMQ05CUe9qLU1IqB2QvVi8ljbC0OENAKpHHW%2B4HZPV3ya4m4CUrmIsBEz02u4o%2FTUWBucXelW27TA%2FMHkcbbkFDMVuk57DqG9l6DCv91Gk0it2LxC7b8QipHE3PIzezn29GFbq0x%2FVAy8j5zhCsVA2u3PoLG8UBgJPigFlduO2n54cymHx0Kj1lPCf0XySDYAG7J%2BkbE9frSbqOenAzEKHL%2BbmTLbvIknLt0tHuWNofydq3sKSVRJUGT6kPaXiG6LcZZAjiidzALZPhPiZjjN2NFbT%2B4d3bYuhSBgSzvUsrX%2FU4t82le3n50YJtFXVQ5QFh1yFj%2BasAJo8gy4CzSP0PgdMEiJHxmad%2BFSBk1osw1BNlolWVHoYfecAbexOr2DelWZtvQEFGBxOieL0Wu0EoUhoxEA%2BwcuNd421R9g0jkhW6T1utyXajONBgYVseJBpWnbW%2BkpGImvblpF9NqajpVHpAAFM6sdMLqiQfJ1f2k9nfS8NIMIMr1C%2Fow0E8D%2FBak4EhkqC2z4QmLpn0zQ7nAVSDGC0pvQQ9HVPj%2BqgNB88SHK9rHZSyCSKf4lsEvYbKl40pk9%2FwaWVlfLBHZ9KQh3Sk5kHWBptfVKftWPHgl3kdZnZZoD7zq5BIGAq%2BfkhmJ1PLAj9CcRgLZKxPmL7BwBfMK1j9GipZrFsKu100o2ehZDw7ycR0yKIZpB5BsA2SMtYyPB%2B8lmSAWsiEcgvv%2BCmvle2pB9btBCR6tP%2FsVAwuKWsrgY6sQEOW7UlyhlECgHHWSD1IxQaKIHYvjLM%2FfiTluais8DBgTs2%2B0ozGJfGCvvwGwuCx3AVFBMiYmPRly4WjCK3xXERtAap5VTGJE61OwLy5AbGPGJEzLPgyw2xUSEbhOBlNW9NWCeq3J6Ykb0rxTuobAmesQY2%2FdIFblQ%2FHHBqxCz3Wf7QF6oiRaFXn07SukEwJwLzpGlJ6GkqAxZz63CXWtQishvehwDUwbs0xamAMs2tYiU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=114ec91b48b5585ecc0c9f4d3835de2a1f4c0c8ebae3c4dc87a77fb6e6eefa0b",
+      "file_size": 40126,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-08-19T16:00:28.960Z",
+  "allow_singular_disclosure_after": -204669430.95755225,
+  "singular_disclosure_allowed": true,
+  "vote_count": 66,
+  "voters": [
+    "mr-medi",
+    "flamezzz",
+    "n1m0",
+    "jensec",
+    "7odamoo",
+    "cdl",
+    "bl4de",
+    "tess",
+    "spam404",
+    "cubed",
+    "and 56 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

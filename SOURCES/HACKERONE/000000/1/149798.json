@@ -1,0 +1,142 @@
+{
+  "id": 149798,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNDk3OTg=",
+  "url": "https://hackerone.com/reports/149798",
+  "title": "Content (Text) Injection at NextCloud Server 9.0.52 - via http://custom_nextcloud_url/remote.php/dav/files/ ",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2016-07-07T16:31:36.225Z",
+  "submitted_at": "2016-07-07T16:31:36.225Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": true,
+    "username": "abcdefghijklmnopqrstuvwxyzabc",
+    "url": "/abcdefghijklmnopqrstuvwxyzabc",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2016-9468"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-12-02T20:01:48.371Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-12-02T20:01:48.298Z",
+  "team_member_agreed_on_going_public_at": "2016-11-03T22:01:57.496Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Dear Next Cloud Security Team,\n\nI would like to report an issue. This is not a critical issue since the affect and not even \"touch\" something sensitive that stored at the server via the application. As a summary, this is issue need the user interaction for exploiting the \"target\". So, based on this simple summary, I put it as a \"Design Issue\".\n\nI. Introduction\n---------------------\nGenerally, Content (which is Text in this case) Injection is an Attack that using the missing input validation at an trusted URL or even form in the specific web application. Usually, this attack can work with the non-aware user that targeted as a victim. In short, based on OWASP, this attack is typically used as, or in conjunction with, social engineering because the attack is exploiting a code-based vulnerability and a user's trust. \n.\n\nII. Summary of the Issue\n---------------------\nAs described above, the issue could allow the Attacker inject any \"very convince\" message via the URL that not give the \"total\" validation of the input yet. Please kindly note, I put the word of \"total\" because the validation is only for \"/\" character.\n.\n\nIII. Situation and Condition\n---------------------\n3.1. The location of this affected URL could be found in 2 (two) different URL, which is: `http://nextcloud_custom_URL/remote.php/dav/files/<Inject_here>` and `http://nextcloud_custom_URL/remote.php/dav/files/<registered_user>/<Inject_here>`\n3.2. As an information, one of those URL will works if we know the registered user at the application (noted with <registered_user>) in the sub point #3.1.\n3.3. Both of those URL need the different \"convince word\" to gaining the \"user's trust\".\n.\n\nIV. Proof of Concept\n---------------------\nThe proof of concept isn't that hard. The victim just need to visit one of those 2 (two) URL with \"convince\" word. For example:\n4.1. `http://nextcloud_custom_URL/remote.php/dav/files/nxtgrpone2/The%20location%20of%20the%20files%20are%20moved%20to%20another%20url%20that%20could%20be%20found%20at%20fakenextcloud.com%20domain.%20Please%20visit%20the%20file%20at%20those%20new%20location%20with%20%22sample%20fake%20file.txt%22` --> please see the **\"1st URL.png\"** as reference.\n\n4.2. `http://localhost/nextcloud/remote.php/dav/files/of%20yoko%20is%20removed%20in%20this%20old%20server.%20Please%20kindly%20visit%20the%20the%20new%20server%20with%20the%20same%20username%20at%20fakenextcloud.com%20domain.%20Please%20contact%20us%20again%20in%20yoko@fakedomain.com%20if%20you%20get%20the%20same%20error%20again,%20which%20is%20files`  --> please see the **\"2nd URL.png\"** as reference.\n.\n\nV. Recommendation\n---------------------\n5.1. Well, even it will be a classic looks and sounds, giving the validation of the input at those affected URL will minimize the risk. In this case, every invalid input should be redirected to custom URL;\n5.2. The second one, related the URL that affected \"if\" Attacker knows the registered user, then it would be good if  the user enumeration is disable.\n.\n\nBest Regard,\n\nYoKo",
+  "weakness": {
+    "id": 57,
+    "name": "Violation of Secure Design Principles"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 103721,
+      "file_name": "1st_URL.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/103/721/c44ce53afacf1ab66555558909ba4aa2001ef191/1st_URL.png?response-content-disposition=attachment%3B%20filename%3D%221st_URL.png%22%3B%20filename%2A%3DUTF-8%27%271st_URL.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDWGU53J%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T121721Z&X-Amz-Expires=1254&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIEQrBbU8Jad1w5JwSX%2BtcCe%2B%2Bf2fWuM59KuP4ISMFc4wAiBo2h1%2BGY0GcS29KJV9ChmgWe9tqhKd5ZLb1WWqvprHYiqxBQhwEAMaDDAxMzYxOTI3NDg0OSIMhG92oDXEtczQPYIjKo4Fy8fG%2F18wGKWDOaZUOzqIsPg%2F2%2Bhxtkqy9tw5WM0FnO0efhz261ude9PuTQW%2F8W1XVC%2B6%2Btv%2F%2FGVnCyHPPzSf21evTkJ%2F2elUnngDFTubvtbmQMdS4Rnt0%2FU%2FuXzMknf8g%2BX5PviUKj6nGgaRnY9Hp0kLUpB9xZV%2BBUdPCVV4HR0N%2BfR1rXE7N8YpBPWLYN%2BeSFjCXMLIPUyphbmsuZkyiXQtehFKt7nJxobss3F2hvjZloveNvwrVNVWJFNQom1gLI9F7%2BIpCnOeXjEy3MSXsLuTbawl2ybmhjHZrkvOBGKRCJZ%2B2u5iwtWDz1wnMZRyFyaeTcUEvO9J6iZaOADHjWDUQ0JKmYoztclRLBYdqnFqX4GvRgDrPlxBgIXLYhik%2BmiNM0sGzn7a7dUiYYPCq%2FdAd9zf%2Bi%2F2Nc6bbCemAOnCRpYV7CfzwpAvbOTg1ETpUulaDRVq85Dx2p0leRTu%2FT%2FWnLION%2BrUWGT9LWh7WHbiRD9czkDV6jmhMSgRB%2Bl0SrMovwZEVMZSrCU%2BLZ04O9Ixjhzq%2B1Vr0XZu7DRtQOja%2FirIkVuwQiYxCdihARcXY10a6JugOVRadvNpcM%2BWrNER7eW6Ggy%2F7f6BytYoIxde%2BqacE7wj84z9DiuAc2no4T1dj4uFJ7X6msn0%2FWRzATSRapOIgtEcp4pwGfB%2BgJFOL0hN4w15UCIL%2FBVzrYd%2BXa1P5NfHNayl%2B47A6AtIllD1sc5l2BQdyjSXlYZVLP2DEDSN%2F9jemORnER%2FjuktMS4RtWWHcTnxoCzT9%2F%2FA8uQ%2FnRXtwTrFdv9agI5vhmpVKiMFBKwXX8KP59Ilg%2Fit%2BFtjLhR36yfvnmCbVRQoElpkcYZZM0YhVFqxqlVMBMJKcrK4GOrIBANrznU6BJTMtT8T9H36XK5m%2BmVr8n6tG0lGtMpTogn8GvplsC4ZKMuQxe3g9N4DP5saesTh9dqff09EBOPWaGcNb6eKu1xWMCP6%2FWNwnlhKPZDaWoTSy84GV7wvrpprkfGE6wb4T1PsZpb%2FIZElZKvxaZpFBFfT0K3jPH7QW9j17n06s2QlpvBBCJkLlXBGs%2FcA4E70Mzy6JNhXk5S%2BRjCCYfigjYp55SDrDc%2F%2FldOze%2FA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9169b0f963cd47b73fd24f8a7f69444f60d074e8abacfceaa9e1cd6909876cd4",
+      "file_size": 1200648,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 103722,
+      "file_name": "2nd_URL.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/103/722/9f775d71382ab42757c67dc2c92a6a703688db55/2nd_URL.png?response-content-disposition=attachment%3B%20filename%3D%222nd_URL.png%22%3B%20filename%2A%3DUTF-8%27%272nd_URL.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDWGU53J%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T121721Z&X-Amz-Expires=1254&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIEQrBbU8Jad1w5JwSX%2BtcCe%2B%2Bf2fWuM59KuP4ISMFc4wAiBo2h1%2BGY0GcS29KJV9ChmgWe9tqhKd5ZLb1WWqvprHYiqxBQhwEAMaDDAxMzYxOTI3NDg0OSIMhG92oDXEtczQPYIjKo4Fy8fG%2F18wGKWDOaZUOzqIsPg%2F2%2Bhxtkqy9tw5WM0FnO0efhz261ude9PuTQW%2F8W1XVC%2B6%2Btv%2F%2FGVnCyHPPzSf21evTkJ%2F2elUnngDFTubvtbmQMdS4Rnt0%2FU%2FuXzMknf8g%2BX5PviUKj6nGgaRnY9Hp0kLUpB9xZV%2BBUdPCVV4HR0N%2BfR1rXE7N8YpBPWLYN%2BeSFjCXMLIPUyphbmsuZkyiXQtehFKt7nJxobss3F2hvjZloveNvwrVNVWJFNQom1gLI9F7%2BIpCnOeXjEy3MSXsLuTbawl2ybmhjHZrkvOBGKRCJZ%2B2u5iwtWDz1wnMZRyFyaeTcUEvO9J6iZaOADHjWDUQ0JKmYoztclRLBYdqnFqX4GvRgDrPlxBgIXLYhik%2BmiNM0sGzn7a7dUiYYPCq%2FdAd9zf%2Bi%2F2Nc6bbCemAOnCRpYV7CfzwpAvbOTg1ETpUulaDRVq85Dx2p0leRTu%2FT%2FWnLION%2BrUWGT9LWh7WHbiRD9czkDV6jmhMSgRB%2Bl0SrMovwZEVMZSrCU%2BLZ04O9Ixjhzq%2B1Vr0XZu7DRtQOja%2FirIkVuwQiYxCdihARcXY10a6JugOVRadvNpcM%2BWrNER7eW6Ggy%2F7f6BytYoIxde%2BqacE7wj84z9DiuAc2no4T1dj4uFJ7X6msn0%2FWRzATSRapOIgtEcp4pwGfB%2BgJFOL0hN4w15UCIL%2FBVzrYd%2BXa1P5NfHNayl%2B47A6AtIllD1sc5l2BQdyjSXlYZVLP2DEDSN%2F9jemORnER%2FjuktMS4RtWWHcTnxoCzT9%2F%2FA8uQ%2FnRXtwTrFdv9agI5vhmpVKiMFBKwXX8KP59Ilg%2Fit%2BFtjLhR36yfvnmCbVRQoElpkcYZZM0YhVFqxqlVMBMJKcrK4GOrIBANrznU6BJTMtT8T9H36XK5m%2BmVr8n6tG0lGtMpTogn8GvplsC4ZKMuQxe3g9N4DP5saesTh9dqff09EBOPWaGcNb6eKu1xWMCP6%2FWNwnlhKPZDaWoTSy84GV7wvrpprkfGE6wb4T1PsZpb%2FIZElZKvxaZpFBFfT0K3jPH7QW9j17n06s2QlpvBBCJkLlXBGs%2FcA4E70Mzy6JNhXk5S%2BRjCCYfigjYp55SDrDc%2F%2FldOze%2FA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4817a4b6428b4b103f38baf393f65cf126176796128de33cb3ebe06fb9fde675",
+      "file_size": 1205084,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-12-03T22:01:57.525Z",
+  "allow_singular_disclosure_after": -227024124.17239773,
+  "singular_disclosure_allowed": true,
+  "vote_count": 7,
+  "voters": [
+    "apapedulimu",
+    "pekafat",
+    "madrobot",
+    "alfredsaonoy",
+    "spetr0x",
+    "bm666",
+    "dyabla"
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 3.1,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

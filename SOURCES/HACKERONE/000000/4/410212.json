@@ -1,0 +1,166 @@
+{
+  "id": 410212,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80MTAyMTI=",
+  "url": "https://hackerone.com/reports/410212",
+  "title": "Vanilla Forums Xenforo password splitHash Unserialize Remote Code Execution Vulnerability",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-09-15T22:22:53.238Z",
+  "submitted_at": "2018-09-15T22:22:53.238Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mr_me",
+    "url": "/mr_me",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/041/443/87c206e9ba716dc99839e7bfd04c0279d74fa6cc_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17443,
+    "url": "https://hackerone.com/vanilla",
+    "handle": "vanilla",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Vanilla",
+      "twitter_handle": "vanilla",
+      "website": "http://vanillaforums.com",
+      "about": "Vanilla is a powerfully simple discussion forum you can easily customize to make as unique as your community."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-11-23T15:46:49.166Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-10-24T15:46:39.331Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\n\nAn authenticated admin user can inject an unserializable password in a another users account. Later when attempting a login with that user, the attacker can trigger a call to an unserialize in the splitHash function. By using a custom pop chain to write into the constants.php file, an attacker can leverage this to gain remote code execution.\n\n## Notes:\n\n- You need to have an admin account to run this poc.\n- This poc will simply delete the conf/.htaccess file assuming the right permissions are set\n- Please note that this poc will not clean up after itself, you will need to remove the back door user\n\n## Analysis:\n\nInside of applications/dashboard/controllers/class.entrycontroller.php we can see the following code\n\n```\nclass EntryController extends Gdn_Controller {\n\n    ...\n\n    public function signIn($method = false, $arg1 = false) {\n        if (!$this->Request->isPostBack()) {\n            $this->checkOverride('SignIn', $this->target());\n        }\n\n        Gdn::session()->ensureTransientKey();\n\n        $this->addJsFile('entry.js');\n        $this->setData('Title', t('Sign In'));\n        $this->Form->addHidden('Target', $this->target());\n        $this->Form->addHidden('ClientHour', date('Y-m-d H:00')); // Use the server's current hour as a default.\n\n        // Additional signin methods are set up with plugins.\n        $methods = [];\n\n        $this->setData('Methods', $methods);\n        $this->setData('FormUrl', url('entry/signin'));\n\n        $this->fireEvent('SignIn');\n\n        if ($this->Form->isPostBack()) {\n            $this->Form->validateRule('Email', 'ValidateRequired', sprintf(t('%s is required.'), t(UserModel::signinLabelCode())));\n            $this->Form->validateRule('Password', 'ValidateRequired');\n\n            if (!$this->Request->isAuthenticatedPostBack() && !c('Garden.Embed.Allow')) {\n                $this->Form->addError('Please try again.');\n            }\n\n            // Check the user.\n            if ($this->Form->errorCount() == 0) {\n                $email = $this->Form->getFormValue('Email');\n                $user = Gdn::userModel()->getByEmail($email);\n                if (!$user) {\n                    $user = Gdn::userModel()->getByUsername($email);\n                }\n\n                if (!$user) {\n                    $this->addCredentialErrorToForm('@'.sprintf(t('User not found.'), strtolower(t(UserModel::signinLabelCode()))));\n                    Logger::event('signin_failure', Logger::INFO, '{signin} failed to sign in. User not found.', ['signin' => $email]);\n                    $this->fireEvent('BadSignIn', [\n                        'Email' => $email,\n                        'Password' => $this->Form->getFormValue('Password'),\n                        'Reason' => 'NotFound'\n                    ]);\n                } else {\n                    // Check the password.\n                    $passwordHash = new Gdn_PasswordHash();\n                    $password = $this->Form->getFormValue('Password');\n                    try {\n                        $passwordChecked = $passwordHash->checkPassword($password, val('Password', $user), val('HashMethod', $user));           // 1\n```\n\nSince we can create a user as an admin controlling the hash method and password, at [1] we can reach the checkPassword() call using data coming from the database. Then, in library/core/class.passwordhash.php we can see the definition of the checkPassword():\n\n```\nclass Gdn_PasswordHash {\n\n    ...\n\n    public function checkPassword($password, $storedHash, $method = false) {\n        $result = false;\n\n        if (empty($password) || empty($storedHash)) {\n            // We don't care if there is a strong password hash. Empty passwords are not cool\n            return false;\n        }\n\n        switch (strtolower($method)) {\n\n        ...\n\n            case 'xenforo':\n                $result = $this->getAlgorithm('Xenforo')->verify($password, $storedHash);           // 2\n```\n\nAt [2] we can see that of the `$method` is set to xenforo, the code will call the `verify()` function on the instance of the XenforoPassword class using the stored hash in the db. Then, within the vendor/vanilla/garden-password/src/XenforoPassword.php file we see the following `verify()` function:\n\n```\nclass XenforoPassword implements PasswordInterface {\n\n    ...\n\n    /**\n     * {@inheritdoc}\n     */\n    public function needsRehash($hash) {\n        list($storedHash, $storedSalt) = $this->splitHash($hash);\n\n        // Unsalted hashes should be rehashed.\n        return $storedHash === false || $storedSalt === false;\n    }\n\n    /**\n     * {@inheritdoc}\n     */\n    public function verify($password, $hash) {\n        list($storedHash, $function, $storedSalt) = $this->splitHash($hash);                // 3\n\n        $calcHash = $this->hashRaw($password, $storedSalt, $function, $storedHash);\n        $result = $calcHash === $storedHash;\n\n        return $result;\n    }\n\n    ...\n\n    private function splitHash($hash) {\n        $parts = @unserialize($hash);                                                       // 4\n```\n\nAt [3] the code calls `splitHash()` which will lead to an unserialize call at [4].\n\n## Exploitation:\n\nAn authenticated attacker can create an account that has an unserializable string inside of the password. Once the user attempts to login, the password is unserialized by the above code. At first, exploitation seems limited because there is a max char limit of 100 chars for the password when creating the user. This is not enough to use the rce pop chain I created. \n\n```\nmysql> describe GDN_User;\n+--------------------------+-------------------+------+-----+---------+----------------+\n| Field                    | Type              | Null | Key | Default | Extra          |\n+--------------------------+-------------------+------+-----+---------+----------------+\n| UserID                   | int(11)           | NO   | PRI | NULL    | auto_increment |\n| Name                     | varchar(50)       | NO   | MUL | NULL    |                |\n| Password                 | varbinary(100)    | NO   |     | NULL    |                |        <-- limited at the db level\n```\n\nHowever we can just use the phar:// technique to trigger a second stage pop chain because we can reach a controlled files_exists(). Inside of library/core/class.proxyrequest.php:\n\n```\nclass ProxyRequest {\n\n    ...\n\n    public function __destruct() {\n        if (file_exists($this->CookieJar)) {                // 1\n            unlink($this->CookieJar);                       // 2\n        }\n    }\n```\n\nAt [1] we can leverage this to reach a second stage unserialize(). Think of it like a second order unserialize. Then at [2] we can of course delete any file. This was the option I went for since this is just a poc.\n\n## Example:\n\n```\nsaturn:vanilla_forums_xenforo_splithash_unserialize_rce mr_me$ ./poc.py \n(+) usage: ./poc.py <target> <username:password>\n(+) eg: ./poc.py 172.16.175.143 admin:admin123\n\nsaturn:vanilla_forums_xenforo_splithash_unserialize_rce mr_me$ ./poc.py 172.16.175.143 admin:admin123\n(+) targeting: http://172.16.175.143\n(+) logged in!\n(+) created a pwner account and injected a serialized object in the password!\n(+) deleted conf/.htaccess!\n(+) modify this exploit if you want to execute remote code ;-)\n```\n\nChecking the target server...\n\n```\nsteven@pluto:/var/www/html/conf$ ls -la .htaccess \n-rwxrwxrwx 1 www-data www-data 13 Sep 15 18:30 .htaccess\nsteven@pluto:/var/www/html/conf$ ls -la .htaccess \nls: cannot access '.htaccess': No such file or directory\n```\n\nWhoops.\n\n## Impact\n\nAn authenticated attacker can gain remote code execution, however in this poc I just created a pop chain that will delete a file as a poc. I think I have already demonstrated rce via another unserialize, don't really need to do it again I think.",
+  "bounty_amount": "300.0",
+  "formatted_bounty": "$300",
+  "weakness": {
+    "id": 52,
+    "name": "Deserialization of Untrusted Data"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 346846,
+      "file_name": "vanilla_forums_xenforo_splithash_unserialize_rce.zip",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/346/846/3a3a2e09be5a366bfeb3593f0b20740ed07f71ef/vanilla_forums_xenforo_splithash_unserialize_rce.zip?response-content-disposition=attachment%3B%20filename%3D%22vanilla_forums_xenforo_splithash_unserialize_rce.zip%22%3B%20filename%2A%3DUTF-8%27%27vanilla_forums_xenforo_splithash_unserialize_rce.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6K7XUSGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131108Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIA5oUTkOsy%2B%2BNZW%2FsEPkxVR9Nn0bKUQajhMaZJnQUOJJAiBNVU4iwU4izaH0MK0tElopJO3KoogTT8%2FbdWX%2FkbKzuyqyBQh2EAMaDDAxMzYxOTI3NDg0OSIMERsjeYIiXpoQB0OmKo8FUViIVri3eJCOgeD2QGMLKPs4F1%2FjbhNffMNUt%2BfvAGSphgvZY2tU246xkvKwwDTX6TnzUNLh3iGOcuouArS3RIWbEfHSiDDu6%2BVZPx3Wz1I%2FCwS%2BKPH5NwJsBp0BibvHEHHji%2FALBDiXO8PioToytjyaEQNaXmQuLAn84CAb4QekxzofZnprn52iHUoXFyJNf%2Fq3ZqvA4jb30mJAxCPIjnPde1tkpNSGuAfsmY%2ByQYlN7sWxpq5yV%2BTU%2Bz0rt1WjtctGsd6w1yt88Dd%2Br74P8m7ROn2Z0ptQw5A%2BWNmX1Wanb7ILpRxe8QeaZaokqgxiSrVfnWtNKgnVUga2Z0moK4hOWv539koLmT4PBBuxJlSyZWyeMoBemGmSCiOxOKwmrf%2BCK%2FG1BpNYsaCmjPVr2A49O9rh48uqEFc8uvejj87y8pQoGWAlFjsxe1QzTC0haaEIYGygiAnZI6IKmy2%2BNlrPwjgcdHQnc15lnYbAokFqg1uW1UzqkUE4c44dN5JbBhzJaJz14CGqvz2LbrkrxeapW3SunevCGGfJdcClV%2F0zJwxxOPm7TYbX7PHfVKaL7pLvGt6ShxVaeJzf1nAj8m2nfGj9L5WdfZ6Sb9aD7w08GXkqVBejxqPrEzu%2Fin49ua4mt8x0hItGe5i0jUq8p%2BuZQ93zKwP09dFgsV6qPlGtXKwW1fddd9jt%2Bnnp1fwfIxbu4spfYa8nFjzgPqH7T%2F%2FJQgaw6dXm%2Fi4%2FblBIP3pX1Sf8fOovW1YithPw4Jt%2FdibdeIaKPPXUhJeeypNj7zindWYEDmbdjQ6xKgYfOTCGv3Kveuz%2BrIe58j5hhTO6SOGM5oLaEPjukGlkwR0S6pSULxstSwXhSCM4K2grCjC%2Fvq2uBjqyASBnlNoKKu8wzQ1P%2F0BlH14PlBBt%2Fm%2BFzSC4hnyN21lioiA3qg372zbcFqxrMin8PkMDjYnDERYVShxZWmk7L62lyLmDmK6ddoZeeuZn0a%2BBvBT61yW5%2Fafe16Wi38LTWHakxXOTJqfqznIB1OO6RKIWbBpba3WDGpf5V64%2B0hKThL7teXpfRzoD3U%2BjQs%2B7q62Fy7YrQ7qeIWla%2FIkEaOKDajC8wFKHIsPw6ZwsIvBIndQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=37eaef318b1460ebc50ae81b307d95cbfc1223f33c6a1246895674c59a3a86c6",
+      "file_size": 145730,
+      "type": "application/zip",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-11-23T15:46:39.390Z",
+  "allow_singular_disclosure_after": -164841869.01900175,
+  "singular_disclosure_allowed": true,
+  "vote_count": 24,
+  "voters": [
+    "irek",
+    "fqdn",
+    "inhibitor181",
+    "sameerphad72",
+    "spam404",
+    "ali",
+    "ahiezer",
+    "theappsec",
+    "harry_mg",
+    "f_m",
+    "and 14 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.0,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "high",
+      "user_interaction": "none",
+      "scope": "changed",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 2101,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.vanillaforums.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 10731,
+      "category": "researcher",
+      "content": "An attacking admin user can inject an unserializable password in a another users account. Later when attempting a login with that user, the attacker can trigger a call to an unserialize in the splitHash function. By using a custom pop chain to write into the constants.php file, an attacker can leverage this to gain remote code execution.",
+      "user": {
+        "id": 41443,
+        "username": "mr_me",
+        "name": "Steven Seeley",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": "https://srcincite.io/",
+        "location": "",
+        "created_at": "2015-10-08T18:38:12.546Z",
+        "url": "https://hackerone.com/mr_me",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/041/443/87c206e9ba716dc99839e7bfd04c0279d74fa6cc_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/041/443/87c206e9ba716dc99839e7bfd04c0279d74fa6cc_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/041/443/87c206e9ba716dc99839e7bfd04c0279d74fa6cc_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

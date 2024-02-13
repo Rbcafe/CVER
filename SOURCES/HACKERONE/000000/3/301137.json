@@ -1,0 +1,148 @@
+{
+  "id": 301137,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMDExMzc=",
+  "url": "https://hackerone.com/reports/301137",
+  "title": "GitHub import allows user to create child group under existing namespace",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2017-12-29T01:13:46.612Z",
+  "submitted_at": "2017-12-29T01:13:46.612Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jobert",
+    "url": "/jobert",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 264,
+    "url": "https://hackerone.com/gitlab",
+    "handle": "gitlab",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "GitLab",
+      "twitter_handle": "gitlab",
+      "website": "https://about.gitlab.com",
+      "about": "A single application for the entire software development lifecycle."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2017-0919"
+  ],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2018-05-24T18:27:39.151Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-05-24T18:22:17.207Z",
+  "team_member_agreed_on_going_public_at": "2018-05-24T18:27:39.053Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "When importing a GitHub repository on GitLab, a request is made to `/import/github`. The user is allowed to pass along a target namespace where they want to add the repository. In this process, the code will create the namespace if it doesn't exist already. However, this can be used to create a sub-group of an existing group and give you \"owner\" level access to the sub-group. This has a couple benefits, including being able to use the plan of the owner group, see who is part of the group (helpful in case the group is private), and, perhaps most importantly, being able to create new projects under a group you're unauthorized to.\n\nTo reproduce, make sure there's a GitLab instance that has a group a user is unauthorized to create projects / groups for. Then, sign in to the normal user account and authorize GitLab to view your GitHub projects. Intercept your network traffic, then click the \"Import\" button. Observe a request similar to the one below being submitted:\n\n**Request**\n```\nPOST /import/github HTTP/1.1\nHost: gitlab-instance\n...\n\nrepo_id=115670444&target_namespace=jobertabma&new_name=test\n```\n\nIn this request, change the `target_namespace` to `secret-group/test`. This will create a sub-group called `test` to the group `secret-group`.████ To exploit this, an attacker could set a GitLab logo as their group avatar and start spreading gitlab-ce and gitlab-ee projects under the gitlab-org namespace.\n\n**The sub-group as shown on the gitlab-org group page**\n{F250077}\n\n**Automatic billing due to the relationship with gitlab-org**\n{F250076}\n\nThis has been tested against the latest version of GitLab.\n\n## Impact\n\nN/A",
+  "bounty_amount": "750.0",
+  "formatted_bounty": "$750",
+  "weakness": {
+    "id": 26,
+    "name": "Improper Access Control - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 250076,
+      "file_name": "Screen_Shot_2017-12-28_at_5.11.46_PM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/250/076/002bb14ffa5e7cdcaf8f6dbad9f463c50ba8ad35/Screen_Shot_2017-12-28_at_5.11.46_PM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2017-12-28_at_5.11.46_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2017-12-28_at_5.11.46_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125637Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a61b0c565f987b284572e9c5db735ab277cf22e7563d0aee962a5f34fae4d8a4",
+      "file_size": 383436,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 250077,
+      "file_name": "Screen_Shot_2017-12-28_at_5.12.07_PM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/250/077/ccbe5e59d78c3fe5e8840447e2ae02e1d3cb821d/Screen_Shot_2017-12-28_at_5.12.07_PM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2017-12-28_at_5.12.07_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2017-12-28_at_5.12.07_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125637Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=86531a18d26c9d148179a66babb9da5d3beeab0e63a0ba6f5361d7890ef9a3b8",
+      "file_size": 457914,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-06-23T18:22:17.331Z",
+  "allow_singular_disclosure_after": -178050859.99667972,
+  "singular_disclosure_allowed": true,
+  "vote_count": 13,
+  "voters": [
+    "europa",
+    "kapytein",
+    "savitar0x01",
+    "apapedulimu",
+    "bugdiscloseguys",
+    "kunal94",
+    "eveeez",
+    "egrep",
+    "cryptographer",
+    "zzealsham",
+    "and 3 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 7.1,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "high",
+      "availability": "none"
+    }
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

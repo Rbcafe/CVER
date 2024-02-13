@@ -1,0 +1,131 @@
+{
+  "id": 132057,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMzIwNTc=",
+  "url": "https://hackerone.com/reports/132057",
+  "title": "Reputation Manipulation (Theoretical)",
+  "state": "Closed",
+  "substate": "not-applicable",
+  "readable_substate": "N/A",
+  "created_at": "2016-04-18T17:35:28.658Z",
+  "submitted_at": "2016-04-18T17:35:28.658Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "paulos__",
+    "url": "/paulos__",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/008/601/abf2077609ef0546be8676abd1bec49aaefc9ff2_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-04-19T23:08:54.105Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-04-19T21:42:40.706Z",
+  "team_member_agreed_on_going_public_at": "2016-04-19T23:08:54.025Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\n\nI really would appreciate if you are transparent with this or does not close the bug quickly as N/A or something similar because of being purely theoretical.\nI am assuming HackerOne runs an x86 System. and the INT_MAX is **2,147,483,648**. (I know this because https://hackerone.com/reports/2147483647 returns 404 but https://hackerone.com/reports/2147483649 returns Error)\n\nWhile https://hackerone.com/reports/-2147483645 returns 404\nhttps://hackerone.com/reports/-2147483649 returns Error\n\nTo try this bug, I need to have a verified program. because I can't do that (not sandbox to manipulate rep), I am reporting to you about why I think this works.\n\n- Integers can be from -2,147,483,648 to 2,147,483,647 (~ ± 2 billion)\n\nIn any programming language, there should be an INT MAX limit. long, short, double... there is. In short:\n```if(INT_MAX+1 > 0)``` is usually true. In your case:\n```if (int(-2147483648) > 0)``` should return **false** which may be a WTF! \n\n-2147483648 is actually an expression: a positive literal value 2147483648 with unary - operator in front of it. Value 2147483648 is apparently too large for the positive side of int range on your platform.\n\nIn short: 2147483647 + 1 is actually -2147483648 and vice versa. **when you pass the MAX in int, it will become negative. and when you pass the negative limit, the number will become posetive**\n\nI am sure by now you are seeing where I am going with this. when an attacker submits too much vulnerabilities and if all are closed by the program as Spam (-10rep) that will give the user a negative reputation. \n\nIf he manages to get enough Spam (can write a script to automate reporting and closing as Spam) he will eventually have enough negative points that pass the int limit and be considered positive.\n\nSo if an attacker manages to do -2147483648 (consider his reputation) - 10 (another report closed as spam) = Positive. *My numbers may not be accurate because of a number of factors* \n\nThis is the oldest trick in the hat while stealing money from banks and sometimes even referenced as Integer Overflow (dont confuse it with the popular c++ bug)\n\nAnyway, take a look and there is more you didnt patch this and I may be right, if so: horry! if not: well, it was a fun writing this.\n\nThanks,\nPaulos",
+  "weakness": {
+    "id": 57,
+    "name": "Violation of Secure Design Principles"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-05-19T21:42:40.785Z",
+  "allow_singular_disclosure_after": -244131909.3173152,
+  "singular_disclosure_allowed": true,
+  "vote_count": 8,
+  "voters": [
+    "is-",
+    "shubham_srt",
+    "term1nal",
+    "mr_sharma_",
+    "paulos__",
+    "spetr0x",
+    "dyabla",
+    "ilemobayo12345"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 1721,
+      "category": "team",
+      "content": "A potential abuse of reputation by means of an integer overflow. However, given that the attack would take approximately 4,596 years to execute we opted to close the report as Not Applicable.\n\nKudos to @paulos_ for his top notch communication and creative thinking!",
+      "user": {
+        "id": 17191,
+        "username": "ebrynne",
+        "name": "Evan Brynne",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": "http://evan.shoes",
+        "location": "",
+        "created_at": "2015-02-05T19:48:53.804Z",
+        "url": "https://hackerone.com/ebrynne",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/191/f333df32e9b61845f5c823b77d968fa6d246d336_original./ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/191/f333df32e9b61845f5c823b77d968fa6d246d336_original./fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/017/191/f333df32e9b61845f5c823b77d968fa6d246d336_original./d7b0d969b6320751e1c58b9e3efff1e228054ee3d8eade5c51c4c79b25513a9c"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

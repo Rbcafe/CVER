@@ -1,0 +1,115 @@
+{
+  "id": 395541,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zOTU1NDE=",
+  "url": "https://hackerone.com/reports/395541",
+  "title": "Cross-site request forgery vulnerability resulting in the deletion of a user's account.",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-07-01T16:24:44.000Z",
+  "submitted_at": "2016-07-01T16:24:44.000Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "edoverflow",
+    "url": "/edoverflow",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/116/374/9a3cf4d62b2f507a0d33808aacbad863ec4455ac_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 31807,
+    "url": "https://hackerone.com/redact",
+    "handle": "redact",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/031/807/3bf790585f65096b99a75d5fc8e1a8a9ad968da1_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/031/807/3bf790585f65096b99a75d5fc8e1a8a9ad968da1_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "profile": {
+      "name": "██████",
+      "twitter_handle": "",
+      "website": "",
+      "about": "██████ "
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": true,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-08-15T16:45:00.758Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": true,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "One of the first cross-site request forgery vulnerabilities that I discovered on █████ allowed me to delete an unsuspecting user's account. In order to exploit this issue, I crafted a simple HTML form that sent a POST request to the `/unregister` endpoint when a user loaded the malicious page.\n\n```html\n<body onload=\"document.csrfForm.submit()\">\n  <form action=\"https://█████/unregister\" method=\"POST\"\ntarget=\"hiddenFrame\" name=\"csrfForm\">\n    <input type=\"hidden\" name=\"unregister_submit\" value=\"Delete my\naccount\" />\n  </form>\n  <iframe name=\"hiddenFrame\" style=\"display: none;\"></iframe>\n</body>\n```\n\nThe vendor awarded a bounty and subsequently resolved the issue — or so they thought — by adding a CAPTCHA.\n\n{F333810}\n\nThe silly thing was, they did not even check to see if the CAPTCHA's result was correct. All you had to do was submit any arbitrary number and the cross-site request forgery vulnerability could still be exploited.\n\n{F333811}\n\nUntil this day, I have absolutely no clue why the vendor decided to use a CAPTCHA to \"fix\" this issue. \n\nBy the way, I was awarded a bounty for the bypass too. :P",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 333810,
+      "file_name": "Screenshot_from_2018-08-15_18-26-35.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/333/810/9af64a22ce0b705c7288509b645943fa18fc4944/Screenshot_from_2018-08-15_18-26-35.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2018-08-15_18-26-35.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2018-08-15_18-26-35.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3DOTL4Z4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130926Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCP1h%2BMnyvDRDa6h%2F4zIodqh2MzJlGISvpnoEvR4kc2fgIgP8fAE6zkU2xDXiIdq36r00FCUyYf6OQc2MuvlpSL6zgqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDJ2sbhPrB5o6p2UkMiqPBcMZAZzMf1lo6ftFZmyVLqm8Hg2J3xbj6a3GuTLabMbNJWiA%2FZsFo0hE3gxRPbyAqhG6FJuKINNLYiqNvOekzW8sar88psZuM%2FX9%2FNoLvFSAVVJpHHBKNZUcwzDsSG6dL68X0%2F81p9YWjmvjokQY%2B9nuD7359WQ659K26Fclw65VMeRybJ1hUyi2a%2FyS4P%2FH0PoUc1H0vEsvCcDRZFSU2VqX6BFziwRAbmxLuUXTN5m%2F5hWF5b3%2BkgFf3EOVPo%2BXtyBL0zsVvefLcDnkTyLYtjGuMSoKMfdzhMUUnoy%2FSkL%2FnqSrrhe9QDnvuA12WJYXs7dXUtOgD1FweSHqkAlJgnKNM8PYSjJnvj8q9w4J7BBdDstdMKFug3p2hl8P0Z3ewTKwgYQFTrJSgQ5k2oIl05GLUuZEuGlOhqiAdJ0VSwCyoN%2BcsLtWKUwcF5i%2BGCo6ppjPFD80qdzVR70b4ApfmQxVQXMoqtkj6LQcYtZ%2BagRqhM%2BtszUfSlLJd2TtHW1cmvfHpY38mbjTqSHEOfCoz%2FpdesWuHOFHT%2FPgVGOwrKnQpNMV%2FyR1KqF%2B%2F4CD%2FGMR2tktKBwuNfh2OlxQvwD2aE8XvEC%2B4mc3056ID7XSvkKVVQ5FPigZOQTgvmJ494qVF7ehsKzqTF%2B9hAoK4S6zfV7Rj7ZQPgHv3om4hYuHsgUcaD29IgjjBb7uAyiaX%2BnWynmxhoDSjS8R%2BX%2Fh548W%2F5oeVorlsLKwzmcY%2Fn5eCd84hK21TQBO83%2FN5WvC2Rjqcrcse3ypMcrNI7pSoyAYBbW7BZ7x1FSQkjJ0k9%2BmmuCWHGFTK1yvtjTnkqMZorU8FXNTbF9f5hhpv%2FD%2Bx%2FaaWxL40nM7EEpqTFiYBitKsZow7cCtrgY6sQExtT%2FZOBwnOUsXGGVn22KELl38mJ%2B5OivmNc%2Fgks2i4L3ET0mxTFvDVZpjL316NVv%2FbrIj%2Fy2VtfGofe3Raptm7CsozbMN%2FwB4%2F%2B1rcHUIoVQ8JJTc06nsi5aVYzNhXnbrwhbQkoT0dxKYDFETL%2B6%2F051XAavIrnvB5CtHwa5YaT7z83h5GNqUOlmAh9%2BiDFNSkfEsNFaYzGytNE8syYguoEi7iDkqQjn2z2qwL4LrkcU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=478aeabfa888e559febcfc007ea123f54b0e3358f5e17c8fc4fbd7408d53073f",
+      "file_size": 9014,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 333811,
+      "file_name": "facepalm.gif",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/333/811/ba878434f7157dc29b017588dc93e692b8772d98/facepalm.gif?response-content-disposition=attachment%3B%20filename%3D%22facepalm.gif%22%3B%20filename%2A%3DUTF-8%27%27facepalm.gif&response-content-type=image%2Fgif&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3DOTL4Z4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130926Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCP1h%2BMnyvDRDa6h%2F4zIodqh2MzJlGISvpnoEvR4kc2fgIgP8fAE6zkU2xDXiIdq36r00FCUyYf6OQc2MuvlpSL6zgqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDJ2sbhPrB5o6p2UkMiqPBcMZAZzMf1lo6ftFZmyVLqm8Hg2J3xbj6a3GuTLabMbNJWiA%2FZsFo0hE3gxRPbyAqhG6FJuKINNLYiqNvOekzW8sar88psZuM%2FX9%2FNoLvFSAVVJpHHBKNZUcwzDsSG6dL68X0%2F81p9YWjmvjokQY%2B9nuD7359WQ659K26Fclw65VMeRybJ1hUyi2a%2FyS4P%2FH0PoUc1H0vEsvCcDRZFSU2VqX6BFziwRAbmxLuUXTN5m%2F5hWF5b3%2BkgFf3EOVPo%2BXtyBL0zsVvefLcDnkTyLYtjGuMSoKMfdzhMUUnoy%2FSkL%2FnqSrrhe9QDnvuA12WJYXs7dXUtOgD1FweSHqkAlJgnKNM8PYSjJnvj8q9w4J7BBdDstdMKFug3p2hl8P0Z3ewTKwgYQFTrJSgQ5k2oIl05GLUuZEuGlOhqiAdJ0VSwCyoN%2BcsLtWKUwcF5i%2BGCo6ppjPFD80qdzVR70b4ApfmQxVQXMoqtkj6LQcYtZ%2BagRqhM%2BtszUfSlLJd2TtHW1cmvfHpY38mbjTqSHEOfCoz%2FpdesWuHOFHT%2FPgVGOwrKnQpNMV%2FyR1KqF%2B%2F4CD%2FGMR2tktKBwuNfh2OlxQvwD2aE8XvEC%2B4mc3056ID7XSvkKVVQ5FPigZOQTgvmJ494qVF7ehsKzqTF%2B9hAoK4S6zfV7Rj7ZQPgHv3om4hYuHsgUcaD29IgjjBb7uAyiaX%2BnWynmxhoDSjS8R%2BX%2Fh548W%2F5oeVorlsLKwzmcY%2Fn5eCd84hK21TQBO83%2FN5WvC2Rjqcrcse3ypMcrNI7pSoyAYBbW7BZ7x1FSQkjJ0k9%2BmmuCWHGFTK1yvtjTnkqMZorU8FXNTbF9f5hhpv%2FD%2Bx%2FaaWxL40nM7EEpqTFiYBitKsZow7cCtrgY6sQExtT%2FZOBwnOUsXGGVn22KELl38mJ%2B5OivmNc%2Fgks2i4L3ET0mxTFvDVZpjL316NVv%2FbrIj%2Fy2VtfGofe3Raptm7CsozbMN%2FwB4%2F%2B1rcHUIoVQ8JJTc06nsi5aVYzNhXnbrwhbQkoT0dxKYDFETL%2B6%2F051XAavIrnvB5CtHwa5YaT7z83h5GNqUOlmAh9%2BiDFNSkfEsNFaYzGytNE8syYguoEi7iDkqQjn2z2qwL4LrkcU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=83918f82b1e203257cb1d5760e8e2df06ece45527596acf13c109766e100999c",
+      "file_size": 1761066,
+      "type": "image/gif",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 44,
+  "voters": [
+    "kiyell",
+    "canarinho_pistola",
+    "barbie_girl",
+    "rhynorater",
+    "badcracker",
+    "michiel",
+    "sameerphad72",
+    "spam404",
+    "ali",
+    "003random",
+    "and 34 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

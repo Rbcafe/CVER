@@ -1,0 +1,122 @@
+{
+  "id": 66994,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82Njk5NA==",
+  "url": "https://hackerone.com/reports/66994",
+  "title": "Link vulnerability leads to phishing attacks",
+  "state": "Closed",
+  "substate": "informative",
+  "readable_substate": "Informative",
+  "created_at": "2015-06-09T20:56:20.833Z",
+  "submitted_at": "2015-06-09T20:56:20.833Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "shpendk13",
+    "url": "/shpendk13",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/368/0d0ac757f48afc823553003803b20ee4222f079c_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 69,
+    "url": "https://hackerone.com/slack",
+    "handle": "slack",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Slack",
+      "twitter_handle": "slackhq",
+      "website": "https://slack.com",
+      "about": "All your team communication in one place, instantly searchable, and available wherever you go."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2015-07-13T22:39:11.513Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-07-13T21:33:21.009Z",
+  "team_member_agreed_on_going_public_at": "2015-07-13T22:39:10.739Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello Guys,\r\n\r\nHope you are doing great. I'm sending this email to let you know about a vulnerability i stumbled upon while using slack (it's a great app!). \r\n\r\nWhile copy-pasting a link from a pdf to slack (desktop/web), i noticed that the resulting link(s) looked a bit messed up (1.png)\r\n\r\nFiring up burp and investigating this issue, it seems like the link parser is having problems with what in burp appears to be dash. Further analysis led to the following two characters causing this issue:\r\n%c2%ad\r\n\r\nWhen inserting the above (after url decoding it) between a link, it will actually split the link into two different clickable links (2.png)\r\n\r\n\r\n​As you can see, this looks like a perfectly valid domain, however when hovering over it you can see that there are two clickable areas, one for http://abc, and one for 123.com.\r\n\r\nFollow these steps to reproduce:\r\n1. Login to Slack using the Web, in a browser that goes through Burp intercepting proxy\r\n2. Choose a colleague to send a direct message\r\n3. Enter your link as message: http://google.com\r\n4. Turn on Interception in Burp and hit enter to send the message. The intercepted message should appear in burp.\r\n5. Between the letter 'g' and 'oogle.com', insert %c2%ad \r\n6. Now select the insertion (%c2%ad), and right-click on it, select \"convert selection->url->url decode\" (3.png)\r\n​7. After url decode, it should appear as a dash. Forward the request.\r\n8 Back to slack, you can see that http://g is clickable, as well as oogle.com\r\n-end replication steps\r\n\r\nThe attack scenario here would be someone registering oogle.com (or ogle.com or any part for that matter) and sending this to the victim. With a high probably, that victim will click the second area that sends you to oogle.com instead of the 'g'. Good chances to phish for passwords.\r\n\r\nLet me know if you have problems reproducing or need additional information.\r\n\r\nRegards,\r\nShpend",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 40707,
+      "file_name": "2.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/040/707/c66997d95ac9dd82f14a092325c833d540118bf2/2.png?response-content-disposition=attachment%3B%20filename%3D%222.png%22%3B%20filename%2A%3DUTF-8%27%272.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2ILJLE6S%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T114146Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDJPm2BocKwYVHq6OvXN7Sjam7eo%2BSIxzA09VW0AVbp2gIhAJSEEdx%2Bwdp3lk64VEqNkIYIhXx%2FxKFpBdSyuvKn3uDQKrIFCHAQAxoMMDEzNjE5Mjc0ODQ5IgwDahPqWWM9RqpHhfIqjwWks8v1jlby6TsImaMYsudHHbH1Wx6QSFFy8DYbsq4sdNBOEyl9ATKaXjCK28W3pUZj7TyOZVii2jhReFgA81tdYD5PFfaf5uIAxYqN97CUjE9tYuC42DG8AfHfqoUrQSIYfsELneF%2FrwPpYOjej6pbEuJZgC5M%2FMSNXxJ9AkJT8ulcJ7ug2u26Vej6laJdmacOPyHhTSDRKqZ8bmU2qZkHjpllBjac8S0jwAJ%2FXOU29NjYq0HDmzg%2FtCQVuok6OwzgDb5hbqWacuN1sxtQGmO9mkyNT4Jw9z%2F%2FM2jKe5Ofp7a%2BsW7M29sPZWBmYpMpm8g2vSNBkxTCySmUy56WR33dkSWPoBYsFBFRxV0i7fuZNan6wwqSXVqlsDGcF4MC3juEMfOmDXorpSY3GLJ%2FVwB%2Fj80Xv6a%2Bp7E%2Bz60vHuZPKRdWwdUIM1%2FbZuj9lLL0UDjQ8xpD%2Bn0FK1fiDxHk1SpOsDjzEP1WahBgmwofMy3D1wpHA5KqDWaKaVFS70XROakujpAfdyfQE5PP6LUnATbGHMnn1bUwhuc0l2VVsshmhKcQ3B5C%2Br3sjG3Hmc9awv6w5zgQBLzR5VleYsLEogGPGtoOncfnHncG8bFUQeNJ22mQ5IuXzbJgMrGIr0P2mvs9lAWFZg6lDLV4JH5vHDviIh7FgcYJUEIkC%2FASSSfJ4S%2F1zmeydCzaoMWM1qaEMyyUrSw34Rs%2FNYdwqtXkMGgT8i40ddZ1ExgLoiuYapUfOH5SmgiRbbREJwXv%2FHCtjdpSUHP9m9syQLajUPFrc65NAq0WB5qVPRHnYKkJmfEG1uUTPQG95vZJq9AQRivJGj4HDlBYWgll%2B9E5Nd9B68J7QKUpyIIN7ophw%2FbOBQN8MMaXrK4GOrABPy7xOWyZjlcC8oDrt3gIH%2BpFpbBCNRA1BmLMfIgaiBMP5w4F8eLFwLZvlKhnztuddGA6O4Uh8OLKOQ2aMk5lW1Xis4FfdDyGJM6fgZBIafAGSXYrAN8T%2FOBBirnmKH3TipDF3gxk1HBgavZXNceHqfYGjmJlFOMF6p%2B60lxNvCERqm7z1BwOfKyvtKJeK4bvct0t59UMTMS%2FtySInE4heSVeslW4qBd%2FQRC4aXxUgJY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=91d74a972dcf40feb19cde31b273a000489dace592d926a98d3fe039d586e9b4",
+      "file_size": 10805,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 40708,
+      "file_name": "3.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/040/708/40f5e688aeef2cc4de408ec1b7d61631a071b2c8/3.png?response-content-disposition=attachment%3B%20filename%3D%223.png%22%3B%20filename%2A%3DUTF-8%27%273.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2ILJLE6S%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T114146Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDJPm2BocKwYVHq6OvXN7Sjam7eo%2BSIxzA09VW0AVbp2gIhAJSEEdx%2Bwdp3lk64VEqNkIYIhXx%2FxKFpBdSyuvKn3uDQKrIFCHAQAxoMMDEzNjE5Mjc0ODQ5IgwDahPqWWM9RqpHhfIqjwWks8v1jlby6TsImaMYsudHHbH1Wx6QSFFy8DYbsq4sdNBOEyl9ATKaXjCK28W3pUZj7TyOZVii2jhReFgA81tdYD5PFfaf5uIAxYqN97CUjE9tYuC42DG8AfHfqoUrQSIYfsELneF%2FrwPpYOjej6pbEuJZgC5M%2FMSNXxJ9AkJT8ulcJ7ug2u26Vej6laJdmacOPyHhTSDRKqZ8bmU2qZkHjpllBjac8S0jwAJ%2FXOU29NjYq0HDmzg%2FtCQVuok6OwzgDb5hbqWacuN1sxtQGmO9mkyNT4Jw9z%2F%2FM2jKe5Ofp7a%2BsW7M29sPZWBmYpMpm8g2vSNBkxTCySmUy56WR33dkSWPoBYsFBFRxV0i7fuZNan6wwqSXVqlsDGcF4MC3juEMfOmDXorpSY3GLJ%2FVwB%2Fj80Xv6a%2Bp7E%2Bz60vHuZPKRdWwdUIM1%2FbZuj9lLL0UDjQ8xpD%2Bn0FK1fiDxHk1SpOsDjzEP1WahBgmwofMy3D1wpHA5KqDWaKaVFS70XROakujpAfdyfQE5PP6LUnATbGHMnn1bUwhuc0l2VVsshmhKcQ3B5C%2Br3sjG3Hmc9awv6w5zgQBLzR5VleYsLEogGPGtoOncfnHncG8bFUQeNJ22mQ5IuXzbJgMrGIr0P2mvs9lAWFZg6lDLV4JH5vHDviIh7FgcYJUEIkC%2FASSSfJ4S%2F1zmeydCzaoMWM1qaEMyyUrSw34Rs%2FNYdwqtXkMGgT8i40ddZ1ExgLoiuYapUfOH5SmgiRbbREJwXv%2FHCtjdpSUHP9m9syQLajUPFrc65NAq0WB5qVPRHnYKkJmfEG1uUTPQG95vZJq9AQRivJGj4HDlBYWgll%2B9E5Nd9B68J7QKUpyIIN7ophw%2FbOBQN8MMaXrK4GOrABPy7xOWyZjlcC8oDrt3gIH%2BpFpbBCNRA1BmLMfIgaiBMP5w4F8eLFwLZvlKhnztuddGA6O4Uh8OLKOQ2aMk5lW1Xis4FfdDyGJM6fgZBIafAGSXYrAN8T%2FOBBirnmKH3TipDF3gxk1HBgavZXNceHqfYGjmJlFOMF6p%2B60lxNvCERqm7z1BwOfKyvtKJeK4bvct0t59UMTMS%2FtySInE4heSVeslW4qBd%2FQRC4aXxUgJY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=15a3bbb210c71ab2ff9ef00b2125177e02647b8cd0772337b0f8ebb89295f2c9",
+      "file_size": 116797,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 40709,
+      "file_name": "1.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/040/709/706a17804aa125cad0df89e9a8cb1c03063668cf/1.png?response-content-disposition=attachment%3B%20filename%3D%221.png%22%3B%20filename%2A%3DUTF-8%27%271.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2ILJLE6S%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T114146Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDJPm2BocKwYVHq6OvXN7Sjam7eo%2BSIxzA09VW0AVbp2gIhAJSEEdx%2Bwdp3lk64VEqNkIYIhXx%2FxKFpBdSyuvKn3uDQKrIFCHAQAxoMMDEzNjE5Mjc0ODQ5IgwDahPqWWM9RqpHhfIqjwWks8v1jlby6TsImaMYsudHHbH1Wx6QSFFy8DYbsq4sdNBOEyl9ATKaXjCK28W3pUZj7TyOZVii2jhReFgA81tdYD5PFfaf5uIAxYqN97CUjE9tYuC42DG8AfHfqoUrQSIYfsELneF%2FrwPpYOjej6pbEuJZgC5M%2FMSNXxJ9AkJT8ulcJ7ug2u26Vej6laJdmacOPyHhTSDRKqZ8bmU2qZkHjpllBjac8S0jwAJ%2FXOU29NjYq0HDmzg%2FtCQVuok6OwzgDb5hbqWacuN1sxtQGmO9mkyNT4Jw9z%2F%2FM2jKe5Ofp7a%2BsW7M29sPZWBmYpMpm8g2vSNBkxTCySmUy56WR33dkSWPoBYsFBFRxV0i7fuZNan6wwqSXVqlsDGcF4MC3juEMfOmDXorpSY3GLJ%2FVwB%2Fj80Xv6a%2Bp7E%2Bz60vHuZPKRdWwdUIM1%2FbZuj9lLL0UDjQ8xpD%2Bn0FK1fiDxHk1SpOsDjzEP1WahBgmwofMy3D1wpHA5KqDWaKaVFS70XROakujpAfdyfQE5PP6LUnATbGHMnn1bUwhuc0l2VVsshmhKcQ3B5C%2Br3sjG3Hmc9awv6w5zgQBLzR5VleYsLEogGPGtoOncfnHncG8bFUQeNJ22mQ5IuXzbJgMrGIr0P2mvs9lAWFZg6lDLV4JH5vHDviIh7FgcYJUEIkC%2FASSSfJ4S%2F1zmeydCzaoMWM1qaEMyyUrSw34Rs%2FNYdwqtXkMGgT8i40ddZ1ExgLoiuYapUfOH5SmgiRbbREJwXv%2FHCtjdpSUHP9m9syQLajUPFrc65NAq0WB5qVPRHnYKkJmfEG1uUTPQG95vZJq9AQRivJGj4HDlBYWgll%2B9E5Nd9B68J7QKUpyIIN7ophw%2FbOBQN8MMaXrK4GOrABPy7xOWyZjlcC8oDrt3gIH%2BpFpbBCNRA1BmLMfIgaiBMP5w4F8eLFwLZvlKhnztuddGA6O4Uh8OLKOQ2aMk5lW1Xis4FfdDyGJM6fgZBIafAGSXYrAN8T%2FOBBirnmKH3TipDF3gxk1HBgavZXNceHqfYGjmJlFOMF6p%2B60lxNvCERqm7z1BwOfKyvtKJeK4bvct0t59UMTMS%2FtySInE4heSVeslW4qBd%2FQRC4aXxUgJY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=38e623f5d94db602657e70e4f44fe4cee47d7738b0a717983418baadccb6fc6c",
+      "file_size": 12209,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2015-08-12T21:33:21.854Z",
+  "allow_singular_disclosure_after": -268409304.16958869,
+  "singular_disclosure_allowed": true,
+  "vote_count": 1,
+  "voters": [
+    "shivammusic"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

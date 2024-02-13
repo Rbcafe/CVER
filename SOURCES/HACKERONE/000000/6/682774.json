@@ -1,0 +1,146 @@
+{
+  "id": 682774,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82ODI3NzQ=",
+  "url": "https://hackerone.com/reports/682774",
+  "title": "Arbitrary file creation with semi-controlled content (leads to DoS, EoP and others) at Steam Windows Client",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2019-08-27T12:10:37.519Z",
+  "submitted_at": "2019-08-27T12:10:37.519Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "xi-tauw",
+    "url": "/xi-tauw",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 23363,
+    "url": "https://hackerone.com/valve",
+    "handle": "valve",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/363/c78d46a7d0ea39e3a15a7c19c1a48634f2571eb9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/363/c78d46a7d0ea39e3a15a7c19c1a48634f2571eb9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Valve",
+      "twitter_handle": "",
+      "website": "https://www.valvesoftware.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2019-09-26T20:53:10.547Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-09-24T20:19:17.498Z",
+  "team_member_agreed_on_going_public_at": "2019-09-26T20:53:10.436Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "The vulnerability allows to create arbitrary file with some crafted text (or append to existing file). Tested on actual version 5.31.28.21 (SteamService.exe filevesion info). At start of the report I describe how to trigger vulnerability, than describe how to cause any consequences.\n\nHow to trigger\n-\n1. Environment\nClose Steam application and stop \"Steam Client Service\", if it is necessary.\nCreate folder at user-controlled space (e.g. \"C:\\test\"). Copy files Steam.exe and steamservice.dll from origina Steam folder (\"C:\\Program Files (x86)\\Steam\"). Create empty folder \"C:\\test\\logs\"\nNow go to registry and change value of \"InstallPath\" (HKLM\\Software\\wow6432node\\valve\\steam) to \"C:\\test\\1\\..\".\nThis registry branch has explicit permission \"Full control\" for \"Users\".\n\n2. Little test\nStart \"Steam Client service\". After it has been stopped, check C:\\test\\logs. Here must be file \"service_log.txt\" with something like: \"08/27/19 13:45:01 : ERROR: SteamService: Invalid file signature C:\\test\\1\\..\\bin\\SteamService.dll\".\nNote, that \"C:\\test\\1\\..\\\" path equals to \"C:\\test\" path, so Windows used second but message contain first one.\nDelete service_log.txt.\n\n3. Add some more text\nInteresting fact: when Windows used path with \"\\..\\\" it is autosimplified the one. Without any check.\nFor example, path \"C:\\1\\<test>\\..\" will be converted to \"C:\\1\" in spite of impossible folder name.\nLets add some CLRF. It is easy from code, but it is possible via regedit. Open \"HKLM\\Software\\wow6432node\\valve\\steam\" and select \"Modify binary data...\" from context menu on \"InstallPath\".\nHere screen (reg_clrf.png) of such changes.\nSo Windows will use path \"C:\\test\", but content of \"service_log.txt\" will be with custom lines (see service_log_content.png).\nDelete service_log.txt after test.\n\n4. Redirect file creation\nNon-admin unable to create file symlink. But there is one trick - you could combine NTFS-reparse point and object-directory symlink (both could be created without admin rights). Create reparse point \"C:\\test\\logs\" <-> \"\\RPC Control\\\", than create symlink \"\\RPC Control\\service_log.txt\" <-> any target path. This strick requre two things - folder of source file must be writeable and must be empty (this is reason of deleting service_log.txt ater every test). There is simple utility named CreateSymlink.exe from (https://github.com/googleprojectzero/symboliclink-testing-tools/ binaries could be finded on Release) that automate the trick.\nMore details could be readed there - https://github.com/googleprojectzero/symboliclink-testing-tools/blob/master/CreateSymlink/CreateSymlink_readme.txt\nUsing of utility: CreateSymlink.exe <from> <to>\nIn our case CreateSymlink.exe C:\\test\\logs\\service_log.txt <target>.\nSteam Client Service after start will create file <target> (or append to, if file exists) and add some lines which could be controlled (except the first and the last ones). Since Steam client service work as NT AUTHORITY\\SYSTEM, almost any target could be choosed.\n\nImpacts\n-\nNow I list some impact from low to high.\n1. DoS\nIf we choose target \"C:\\Winwos\\System32\\config\\SAM\" or \"C:\\Winwos\\System32\\config\\SECURITY\" it seems OS will be broken wont be booted after shutdown.\n\n2. Redirect of internet services\nTarget: C:\\Windows\\system32\\drivers\\etc\\hosts\nAdd line: \"127.0.0.1 google.com\" (for example)\nResult on ping.png\n\n3. Horizontal EoP\nTarget: C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp\\run.bat\nAdd line: \"start C:\\test\\1.exe\"\nAny files from \"C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp\" are executed during logon of any user (this folder not writable for non-admin users). The vulnerability create bat file and all lines of the file will be executed (the first one and the last one has no effect, but payload will be executed). This is allows any user of OS force to execute any payload as another user (even administrator) when the target user logined.\nNote: since line contains '\\', we need add some \"\\..\" at the end of \"InstallPath\" (we need \"InstallPath\" be equals to \"C:\\test\")\n\n4. Vertical EoP\nMany software uses bat files for its own purposes and some times this files runs with high privileges. For example, NVIDIA and VmWare uses this. Moreover, domain users ofteh have Startup and Shutdown scripts from GroupPolicy. All of that scripts could be appended with payload.\nYes, I unable to found any script that out-of-box-Windows has, but this is not means that there are no such files.\n\n5. Not checked but need to be mentioned.\nThe vulnerability allows to create xml files and ini files (with extra lines, which breaks format). I was not check that kind of files for vaildity for TaskSheduler or .manifest (Windows dll side-by-side loading) or so on. This will take so much of my time if I do this checks. so I just mention it.\n\n## Impact\n\n1. DoS (force OS to be broken)\n2. Redirect of internet services (take control of name-ip resolution)\n3. Horizontal EoP (from one user to another)\n4. Vertical EoP (possible with additions, from user to NT AUTHORITY\\SYSTEM)",
+  "bounty_amount": "1250.0",
+  "formatted_bounty": "$1,250",
+  "weakness": {
+    "id": 19,
+    "name": "Path Traversal"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 567733,
+      "file_name": "reg_clrf.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/uAdHMno5eaCupg23awfcvfJS?response-content-disposition=attachment%3B%20filename%3D%22reg_clrf.png%22%3B%20filename%2A%3DUTF-8%27%27reg_clrf.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132716Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=48ae08adb4faf9bdf379e6439e0f5e2542700a6bcdc7e4794b183b849941f618",
+      "file_size": 14367,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 567734,
+      "file_name": "service_log_content.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/gszn9n1dQfRsXNRSuWQjM5ne?response-content-disposition=attachment%3B%20filename%3D%22service_log_content.png%22%3B%20filename%2A%3DUTF-8%27%27service_log_content.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132716Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e7a344f0de73fbe9ae94527a233f9889610c08c0fddcf8a7d3d6e470a66d7888",
+      "file_size": 5925,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 567735,
+      "file_name": "ping.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/NdV37sd95cDpaF1MDBvaQJu5?response-content-disposition=attachment%3B%20filename%3D%22ping.png%22%3B%20filename%2A%3DUTF-8%27%27ping.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132716Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=af97b75fe34d0364232c0644f6cffb57b74840f554ba7305f41122db95e02d55",
+      "file_size": 136528,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 41,
+  "voters": [
+    "mr-medi",
+    "njbooher",
+    "mvc",
+    "me9187",
+    "sameerphad72",
+    "spam404",
+    "ali",
+    "romesful",
+    "th3rmy",
+    "khizer47",
+    "and 31 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 1290,
+    "asset_type": "DOWNLOADABLE_EXECUTABLES",
+    "asset_identifier": "*.exe",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

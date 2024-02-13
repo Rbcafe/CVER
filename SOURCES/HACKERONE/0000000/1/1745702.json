@@ -1,0 +1,151 @@
+{
+  "id": 1745702,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzQ1NzAy",
+  "url": "https://hackerone.com/reports/1745702",
+  "title": "Insecure randomness for default password in file sharing when password policy app is disabled",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2022-10-21T11:35:30.802Z",
+  "submitted_at": "2022-10-21T11:35:30.862Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "gorei",
+    "url": "/gorei",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2023-28835"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-03-30T08:45:42.098Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-03-30T08:45:42.018Z",
+  "team_member_agreed_on_going_public_at": "2023-03-30T08:22:05.364Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nSharing links can be protected with a password. However, the function used for generating this password is using cryptographically insecure RNG.\n\n`server-25.0.0\\apps\\files_sharing\\src\\utils\\GeneratePassword.js` (lines 36-55):\n\n```php\nexport default async function() {\n\t// password policy is enabled, let's request a pass\n\tif (config.passwordPolicy.api && config.passwordPolicy.api.generate) {\n\t\ttry {\n\t\t\tconst request = await axios.get(config.passwordPolicy.api.generate)\n\t\t\tif (request.data.ocs.data.password) {\n\t\t\t\treturn request.data.ocs.data.password\n\t\t\t}\n\t\t} catch (error) {\n\t\t\tconsole.info('Error generating password from password_policy', error)\n\t\t}\n\t}\n\n\t// generate password of 10 length based on passwordSet\n\treturn Array(10).fill(0)\n\t\t.reduce((prev, curr) => {\n\t\t\tprev += passwordSet.charAt(Math.floor(Math.random() * passwordSet.length))\n\t\t\treturn prev\n\t\t}, '')\n}\n```\n\nThe first part of the function handles the password generation in a safe way when a password policy is present. However, there is another variant generating the password using `Math.random` function, which is not appropriate for use in a security-sensitive context.\n\nCitation from [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random):\n*\"Note: Math.random() does not provide cryptographically secure random numbers. Do not use them for anything related to security. Use the Web Crypto API instead, and more precisely the window.crypto.getRandomValues() method.\"*\n\n## Supporting Material/References:\n  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random\n * https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues\n\n## Impact\n\nAn attacker might be able to access the shared files even without knowledge of the password.",
+  "weakness": {
+    "id": 44,
+    "name": "Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2023-04-29T08:22:05.433Z",
+  "allow_singular_disclosure_after": -25078187.220934153,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "shreyaschavhan",
+    "zy9ard3",
+    "shubham_srt",
+    "friskyb",
+    "usr2r00t"
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 3.5,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 13,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "nextcloud/server",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 270088,
+      "category": "team",
+      "content": "Security advisory at https://github.com/nextcloud/security-advisories/security/advisories/GHSA-7w2p-rp9m-9xp9",
+      "user": {
+        "id": 89223,
+        "username": "nickvergessen",
+        "name": "Joas Schilling",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": "Germany",
+        "created_at": "2016-07-01T08:17:59.061Z",
+        "url": "https://hackerone.com/nickvergessen",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

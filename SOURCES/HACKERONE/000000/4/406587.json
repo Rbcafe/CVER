@@ -1,0 +1,130 @@
+{
+  "id": 406587,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80MDY1ODc=",
+  "url": "https://hackerone.com/reports/406587",
+  "title": "Self DOM-Based XSS in www.hackerone.com",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2018-09-06T19:11:11.340Z",
+  "submitted_at": "2018-09-06T19:11:11.340Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "adac95",
+    "url": "/adac95",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-11-08T10:46:50.735Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-11-08T10:46:50.641Z",
+  "team_member_agreed_on_going_public_at": "2018-11-07T18:51:29.870Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary:**\nThere is a 'self' DOM-based cross-site scripting vulnerability in the contact form available on the www.hackerone.com website. This could allow an attacker to perform cross-site scripting, or other client-side attacks, against users of the application. However, the risk presented by this issue is significantly reduced because exploitation would require an element of social engineering to succeed, and the website's Content Security Policy (CSP) blocked the execution of inline scripts.\n\n**Description:**\nThe HackerOne contact form is automatically displayed when the string  'contact/' is detected in the URI fragment on any page under the www.hackerone.com domain (for example, https://www.hackerone.com/#contact/). When the 'submit' button is clicked, the following JavaScript functions are executed:\n\n```javascript\n//Marketo Form Code\nfunction strip(html) {\n    var tmp = document.createElement(\"DIV\");\n    tmp.innerHTML = html;\n    return tmp.textContent || tmp.innerText || \"\";\n}\n\n$('form').submit(function() {\n    $('textarea').val(function() {\n        return strip($(this).val());\n    });\n});\n```\nThe 'submit' event handler passes the current value of any 'textarea' elements to the 'strip' function. This function creates a new 'div' element, sets the 'innerHTML'  property to the provided value, and then returns the 'textContent' property of the resulting div. This type of code is typically used to remove HTML tags from a string, as the textContent property contains the String which was rendered by the browser when the HTML was parsed. (A reference to this exact function was also found on Stack Overflow: https://stackoverflow.com/questions/12941663/removing-html-tags-from-a-string-and-keeping-colon) \n\nHowever , this particular method is inherently insecure because it uses 'innerHTML'. When user input is provided to the 'innerHTML' property, it is parsed by the web browser and can therefore lead to the execution of malicious JavaScript. A screenshot has been attached to this report showing the result in the web browser when the following payload was typed into the 'Message' textarea of the HackerOne contact form, and the 'send message' button was clicked:\n\n```html\n<img src=x onerror=alert(1) />\n```\nThe developer console (in Google Chrome) displayed two errors - one which stated that https://www.hackerone.com/x was requested and returned a 404 (due to the src attribute of the img tag), and another which reported a violation of the website's CSP. This second error occurred because the browser attempted to execute the JavaScript code in the 'onerror' attribute, but the website's CSP did not allow it. Performing the same actions in a browser with CSP disabled allowed the JavaScript in the 'onerror' attribute to execute.\n\nAn attacker could exploit this vulnerability by convincing a user (ideally with a browser which does not support CSP) to paste a malicious payload into the 'message' field of the contact form and then click the 'send message' button.\n\nIt should also be noted that, if the 'strip' function was implemented to prevent an attacker from sending malicious HTML to Marketo or the server, it can be trivially bypassed using an intercepting proxy tool such as Burp Suite. By intercepting the HTTP request sent once the form submission is complete, any HTML 'stripped' by the JavaScript can simply be replaced. In light of this, developers should consider whether the 'strip' function is required - any validation or sanitization should  be performed by the server, where it cannot be influenced by an attacker.\n\nIf the 'strip' function is required, it is recommended that it is replaced with a solution which does not require the use of 'innerHTML'. A suitable alternative may be the use of a regex to remove common HTML characters.\n\n### Steps To Reproduce\n\n1. Open the https://www.hackerone.com/#contact/ page and open the browser's developer tools\n2.  Type \"<img src=x onerror=alert(1) />\" into the 'message' textarea\n3.  Click the 'send message' button\n4. Check the developer console to view the two errors\n\n(alternatively, disable CSP in your web browser and repeat the steps above. The JavaScript code 'alert(1)' should execute)\n\n## Impact\n\nThe attacker could achieve XSS in the www.hackerone.com website.",
+  "weakness": {
+    "id": 63,
+    "name": "Cross-site Scripting (XSS) - DOM"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 343117,
+      "file_name": "self-XSS.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/343/117/4a6c2b7af987bf851a33e53be22dda1e7565ce5a/self-XSS.PNG?response-content-disposition=attachment%3B%20filename%3D%22self-XSS.PNG%22%3B%20filename%2A%3DUTF-8%27%27self-XSS.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6PGWSTMP%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131046Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCViOi%2F56ueEuvIwenQe%2BLb%2BwbBeFYt95o%2B27q1gAyjJQIhAJy41GZeNB%2F35zQFEMMldvRn9RKuTJ921mYFGjWXM4xOKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igyfj5amkH4Q4qV17RUqjwW2CAxiK4m4hWEAlsDvzI4tTbj8wtQkEbV8t3TJ6TszDYzbxoZfKv%2FF1ngpPiZtnooExkiPG26fSsSPVxr95a5R%2Bb53aIMfs4cvspAbjO408u%2FKZN5zXVPh6CnfCbsN8F6X%2F9KN%2Fbv66jc7vpds0BIK8%2B6fFbH50L%2BJ7loxPgYJpwQKPGA%2BxAU3n4cW0xu40kEa4HScwwT%2BqFoMNkHSPq7v%2FMX6cc1VRdiCryuyIqwF%2Bs0t%2FvdjeVHg78LS0%2FuMMNkbwDSMNufKbDqARDuoU0P%2F7njwSrXV5%2BkRLbGbe0L89dhffkGntr%2Bd%2FtQ8CCYU66m%2FjoL0k41lI2HeR3O7pLZw6xc3baudQgvKzzU8naKjeMtCWmGIlkN1deTGbW6VWFv94mPhh6xqwYF%2FygK1ASZXWcjKuCZDkbIOgvNsJXfi9GobE%2Fg%2FQCvqFLRdBFuYpEHQ%2BmeEDcfMacgRXA297IImF0dUJN85r5YBUSsTgEED3A1n%2BDuZ7EYlyHsa0FOqtqBvavx526YAyqmogm2M05wZ7943732ur203IxCn9N2G019Q9wlJDIhQKk2ujbfG2QJJ9kcZT0%2FclqOtb7n1O02fUwDgOTGWF7a6VW3W7hV6bjCy%2B5Rac9PzkS6VymX8vtLX1k%2FZgwFkOteSUd2%2FRZ6WSu3ZzHNAUkrRcuUOocwK48DWkjTuzKGjaWSycV5T7TkIYO82PSRCe3%2FO3LFd%2F1MQ3Lt2TctQHWcm%2FuYG8L64tYNCvpptkP4lbIEMyLovg2Tcvod1IiJWSFCfdjo3%2F62cnjstu7oIkOgQE1rNQRi7tl%2BOpOZ3O2p1%2BkSM9%2F0IDEkXXc43X4wqyrJxFCXTAgtGobNnX8BPw1JLWKKzcjvCMLC1ra4GOrABG6HOSlDmK1pVHFgvG0UCsHX0y77qrI5WogVE2SsoeRtdX%2BFgr0TJVFxF%2FqzndNjCSF1CE7s5o1cvQRnubzfIEHh%2Bql4Yr2YDxqHDFub6HZHglXezaL0SQVMK924Vna4%2Fd7oHIUZe52JuzZ8HuqQcy4plSO1mkvy6u0L4T%2F1njIpact7INdijf%2B1WFhWhjy0qA%2BmL%2BCVvUwMMaTaqrHm4JzWtOGywBhoyvrV0SfdDvYQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bcabd218f1932f64522cabaaae050daa704fc82b5ed3e905098b09544edde4b1",
+      "file_size": 84297,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-12-07T18:51:30.010Z",
+  "allow_singular_disclosure_after": -163621156.19024438,
+  "singular_disclosure_allowed": true,
+  "vote_count": 22,
+  "voters": [
+    "sameerphad72",
+    "ali",
+    "romesful",
+    "0nlymohammed",
+    "savitar0x01",
+    "eveeez",
+    "khizer47",
+    "t4ym",
+    "japz",
+    "bb00x",
+    "and 12 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 6,
+    "asset_type": "URL",
+    "asset_identifier": "www.hackerone.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

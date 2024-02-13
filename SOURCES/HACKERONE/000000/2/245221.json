@@ -1,0 +1,118 @@
+{
+  "id": 245221,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNDUyMjE=",
+  "url": "https://hackerone.com/reports/245221",
+  "title": "null pointer dereference and segfault in tile-count-merge",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2017-07-02T00:41:36.403Z",
+  "submitted_at": "2017-07-02T00:41:36.403Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "geeknik",
+    "url": "/geeknik",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/7xfGZCKCxUuGLYGfuUZM3XyY/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 1366,
+    "url": "https://hackerone.com/mapbox",
+    "handle": "mapbox",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/366/d4dfa3c8752e3849cdfb22fea49c17bd37f03850_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/366/d4dfa3c8752e3849cdfb22fea49c17bd37f03850_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Mapbox",
+      "twitter_handle": "mapbox",
+      "website": "https://www.mapbox.com/security",
+      "about": "Mapbox is an open source mapping platform, providing building blocks for developers to integrate location into any mobile or online application."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-07-11T15:36:07.317Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-07-07T20:13:45.831Z",
+  "team_member_agreed_on_going_public_at": "2017-07-11T15:36:07.284Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "This crash was triggered with `642f773 ` while fuzzing `tile-count-merge` with AFL on Debian 8 x64.\n\n`./tile-count-merge -o /dev/null test000`\n\n```\nASAN:SIGSEGV\n=================================================================\n==10201==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000000 (pc 0x00000048d0af bp 0x7ffd8644b6a0 sp 0x7ffd8644ae30 T0)\n    #0 0x48d0ae in __interceptor_memcmp (/root/tile-count/tile-count-merge+0x48d0ae)\n    #1 0x4dc6c9 in finder::operator<(finder const&) const /root/tile-count/merge.cpp:115:10\n    #2 0x4dc6c9 in bool __gnu_cxx::__ops::_Iter_less_val::operator()<finder*, finder const>(finder*, finder const&) const /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/bits/predefined_ops.h:54\n    #3 0x4dc6c9 in finder* std::__lower_bound<finder*, finder, __gnu_cxx::__ops::_Iter_less_val>(finder*, finder*, finder const&, __gnu_cxx::__ops::_Iter_less_val) /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/bits/stl_algobase.h:965\n    #4 0x4ca6e0 in finder* std::lower_bound<finder*, finder>(finder*, finder*, finder const&) /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9/../../../../include/c++/4.9/bits/stl_algobase.h:999:14\n    #5 0x4ca6e0 in do_merge(merge*, unsigned long, int, int, long long, int, bool, unsigned long) /root/tile-count/merge.cpp:213\n    #6 0x4c38e4 in main /root/tile-count/mergetool.cpp:105:2\n    #7 0x7fba250bcb44 in __libc_start_main /build/glibc-qK83Be/glibc-2.19/csu/libc-start.c:287\n    #8 0x4c248c in _start (/root/tile-count/tile-count-merge+0x4c248c)\n\nAddressSanitizer can not provide additional info.\nSUMMARY: AddressSanitizer: SEGV ??:0 __interceptor_memcmp\n==10201==ABORTING\n```",
+  "weakness": {
+    "id": 51,
+    "name": "NULL Pointer Dereference"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 199396,
+      "file_name": "test000.gz",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/199/396/b8d11a8dbf39d16bb10abcb3fb9503181e6318d2/test000.gz?response-content-disposition=attachment%3B%20filename%3D%22test000.gz%22%3B%20filename%2A%3DUTF-8%27%27test000.gz&response-content-type=application%2Fgzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2ILJLE6S%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T124526Z&X-Amz-Expires=676&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDJPm2BocKwYVHq6OvXN7Sjam7eo%2BSIxzA09VW0AVbp2gIhAJSEEdx%2Bwdp3lk64VEqNkIYIhXx%2FxKFpBdSyuvKn3uDQKrIFCHAQAxoMMDEzNjE5Mjc0ODQ5IgwDahPqWWM9RqpHhfIqjwWks8v1jlby6TsImaMYsudHHbH1Wx6QSFFy8DYbsq4sdNBOEyl9ATKaXjCK28W3pUZj7TyOZVii2jhReFgA81tdYD5PFfaf5uIAxYqN97CUjE9tYuC42DG8AfHfqoUrQSIYfsELneF%2FrwPpYOjej6pbEuJZgC5M%2FMSNXxJ9AkJT8ulcJ7ug2u26Vej6laJdmacOPyHhTSDRKqZ8bmU2qZkHjpllBjac8S0jwAJ%2FXOU29NjYq0HDmzg%2FtCQVuok6OwzgDb5hbqWacuN1sxtQGmO9mkyNT4Jw9z%2F%2FM2jKe5Ofp7a%2BsW7M29sPZWBmYpMpm8g2vSNBkxTCySmUy56WR33dkSWPoBYsFBFRxV0i7fuZNan6wwqSXVqlsDGcF4MC3juEMfOmDXorpSY3GLJ%2FVwB%2Fj80Xv6a%2Bp7E%2Bz60vHuZPKRdWwdUIM1%2FbZuj9lLL0UDjQ8xpD%2Bn0FK1fiDxHk1SpOsDjzEP1WahBgmwofMy3D1wpHA5KqDWaKaVFS70XROakujpAfdyfQE5PP6LUnATbGHMnn1bUwhuc0l2VVsshmhKcQ3B5C%2Br3sjG3Hmc9awv6w5zgQBLzR5VleYsLEogGPGtoOncfnHncG8bFUQeNJ22mQ5IuXzbJgMrGIr0P2mvs9lAWFZg6lDLV4JH5vHDviIh7FgcYJUEIkC%2FASSSfJ4S%2F1zmeydCzaoMWM1qaEMyyUrSw34Rs%2FNYdwqtXkMGgT8i40ddZ1ExgLoiuYapUfOH5SmgiRbbREJwXv%2FHCtjdpSUHP9m9syQLajUPFrc65NAq0WB5qVPRHnYKkJmfEG1uUTPQG95vZJq9AQRivJGj4HDlBYWgll%2B9E5Nd9B68J7QKUpyIIN7ophw%2FbOBQN8MMaXrK4GOrABPy7xOWyZjlcC8oDrt3gIH%2BpFpbBCNRA1BmLMfIgaiBMP5w4F8eLFwLZvlKhnztuddGA6O4Uh8OLKOQ2aMk5lW1Xis4FfdDyGJM6fgZBIafAGSXYrAN8T%2FOBBirnmKH3TipDF3gxk1HBgavZXNceHqfYGjmJlFOMF6p%2B60lxNvCERqm7z1BwOfKyvtKJeK4bvct0t59UMTMS%2FtySInE4heSVeslW4qBd%2FQRC4aXxUgJY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f2f19abe48636e0720a348513e3da706486eae7dd0924d0c755ce00ee0155fd4",
+      "file_size": 253,
+      "type": "application/gzip",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-08-06T20:13:45.907Z",
+  "allow_singular_disclosure_after": -205777900.4407703,
+  "singular_disclosure_allowed": true,
+  "vote_count": 4,
+  "voters": [
+    "apapedulimu",
+    "geeknik",
+    "eveeez",
+    "japz"
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

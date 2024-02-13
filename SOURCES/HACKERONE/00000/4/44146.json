@@ -1,0 +1,111 @@
+{
+  "id": 44146,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NDE0Ng==",
+  "url": "https://hackerone.com/reports/44146",
+  "title": "Make API calls on behalf of another user (CSRF protection bypass)",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-01-17T12:20:02.541Z",
+  "submitted_at": "2015-01-17T12:20:02.541Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "avlidienbrunn",
+    "url": "/avlidienbrunn",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/948/699d45bda29817e724a5a2399862812a14dba902_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 56,
+    "url": "https://hackerone.com/vimeo",
+    "handle": "vimeo",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/056/c3188aa0fc4a95fd486b5ee1f4b2d0b90da111d3_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/056/c3188aa0fc4a95fd486b5ee1f4b2d0b90da111d3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Vimeo",
+      "twitter_handle": "vimeo",
+      "website": "https://vimeo.com",
+      "about": "Make life worth watching"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2015-01-22T22:47:26.853Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-01-22T19:04:19.751Z",
+  "team_member_agreed_on_going_public_at": "2015-01-22T22:47:25.735Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi!\r\n\r\n**Brief**\r\nI have discovered a way to issue API calls on behalf of other users. The problem stems from the fact that the API playground at https://developer.vimeo.com/api/playground/me has a very weak CSRF protection. The only thing protecting this resource from CSRF attacks is the demand that the \"X-Requested-With: XMLHttpRequest\" request header is present on the call.\r\n\r\nAt first sight, this seems impossible to circumvent because sending AJAX requests cross-domain is blocked by CORS, but there is a way to spoof the \"X-Requested-With\" request header in Flash.\r\n\r\nI have only created a proof-of-concept for Safari (tested on newest version on OSX), but there is a big chance that this is possible from other browsers (and other plugins) too.\r\n\r\n**PoC**\r\n1. Log in to Vimeo in Safari\r\n2. Visit https://s3.amazonaws.com/avlidienbrunn/vimeo_pwn.swf\r\n3. Your profile biography now says \"avlidienbrunn+was+here\"\r\n\r\n**Video demonstration**\r\nI have made a Video explaining the issue, but at the time of writing this I am still uploading it to Vimeo (I will put a password on it and attach it to a comment).\r\n\r\n**Technical details**\r\nIt's possible to send the \"X-Requested-With\" header with Flash, but we can't send it cross-domain due to the SOP implementation with Adobe's crossdomain.xml files. However, we can trick Flash into sending the request anyway by issuing the request to a domain that *does* allow it, which in turn sends a HTTP 307 redirect to the resource that we want to target. Flash will send the request to the new resource *before* requesting crossdomain.xml on the new domain.\r\n\r\n1. Safari requests https://s3.amazonaws.com/avlidienbrunn/vimeo_pwn.swf\r\n2. SWF requests https://avlidienbrunn.se/crossdomain.xml\r\n3. SWF requests https://avlidienbrunn.se/vimeo_pwn.php (issues 307 redirect to Vimeo API playground)\r\n4. SWF requests https://developer.vimeo.com/api/playground/me (including the X-Requested-With header)\r\n5. SWF requests https://developer.vimeo.com/crossdomain.xml\r\n\r\nSince it's step #4 that issues the API call, we can make the currently logged in user issue the call regardless of the crossdomain.xml file. We can, however, not read the response from the API call.\r\n\r\nMathias",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2015-02-21T19:04:20.922Z",
+  "allow_singular_disclosure_after": -283278651.11785835,
+  "singular_disclosure_allowed": true,
+  "vote_count": 28,
+  "voters": [
+    "0xcaptainfreak",
+    "arneswinnen",
+    "jensec",
+    "bogdantcaciuc",
+    "zombiehelp54",
+    "ahiezer",
+    "retr02332",
+    "quikke",
+    "its_afolic",
+    "term1nal",
+    "and 18 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

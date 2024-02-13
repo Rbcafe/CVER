@@ -1,0 +1,157 @@
+{
+  "id": 125587,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjU1ODc=",
+  "url": "https://hackerone.com/reports/125587",
+  "title": "Hogging up all the resources on hackerone.com",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2016-03-24T01:38:59.232Z",
+  "submitted_at": "2016-03-24T01:38:59.232Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "kirils",
+    "url": "/kirils",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/044/102/0ce8761f69a2583941a773f913880a5dbf0eb068_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-04-10T07:35:47.784Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-04-10T07:35:47.663Z",
+  "team_member_agreed_on_going_public_at": "2019-04-09T23:43:11.018Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "***Please note.*** *I believe that some of the issues described below can also be used on their own and/or combined in other configurations to achieve different results, e.g. \"paying\" a bounty of zero or team avoiding to resolve and unpleasant issue. I am however describing the (very likely) doomsday scenario.*\n\nThe following report IDs were used in testing: 125555, 125556. After you're done with this bug, please remove those. **DO NOT OPEN BEFORE READING THE FULL REPORT**\n\nTo reproduce the problem immediately, just skip to **Bug5**.\n\n**Bug1. It is possible to award bounties of size zero.** *(not required for doomsday)*\nhackerone has implemented a filter on minimal bounty amount. It is impossible to award negative bounty, zero bounty or \"0.00\" bounty. This is checked by JavaScript and furthermore on the server side. However, it is possible to award \"0.001\" bounty, effectively awarding zero amount. This allows a team to risk no money when executing next steps.\n\n**Bug2. POST to `bulk` is susceptible to a replay attack .** *(not required for doomsday)*\nThis of course only makes the following attack easier, but POST to https://hackerone.com/reports/bulk can be replayed without changing a thing in the request. A dynamic use-once token is strongly advised.\n\n**Bug3. Many `Activities::BountyAwarded` on a bug report hog up server resources because of unoptimized codebase.** \n*Note. Other types of activities may also be affected. This was not further clarified due to severe impact on hackerone infrastructure.*\nIt was measured that with each new activity added https://hackerone.com/reports/NNNNNN.json became slower and slower.\nPlease see the following table where cnt is the count of Activities::BountyAwarded in a bug report and spd is the time (in seconds) it took for the json to load.\n```\ncnt\t\tspd\n335\t\t13\n380\t\t15\n440\t\t19\n485\t\t23\n555\t\t24\n680\t\t26\n750\t\t28\n```\nThis already makes the specific bug report quite unusable.\n\n**Bug4. Cloudflare is configured to disconnect the HTTP session if the response takes longer than 30 seconds.** *(not required for doomsday)*\nThis is generally a good thing, but considering the previous bug this means that at some amount of `Activities::BountyAwarded` we effectively make report inaccessible to anyone. I reached this point in my testing with approx 800 activities per report. Note that I did not try to find the specific limit due to the severe impact of this bug on hackerone infrastructure. Additionally the specific number is probably dependant on the server load anyway.\n*Please see the attached screenshot \"offline.png\".*\n\nStill I am quite sure that a report can only have less than a thousand activities of this type.\nAfter Cloudflare has disconnected a HTTP session, it does not automatically reconnect, so this can be further used to make the user believe that he is logged out. Probably some other nefarious purposes.\n*Please see the attached screenshot \"logged-out.png\", I am infact logged-in at that moment.*\n\n**Bug5. Just 10 parallel requests to the json file is enough to paralyse hackerone.com for everyone.**\n```\nfor((x=0;x<10;x++)); do (curl https://hackerone.com/reports/NNNNNN.json & ); done\n```\nThis was tested on the report ID ending with 6. I ran the attack only twice. Second time to confirm that the unavailability was not a coincidence.\n*Please see the attached file \"DoS-impact-measurments.txt\" for attack impact measurement.*\n\nI am able to effectively permanently take down hackerone.com by sending just **14 thousand requests per day**. You state that you treat confidentiality bugs as \"severe\". This is an availability (+small part integrity) bug, but the impact is massive. I therefore urge that you consider this bug of the highest severity.\n\n\n**Attack plan**\n1. Get a vulnerability report\n2. Fix it, agree on disclosure. It is now publicly available and visible on the front page.\n3. Submit a 1000 rewards of 0.001 to the report.\n4. Anyone who requests the json file (by opening the report on the front page for example) will get disconnected by Cloudflare.\n5. If this is not enough to create a DDoS on the actual infrastructure hidden behind Cloudflare, you can just launch 10 parallel requests to the json file yourself every minute for a simple and elegant DoS.\n6. ~~Profit.~~ Watch the world burn.\n\n**Suggested fixes**\nBug1: round the value first, validate against >0 later.\nBug2: apply non-reusable tokens to your POST forms.\nBug3: hell if I know! you're not open source, right? take a look at your damn code. ;)\nBug4: might want to adjust the thresholds or reimplement your client-side (JavaScript) algorithms for detecting if a user is logged in or not.\nBug5: pre-generating actual json files for different audiences would surely reduce the load and eliminate this vector.",
+  "weakness": {
+    "id": 48,
+    "name": "Denial of Service"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 80864,
+      "file_name": "offline.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/080/864/3b343c7dfd25158bfc36abeb1f93566c3efe7f24/offline.png?response-content-disposition=attachment%3B%20filename%3D%22offline.png%22%3B%20filename%2A%3DUTF-8%27%27offline.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYNWCPB7L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T120340Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZonlQ6XZgqcJy52%2BgLeu7rc%2BcmnwL48Jd3jP8q5%2FnAIgBqR93Cql4TkH3OcEpzuPURjNMviKVAaN%2BZ5EJ93CKHMqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDC6ruR9Bo4NPZ6hGziqOBTlv9ZKHmz6ju1OkdxDfdYMkEOLdYBFwxFeSW3uoBTkUPGqDZadsGRlOm%2FzVtXFfSNIYP7AeaBzFIeS8LcBh%2BgxgmY5hETW2LeYwB%2F3XW2H67p6e7bnzldnlj2tuACFxnKA6rcmcUQTXn4qVKPw%2FsgBonpbjVSLH1G3MhuwcdUrgeFjI7JHFzHMgd7%2BYjdjZMeFC5A7DM0sT8KjQAqMCvmyYUuytyZlFtZt%2BmkPDyj8xPC2BnGzGd8ViwG0oSBCmgyULo8%2BibDGvrMmOjHPDqqUa51uudsuIw3xXCU7yEl54SJO8XPwko%2FUDfNLlPnB%2BsrExqEFkzOUbRn8wytJZJbdlm4PKX7p1sguljWzLGzMthBAcUaMx563jGqM6UBzNW8J7ZvQGt%2B1a3uE51BbOuuys1pnhOCpDb5JVA%2F%2FnzxJBkW450qNxs7qEyti1abXcL80lTaRmG99RCoVXy4Z1np7gmDfekfXlXCBl86B94t2Ng9rjTnc7plMi%2BnjT5NpYRtvlD1UpwqSlpHw2LxzvZHpnEAjgW8aVgyKPoE6tQwMw2sgb02Lt0IOaTIVI9DmdZbb5FIIz5u0W7gGoxWgQ5yaRk5osuY5nK4GSs4uwAAb6e9hPfxePBU%2B3OK%2BLDM2L0ULVBqQLonfTFD4q0hygJNmtMZ93jUiC1uw5seAKU9RQaFXprCUTfTFtdiGuqhtRvHnqNI2%2BYtGwEaoPk45%2FBZHKWdUiA6zzx2Vh1ViwuP2bYU1TfleKuf4XSDTRnsL25sxpXHdWEdzp36j4m8m4N7y9V%2BDLGJL0W5laKN4XaBIRNCwRfNALochyxg%2FRqoYPvilO9klb%2Fo58doCSMcQFz%2B2dImB8vsUlC4TfkCpPPjC7payuBjqxAUz7jVGh5dF5HDYPCV1aK6vLNtHQn48iZT2lveCprzWjOASVNejwySv8S0Qz3%2BorxxSB4hGPZkqz36geF8d9lQ8aLh18bVe6qUL5yM5i2yxVkHovo80Uf9FwD0IrvwxhBv2vzB%2BEuch1dctBkoyLtJS470n%2BuD%2F%2BwCLVUXoH1ljlX3lPqEb2nvs0Eo4v6pGR4x8y4bHoxAxkfJRPNJ4ut4mAE9vidBtOStAITUN8HDLywA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f2997614338a432481e0e25173e70d0ed05c599a152c34e26cb86ee58765a9b2",
+      "file_size": 73557,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 80865,
+      "file_name": "logged-out.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/080/865/3ac71553e3b54c575162808a5e178ef4aa20304e/logged-out.png?response-content-disposition=attachment%3B%20filename%3D%22logged-out.png%22%3B%20filename%2A%3DUTF-8%27%27logged-out.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYNWCPB7L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T120340Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZonlQ6XZgqcJy52%2BgLeu7rc%2BcmnwL48Jd3jP8q5%2FnAIgBqR93Cql4TkH3OcEpzuPURjNMviKVAaN%2BZ5EJ93CKHMqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDC6ruR9Bo4NPZ6hGziqOBTlv9ZKHmz6ju1OkdxDfdYMkEOLdYBFwxFeSW3uoBTkUPGqDZadsGRlOm%2FzVtXFfSNIYP7AeaBzFIeS8LcBh%2BgxgmY5hETW2LeYwB%2F3XW2H67p6e7bnzldnlj2tuACFxnKA6rcmcUQTXn4qVKPw%2FsgBonpbjVSLH1G3MhuwcdUrgeFjI7JHFzHMgd7%2BYjdjZMeFC5A7DM0sT8KjQAqMCvmyYUuytyZlFtZt%2BmkPDyj8xPC2BnGzGd8ViwG0oSBCmgyULo8%2BibDGvrMmOjHPDqqUa51uudsuIw3xXCU7yEl54SJO8XPwko%2FUDfNLlPnB%2BsrExqEFkzOUbRn8wytJZJbdlm4PKX7p1sguljWzLGzMthBAcUaMx563jGqM6UBzNW8J7ZvQGt%2B1a3uE51BbOuuys1pnhOCpDb5JVA%2F%2FnzxJBkW450qNxs7qEyti1abXcL80lTaRmG99RCoVXy4Z1np7gmDfekfXlXCBl86B94t2Ng9rjTnc7plMi%2BnjT5NpYRtvlD1UpwqSlpHw2LxzvZHpnEAjgW8aVgyKPoE6tQwMw2sgb02Lt0IOaTIVI9DmdZbb5FIIz5u0W7gGoxWgQ5yaRk5osuY5nK4GSs4uwAAb6e9hPfxePBU%2B3OK%2BLDM2L0ULVBqQLonfTFD4q0hygJNmtMZ93jUiC1uw5seAKU9RQaFXprCUTfTFtdiGuqhtRvHnqNI2%2BYtGwEaoPk45%2FBZHKWdUiA6zzx2Vh1ViwuP2bYU1TfleKuf4XSDTRnsL25sxpXHdWEdzp36j4m8m4N7y9V%2BDLGJL0W5laKN4XaBIRNCwRfNALochyxg%2FRqoYPvilO9klb%2Fo58doCSMcQFz%2B2dImB8vsUlC4TfkCpPPjC7payuBjqxAUz7jVGh5dF5HDYPCV1aK6vLNtHQn48iZT2lveCprzWjOASVNejwySv8S0Qz3%2BorxxSB4hGPZkqz36geF8d9lQ8aLh18bVe6qUL5yM5i2yxVkHovo80Uf9FwD0IrvwxhBv2vzB%2BEuch1dctBkoyLtJS470n%2BuD%2F%2BwCLVUXoH1ljlX3lPqEb2nvs0Eo4v6pGR4x8y4bHoxAxkfJRPNJ4ut4mAE9vidBtOStAITUN8HDLywA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f012a1edb7f8bca2cd503472cd823b98e8bb55b0ee946f90427df81716a1785d",
+      "file_size": 339628,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 80866,
+      "file_name": "DoS-impact-measurments.txt",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/080/866/5c1cc00e00e189dfaac9e6a2eaf93293ca2f41ab/DoS-impact-measurments.txt?response-content-disposition=attachment%3B%20filename%3D%22DoS-impact-measurments.txt%22%3B%20filename%2A%3DUTF-8%27%27DoS-impact-measurments.txt&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYNWCPB7L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T120340Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZonlQ6XZgqcJy52%2BgLeu7rc%2BcmnwL48Jd3jP8q5%2FnAIgBqR93Cql4TkH3OcEpzuPURjNMviKVAaN%2BZ5EJ93CKHMqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDC6ruR9Bo4NPZ6hGziqOBTlv9ZKHmz6ju1OkdxDfdYMkEOLdYBFwxFeSW3uoBTkUPGqDZadsGRlOm%2FzVtXFfSNIYP7AeaBzFIeS8LcBh%2BgxgmY5hETW2LeYwB%2F3XW2H67p6e7bnzldnlj2tuACFxnKA6rcmcUQTXn4qVKPw%2FsgBonpbjVSLH1G3MhuwcdUrgeFjI7JHFzHMgd7%2BYjdjZMeFC5A7DM0sT8KjQAqMCvmyYUuytyZlFtZt%2BmkPDyj8xPC2BnGzGd8ViwG0oSBCmgyULo8%2BibDGvrMmOjHPDqqUa51uudsuIw3xXCU7yEl54SJO8XPwko%2FUDfNLlPnB%2BsrExqEFkzOUbRn8wytJZJbdlm4PKX7p1sguljWzLGzMthBAcUaMx563jGqM6UBzNW8J7ZvQGt%2B1a3uE51BbOuuys1pnhOCpDb5JVA%2F%2FnzxJBkW450qNxs7qEyti1abXcL80lTaRmG99RCoVXy4Z1np7gmDfekfXlXCBl86B94t2Ng9rjTnc7plMi%2BnjT5NpYRtvlD1UpwqSlpHw2LxzvZHpnEAjgW8aVgyKPoE6tQwMw2sgb02Lt0IOaTIVI9DmdZbb5FIIz5u0W7gGoxWgQ5yaRk5osuY5nK4GSs4uwAAb6e9hPfxePBU%2B3OK%2BLDM2L0ULVBqQLonfTFD4q0hygJNmtMZ93jUiC1uw5seAKU9RQaFXprCUTfTFtdiGuqhtRvHnqNI2%2BYtGwEaoPk45%2FBZHKWdUiA6zzx2Vh1ViwuP2bYU1TfleKuf4XSDTRnsL25sxpXHdWEdzp36j4m8m4N7y9V%2BDLGJL0W5laKN4XaBIRNCwRfNALochyxg%2FRqoYPvilO9klb%2Fo58doCSMcQFz%2B2dImB8vsUlC4TfkCpPPjC7payuBjqxAUz7jVGh5dF5HDYPCV1aK6vLNtHQn48iZT2lveCprzWjOASVNejwySv8S0Qz3%2BorxxSB4hGPZkqz36geF8d9lQ8aLh18bVe6qUL5yM5i2yxVkHovo80Uf9FwD0IrvwxhBv2vzB%2BEuch1dctBkoyLtJS470n%2BuD%2F%2BwCLVUXoH1ljlX3lPqEb2nvs0Eo4v6pGR4x8y4bHoxAxkfJRPNJ4ut4mAE9vidBtOStAITUN8HDLywA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bfecd769d5c90d49dbf09098c35bfb44792006519670aedf32cbaede25aa4e3a",
+      "file_size": 1312,
+      "type": "text/plain",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2019-05-09T23:43:11.098Z",
+  "allow_singular_disclosure_after": -150380429.70775017,
+  "singular_disclosure_allowed": true,
+  "vote_count": 44,
+  "voters": [
+    "hipotermia",
+    "base_64",
+    "ali",
+    "savitar0x01",
+    "0xdeadbife",
+    "pekafat",
+    "mpz",
+    "eveeez",
+    "khizer47",
+    "ak1t4",
+    "and 34 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 5.0,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "none",
+      "availability": "low"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 3,
+    "asset_type": "URL",
+    "asset_identifier": "hackerone.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

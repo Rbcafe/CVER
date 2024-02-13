@@ -1,0 +1,135 @@
+{
+  "id": 684603,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82ODQ2MDM=",
+  "url": "https://hackerone.com/reports/684603",
+  "title": "CVE-2019-5482: Heap buffer overflow in TFTP when using small blksize",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2019-08-29T15:52:19.164Z",
+  "submitted_at": "2019-08-29T15:52:19.164Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "thomas_v",
+    "url": "/thomas_v",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 35663,
+    "url": "https://hackerone.com/curl",
+    "handle": "curl",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "curl",
+      "twitter_handle": "",
+      "website": "https://curl.se",
+      "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2019-5482",
+    "CVE-2019-5436"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2020-11-14T15:17:25.890Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-11-14T15:17:25.833Z",
+  "team_member_agreed_on_going_public_at": "2020-11-05T08:37:40.983Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nWith a TFTP server that does not send OACK, but instead starts anyway with first block with 512 bytes block size, the curl library fails to assume default 512 bytes blocks. Instead it detects EOF and does not return an error code. Consequence is a truncated file that is 512 bytes without any error code.\n\nMy understanding is that from the RFC, a TFTP server might ignore blksize request and anyway send the default 512 bytes block size data.\n\nUnless an OACK is received we should assume 512 block size, whether or not a particular blocksize was requested.\n\nThis was introduced by security fix of CVE-2019-5436:\n257600341 tftp: use the current blksize for recvfrom()\n\n## Potential Fix\nWe could revert 2576003415625d7b5f0e390902f8097830b82275 and instead malloc the receive buffer for at least 512 bytes, or for the requested blksize if it is bigger. That would address the issue being reported and also the CVE-2019-5436.\n\n## Steps To Reproduce:\n  1. Use a TFTP server that does not send OACK in response of a particular blksize request, but instead sends directly the first block, of default size (512B).\n  2. Run curl asking for a >512 bytes block size like:\n    curl --tftp-blksize 8192 tftp://9.1.9.1/data.bin --output data.bin\n  3. echo $? is 0 and file size is 512 bytes\n\n## Comment\nNot too sure about the Weakness identification and/or Severity, reporting it here since it was introduced by a CVE fix.\n\n## Impact\n\nFile truncation without 'curl' returning any error code.",
+  "weakness": {
+    "id": 5,
+    "name": "Heap Overflow"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2020-12-05T08:37:41.082Z",
+  "allow_singular_disclosure_after": -100673387.48738934,
+  "singular_disclosure_allowed": true,
+  "vote_count": 11,
+  "voters": [
+    "sameerphad72",
+    "yusuf_furkan",
+    "cryptographer",
+    "neupanedev1999",
+    "ranking622",
+    "mudassiraijaz_18",
+    "arrow777",
+    "abowalid",
+    "chad0e",
+    "kokil6594",
+    "and 1 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 5.2,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "high",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "low",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 18844,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/curl/curl",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

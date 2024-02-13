@@ -1,0 +1,133 @@
+{
+  "id": 191216,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xOTEyMTY=",
+  "url": "https://hackerone.com/reports/191216",
+  "title": "SSRF via git Repo by URL Abuse",
+  "state": "Closed",
+  "substate": "duplicate",
+  "severity_rating": "medium",
+  "readable_substate": "Duplicate",
+  "created_at": "2016-12-14T19:59:53.158Z",
+  "submitted_at": "2016-12-14T19:59:53.158Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "oroborus",
+    "url": "/oroborus",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/ba7idsx0eb6sunylrcf5ueenzs1t/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 264,
+    "url": "https://hackerone.com/gitlab",
+    "handle": "gitlab",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "GitLab",
+      "twitter_handle": "gitlab",
+      "website": "https://about.gitlab.com",
+      "about": "A single application for the entire software development lifecycle."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-11-28T18:11:33.802Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-11-28T08:13:49.782Z",
+  "team_member_agreed_on_going_public_at": "2017-11-28T18:11:33.568Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi team ,\n\nFirst things first, awesome work with <3 Gitlab \n\n######Description :\nWhen creating a repository there is an option to pull existing repo from github by providing your github repos url endpoint, then a request is made to that url endpoint to fetch data and create repo on github fair enough till here. But the issue i wanna address here is that you are **not validating that the URL provided by user** this lets any malicious user request any arbitrary url on the internet and use gitlabs server to connect back to him.\n\n######Steps to Reproduce : \n\n1. Create a repo\n2. Click on git repo by url option \n3. Enter url of your public server and create a repo\n4. Now if you access your servers access logs you will find \n\n``` http\n 40.84.0.225 - - [14/Dec/2016 11:36:33] \"GET /info/refs?service=git-upload-pack HTTP/1.1\" 404 - \n```  \nWhich is requested by gitlab when creating the repo.\n\n######POC:\n\n>>As a poc i simply port forwarded port  **4444** on my router and started simple HTTP server and listened on 4444 to check for incoming connections, by doing the steps mentioned above i got a GET request from **40.84.0.225**  , images for the same are attached for reference.\n\n\n######Impact:\n\nSuccessful attack on this issue can lead to the following:\n\n* Port scan intranet and external Internet facing servers\n* Fingerprint internal (non-Internet exposed) network aware services\n* Perform banner grabbing\n* Run code on reachable machines\n* Enumerate and attack services that are running on these hosts\n\nAlthough i have not tested for any of these yet, this issue can still be misused to use this endpoint to initiate port scans or dos on other servers on the internet, as the hits will be going from your endpoint.\n\n\n**Cheers!** \n####*Siddhu*",
+  "weakness": {
+    "id": 68,
+    "name": "Server-Side Request Forgery (SSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 143574,
+      "file_name": "1.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/143/574/e3062e9d32836238b2a73161247250bc5d8d53aa/1.PNG?response-content-disposition=attachment%3B%20filename%3D%221.PNG%22%3B%20filename%2A%3DUTF-8%27%271.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2JWCBEGQ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122959Z&X-Amz-Expires=543&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQC%2FUOBUX4k3hk3E%2Be6snO9LPeTekkyoO2NoMEQpFLXEBwIhAJtkXXn5eL0ikTtvqv%2F2fgGtuhZUPvLulWFuhYzEiLfuKrAFCG8QAxoMMDEzNjE5Mjc0ODQ5Igx%2BsOWizWfx0tzigpsqjQUuFNaEEdzMHGeLBy6s%2Bkoye8hS0hWPfE4WrdAunw9kpHYBx3YQZH%2FutD5pqzkJ0%2FpSWNbJpNfcWoCwQfdsMFN%2F3JTaogDPpUe%2FUAwScnqabVUL9jhgbAfxzoi6vdePXcWwC3rPpDdJZOWII30adweaKN3r73pvMjzWQOzrFwQRQ2qqkd6ueKTpUI%2Fv4YvwK2UEvpnWlXVfdWza8QTDZ%2BVAhjMIgYhtNwiWvsrwTlWirEbz9gqK%2FzOzBvugRZ98k6lTo4fLL9%2F23SfytoJCVdDDIwGtU9XGeEckRTNfnCgQgTT%2FZaoU54aipxAM0Bk2%2FOy9qyQgNo%2Bc4a%2BtxjohyY6lmRwPOUw0Pc6tciCZLAfzTSCwKGLeWeoHYecu2a8TObYqts0FTVzlDxQi0dXbDKcGkreaslLTdMzFIWj7k%2FvKf0zZ7SIjn5wlEWYmpN6UNwCGxRlHEIiWuB874izqCmy7qw9LCJb0ZLpm1%2FSPsUBljWnIWg8YKhR5G%2BlRT4AnTpGmbQ1duSnA4UOAFqFF9ooGKFMwleUudDqIrFYn0NrgGkKuZ0FyHukrzdoftt2m1CLmNvKjrzoE0ES2uqov8Tj9QQRIEQFjtg7I5ZpK9maHPpHk4CLN0O0Y4rauWiSIHQif1cMtqKARg%2BcskG0crI1mZl2Me%2BZZ8g9Jr6A9TO%2BG6B%2BAuHvyOlBnEQo9ApBQ4g3JZp7uSyRCH7wyxu5avVfWBP0kR4X6PVPNS2njxovFuRYhrsoaOxr5qCj6HG4uUNqbsm3ZbdAMFLxXzT5KEhmDSNZSAkWhXSd3CbLn6PLU3H1wZKL%2BRTr3YWP6V%2BPBJOgG3%2F1%2FtAW8La4mIXOfKOuKrxAT6UJ%2F3ezUbaPUnzCVlKyuBjqwAYUQRBNZktTPJUzRxaZYc7FlEKaYCo56JYwdR1VwuNznpSAuwrJmZ8ZvnXNFJPLlJdcNccsiJ5fTCzfeWcf9BpY1wSj3EzyoYZKwzbfX52pXogACNTVaQkOfGOJAlQQWdAcneFKpYzmbv463sdm5nxdVudTTpGAS2KhfaCeHX8P%2BR4cx6Nfp5GhC4hDj4dSg1VosbQKNMaotjyBFcyuRuboj987f2kN16pdIanTNBi4a&X-Amz-SignedHeaders=host&X-Amz-Signature=3e96257d1e3dd1c02be9fb5292e5c27cb9c47e96e5bc2006ceef71032bf3b5da",
+      "file_size": 38336,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 143575,
+      "file_name": "2.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/143/575/7087b6d0619ff536adae0085e57bcdd8a13c9b10/2.PNG?response-content-disposition=attachment%3B%20filename%3D%222.PNG%22%3B%20filename%2A%3DUTF-8%27%272.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2JWCBEGQ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122959Z&X-Amz-Expires=543&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQC%2FUOBUX4k3hk3E%2Be6snO9LPeTekkyoO2NoMEQpFLXEBwIhAJtkXXn5eL0ikTtvqv%2F2fgGtuhZUPvLulWFuhYzEiLfuKrAFCG8QAxoMMDEzNjE5Mjc0ODQ5Igx%2BsOWizWfx0tzigpsqjQUuFNaEEdzMHGeLBy6s%2Bkoye8hS0hWPfE4WrdAunw9kpHYBx3YQZH%2FutD5pqzkJ0%2FpSWNbJpNfcWoCwQfdsMFN%2F3JTaogDPpUe%2FUAwScnqabVUL9jhgbAfxzoi6vdePXcWwC3rPpDdJZOWII30adweaKN3r73pvMjzWQOzrFwQRQ2qqkd6ueKTpUI%2Fv4YvwK2UEvpnWlXVfdWza8QTDZ%2BVAhjMIgYhtNwiWvsrwTlWirEbz9gqK%2FzOzBvugRZ98k6lTo4fLL9%2F23SfytoJCVdDDIwGtU9XGeEckRTNfnCgQgTT%2FZaoU54aipxAM0Bk2%2FOy9qyQgNo%2Bc4a%2BtxjohyY6lmRwPOUw0Pc6tciCZLAfzTSCwKGLeWeoHYecu2a8TObYqts0FTVzlDxQi0dXbDKcGkreaslLTdMzFIWj7k%2FvKf0zZ7SIjn5wlEWYmpN6UNwCGxRlHEIiWuB874izqCmy7qw9LCJb0ZLpm1%2FSPsUBljWnIWg8YKhR5G%2BlRT4AnTpGmbQ1duSnA4UOAFqFF9ooGKFMwleUudDqIrFYn0NrgGkKuZ0FyHukrzdoftt2m1CLmNvKjrzoE0ES2uqov8Tj9QQRIEQFjtg7I5ZpK9maHPpHk4CLN0O0Y4rauWiSIHQif1cMtqKARg%2BcskG0crI1mZl2Me%2BZZ8g9Jr6A9TO%2BG6B%2BAuHvyOlBnEQo9ApBQ4g3JZp7uSyRCH7wyxu5avVfWBP0kR4X6PVPNS2njxovFuRYhrsoaOxr5qCj6HG4uUNqbsm3ZbdAMFLxXzT5KEhmDSNZSAkWhXSd3CbLn6PLU3H1wZKL%2BRTr3YWP6V%2BPBJOgG3%2F1%2FtAW8La4mIXOfKOuKrxAT6UJ%2F3ezUbaPUnzCVlKyuBjqwAYUQRBNZktTPJUzRxaZYc7FlEKaYCo56JYwdR1VwuNznpSAuwrJmZ8ZvnXNFJPLlJdcNccsiJ5fTCzfeWcf9BpY1wSj3EzyoYZKwzbfX52pXogACNTVaQkOfGOJAlQQWdAcneFKpYzmbv463sdm5nxdVudTTpGAS2KhfaCeHX8P%2BR4cx6Nfp5GhC4hDj4dSg1VosbQKNMaotjyBFcyuRuboj987f2kN16pdIanTNBi4a&X-Amz-SignedHeaders=host&X-Amz-Signature=d5e61f232b19b200de27751e53b900ac0c323723bb4b7ae832adaa99a96728e2",
+      "file_size": 8381,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 2,
+  "voters": [
+    "eveeez",
+    "sa1tama0"
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 6.6,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "local",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "low",
+      "availability": "high"
+    }
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

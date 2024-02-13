@@ -1,0 +1,114 @@
+{
+  "id": 1085782,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMDg1Nzgy",
+  "url": "https://hackerone.com/reports/1085782",
+  "title": "█████████ IDOR leads to disclosure of PHI/PII",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2021-01-24T08:01:48.723Z",
+  "submitted_at": "2021-01-24T08:01:48.742Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "nidens",
+    "url": "/nidens",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/w14dbu00qo3li3q4z4qbgl4puv3h/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 16064,
+    "url": "https://hackerone.com/deptofdefense",
+    "handle": "deptofdefense",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/016/064/46cd0286b1fa224aaa2cb9dfaaca9fa22b5b80b2_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/064/46cd0286b1fa224aaa2cb9dfaaca9fa22b5b80b2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "U.S. Dept Of Defense",
+      "twitter_handle": "DC3VDP",
+      "website": "https://bit.ly/3ntULtN",
+      "about": ""
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-02-18T19:17:50.327Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2021-02-12T15:53:12.873Z",
+  "comments_closed?": true,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary:**\n████ is designed in a way where there is a vulnerable endpoint that allows a non-medical user to view the ██████████ records of people who are not ████████s of the sponsor. \n\n**Description:**\nI am currently an Active Duty Airman and this vulnerability does require CAC authentication. When browsing the ██████ website with a proxy I noticed that there is a function that allows sponsors (in this case me) to view their █████s shot records in PDF form. After viewing my ██████████'s shot records, I noticed this functionality lives on the following endpoint `https://████=[id]`.  If you increment or decrement the `██████` parameter by 1 the application will throw an HTTP Status Code 302 and redirect you back to the `██████████` endpoint which is a good security practice. The issue with this is, that with the 302 redirect the PDF of the incremented ID will be attached in the body of the 302 requests, you are able to extract this when using a proxy like Burp Suite. Obviously, this is concerning because this would allow a user to pull any shot record without being associated with medical. \n\n## Step-by-step Reproduction Instructions\n### I have redacted the screenshots as best as possible. The screenshots are of my information, the example for validation.\n\n1. Navigate to ████/█████ and login with CAC\n2.  Once you are authenticated browse to this endpoint, https://███████=█████████ and you should be redirected to `█████` but the 302 redirect will have the PDF information of my daughter (no actual ██████████ information is loaded).\n3. On the 302 redirects, you can utilize the function `Copy to File` in burp suite to save this request as a pdf and you will have a PDF version of my ██████ shot record. \n\nPlease review the attached screenshot, I did not pull use my █████ information for this screenshot because I have authorized to view her information. This request shows me decrementing the `██████` by 1 and showing the PDF is attached to the 302 redirects. \n██████\n\n\n## Suggested Mitigation/Remediation Actions\nEnforce the same permissions that are used for the `██████████` and `████` functions of the application. \n\nI am more than willing to speak with the developers about this if they want to e-mail my NIPR email. I took care to not go any further than just validating that the vulnerability exists and immediately stopped and started to write this report.\n\n## Impact\n\nPHI/PII disclosure which includes, ████████",
+  "weakness": {
+    "id": 55,
+    "name": "Insecure Direct Object Reference (IDOR)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 23,
+  "voters": [
+    "hackeroneandchz",
+    "tokyoenigma",
+    "alpharingo",
+    "un4gi",
+    "ali",
+    "0nlymohammed",
+    "nidens",
+    "khizer47",
+    "shamal0x",
+    "kavik1118",
+    "and 13 more..."
+  ],
+  "severity": {
+    "rating": "critical",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

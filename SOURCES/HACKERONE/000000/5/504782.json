@@ -1,0 +1,143 @@
+{
+  "id": 504782,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81MDQ3ODI=",
+  "url": "https://hackerone.com/reports/504782",
+  "title": "CSRF at adding new role (user-management.service.newrelic.com)",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2019-03-04T14:11:56.232Z",
+  "submitted_at": "2019-03-04T14:11:56.232Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "skavans",
+    "url": "/skavans",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-08-13T11:04:24.205Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-08-11T09:33:45.734Z",
+  "team_member_agreed_on_going_public_at": "2020-08-13T11:04:24.101Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hey New Relic security team,\n\nI have discovered a CSRF-vulnerability allowing attacker to create new custom role on behalf of victim.\nThe role creation endpoint does not implement correct CSRF-protection so it can be bypassed.\nThe exploited works fine at least at latest Firefox browser.\n\n**Steps to reproduce**\n\n1. Sign into New Relic app as admin.\n2. Open an attached html file {F435288} in the same browser and wait iframe to be fully loaded.\n3. Navigate to roles page (`https://account.newrelic.com/accounts/<account_id>/roles`) and make sure there is a new custom role \"CSRF_ROLE\".\n{F435275}\n\n**Mitigation**\nThis endpoint implements some CSRF-protection: it checks the referer and origin headers, but these checks can be bypassed using the form (doesn't send Origin header) and data: URI (form inside data: URI doesn't send Referer header). That's why it is better to use standard CSRF-protection technique with CSRF-tokens.\n\n## Impact\n\nAttacker can create custom role inside New Relic app.",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 435275,
+      "file_name": "______________2019-03-04___17.04.55.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/435/275/184041e916929701a4fd6fefc2b5ea164f61e731/______________2019-03-04___17.04.55.png?response-content-disposition=attachment%3B%20filename%3D%22______________2019-03-04___17.04.55.png%22%3B%20filename%2A%3DUTF-8%27%27______________2019-03-04___17.04.55.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131845Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c4a36a63767043fa629527da018649b2cc3c6ecfb94ac1ad8e16762d085196d9",
+      "file_size": 291305,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 435288,
+      "file_name": "untitled.html",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/435/288/4276a0ed68c8bd76924e70a1ebb2f321d00d3292/untitled.html?response-content-disposition=attachment%3B%20filename%3D%22untitled.html%22%3B%20filename%2A%3DUTF-8%27%27untitled.html&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131845Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c8c68d110e1f4128c10b95228a7a25a1897c1378cebd7d6459f61aba203015fd",
+      "file_size": 546,
+      "type": "text/html",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-09-10T09:33:45.791Z",
+  "allow_singular_disclosure_after": -108099899.5537327,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "wi11",
+    "cryptographer",
+    "dimwip",
+    "obsecure",
+    "majidhussien"
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 5.0,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 4405,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.newrelic.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

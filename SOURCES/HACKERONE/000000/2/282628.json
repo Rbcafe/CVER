@@ -1,0 +1,119 @@
+{
+  "id": 282628,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yODI2Mjg=",
+  "url": "https://hackerone.com/reports/282628",
+  "title": "OS Command Execution on User's PC via CSV Injection",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "medium",
+  "readable_substate": "Informative",
+  "created_at": "2017-10-24T21:25:20.992Z",
+  "submitted_at": "2017-10-24T21:25:20.992Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "cornerpirate",
+    "url": "/cornerpirate",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 61,
+    "url": "https://hackerone.com/x",
+    "handle": "x",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "X (Formerly Twitter)",
+      "twitter_handle": "XSecurity",
+      "website": "https://x.com",
+      "about": "X helps you create and share ideas and information instantly, without barriers."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-11-02T23:55:51.672Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-10-31T17:29:29.000Z",
+  "team_member_agreed_on_going_public_at": "2017-11-02T23:55:51.596Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary:** Twitter is vulnerable to CSV Injection. If an attacker can successfully exploit this, then they will compromise the PC of the user. The injection point is via a tweet (on the main twitter.com site) while the retrieval point is via the “Export Data” option on the analytics site.\n\n**Description:** No user would ever tweet their own payload surely? Well I have found an issue also with the “Share this article” intent (specifically the “text” parameter). It handles URL encoded newline characters “%0A”. The default behaviours on some web browsers show the bottom line of text in the tweet only. Therefore, it is possible for an attacker to entice a user to tweet a malicious payload. \n\nIf that victim then exports their analytics, opens the “csv” file in Excel and accepts a warning then their computer would be compromised. \n\nThis is Dynamic Data Injection (DDE) into a formula which is evaluated in Excel. \n\n## Steps To Reproduce:\n\nTo verify the injection point safely simply:\n\n  1. Tweet a benign payload: =1+55 \n  2. Goto the analytics page and ensure that tweet is within the date range before clicking \"export data\"\n  3. Open the exported CSV file within Excel\n\nThe most recent tweet should be at the top. Your first row will say 56 which is proof the addition worked.\n\nModifying the payload can convert this from an arithmetic formula to triggering Dynamic Data Exchange (DDE).\n\n  1. Modify the payload to: =cmd|' /C calc'!A0\n  2. Repeat the export and opening process.\n  3. This time Excel will warn users about the DDE. Accepting these warnings will trigger calc.exe to open.\n\nThese error messages are Microsoft's response to DDE code execution. It has been established that users do not necessarily understand these warnings and that they instead rely on their implicit trust of the service which generated the file.\n\nSo far how to replicate the injection has been shown. The second part of this is how to influence a user to post a tweet which would harm themselves? I located a flaw in the \"Share this article\" intent through the \"text\" parameter. The URL for this is:\n\nhttps://twitter.com/intent/tweet?text=[value]\n\nThe value allows URL encoded control characters such as: %0A\n\nThis is interpreted as a newline character and can be used to obfuscate the payload. The following URL includes a payload which can be used to replicate the issue:\n\nhttps://twitter.com/intent/tweet?text=%3DSUM(1%2B1)*cmd%7C%27%20%2FC%20calc%27!A0%0A%0D%0A%0D%0A%0D%0A%0Dbbb\n\nEssentially it begins with a DDE payload, injects several newlines and then writes “bbb” which could be the string the victim believes they are posting. By default FireFox (at least on Windows) was found to scroll down to the bottom of the text field meaning it displayed the string \"bbb\". There were over 100 characters remaining in which to replace that string with a reasonable message to entice the victim.\n\n## Impact: This matters if you want to ensure your users can invest their trust in Twitter. \n\nThe impact for Twitter is indirect. It is most likely going to affect trust in the service.\nThe impact for affected users is likely the full compromise of their computers. \n\nThe attack requires multiple (but trivial) steps. If an attacker controlled a website and was able to make an article on that site \"go viral\". Then they could exploit users via the \"Share this article\" feature. While the payload would be delivered instantly it is at a later date most likely when the victim would export their data to complete the attack. An attacker would require patience. For this reason I would say there is a high impact, low difficulty of exploitation, but a degree of patience is required on the attackers part. \n\nI would say the CVSS rating is honestly way too high given the hoops to jump through but using that calculator can be a mixed bag. Gimmie a choice I'd say \"high impact if exploited on the user side\", but \"probably not going to affect that many people\" so average out and finger in the air at \"medium\" risk. If I was consulting for Twitter I would raise it for discussion and even if it winds up as \"low\" on your risk criteria point out the universality and simplicity of the remediation.\n\nThe following shows how a list of modern web browsers (on Windows) behaved:\n\nFirefox 56.0.1\tYes - Vulnerable\nChrome 62.0.3202.62\tNo – less vulnerable\nInternet Explorer 11.674.15063.0\tNo – less vulnerable\nEdge 40.15063.674.0\tNo – less vulnerable\nOpera  48.0.2685.50\tNo – less vulnerable\n\nFireFox was the only one which scrolled the user to the bottom of the text field. All others are less vulnerable to exploitation.\n\n## Remediation\n\nModify the “Export Data” function on the analytics host to prefix:=, +, - and @ symbols with a '. The single quote escapes the dangerous characters and prevents code execution client side.\n\nSounds cheap to me? A 5 minute code change to fix a potentially interesting issue. What else can you get done in 5 minutes?\n\n## Supporting Material/References:\n\nI have uploaded the following PDF which includes the same discussion and has screenshots etc for more confirmation:\n\n  * F232489: Tweet_DDE_to_Me .pdf\n\n",
+  "weakness": {
+    "id": 59,
+    "name": "OS Command Injection"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 232489,
+      "file_name": "Tweet_DDE_to_Me_.pdf",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/232/489/0d83e0aaa36d4e05f67e379c850fa5d370817699/Tweet_DDE_to_Me_.pdf?response-content-disposition=attachment%3B%20filename%3D%22Tweet_DDE_to_Me_.pdf%22%3B%20filename%2A%3DUTF-8%27%27Tweet_DDE_to_Me_.pdf&response-content-type=application%2Fpdf&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6PGWSTMP%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125316Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCViOi%2F56ueEuvIwenQe%2BLb%2BwbBeFYt95o%2B27q1gAyjJQIhAJy41GZeNB%2F35zQFEMMldvRn9RKuTJ921mYFGjWXM4xOKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igyfj5amkH4Q4qV17RUqjwW2CAxiK4m4hWEAlsDvzI4tTbj8wtQkEbV8t3TJ6TszDYzbxoZfKv%2FF1ngpPiZtnooExkiPG26fSsSPVxr95a5R%2Bb53aIMfs4cvspAbjO408u%2FKZN5zXVPh6CnfCbsN8F6X%2F9KN%2Fbv66jc7vpds0BIK8%2B6fFbH50L%2BJ7loxPgYJpwQKPGA%2BxAU3n4cW0xu40kEa4HScwwT%2BqFoMNkHSPq7v%2FMX6cc1VRdiCryuyIqwF%2Bs0t%2FvdjeVHg78LS0%2FuMMNkbwDSMNufKbDqARDuoU0P%2F7njwSrXV5%2BkRLbGbe0L89dhffkGntr%2Bd%2FtQ8CCYU66m%2FjoL0k41lI2HeR3O7pLZw6xc3baudQgvKzzU8naKjeMtCWmGIlkN1deTGbW6VWFv94mPhh6xqwYF%2FygK1ASZXWcjKuCZDkbIOgvNsJXfi9GobE%2Fg%2FQCvqFLRdBFuYpEHQ%2BmeEDcfMacgRXA297IImF0dUJN85r5YBUSsTgEED3A1n%2BDuZ7EYlyHsa0FOqtqBvavx526YAyqmogm2M05wZ7943732ur203IxCn9N2G019Q9wlJDIhQKk2ujbfG2QJJ9kcZT0%2FclqOtb7n1O02fUwDgOTGWF7a6VW3W7hV6bjCy%2B5Rac9PzkS6VymX8vtLX1k%2FZgwFkOteSUd2%2FRZ6WSu3ZzHNAUkrRcuUOocwK48DWkjTuzKGjaWSycV5T7TkIYO82PSRCe3%2FO3LFd%2F1MQ3Lt2TctQHWcm%2FuYG8L64tYNCvpptkP4lbIEMyLovg2Tcvod1IiJWSFCfdjo3%2F62cnjstu7oIkOgQE1rNQRi7tl%2BOpOZ3O2p1%2BkSM9%2F0IDEkXXc43X4wqyrJxFCXTAgtGobNnX8BPw1JLWKKzcjvCMLC1ra4GOrABG6HOSlDmK1pVHFgvG0UCsHX0y77qrI5WogVE2SsoeRtdX%2BFgr0TJVFxF%2FqzndNjCSF1CE7s5o1cvQRnubzfIEHh%2Bql4Yr2YDxqHDFub6HZHglXezaL0SQVMK924Vna4%2Fd7oHIUZe52JuzZ8HuqQcy4plSO1mkvy6u0L4T%2F1njIpact7INdijf%2B1WFhWhjy0qA%2BmL%2BCVvUwMMaTaqrHm4JzWtOGywBhoyvrV0SfdDvYQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1d5cf2f54358ea8f4a3a9f68d85a110c81105250e19c0a27b7d9e81bca0122ad",
+      "file_size": 664091,
+      "type": "application/pdf",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 2,
+  "voters": [
+    "kapytein",
+    "lanepowell98"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 1062,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.twitter.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

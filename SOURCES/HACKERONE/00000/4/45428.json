@@ -1,0 +1,111 @@
+{
+  "id": 45428,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NTQyOA==",
+  "url": "https://hackerone.com/reports/45428",
+  "title": "CSRF bypass",
+  "state": "Closed",
+  "substate": "informative",
+  "readable_substate": "Informative",
+  "created_at": "2015-01-27T19:22:38.392Z",
+  "submitted_at": "2015-01-27T19:22:38.392Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": true,
+    "username": "b7882330c6060c6b277c5a1",
+    "url": "/b7882330c6060c6b277c5a1",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 56,
+    "url": "https://hackerone.com/vimeo",
+    "handle": "vimeo",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/056/c3188aa0fc4a95fd486b5ee1f4b2d0b90da111d3_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/056/c3188aa0fc4a95fd486b5ee1f4b2d0b90da111d3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Vimeo",
+      "twitter_handle": "vimeo",
+      "website": "https://vimeo.com",
+      "about": "Make life worth watching"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2015-01-30T18:18:49.473Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-01-30T00:07:53.219Z",
+  "team_member_agreed_on_going_public_at": "2015-01-30T18:18:48.788Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Dear Team,\r\n\r\nOnce again i'm here.\r\nDuring research of vimeo.com I found that you are using anti-csrf token against csrf attack. but it's not going to validate on server side.\r\n\r\nlet's see\r\n\r\nStep 1: go to https://vimeo.com/forgot_password\r\nStep 2: write your email and click on **help me**.\r\nStep 3: Now before posting make sure **Burp Suite's Interceptor is turned on** to capture the request.\r\n\r\nClick on \"help me\" now, you will see below kind of request in Burp suite:\r\n\r\n```\r\nPOST /forgot_password HTTP/1.1\r\nHost: vimeo.com\r\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:35.0) Gecko/20100101 Firefox/35.0\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\nAccept-Language: en-US,en;q=0.5\r\nAccept-Encoding: gzip, deflate\r\nReferer: https://vimeo.com/forgot_password\r\nCookie: vuid=471411067.232973627; __utma=18302654.785580395.1421186258.1421859718.1422384189.4; __utmz=18302654.1421186258.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); __utmv=18302654.|2=user_type=basic=1^3=ms=0=1^7=video_count=0=1; site_settings=%7B%22sticky_page%22%3Anull%7D; has_logged_in=1; __gads=ID=3eb5153d2e8ef474:T=1421187886:S=ALNI_MZ62UIUIjNjSl4kp3auNxfRHSXdnQ; stats_start_date=2015%2F01%2F10; stats_end_date=2015%2F01%2F14; __utmb=18302654.4.10.1422384189; __utmc=18302654; __utmli=forgot_form; xsrft=e9b0179d3dd45669bd6d44a2484fb0f5.0\r\nConnection: keep-alive\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 79\r\n\r\nemail=shubhamgupta109.1995%40gmail.com&token=e9b0179d3dd45669bd6d44a2484fb0f5.0\r\n```\r\n\r\nnow you can see you are using **anti-csrf token** there but it's not going to validate. attacker can flood user account with too many mails for password reset request.\r\n\r\nI'ave attached POC of the same.\r\nLet me know if you needed more info.\r\n\r\nBest Regard\r\nShubham",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 27951,
+      "file_name": "POC.gif",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/027/951/621e762f2c5db1fb13f30678cfcf02202b42f171/POC.gif?response-content-disposition=attachment%3B%20filename%3D%22POC.gif%22%3B%20filename%2A%3DUTF-8%27%27POC.gif&response-content-type=image%2Fgif&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYS6T2T4S%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T113543Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQC%2FRlgMvrp4sI%2BNN%2Bw0e%2BHS%2Fi0X4FFUjwI6hTqAUnQWYQIgPZYpGqRtUrQEdEqyjQ7VWI1A7cqBCtguMbt4YIuIcNIqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDIwmV%2FtI2Z%2BVlVJQOCqOBc7CvK4xINdfRva6PibURBsgRmkDXf%2FsfRb09TcUdBlBFNmKVkxQPEdRC1Mnq1DDtMy%2FcGXOrpRoAxZrwVEpSHxUpZo%2FJRAHbOWAQBUrr1l1gC6t9Ol8wWC7PLi7X%2FD2%2BIDYKaPOL3QSa9PdanrueH6WdeJdiGnGVaFnEkwm%2BHPy%2BNshabbrQKXqkiQ%2FKRYoPLt1dvZ1N24FQHGKbhJBHzJTQzkx7Zrace5bXg%2BJgLt6PscN7h%2BULLdZS9N80mauppM1Bvb6ZAc1mkJWSe0udi0WKGIY51k32kzf%2FZRlsjDjv3wLANMhuaYZxtbiG3WqGDC8fit9fFP3v6IHyuIqz8W%2FJG6NK1zlTj4Bv2ofITBdDLGFFR8yKVIFqByGSOWGgKHI%2Bp%2FU758TaX5fX5ORVjWG5txmLAIp2Ye6HKb1jos9tPe0WwKFf1VXSzM%2BIPDtrwzelzeq1ecGD7Qov%2BE7m6FSNQhrPCH5MWK76q29U5jHq4v9GWkh6dO8IcaXMgC5%2BVrL8P1250J44UPDKtphXTjBb3iA00qdsdp1F%2B%2Fa15Q2N6WK4Zj8yXgSiYj5SqlvrlLooUiEv4FjCaTKJ%2B%2F6X9LlHBvM59P7vynVxy%2FZvv1tVFuE%2B1IJtkjeAr5%2BJZnYlQqnuceFw3MjImSw8YPBpzvy4Syrbl%2FiRlfszmlv0xFykH9Tf1k32eSbbbhd5%2B5c1f0w5Do%2F0wB%2B%2F7HU5grw%2Fsc%2Fa4ONp4AL9dothtFzDI9yrU86H0Tj%2BgA4bfs%2Bq8KiM04Zifmo5%2BSqSn50Vbg%2BbyS%2BCKKHCDlA%2FBvQCMxY1dpo4pqPW8%2FQk9SE5zpcrHezMMGRkJg26Wm6o5Sur%2BuuyvPlmvWPTnE137%2FSashTujC8pqyuBjqxAQugPapY7MCgoHnN3A9t0%2FPfp1FpK4tJONEidbWkGhXB6NA90wXv8DKSeZxQJFUZ19mDVzE0iG0%2BiihjuEoeGetVY82tVdAOUT4mlhJqZaL%2FmnCgfpwcatSd2OhHah3YU4JQGvlArly1nhC20oudJ%2FsRukkppx66K%2BMQZDqC%2BF8kHc8TtamF0NWCg6ZU6SXNGyIAZPkCoGCxc2Yn3P3JIGfWLiNvqDATfN7jYp4Rp1toDQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5b4f9856e9b086101a7ed5a0c9986f1e3ae7b5f4cc62584c27910b5e8a91808a",
+      "file_size": 4177850,
+      "type": "image/gif",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2015-03-01T00:07:54.778Z",
+  "allow_singular_disclosure_after": -282655668.6236658,
+  "singular_disclosure_allowed": true,
+  "vote_count": 2,
+  "voters": [
+    "shivammusic",
+    "tandav"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

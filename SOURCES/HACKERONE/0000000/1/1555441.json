@@ -1,0 +1,141 @@
+{
+  "id": 1555441,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTU1NDQx",
+  "url": "https://hackerone.com/reports/1555441",
+  "title": "CVE-2022-27781: CERTINFO never-ending busy-loop",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2022-04-30T19:24:14.187Z",
+  "submitted_at": "2022-04-30T19:24:14.263Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "sybr",
+    "url": "/sybr",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 35663,
+    "url": "https://hackerone.com/curl",
+    "handle": "curl",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "curl",
+      "twitter_handle": "",
+      "website": "https://curl.se",
+      "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2022-27781"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2022-05-16T09:01:16.412Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2022-05-11T06:48:04.282Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nCurl is prone to a DoS attack in case the NSS TLS library is used and the CERTINFO option is enabled. Using maliciously crafted certificates on a server, an attacker can make curl run into an endless loop when connecting to the server. The bug is located in the following code segment (https://github.com/curl/curl/blob/master/lib/vtls/nss.c#L1014):\n\n```\n/* Count certificates in chain. */\nint i = 1;\nnow = PR_Now();\nif(!cert->isRoot) {\n  cert2 = CERT_FindCertIssuer(cert, now, certUsageSSLCA);\n  while(cert2) {\n    i++;\n    if(cert2->isRoot) {\n      CERT_DestroyCertificate(cert2);\n      break;\n    }\n    cert3 = CERT_FindCertIssuer(cert2, now, certUsageSSLCA);\n    CERT_DestroyCertificate(cert2);\n    cert2 = cert3;\n  }\n}\n```\n\nWhen CERTINFO is set, display_conn_info() executes the above shown code, which tries to count the certificates in the chain received from servers via TLS. To this end, display_conn_info() starts with the leaf certificate and attempts to find its issuer certificate in the chain. The issuer certificate then becomes the origin for the next iteration. This step is repeated until there either is no issuer certificate or a root (= self-signed) certificate is found. However, if the received certificate chain contains a loop, this exit condition is never reached and display_conn_info() runs into an endless loop. To craft a loop, it is sufficient to have two CA certificates that mutually list each other as issuers (see attached PoC).\n\n## Steps To Reproduce:\n\nI have implemented a small PoC where a Webserver uses a maliciously crafted certificate chain that contains a loop. To this end, the end-entity certificate for localhost is issued by CA2, whose certificate is issued by CA1, whose certificate in turn is issued by CA2 (-> loop). The Python script for the Webserver and the certificate chain are attached to this report. To trigger the DoS in curl, the following steps need to be executed:\n\n  1. Modify URL in certinfo example (https://github.com/curl/curl/blob/master/docs/examples/certinfo.c#L46) to point to `https://localhost:4443/` instead of `https://www.example.com/` (`url_easy_setopt(curl, CURLOPT_URL, \"https://localhost:4443/\")`)\n  1. Build curl with NSS TLS library (./configure --with-nss) and with examples (make examples)\n  1. Execute python script attached to this report to start the attacker's Webserver\n  1. Execute certinfo (doc/examples/certinfo)\n\n## Supporting Material/References:\n[list any additional material (e.g. screenshots, logs, etc.)]\n\n  * https_server.py (poc webserver)\n  * key.pem (poc webserver key)\n  * combined_loop.pem (poc webserver certificate chain)\n\n## Impact\n\nAn attacker who controls a server that a libcurl-using application (with NSS and enabled CERTINFO) connects to, can trigger a DoS. In this case, the application runs into an infinite loop and consumes nearly 100% CPU.\n\nUsing the CVSS calculator, I initially came up with medium severity (5.3). However, because the vulnerabilities relies on CERTINFO being enabled and NSS being used, which is not that popular and will soon be deprecated (https://curl.se/dev/deprecate.html), I eventually estimate the severity to be low.",
+  "weakness": {
+    "id": 48,
+    "name": "Denial of Service"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1712953,
+      "file_name": "https_server.py",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/k3u3liszw2qarmzlc5p0pk862ucv?response-content-disposition=attachment%3B%20filename%3D%22https_server.py%22%3B%20filename%2A%3DUTF-8%27%27https_server.py&response-content-type=text%2Fx-python&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVWHFSNNE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142505Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZLzSSHKxWIGhQtGT81DYUaazxK%2BA4b%2BeBse1XlfNIBwIgfPS8dRNp%2FxmFBCNrWLDxkracRrBYrm5cEg%2BjJDXIvNsqsgUIdRADGgwwMTM2MTkyNzQ4NDkiDNaBwIyE1dVL1zGF0iqPBeiofcLE831cuz%2Fg3%2FBj%2BOAUaL0qSPB0iFluwPLKGuVB6sGEff4eb%2BhiIZV7BGnszG7nUhp9GzIuA1YXeX1txWBdpF9oemEmi5NywysgHkWri0j4Huf8Kqc0veGGY9SjOhiXwycQ8YsHi0vPSebpPPXh0TfZnOU4brttYbmYDQt11ba4sYpdhFcGj2JT98cBsee%2Fc5T7bN4P2XDVhPiRuRw9aGFMqvz1hVd7umv69rNFED1JWINyJdd5C%2F6agSSB8sgbH71ksUBWB6gZbJY81x4rscmVfXXofwqa8PBk5Og2PopEsHO5gC2m6ONQs7oHx%2FwcPVQk3JG%2BUI5vzVw25Vs4%2BdZdhcmlVKrn%2B%2FAnPLwb1UVjUdIZ1Bh2A7dxoauy7mugTmVoaADIScHYKRRYQ6ymOT%2B5HZKcppxrXZOnvSp0bLZxAWUdNfX%2BptG8LPBB0HFsGwGHJM3e67F2eH8OPbwOv4CEGzSDxBRn5jAtojFIeM0zYT71ER7JqwYdvVMhHEmS6yzxVkocSBRdqjcwtHkc%2F3o0qHipZYK%2FYAM9qv8hFeWan6Sa185DBwXF3TgIsvbA%2Fcjp8pWqNUeqtz6soCDoRJUku0qJamW5nH6N7sH%2BtO5tJv6FlKTWPWglmSjgtpptDiSnxBFAQX9CJ8spiVo69mOdSoiBjJLiBs9VWBWsOKdxglim0NnAzaWeTydCoRC1TZO3P1tZhKm4UqA86wCtToWZwff54BVenmfxX29vKT622UzSbI49YSFrYIcmrAYj0mP7dMKGXpl0tZCD4BdH226Uje%2FjlE7N5BpXxeyGKIWjtnsKMm2g%2BMxP7x2yGOeguUUjYzkWYTTS1FwwtYRKn3lLwjDgiYO0bzSZF0Ew1bitrgY6sQHIue94FUiYiMOMkDJ9Ayf9fPYms2aIIAO2H9bXmuaR5lH9obA9b%2FPrvjiRxAZ6lxqcr%2B9QPKlzkknLInDxqbq5txCl1Rij1JaLqv%2B4UxnGRb8ZIpj0ICFXmBBF2kEefQwHF5kj7QtGSa2JcGxgdtN3u7o%2BaXyb07mhLfzaH6hd1QUtvhvVRlbD%2FIk%2F25jmafq1vwS1a1GzXy59j%2BKSs8AfLJwUQzk9Ye%2BpIrlwwlAnAww%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=80976b4968d752ea448bf8bda4787fd3a3dd22136305120fc01f20594b300026",
+      "file_size": 470,
+      "type": "text/x-python",
+      "moderated": null
+    },
+    {
+      "id": 1712954,
+      "file_name": "key.pem",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/vjkhcf2xyvtr4b527e2ymztd7a23?response-content-disposition=attachment%3B%20filename%3D%22key.pem%22%3B%20filename%2A%3DUTF-8%27%27key.pem&response-content-type=application%2Fx-x509-key%3Bformat%3Dpem&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVWHFSNNE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142505Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZLzSSHKxWIGhQtGT81DYUaazxK%2BA4b%2BeBse1XlfNIBwIgfPS8dRNp%2FxmFBCNrWLDxkracRrBYrm5cEg%2BjJDXIvNsqsgUIdRADGgwwMTM2MTkyNzQ4NDkiDNaBwIyE1dVL1zGF0iqPBeiofcLE831cuz%2Fg3%2FBj%2BOAUaL0qSPB0iFluwPLKGuVB6sGEff4eb%2BhiIZV7BGnszG7nUhp9GzIuA1YXeX1txWBdpF9oemEmi5NywysgHkWri0j4Huf8Kqc0veGGY9SjOhiXwycQ8YsHi0vPSebpPPXh0TfZnOU4brttYbmYDQt11ba4sYpdhFcGj2JT98cBsee%2Fc5T7bN4P2XDVhPiRuRw9aGFMqvz1hVd7umv69rNFED1JWINyJdd5C%2F6agSSB8sgbH71ksUBWB6gZbJY81x4rscmVfXXofwqa8PBk5Og2PopEsHO5gC2m6ONQs7oHx%2FwcPVQk3JG%2BUI5vzVw25Vs4%2BdZdhcmlVKrn%2B%2FAnPLwb1UVjUdIZ1Bh2A7dxoauy7mugTmVoaADIScHYKRRYQ6ymOT%2B5HZKcppxrXZOnvSp0bLZxAWUdNfX%2BptG8LPBB0HFsGwGHJM3e67F2eH8OPbwOv4CEGzSDxBRn5jAtojFIeM0zYT71ER7JqwYdvVMhHEmS6yzxVkocSBRdqjcwtHkc%2F3o0qHipZYK%2FYAM9qv8hFeWan6Sa185DBwXF3TgIsvbA%2Fcjp8pWqNUeqtz6soCDoRJUku0qJamW5nH6N7sH%2BtO5tJv6FlKTWPWglmSjgtpptDiSnxBFAQX9CJ8spiVo69mOdSoiBjJLiBs9VWBWsOKdxglim0NnAzaWeTydCoRC1TZO3P1tZhKm4UqA86wCtToWZwff54BVenmfxX29vKT622UzSbI49YSFrYIcmrAYj0mP7dMKGXpl0tZCD4BdH226Uje%2FjlE7N5BpXxeyGKIWjtnsKMm2g%2BMxP7x2yGOeguUUjYzkWYTTS1FwwtYRKn3lLwjDgiYO0bzSZF0Ew1bitrgY6sQHIue94FUiYiMOMkDJ9Ayf9fPYms2aIIAO2H9bXmuaR5lH9obA9b%2FPrvjiRxAZ6lxqcr%2B9QPKlzkknLInDxqbq5txCl1Rij1JaLqv%2B4UxnGRb8ZIpj0ICFXmBBF2kEefQwHF5kj7QtGSa2JcGxgdtN3u7o%2BaXyb07mhLfzaH6hd1QUtvhvVRlbD%2FIk%2F25jmafq1vwS1a1GzXy59j%2BKSs8AfLJwUQzk9Ye%2BpIrlwwlAnAww%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=684af0352f095ff65e1977b73e864ff7bd5c1a8d6e17e6ad9756ee7e3133845f",
+      "file_size": 1675,
+      "type": "application/x-x509-key;format=pem",
+      "moderated": null
+    },
+    {
+      "id": 1712955,
+      "file_name": "combined_loop.pem",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/tjkjntnxrohaiappbbhl1zal508n?response-content-disposition=attachment%3B%20filename%3D%22combined_loop.pem%22%3B%20filename%2A%3DUTF-8%27%27combined_loop.pem&response-content-type=application%2Fx-x509-ca-cert&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVWHFSNNE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142505Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZLzSSHKxWIGhQtGT81DYUaazxK%2BA4b%2BeBse1XlfNIBwIgfPS8dRNp%2FxmFBCNrWLDxkracRrBYrm5cEg%2BjJDXIvNsqsgUIdRADGgwwMTM2MTkyNzQ4NDkiDNaBwIyE1dVL1zGF0iqPBeiofcLE831cuz%2Fg3%2FBj%2BOAUaL0qSPB0iFluwPLKGuVB6sGEff4eb%2BhiIZV7BGnszG7nUhp9GzIuA1YXeX1txWBdpF9oemEmi5NywysgHkWri0j4Huf8Kqc0veGGY9SjOhiXwycQ8YsHi0vPSebpPPXh0TfZnOU4brttYbmYDQt11ba4sYpdhFcGj2JT98cBsee%2Fc5T7bN4P2XDVhPiRuRw9aGFMqvz1hVd7umv69rNFED1JWINyJdd5C%2F6agSSB8sgbH71ksUBWB6gZbJY81x4rscmVfXXofwqa8PBk5Og2PopEsHO5gC2m6ONQs7oHx%2FwcPVQk3JG%2BUI5vzVw25Vs4%2BdZdhcmlVKrn%2B%2FAnPLwb1UVjUdIZ1Bh2A7dxoauy7mugTmVoaADIScHYKRRYQ6ymOT%2B5HZKcppxrXZOnvSp0bLZxAWUdNfX%2BptG8LPBB0HFsGwGHJM3e67F2eH8OPbwOv4CEGzSDxBRn5jAtojFIeM0zYT71ER7JqwYdvVMhHEmS6yzxVkocSBRdqjcwtHkc%2F3o0qHipZYK%2FYAM9qv8hFeWan6Sa185DBwXF3TgIsvbA%2Fcjp8pWqNUeqtz6soCDoRJUku0qJamW5nH6N7sH%2BtO5tJv6FlKTWPWglmSjgtpptDiSnxBFAQX9CJ8spiVo69mOdSoiBjJLiBs9VWBWsOKdxglim0NnAzaWeTydCoRC1TZO3P1tZhKm4UqA86wCtToWZwff54BVenmfxX29vKT622UzSbI49YSFrYIcmrAYj0mP7dMKGXpl0tZCD4BdH226Uje%2FjlE7N5BpXxeyGKIWjtnsKMm2g%2BMxP7x2yGOeguUUjYzkWYTTS1FwwtYRKn3lLwjDgiYO0bzSZF0Ew1bitrgY6sQHIue94FUiYiMOMkDJ9Ayf9fPYms2aIIAO2H9bXmuaR5lH9obA9b%2FPrvjiRxAZ6lxqcr%2B9QPKlzkknLInDxqbq5txCl1Rij1JaLqv%2B4UxnGRb8ZIpj0ICFXmBBF2kEefQwHF5kj7QtGSa2JcGxgdtN3u7o%2BaXyb07mhLfzaH6hd1QUtvhvVRlbD%2FIk%2F25jmafq1vwS1a1GzXy59j%2BKSs8AfLJwUQzk9Ye%2BpIrlwwlAnAww%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2d38da6150f596ce0b28af35a34327725003a214e121ca9e0372f078a0498951",
+      "file_size": 3344,
+      "type": "application/x-x509-ca-cert",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2022-06-10T06:48:04.378Z",
+  "allow_singular_disclosure_after": -52990621.04638656,
+  "singular_disclosure_allowed": true,
+  "vote_count": 4,
+  "voters": [
+    "zy9ard3",
+    "shivammusic",
+    "bitokinha",
+    "ekgaribadmi"
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 18844,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/curl/curl",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

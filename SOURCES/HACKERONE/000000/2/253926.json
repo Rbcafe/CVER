@@ -1,0 +1,146 @@
+{
+  "id": 253926,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNTM5MjY=",
+  "url": "https://hackerone.com/reports/253926",
+  "title": "DKIM records not present, Email Hijacking is possible.....",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "none",
+  "readable_substate": "Resolved",
+  "created_at": "2017-07-27T14:18:15.793Z",
+  "submitted_at": "2017-07-27T14:18:15.793Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "kaamakya",
+    "url": "/kaamakya",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/186/026/34a9904b24d538f592bdc4e4d99a4806c422bed3_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 19468,
+    "url": "https://hackerone.com/weblate",
+    "handle": "weblate",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/019/468/71eb3827ae9f2a388f27bd4b7eefd20bc3ac813c_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/019/468/71eb3827ae9f2a388f27bd4b7eefd20bc3ac813c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Weblate",
+      "twitter_handle": "WeblateOrg",
+      "website": "https://weblate.org/",
+      "about": "Weblate is a libre software web-based continuous localization system"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-09-16T13:39:46.220Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2017-08-17T13:39:29.716Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Your SPF record is present (attachments : spf)\n\nWhich very well shows that you don't want spoofed email to be sent from your domains, but you just forget one thing:\n\nDKIM (DomainKeys Identified Mail) is an important authentication mechanism to help protect both email receivers and email senders from forged and phishing email. Forged email is a serious threat to all parties in an email exchange.\n\nDomainKeys Identified Mail (DKIM) is an email validation system designed to detect email spoofing by providing a mechanism to allow receiving mail exchangers to check that incoming mail from a domain is authorized by that domain's administrators and that the email (including attachments) has not been modified during transport. A digital signature included with the message can be validated by the recipient using the signer's public key published in the DNS. In technical term, DKIM is a technique to authorize the domain name which is associated with a message through cryptographic authentication.\n\nDKIM was aimed at:\n\nReducing false negatives\nProvide authentication reporting\nApply sender policies at the receiving end\nReduce phishing\nBe scalable\n\nAdvantages:\n\nUse with spam filtering\nDKIM is a method of labeling a message, and it does not itself filter or identify spam. However, widespread use of DKIM can prevent spammers from forging the source address of their messages, a technique they commonly employ today. If spammers are forced to show a correct source domain, other filtering techniques can work more effectively. In particular, the source domain can feed into a reputation system to better identify spam. Conversely, DKIM can make it easier to identify mail that is known not to be spam and need not be filtered. If a receiving system has a whitelist of known good sending domains, either locally maintained or from third party certifiers, it can skip the filtering on signed mail from those domains, and perhaps filter the remaining mail more aggressively.\n\nAnti-phishing\nDKIM can be useful as an anti-phishing technology. Mailers in heavily phished domains can sign their mail to show that it is genuine. Recipients can take the absence of a valid signature on mail from those domains to be an indication that the mail is probably forged. The best way to determine the set of domains that merit this degree of scrutiny remains an open question; DKIM has an optional feature called ADSP that lets authors that sign all their mail self-identify, but the effectiveness of this approach is questionable, and ADSP was demoted to historic status in November 2013\n\nCompatibility\nBecause it is implemented using DNS records and an added RFC 5322 header field, DKIM is compatible with the existing e-mail infrastructure. In particular, it is transparent to existing e-mail systems that lack DKIM support\n\nProtocol overhead\nDKIM requires cryptographic checksums to be generated for each message sent through a mail server, which results in computational overhead not otherwise required for e-mail delivery. This additional computational overhead is a hallmark of digital postmarks, making sending bulk spam more (computationally) expensive.his facet of DKIM may look similar to hashcash, except that the receiver side verification is not a negligible amount of work.\n\nGenerate your DKIM easily here: http://dkimcore.org/tools/keys.html\n\nYou can read more about DKIM records and their uses here: http://www.gettingemaildelivered.com/dkim-explained-how-to-set-up-and-use-domainkeys-identified-mail-effectively.\n\nNow, to check if the DKIM record is present or not in weblate run below command\n\n \"nslookup -querytype=TXT google._domainkey.weblate.org\"\n\nThe DKIM record is not present in weblate.org (attachments : poc), Which shows that you are missing this security feature.\n\nYou should publish a valid DKIM record for your domain to prevent any misunderstanding and to prevent hackers from using your email.\n\nDKIM for hackerone is attached below (attachments : hackerone):",
+  "weakness": {
+    "id": 27,
+    "name": "Improper Authentication - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 206918,
+      "file_name": "spf.JPG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/206/918/5e3ab2d772772c541482ca5b9fa68e33731d67f9/spf.JPG?response-content-disposition=attachment%3B%20filename%3D%22spf.JPG%22%3B%20filename%2A%3DUTF-8%27%27spf.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSQ564LXW%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T124700Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDl76KVUFS0hN8YruFStxJXVErBlHnUq37TLzE6NJ4nVgIhANpbiTp%2BMBG4Nwb5E7dtwmMEX5oh%2FQf%2BDE1tYHw3IkRRKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5IgysR5bYjXDNHPUxaW8qjwUn5sVCnmMuonjKnG%2FT4J4WQrTsBQX1SNmTEPNbtsQv5XcKQaoPHieXQdr%2B%2B1X5avNpXfOZbh0pZ6CXdrJ4yYa55f0HXkeQiH0zcQ0fif5j1pP8jC%2Blsq%2BD9fB7SzZQg6RmosBSYA4XGzLy8%2FPyGRLQ28yjB4W8KTl8fBM4CmJJFWLBmzWUBK2SOnDwMfsDL5%2BmafcYaKkz0yszM1cg3XozTAFLh8hmoIUAWpu77QkIzg0Ht8%2B93fM%2FYsZn5uKr6IpQ2U4pqWdLfB29cuQ%2Fcqg62XxGu%2BLk6jR1jXWEegWhMonWqQeGJPWbh8kEDYxBzUAidK12bSQGyMxonksvquoUumwsvEUzmQd%2BhHIBPGEfHEpImOlgzqswJwZ%2F4JNoWjfIUk3c2lvDijlThqGBqTQoB645h%2B4iprdRTJwkrRB74qIwzHH8cv8viZ7ZrieVZK6heyAtoEGA%2BZN6Yt1%2Fh3uEHlmtJnS1Vmef8OPs7HDSzKz4njXcD7iXOt625xzMEBsfshpisEQDc6V%2BgE%2BBXbdv%2FT4XaJkVUN7kUFRWxoez0R%2FafT55iChRzC%2FCCCtXPxRwQLswXHFkjSKPv6sVfuM5MRTBUP55DDIHcRMXtwEjecS03yT%2BLa3gpqGgU9vRMfcH0LWQdYklhl1sQ6N1w3UJ%2BzTVF7HEgKCpghOKhwVCK9huxD72fxZOO6FF5FJzK3DifWVeM1v32dnnKItdegNY3N8My9s4MQJ%2B3ECyboRUjyg2nm%2BDhuYrpgIelJVrUGgu74IzyiQ2A%2FCKjoDOYFSWGrm4y%2B2UnhJeZRlQds%2FlnTD4xuiMof7htaNeiZuyDqfi6JTbOSG%2FNqB7QSE2ezcJ75qQGAqDpKeqbVdeTC34MIa2ra4GOrABDubMC6LwabfeW3Qsfz2RgL7fTEyxJw929PcIhksJK3EmRE2rUVVoVGGm7fTwmneEB55wcJn7xtg4Rs3f5YiKxBbRlxeqJEXHdJJWWaOq%2BpG%2BMHzVFgbZYimMKoU39IYu2PyQrofnOmHZ%2FEB3I1PLguFv1fjZlzVTHUwnD4kRx2g5tTJLggeCKerD5uXmMSsk8WllCOp%2FdA8M69%2BsXGmqNNPZRG6tkFF%2FJPssbKNyXTU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a1355669e462317f40485d20816700f306a290cd113556db3d0a9fe1e73d803e",
+      "file_size": 54664,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 206919,
+      "file_name": "hackerone.JPG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/206/919/0857e3e1fe928a694bce463ea6e67c5b99869595/hackerone.JPG?response-content-disposition=attachment%3B%20filename%3D%22hackerone.JPG%22%3B%20filename%2A%3DUTF-8%27%27hackerone.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSQ564LXW%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T124700Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDl76KVUFS0hN8YruFStxJXVErBlHnUq37TLzE6NJ4nVgIhANpbiTp%2BMBG4Nwb5E7dtwmMEX5oh%2FQf%2BDE1tYHw3IkRRKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5IgysR5bYjXDNHPUxaW8qjwUn5sVCnmMuonjKnG%2FT4J4WQrTsBQX1SNmTEPNbtsQv5XcKQaoPHieXQdr%2B%2B1X5avNpXfOZbh0pZ6CXdrJ4yYa55f0HXkeQiH0zcQ0fif5j1pP8jC%2Blsq%2BD9fB7SzZQg6RmosBSYA4XGzLy8%2FPyGRLQ28yjB4W8KTl8fBM4CmJJFWLBmzWUBK2SOnDwMfsDL5%2BmafcYaKkz0yszM1cg3XozTAFLh8hmoIUAWpu77QkIzg0Ht8%2B93fM%2FYsZn5uKr6IpQ2U4pqWdLfB29cuQ%2Fcqg62XxGu%2BLk6jR1jXWEegWhMonWqQeGJPWbh8kEDYxBzUAidK12bSQGyMxonksvquoUumwsvEUzmQd%2BhHIBPGEfHEpImOlgzqswJwZ%2F4JNoWjfIUk3c2lvDijlThqGBqTQoB645h%2B4iprdRTJwkrRB74qIwzHH8cv8viZ7ZrieVZK6heyAtoEGA%2BZN6Yt1%2Fh3uEHlmtJnS1Vmef8OPs7HDSzKz4njXcD7iXOt625xzMEBsfshpisEQDc6V%2BgE%2BBXbdv%2FT4XaJkVUN7kUFRWxoez0R%2FafT55iChRzC%2FCCCtXPxRwQLswXHFkjSKPv6sVfuM5MRTBUP55DDIHcRMXtwEjecS03yT%2BLa3gpqGgU9vRMfcH0LWQdYklhl1sQ6N1w3UJ%2BzTVF7HEgKCpghOKhwVCK9huxD72fxZOO6FF5FJzK3DifWVeM1v32dnnKItdegNY3N8My9s4MQJ%2B3ECyboRUjyg2nm%2BDhuYrpgIelJVrUGgu74IzyiQ2A%2FCKjoDOYFSWGrm4y%2B2UnhJeZRlQds%2FlnTD4xuiMof7htaNeiZuyDqfi6JTbOSG%2FNqB7QSE2ezcJ75qQGAqDpKeqbVdeTC34MIa2ra4GOrABDubMC6LwabfeW3Qsfz2RgL7fTEyxJw929PcIhksJK3EmRE2rUVVoVGGm7fTwmneEB55wcJn7xtg4Rs3f5YiKxBbRlxeqJEXHdJJWWaOq%2BpG%2BMHzVFgbZYimMKoU39IYu2PyQrofnOmHZ%2FEB3I1PLguFv1fjZlzVTHUwnD4kRx2g5tTJLggeCKerD5uXmMSsk8WllCOp%2FdA8M69%2BsXGmqNNPZRG6tkFF%2FJPssbKNyXTU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=8d8b4c14d4c3368bae0b42854ca8e7d4b50c8eade87de50f5faef249ac07cdf7",
+      "file_size": 59487,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 206920,
+      "file_name": "poc.JPG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/206/920/937dbd35d96fd6848a9df41e321823b06a30767b/poc.JPG?response-content-disposition=attachment%3B%20filename%3D%22poc.JPG%22%3B%20filename%2A%3DUTF-8%27%27poc.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSQ564LXW%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T124700Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDl76KVUFS0hN8YruFStxJXVErBlHnUq37TLzE6NJ4nVgIhANpbiTp%2BMBG4Nwb5E7dtwmMEX5oh%2FQf%2BDE1tYHw3IkRRKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5IgysR5bYjXDNHPUxaW8qjwUn5sVCnmMuonjKnG%2FT4J4WQrTsBQX1SNmTEPNbtsQv5XcKQaoPHieXQdr%2B%2B1X5avNpXfOZbh0pZ6CXdrJ4yYa55f0HXkeQiH0zcQ0fif5j1pP8jC%2Blsq%2BD9fB7SzZQg6RmosBSYA4XGzLy8%2FPyGRLQ28yjB4W8KTl8fBM4CmJJFWLBmzWUBK2SOnDwMfsDL5%2BmafcYaKkz0yszM1cg3XozTAFLh8hmoIUAWpu77QkIzg0Ht8%2B93fM%2FYsZn5uKr6IpQ2U4pqWdLfB29cuQ%2Fcqg62XxGu%2BLk6jR1jXWEegWhMonWqQeGJPWbh8kEDYxBzUAidK12bSQGyMxonksvquoUumwsvEUzmQd%2BhHIBPGEfHEpImOlgzqswJwZ%2F4JNoWjfIUk3c2lvDijlThqGBqTQoB645h%2B4iprdRTJwkrRB74qIwzHH8cv8viZ7ZrieVZK6heyAtoEGA%2BZN6Yt1%2Fh3uEHlmtJnS1Vmef8OPs7HDSzKz4njXcD7iXOt625xzMEBsfshpisEQDc6V%2BgE%2BBXbdv%2FT4XaJkVUN7kUFRWxoez0R%2FafT55iChRzC%2FCCCtXPxRwQLswXHFkjSKPv6sVfuM5MRTBUP55DDIHcRMXtwEjecS03yT%2BLa3gpqGgU9vRMfcH0LWQdYklhl1sQ6N1w3UJ%2BzTVF7HEgKCpghOKhwVCK9huxD72fxZOO6FF5FJzK3DifWVeM1v32dnnKItdegNY3N8My9s4MQJ%2B3ECyboRUjyg2nm%2BDhuYrpgIelJVrUGgu74IzyiQ2A%2FCKjoDOYFSWGrm4y%2B2UnhJeZRlQds%2FlnTD4xuiMof7htaNeiZuyDqfi6JTbOSG%2FNqB7QSE2ezcJ75qQGAqDpKeqbVdeTC34MIa2ra4GOrABDubMC6LwabfeW3Qsfz2RgL7fTEyxJw929PcIhksJK3EmRE2rUVVoVGGm7fTwmneEB55wcJn7xtg4Rs3f5YiKxBbRlxeqJEXHdJJWWaOq%2BpG%2BMHzVFgbZYimMKoU39IYu2PyQrofnOmHZ%2FEB3I1PLguFv1fjZlzVTHUwnD4kRx2g5tTJLggeCKerD5uXmMSsk8WllCOp%2FdA8M69%2BsXGmqNNPZRG6tkFF%2FJPssbKNyXTU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=cbacf78d7cab8c59119b026641d21da5b2cee98169bfcd4cfaff46c66a867fd8",
+      "file_size": 29290,
+      "type": "image/jpeg",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-09-16T13:39:29.753Z",
+  "allow_singular_disclosure_after": -202259250.81043443,
+  "singular_disclosure_allowed": true,
+  "vote_count": 11,
+  "voters": [
+    "cuso4",
+    "savitar0x01",
+    "r3y",
+    "eveeez",
+    "khizer47",
+    "ronygigi",
+    "muztahidultan1m",
+    "arjama_saha",
+    "santoshloka39",
+    "sam64",
+    "and 1 more..."
+  ],
+  "severity": {
+    "rating": "none",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 171,
+    "asset_type": "URL",
+    "asset_identifier": "hosted.weblate.org",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

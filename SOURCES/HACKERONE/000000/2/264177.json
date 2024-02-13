@@ -1,0 +1,161 @@
+{
+  "id": 264177,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNjQxNzc=",
+  "url": "https://hackerone.com/reports/264177",
+  "title": "XSS when replying / forwarding to a malicious email on iOS",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2017-08-29T04:14:14.746Z",
+  "submitted_at": "2017-08-29T04:14:14.746Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "pwnsdx",
+    "url": "/pwnsdx",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 65,
+    "url": "https://hackerone.com/mailru",
+    "handle": "mailru",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Mail.ru",
+      "twitter_handle": "",
+      "website": "https://vk.company/",
+      "about": "Building the Internet since 1998"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-12-28T15:04:02.595Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-12-28T15:04:02.516Z",
+  "team_member_agreed_on_going_public_at": "2017-12-28T14:55:00.137Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Domain, site, application\n--\nMail.ru for iOS\n\nTesting environment\n--\niOS 10\n\nSteps to reproduce\n--\n1) Send you a mail with something like this in the From field: =?utf-8?b?PHNjcmlwdD5hbGVydChkb2N1bWVudC5jb29raWUpPC9zY3JpcHQ+?=@pwnsdx.pw\n\nNote: This is a base64 string of \"<script>alert(document.cookie)</script>\"\n\n2) Try to forward or reply to that email.\n\nNote: If you kill the app from the iOS multitask and run it again, the reply / forward will show again, executing one more time the JS code.\n\nActual results\n--\nJS alert with current cookies is shown\n\nExpected results, security impact description and recommendations\n--\nNothing happens\n\nPoC, exploit code, screenshots, video, references, additional resources\n--\n\nPayload is: `From: =?utf-8?b?PHNjcmlwdD5hbGVydChkb2N1bWVudC5jb29raWUpPC9zY3JpcHQ+?=@pwnsdx.pw`\n\nVideo has been attached.",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 216633,
+      "file_name": "video-export.mov",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/216/633/fb8f39f96675ffec4c0e4f9de6fb654a7dff24c8/video-export.mov?response-content-disposition=attachment%3B%20filename%3D%22video-export.mov%22%3B%20filename%2A%3DUTF-8%27%27video-export.mov&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQ3BKZOEE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T124909Z&X-Amz-Expires=1238&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIG6IenXByqkn3Q4DzIOoyCRmUa9piCrSguk1c5%2FILyJ7AiEAykcOsXd4dfj0MtryP7Ypqcz0EGqy2srC7Ahyju9P1wwqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDNoh%2FatXkiXqzvRarSqPBSxRPdxDhM3ZWovfuUDFze8TKTTXyWnM%2BqLvvwol8L9J5VDQFkQXA7smucDX4AEp9WwjM1M5SoDxfIqGVNACAZ%2FhCWOou%2FjPGm5hXxkVid3k%2FfBEIUStu2OCGILQXKrFXckdXocqxibxJkp9FBscVVfy1z9spS224jk9a64wEyKkB%2FEqDONaGznbocoqfOWRO2gk3kN2mF%2FlFYwuvjMbBGI25CA0c8P0uDrdXv75mMgHiHzhQ2UA0io6mOBJRxlcl5iTWXpEwOcbqq7%2B5ONf7AQWMJlf044SZPS7ctrMSsbHt11897THGeHPEYn6tBP8I5Fnd6qJj2f%2FVMm2nAjyPv65mqH9IFrso33MbOg9OScFT8GcXL%2FSL9CsmuqI8DAuHV2TQ6tOcf60FFoK%2FNc8%2BH1opXPi5t84Wy8dXz0ShSZARezbri6JYCQuZaMmQWSTRbaOxgDpQUbmc2MtnSfbshwx0iX%2BKoAaAhWHkgNlastBKxxdkZZfKj3uPWL%2FAZpJ5vQ3aCiYuhMiLdSNoDq04UJUEE6U3x5bncELirAw9rSBGBlZ2LnTIizRqNNZcm4bzUeL8KfXYWONTy2NjqxuN2Pv%2FhvWs7ZeUu%2Bl5RyG%2BaglXVojqzVcfe0pYyyTxENUtLQnCxv1F6%2BFRPB1kbi%2FlMdY30Ih91ui923zixOr4x2bTvqsEUosHXQuAePevTEs9cXth9Tl9dEZ77qdYODIErVxnZKWIWL%2Bdg57Wo05wOYkPoMuK0ANx9QnIFRVpYN51rM3ygm3cI0FCy6O67TKyAzlM4W7pyg0gugDJWcmjphUjUsnNWj%2BZQCUHNlg0hrBypo%2BHXJ4oZgGe0%2F80G6Eur1xfPo2GRyn5qtYCGPsRlYw8qesrgY6sQGYbS8MxVrsunWUBMnltzktg6eAZ8fvxgC5j8%2BYmwaIMOuBsufYAl7nKraCTIkLFC7rGgVC8sqvqoXBLrYQFqgLumTDGfWJUNAVMAVtqNo%2BIL8JvOZD%2FTW4GOmqGMXOgQRmU1Wa7j36A2IvAe7wpP5z8dprPILpwsnYzL4pzdM%2FrRrGA5fhAddbNV%2BDoX4yqjS2RN%2BKe8v5EYqHMPr2TCLmUPcDm070amRAZC10%2F9gLePE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=dcf1bc3a523808224e05bb900d2b6b58c3947f8b7c191d338c3387b9699a857a",
+      "file_size": 609455,
+      "type": "video/mp4",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-01-27T14:55:00.240Z",
+  "allow_singular_disclosure_after": -190763649.74438775,
+  "singular_disclosure_allowed": true,
+  "vote_count": 8,
+  "voters": [
+    "pwnsdx",
+    "eveeez",
+    "khizer47",
+    "luigigubello",
+    "cr4xerbik4sh",
+    "japz",
+    "3apa3a",
+    "extr4b4n4n4"
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 5.0,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 238,
+    "asset_type": "APPLE_STORE_APP_ID",
+    "asset_identifier": "ru.mail.mail",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 6178,
+      "category": "team",
+      "content": "It was possible to trigger XSS vulnerability within webview of iOS Mail.Ru Mail application via crafted e-mail address.\nVulnerability doesn't provide direct access to user session or critical data, and considered medium severity due to possible phishing scenarios.",
+      "user": {
+        "id": 4836,
+        "username": "3apa3a",
+        "name": "Vladimir Dubrovin",
+        "bio": "En la agostada senda he visto al buen lagarto (gota de cocodrilo) meditando. ",
+        "cleared": false,
+        "verified": false,
+        "website": "https://3proxy.org/",
+        "location": "Nizhny Novgorod, Russia",
+        "created_at": "2014-04-10T22:08:47.745Z",
+        "url": "https://hackerone.com/3apa3a",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

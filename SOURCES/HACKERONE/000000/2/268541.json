@@ -1,0 +1,168 @@
+{
+  "id": 268541,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNjg1NDE=",
+  "url": "https://hackerone.com/reports/268541",
+  "title": "[Synthetics/Infrastructure/everything] Individual account permissions are not properly managed and inherited on sub accounts ",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2017-09-15T02:09:29.147Z",
+  "submitted_at": "2017-09-15T02:09:29.147Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jon_bottarini",
+    "url": "/jon_bottarini",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-09-04T17:06:47.808Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-08-20T02:56:39.110Z",
+  "team_member_agreed_on_going_public_at": "2020-09-04T17:06:47.691Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "I've been poking around with sub accounts since I exploited #219356 and gave myself access to New Relic pro features, and I found a few things that seem to be overlooked after the user management overhaul that happened about a few weeks ago. \n\nWhen you have a sub account on your account, you get this message: \n\n{F220454}\n\n> Anybody with permission to access this account will also have the same permissions on these sub-accounts: {{name of the sub account}}\n\nThe problem is that this isn't ... actually true. In fact it seems almost completely broken. Before the user permissions overhaul, this worked pretty well and the user accounts page managed all aspects of all accounts: the main account and any sub accounts settings were all centralized under the main account. But now, you can have accounts on the main account that aren't even registered on the sub account - including the account administrator! \n\nWhy is this a problem? Say you want to give the restricted user access to the main account's Synthetics, so you'll give them synthetics manager add-on permission. They will be able to control the synthetics on the main account and the sub account. This is expected, because the privileges are inherited from the main account:\n\n{F221077}\n\nThis becomes a **big problem** the moment you **give the restricted user privileges on the sub-account**, because even on the main account you can run into this issue: \n\n*Main account*: Restricted user has NO synthetics privileges \n\n{F221076}\n\n*Sub account*: Restricted user is given synthetic privileges on the sub account, but NOT on the main account\n\n{F221078}\n\nBy this logic - the Restricted User should **not** to be able to perform any actions on the sub account when it comes to Synthetics, because on the main account they are given no permissions at all. Regardless of what the permissions are on main account, the sub account permissions overwrite the permissions on the main account. As a restricted user - I can still perform Synthetics manager permissions on the sub account even though the main account does not give me those permissions. This is clearly an overlooked issue surrounding the recent permissions changes. \n\nNow let's sum this vulnerability up in one sentence: Sub account permissions remain unchanged when main account permissions are modified. \n\n{F221079}\n\n*Billy Mays voice*: But wait - **this gets even worse**! If a user is **deleted** from the main account, as long as they have any privilege on the sub account, they still have full access to the sub account and all the data and functions! \n\n**Imagine this scenario**: User1 creates NR account and a sub account, gives user2 admin permissions on the main account and the sub account, then a few months pass and the user2 no longer works for the company, so their main account is deleted. The user2 is still an admin on the sub account - which shouldn't happen, because if inheriting permissions from the main account actually worked, they wouldn't have any access at all. I think you see where I'm going with this. \n\nYou're inadvertently creating confusion and the potential for abuse by juggling two account permissions across accounts when in reality there should only be one place to manage all the permissions - the main account. By allowing user permissions to be modified on the sub account when in reality they should -always- be inherited from the main account, there is huge room for confusion amongst user management. \n\nFrom your documentation: \n\n{F221080}\n\n^ The underlined sentence is not true. The user list does not automatically populate. The only user that is populated in the user list is the admin who created the sub account. \n\n{F221081}\n\nThis is a lot of info to take in, but the underlying vulnerability here is that the permissions model is inherently broken on sub accounts. Let me know if something is not clear here. ",
+  "bounty_amount": "750.0",
+  "formatted_bounty": "$750",
+  "weakness": {
+    "id": 65,
+    "name": "Business Logic Errors"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 220454,
+      "file_name": "Screen_Shot_2017-09-12_at_6.58.02_PM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/220/454/d8ac8c59bd99ff4fbde4b2cbe27ed9a2d24a8f9a/Screen_Shot_2017-09-12_at_6.58.02_PM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2017-09-12_at_6.58.02_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2017-09-12_at_6.58.02_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4S26OA6W%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125007Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBrwAoewzxY3bz1ssFSdtEyK39n4ige2HCt%2FqgWXMxo6AiEA8W9QZL7h8ed7oBtuSQFGPQDGjUswee0LimM2YHTA1jMqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDIMSY8w9rHi0W5K3diqPBbjGizLrTlN6ZGbFF9LhBmPFJ1m5swtpZ7QtuQ1ecm6xRS32Vw6P29QnZ1nCvXxHRHo6hca4PRPlC%2F0SuWjzk0o8NKsd8UrMzywQ79MxoK3cqCgX8WV8kEyJZ1wthUKdW7fS3ASByTHh9EDJx35aAAaV%2FjyX21PDJbVpBrxSai%2BI8NCYDMrESdXzFg96JAx0%2FwVm%2BdX91kGoUyEspJy20Nir3f1bZWjC7MdtcCOSsjRRpflXb4gfaH%2BL1WT1rmstsNmGjj3W3W7TeYhR6pZtPFJdtb6k%2FghNKP4k29rXq2vgyXJX%2BVcohZ1zGAdsXYKgnKO2Y3m%2BPX7s9J%2BEwjIpNQnCTqqMY1fdtAuglpVQs9wOIOz5AsX%2F3fV3pu%2FvQSQRA8Du6Cj%2BeC4F1CXAi0KT8j%2B0b0OBcdCMFF7x0ZDWnp2IvcnhJbnULpfzrU3BcnLBK5G1w73sljokf7mqqRRV2mJeZ0Ksp5PbOgcxO2a9zF3%2F8KWFXZX25btNrQCkx2iy6DjaS4wWdbHTtaTyA9KPaMdPFCZK0C8QMd1EIcXXBkK42tdRHldBFv0Qtop0xhubZI7kmNI9gIAuHZhtoU%2F051v4TKLQUh2TAOI42M0%2BTEJLZph2o6AOjkFRtLNFt7YY1LhWRiyVjOtaBUNN8WQ3Qh3vWd2mGOGt3XUF8k06PdeLUGh8KHoKU7J50qkgwAmhpZgQn9UvombEZfjpL9rMdjKsr48SewAEp5ii613cBEjgvmV9GqfxRnaBt9%2BBnmZqq%2Bqdlb6QUuoAocNShZpYRVRCujWv0rbK5%2BJsewBiul9SD4qpCHDP0iLsOH3MbGI4L4Vl8HvxUyotCrHJVcTbSu85yQg3fmRmZR%2FKVxNQjZkwy8atrgY6sQF65KaBWFLOPDup9JZh9E6aRNnp6nOc2RJjfDBuEZqnqO%2FE0eIR6%2FMnB5jQvVkuHRSmXTStKVhFSTodnbxf6Jx%2FV%2Bb7oAvc4YN%2FjwysEYMAdJ7G1ipFcWKNk%2Fy8IJiu93NTzXgZ%2BUcmX9FJKhedbl1puxNoeG9%2FJnYsNGqtzqjFHuyw9oeW7ona11lhu%2Bwq%2BU434QKAOt%2FmsX3wWtY1amD8a%2F8TawrYCNcXdx0m%2F%2FsKhD8%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6a20e02601374bb939f9fa7705a12b99b46a9002aa42d69a0ff095113addd1d1",
+      "file_size": 26411,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 221077,
+      "file_name": "Screen_Shot_2017-09-14_at_6.13.42_PM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/221/077/dea5b3be4fd3b8ff0d3f76614cc0d073b2d27d0b/Screen_Shot_2017-09-14_at_6.13.42_PM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2017-09-14_at_6.13.42_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2017-09-14_at_6.13.42_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4S26OA6W%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125007Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBrwAoewzxY3bz1ssFSdtEyK39n4ige2HCt%2FqgWXMxo6AiEA8W9QZL7h8ed7oBtuSQFGPQDGjUswee0LimM2YHTA1jMqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDIMSY8w9rHi0W5K3diqPBbjGizLrTlN6ZGbFF9LhBmPFJ1m5swtpZ7QtuQ1ecm6xRS32Vw6P29QnZ1nCvXxHRHo6hca4PRPlC%2F0SuWjzk0o8NKsd8UrMzywQ79MxoK3cqCgX8WV8kEyJZ1wthUKdW7fS3ASByTHh9EDJx35aAAaV%2FjyX21PDJbVpBrxSai%2BI8NCYDMrESdXzFg96JAx0%2FwVm%2BdX91kGoUyEspJy20Nir3f1bZWjC7MdtcCOSsjRRpflXb4gfaH%2BL1WT1rmstsNmGjj3W3W7TeYhR6pZtPFJdtb6k%2FghNKP4k29rXq2vgyXJX%2BVcohZ1zGAdsXYKgnKO2Y3m%2BPX7s9J%2BEwjIpNQnCTqqMY1fdtAuglpVQs9wOIOz5AsX%2F3fV3pu%2FvQSQRA8Du6Cj%2BeC4F1CXAi0KT8j%2B0b0OBcdCMFF7x0ZDWnp2IvcnhJbnULpfzrU3BcnLBK5G1w73sljokf7mqqRRV2mJeZ0Ksp5PbOgcxO2a9zF3%2F8KWFXZX25btNrQCkx2iy6DjaS4wWdbHTtaTyA9KPaMdPFCZK0C8QMd1EIcXXBkK42tdRHldBFv0Qtop0xhubZI7kmNI9gIAuHZhtoU%2F051v4TKLQUh2TAOI42M0%2BTEJLZph2o6AOjkFRtLNFt7YY1LhWRiyVjOtaBUNN8WQ3Qh3vWd2mGOGt3XUF8k06PdeLUGh8KHoKU7J50qkgwAmhpZgQn9UvombEZfjpL9rMdjKsr48SewAEp5ii613cBEjgvmV9GqfxRnaBt9%2BBnmZqq%2Bqdlb6QUuoAocNShZpYRVRCujWv0rbK5%2BJsewBiul9SD4qpCHDP0iLsOH3MbGI4L4Vl8HvxUyotCrHJVcTbSu85yQg3fmRmZR%2FKVxNQjZkwy8atrgY6sQF65KaBWFLOPDup9JZh9E6aRNnp6nOc2RJjfDBuEZqnqO%2FE0eIR6%2FMnB5jQvVkuHRSmXTStKVhFSTodnbxf6Jx%2FV%2Bb7oAvc4YN%2FjwysEYMAdJ7G1ipFcWKNk%2Fy8IJiu93NTzXgZ%2BUcmX9FJKhedbl1puxNoeG9%2FJnYsNGqtzqjFHuyw9oeW7ona11lhu%2Bwq%2BU434QKAOt%2FmsX3wWtY1amD8a%2F8TawrYCNcXdx0m%2F%2FsKhD8%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=007ab768cfafa5ef628c4d5cc5f022c62844f7c979a6fb112eed9984f879191e",
+      "file_size": 91309,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 221079,
+      "file_name": "itgetsworse.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/221/079/ced0fcfdfb0c439d7f8161c63dcf3e568a535300/itgetsworse.png?response-content-disposition=attachment%3B%20filename%3D%22itgetsworse.png%22%3B%20filename%2A%3DUTF-8%27%27itgetsworse.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4S26OA6W%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125007Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBrwAoewzxY3bz1ssFSdtEyK39n4ige2HCt%2FqgWXMxo6AiEA8W9QZL7h8ed7oBtuSQFGPQDGjUswee0LimM2YHTA1jMqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDIMSY8w9rHi0W5K3diqPBbjGizLrTlN6ZGbFF9LhBmPFJ1m5swtpZ7QtuQ1ecm6xRS32Vw6P29QnZ1nCvXxHRHo6hca4PRPlC%2F0SuWjzk0o8NKsd8UrMzywQ79MxoK3cqCgX8WV8kEyJZ1wthUKdW7fS3ASByTHh9EDJx35aAAaV%2FjyX21PDJbVpBrxSai%2BI8NCYDMrESdXzFg96JAx0%2FwVm%2BdX91kGoUyEspJy20Nir3f1bZWjC7MdtcCOSsjRRpflXb4gfaH%2BL1WT1rmstsNmGjj3W3W7TeYhR6pZtPFJdtb6k%2FghNKP4k29rXq2vgyXJX%2BVcohZ1zGAdsXYKgnKO2Y3m%2BPX7s9J%2BEwjIpNQnCTqqMY1fdtAuglpVQs9wOIOz5AsX%2F3fV3pu%2FvQSQRA8Du6Cj%2BeC4F1CXAi0KT8j%2B0b0OBcdCMFF7x0ZDWnp2IvcnhJbnULpfzrU3BcnLBK5G1w73sljokf7mqqRRV2mJeZ0Ksp5PbOgcxO2a9zF3%2F8KWFXZX25btNrQCkx2iy6DjaS4wWdbHTtaTyA9KPaMdPFCZK0C8QMd1EIcXXBkK42tdRHldBFv0Qtop0xhubZI7kmNI9gIAuHZhtoU%2F051v4TKLQUh2TAOI42M0%2BTEJLZph2o6AOjkFRtLNFt7YY1LhWRiyVjOtaBUNN8WQ3Qh3vWd2mGOGt3XUF8k06PdeLUGh8KHoKU7J50qkgwAmhpZgQn9UvombEZfjpL9rMdjKsr48SewAEp5ii613cBEjgvmV9GqfxRnaBt9%2BBnmZqq%2Bqdlb6QUuoAocNShZpYRVRCujWv0rbK5%2BJsewBiul9SD4qpCHDP0iLsOH3MbGI4L4Vl8HvxUyotCrHJVcTbSu85yQg3fmRmZR%2FKVxNQjZkwy8atrgY6sQF65KaBWFLOPDup9JZh9E6aRNnp6nOc2RJjfDBuEZqnqO%2FE0eIR6%2FMnB5jQvVkuHRSmXTStKVhFSTodnbxf6Jx%2FV%2Bb7oAvc4YN%2FjwysEYMAdJ7G1ipFcWKNk%2Fy8IJiu93NTzXgZ%2BUcmX9FJKhedbl1puxNoeG9%2FJnYsNGqtzqjFHuyw9oeW7ona11lhu%2Bwq%2BU434QKAOt%2FmsX3wWtY1amD8a%2F8TawrYCNcXdx0m%2F%2FsKhD8%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=cf2cf222f5206f5441a092390aa0871bba355c7ea15866d8cd1dc705eda0cdd0",
+      "file_size": 213300,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 221080,
+      "file_name": "Screen_Shot_2017-09-14_at_6.55.22_PM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/221/080/33d257ee272ddb328efbe8eda60dd1a697011fc6/Screen_Shot_2017-09-14_at_6.55.22_PM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2017-09-14_at_6.55.22_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2017-09-14_at_6.55.22_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4S26OA6W%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125007Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBrwAoewzxY3bz1ssFSdtEyK39n4ige2HCt%2FqgWXMxo6AiEA8W9QZL7h8ed7oBtuSQFGPQDGjUswee0LimM2YHTA1jMqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDIMSY8w9rHi0W5K3diqPBbjGizLrTlN6ZGbFF9LhBmPFJ1m5swtpZ7QtuQ1ecm6xRS32Vw6P29QnZ1nCvXxHRHo6hca4PRPlC%2F0SuWjzk0o8NKsd8UrMzywQ79MxoK3cqCgX8WV8kEyJZ1wthUKdW7fS3ASByTHh9EDJx35aAAaV%2FjyX21PDJbVpBrxSai%2BI8NCYDMrESdXzFg96JAx0%2FwVm%2BdX91kGoUyEspJy20Nir3f1bZWjC7MdtcCOSsjRRpflXb4gfaH%2BL1WT1rmstsNmGjj3W3W7TeYhR6pZtPFJdtb6k%2FghNKP4k29rXq2vgyXJX%2BVcohZ1zGAdsXYKgnKO2Y3m%2BPX7s9J%2BEwjIpNQnCTqqMY1fdtAuglpVQs9wOIOz5AsX%2F3fV3pu%2FvQSQRA8Du6Cj%2BeC4F1CXAi0KT8j%2B0b0OBcdCMFF7x0ZDWnp2IvcnhJbnULpfzrU3BcnLBK5G1w73sljokf7mqqRRV2mJeZ0Ksp5PbOgcxO2a9zF3%2F8KWFXZX25btNrQCkx2iy6DjaS4wWdbHTtaTyA9KPaMdPFCZK0C8QMd1EIcXXBkK42tdRHldBFv0Qtop0xhubZI7kmNI9gIAuHZhtoU%2F051v4TKLQUh2TAOI42M0%2BTEJLZph2o6AOjkFRtLNFt7YY1LhWRiyVjOtaBUNN8WQ3Qh3vWd2mGOGt3XUF8k06PdeLUGh8KHoKU7J50qkgwAmhpZgQn9UvombEZfjpL9rMdjKsr48SewAEp5ii613cBEjgvmV9GqfxRnaBt9%2BBnmZqq%2Bqdlb6QUuoAocNShZpYRVRCujWv0rbK5%2BJsewBiul9SD4qpCHDP0iLsOH3MbGI4L4Vl8HvxUyotCrHJVcTbSu85yQg3fmRmZR%2FKVxNQjZkwy8atrgY6sQF65KaBWFLOPDup9JZh9E6aRNnp6nOc2RJjfDBuEZqnqO%2FE0eIR6%2FMnB5jQvVkuHRSmXTStKVhFSTodnbxf6Jx%2FV%2Bb7oAvc4YN%2FjwysEYMAdJ7G1ipFcWKNk%2Fy8IJiu93NTzXgZ%2BUcmX9FJKhedbl1puxNoeG9%2FJnYsNGqtzqjFHuyw9oeW7ona11lhu%2Bwq%2BU434QKAOt%2FmsX3wWtY1amD8a%2F8TawrYCNcXdx0m%2F%2FsKhD8%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9208b522eca23745767a47f9a16a259522a6cfc225ac99a04e8cb85d86f21f80",
+      "file_size": 124793,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-09-19T02:56:39.161Z",
+  "allow_singular_disclosure_after": -107344408.14737758,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "wi11",
+    "ali",
+    "faizannehal",
+    "atpugsec",
+    "prateek_thakare"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 24110,
+      "category": "researcher",
+      "content": "{F221079}",
+      "user": {
+        "id": 13784,
+        "username": "jon_bottarini",
+        "name": "Jon Bottarini",
+        "bio": "I ❤️  privilege escalation",
+        "cleared": true,
+        "verified": true,
+        "website": "https://www.jonbottarini.com",
+        "location": "Austin, TX ",
+        "created_at": "2014-11-04T21:03:50.565Z",
+        "url": "https://hackerone.com/jon_bottarini",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

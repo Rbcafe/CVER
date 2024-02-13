@@ -1,0 +1,100 @@
+{
+  "id": 189704,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODk3MDQ=",
+  "url": "https://hackerone.com/reports/189704",
+  "title": "Segmentation fault due to invalid memory access in codegen when using break with the 127th argument a constant",
+  "state": "Closed",
+  "substate": "duplicate",
+  "readable_substate": "Duplicate",
+  "created_at": "2016-12-09T03:40:49.614Z",
+  "submitted_at": "2016-12-09T03:40:49.614Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "haquaman",
+    "url": "/haquaman",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/646/07cbfc394d4d3432eb95cf9735f225ea803090bb_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15668,
+    "url": "https://hackerone.com/shopify-scripts",
+    "handle": "shopify-scripts",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "shopify-scripts",
+      "twitter_handle": "",
+      "website": "",
+      "about": ""
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-12-17T20:48:31.714Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-12-17T20:13:31.247Z",
+  "team_member_agreed_on_going_public_at": "2016-12-17T20:48:31.681Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Crash file is:\n\n```\nbreak 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,CRASH\n```\n\nThis is 126 0's, then a constant. The 0's can be anything valid, and the constant just has to be a constant. Doesn't matter if it is defined or not. \n\nCauses a segfault with the following backtrace:\n```\nASAN:SIGSEGV\n=================================================================\n==813==ERROR: AddressSanitizer: SEGV on unknown address 0x0000000002ad (pc 0x00000063edfc bp 0x7ffe98e8cfe0 sp 0x7ffe98e8ce20 T0)\n    #0 0x63edfb in codegen /root/mruby-fixes/mrbgems/mruby-compiler/core/codegen.c:1221:39\n    #1 0x6818e5 in gen_values /root/mruby-fixes/mrbgems/mruby-compiler/core/codegen.c:821:9\n    #2 0x643cae in codegen /root/mruby-fixes/mrbgems/mruby-compiler/core/codegen.c:1596:11\n    #3 0x64a94d in loop_break /root/mruby-fixes/mrbgems/mruby-compiler/core/codegen.c:2853:5\n    #4 0x64a94d in codegen /root/mruby-fixes/mrbgems/mruby-compiler/core/codegen.c:2001\n    #5 0x64c8d8 in codegen /root/mruby-fixes/mrbgems/mruby-compiler/core/codegen.c:1239:7\n    #6 0x67a4b9 in scope_body /root/mruby-fixes/mrbgems/mruby-compiler/core/codegen.c:720:3\n    #7 0x63f3ef in codegen /root/mruby-fixes/mrbgems/mruby-compiler/core/codegen.c:1540:5\n    #8 0x63d870 in mrb_generate_code /root/mruby-fixes/mrbgems/mruby-compiler/core/codegen.c:2925:5\n    #9 0x5c0b4d in mrb_load_exec /root/mruby-fixes/mrbgems/mruby-compiler/core/parse.y:5723:10\n    #10 0x4e437b in main /root/mruby-fixes/mrbgems/mruby-bin-mruby/tools/mruby/mruby.c:232:11\n    #11 0x7fae55836ec4  (/lib/x86_64-linux-gnu/libc.so.6+0x21ec4)\n    #12 0x43d116 in _start (/root/mruby-fixes/bin/mruby+0x43d116)\n\nAddressSanitizer can not provide additional info.\nSUMMARY: AddressSanitizer: SEGV /root/mruby-fixes/mrbgems/mruby-compiler/core/codegen.c:1221 codegen\n==813==ABORTING\n\n```\n\nLooking through, looks like in `gen_values`, n loops up to 126 (on the constant node), so takes the first if block, val isn't set, so takes the else inside there, but `t->car->cdr` points to a invalid memory address so when `codegen` dereferences `tree`, it segfaults.\n\n```\n$ lldb ./mruby/bin/mruby crash.rb\n(lldb) target create \"./mruby/bin/mruby\"\nCurrent executable set to './mruby/bin/mruby' (x86_64).\n(lldb) settings set -- target.run-args  \"crash.rb\"\n(lldb) r\nProcess 58614 launched: './mruby/bin/mruby' (x86_64)\nProcess 58614 stopped\n* thread #1: tid = 0x612a08, 0x000000010005c3f1 mruby`codegen(s=0x000000010101cc20, tree=0x000000000000029b, val=0) + 129 at codegen.c:1221, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x2ad)\n    frame #0: 0x000000010005c3f1 mruby`codegen(s=0x000000010101cc20, tree=0x000000000000029b, val=0) + 129 at codegen.c:1221\n   1218     return;\n   1219   }\n   1220\n-> 1221   if (s->irep && s->filename_index != tree->filename_index) {\n   1222     s->irep->filename = mrb_parser_get_filename(s->parser, s->filename_index);\n   1223     mrb_debug_info_append_file(s->mrb, s->irep, s->debug_start_pos, s->pc);\n   1224     s->debug_start_pos = s->pc;\n(lldb) up\nframe #1: 0x000000010006581a mruby`gen_values(s=0x000000010101cc20, t=0x00000001010170d4, val=0) + 762 at codegen.c:821\n   818          }\n   819        }\n   820        else {\n-> 821          codegen(s, t->car->cdr, NOVAL);\n   822          t = t->cdr;\n   823          while (t) {\n   824            codegen(s, t->car, NOVAL);\n(lldb) p *t->car\n(mrb_ast_node) $0 = {\n  car = 0x000000000000002c\n  cdr = 0x000000000000029b\n  lineno = 1\n  filename_index = 0\n}\n(lldb) p n\n(int) $1 = 126\n(lldb) p is_splat\n(int) $2 = 0\n(lldb) p val\n(int) $3 = 0\n(lldb) q\nQuitting LLDB will kill one or more processes. Do you really want to proceed: [Y/n] y\n\n```\n\nSo this is showing that that 127th argument to break isn't set right. I printed out `t->car` for each `codegen` call, and it shows for the above, we get a the usual start (CFUNC, BEGIN, etc), then NODE_BREAK, followed by 126 NODE_INT's, then the segfault happens (`tree` points to invalid memory). \n\nI changed the constant to some other values, and found that `t->car` was clearly overflowing for other values, `0.0` (`NODE_FLOAT`), was always a value of `3157552`, rather than `52`. A `NODE_INT` varied, but one value was `-197952842`, not `51`. same with `NODE_STR`, `NODE_DSTR`, `NODE_REGX`, a *non-empty* `NODE_ARRAY`, a `NODE_FCALL`, `NODE_CALL`.... You get the picture. Weirdly only the `NODE_FLOAT` always kept the same value...\n\nI've just found that a NODE_LVAR also crashes, such as this example crash file:\n\n```\ncrash=1\nbreak 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,crash\n```\n\n\nHaven't got a patch for this one yet, just wanted to file it.\n\nCheers,\n\nHugh\n",
+  "weakness": {
+    "id": 48,
+    "name": "Denial of Service"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 2,
+  "voters": [
+    "eveeez",
+    "spetr0x"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

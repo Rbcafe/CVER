@@ -1,0 +1,169 @@
+{
+  "id": 903424,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85MDM0MjQ=",
+  "url": "https://hackerone.com/reports/903424",
+  "title": "SSL certificate not validated when registering with a provider",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2020-06-20T01:40:16.724Z",
+  "submitted_at": "2020-06-20T01:40:16.724Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "netranger",
+    "url": "/netranger",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2021-22895"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2021-06-02T03:09:32.942Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-06-02T03:09:32.862Z",
+  "team_member_agreed_on_going_public_at": "2021-06-01T17:50:41.540Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Description\n\nWhen running the desktop client for the first time, users can click the \"Register with a provider\" button to sign up for a Nextcloud account with a Nextcloud cloud provider. Clicking \"Register...\" opens a web page in a Nextcloud desktop client window with content from https://nextcloud.com/register.\n\nHowever, the desktop client doesn't appear to validate the SSL certificate for nextcloud.com. An attacker between the user and nextcloud.com could replace the certificate with their own invalid cert and conduct a man in the middle attack. The attacker could control the page content displayed to the user.\n\nThis appears to affect Windows and Linux Nextcloud desktop clients. I don't have a Mac so haven't tested the Mac client.\n\n## Reproduction\n\nIf you have Burp HTTP proxy, set the Nextcloud client to proxy traffic through Burp. Click \"Register with a provider\"; Burp should receive the request. This demonstrates vulnerability presence because the Nextcloud client should alert on Burp's self signed certificate, but doesn't.\n\nOtherwise, I wrote a quick python script to demonstrate the vulnerability. You will need at least 1 Linux machine to run the script on. You can run Nextcloud desktop on it too or on another device.\n\n1. Download the attached nc_desktop_mitm.py, nc_key.pem (private key), and nc_cert.pem (public cert) files to a Linux machine. \n2. Start the nc_desktop_mitm.py script. The option -k specifies the private key file and -c specifices the public cert file. Sudo is required because we bind to port 443: sudo python3 nc_desktop_mitm.py -k nc_key.pem -c nc_cert.pem\n3. Note the IP address of the machine running the script.\n4. Now we need to mimic what an attacker could accomplish through ARP poisoning, DNS spoofing, or by controlling a router between the victim and nextcloud.com. However, MiTM techniques like these are tedious to setup, so we'll cheat... Open the hosts file on the device where you are running Nextcloud desktop.\n5. Add an entry to point nextcloud.com to the IP of the machine running the script. Save and close the hosts file.\n6. Open Nextcloud desktop client and click \"Register with a provider\".\n7. The Nextcloud client displays my custom proof of concept page, indicating the client trusted the invalid cert.\n\nI've attached a screenshot of what the Nextcloud client should show after clicking \"Register with a provider\" if the reproduction steps worked.\n\nTested Nextcloud desktop client version 2.6.4stable (build 20200303) on Ubuntu 18.04 and Windows 10. If I can provide further information please let me know. Thanks!\n\n## Impact\n\nAn attacker can serve untrusted HTML, Javascript, etc in the trusted context of the desktop client. A typical user is likely inclined to trust what is shown to them in the Nextcloud app compared to a web browser page; they won't even know it's web content necessarily and may assume it's native to the Nextcloud client.\n\n A likely attack vector would be to replace the content with a fake login page and try to get the user to login. If the user clicks \"Register with a provider\", a window asking them to \"Sign in with Google/Facebook/Apple to access your new Nextcloud account!\" or similar might net the attacker something useful. Such an attack would probably have a decent success rate given the circumstances.\n\nIf an attacker just passively eavesdrops on the user's traffic, near as I can tell the attacker can collect the user's email as it gets POSTed to nextcloud.com during the registration process. A user's email is private, but the usefulness to an attacker seems limited without other associated user information.",
+  "bounty_amount": "300.0",
+  "formatted_bounty": "$300",
+  "weakness": {
+    "id": 32,
+    "name": "Cryptographic Issues - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 875078,
+      "file_name": "nc_cert.pem",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/zV8Ef68XvX4AFngcdKd8ui9B?response-content-disposition=attachment%3B%20filename%3D%22nc_cert.pem%22%3B%20filename%2A%3DUTF-8%27%27nc_cert.pem&response-content-type=application%2Fx-x509-ca-cert&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134810Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e33307719ae9ccb24ed3c503677570a6e91b52515d25448ba22e55ffa6573c64",
+      "file_size": 1976,
+      "type": "application/x-x509-ca-cert",
+      "moderated": null
+    },
+    {
+      "id": 875079,
+      "file_name": "nc_key.pem",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/11GtVuaQHA8VixZSxVo7orev?response-content-disposition=attachment%3B%20filename%3D%22nc_key.pem%22%3B%20filename%2A%3DUTF-8%27%27nc_key.pem&response-content-type=application%2Fx-x509-ca-cert&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134810Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=06ffd8eda58cfa6206d145a49bbd73ecbcd19df5a0b421dddbbe7016cc9a1608",
+      "file_size": 3272,
+      "type": "application/x-x509-ca-cert",
+      "moderated": null
+    },
+    {
+      "id": 875080,
+      "file_name": "nc_desktop_mitm.py",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/wxqyYeAXZfa32QJqiXMgUpdq?response-content-disposition=attachment%3B%20filename%3D%22nc_desktop_mitm.py%22%3B%20filename%2A%3DUTF-8%27%27nc_desktop_mitm.py&response-content-type=text%2Fx-python&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134810Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=291dae97161fa282151f5e1e3829ee17c52305c744ca7c1c6efc3419dfd4c38f",
+      "file_size": 72560,
+      "type": "text/x-python",
+      "moderated": null
+    },
+    {
+      "id": 875081,
+      "file_name": "successful_exploit.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/BexRJaMFWTNpUAyYNwg5pPkR?response-content-disposition=attachment%3B%20filename%3D%22successful_exploit.png%22%3B%20filename%2A%3DUTF-8%27%27successful_exploit.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134810Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0c06f5b6b19016816192e5d86f856e375e592a31dc44378eff3fe727f5ea0d34",
+      "file_size": 71300,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2021-07-01T17:50:41.668Z",
+  "allow_singular_disclosure_after": -82670249.19466004,
+  "singular_disclosure_allowed": true,
+  "vote_count": 42,
+  "voters": [
+    "wi11",
+    "cdogu",
+    "akashhamal0x01",
+    "anupamas01",
+    "r0pz",
+    "0nlymohammed",
+    "yusuf_furkan",
+    "shubholicworld",
+    "cryptographer",
+    "0xbnke",
+    "and 32 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 6.5,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 77,
+    "asset_type": "DOWNLOADABLE_EXECUTABLES",
+    "asset_identifier": "Desktop Client",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

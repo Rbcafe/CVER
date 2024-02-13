@@ -1,0 +1,128 @@
+{
+  "id": 1129529,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTI5NTI5",
+  "url": "https://hackerone.com/reports/1129529",
+  "title": "CVE-2021-22890: TLS 1.3 session ticket proxy host mixup",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2021-03-17T18:30:33.904Z",
+  "submitted_at": "2021-03-17T18:30:34.012Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mingtao",
+    "url": "/mingtao",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 35663,
+    "url": "https://hackerone.com/curl",
+    "handle": "curl",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "curl",
+      "twitter_handle": "",
+      "website": "https://curl.se",
+      "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2021-22890"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2021-04-30T06:03:43.981Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2021-03-31T06:03:42.735Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\n(I don't think that this can be easily exploitable, but I am submitting it as a security issue for precaution. I am not looking for a bounty.)\n\nCommit [549310e907e82e44c59548351d4c6ac4aaada114](https://github.com/curl/curl/commit/549310e907e82e44c59548351d4c6ac4aaada114)  enables session resumption with TLS 1.3. Curl connections maintain two SSL contexts, one for the proxy and one for the destination. However, curl incorrectly stores session tickets issued by an TLS 1.3 HTTPS proxy under the non proxy context.\n\nThe issue is that the logic inside `Curl_ssl_addsessionid` that chooses which context to store the tickets under is incorrect under TLS 1.3. \n\n```\nconst bool isProxy = CONNECT_PROXY_SSL();\nstruct ssl_primary_config * const ssl_config = isProxy ?\n  &conn->proxy_ssl_config :\n  &conn->ssl_config;\nconst char *hostname = isProxy ? conn->http_proxy.host.name :\n  conn->host.name;\n```\n\n```\n#define CONNECT_PROXY_SSL()\\\n  (conn->http_proxy.proxytype == CURLPROXY_HTTPS &&\\\n  !conn->bits.proxy_ssl_connected[sockindex])\n```\n\nOne of the major differences between how TLS session tickets are issued between TLS 1.3 and prior versions  of TLS is that TLS 1.3 issues session tickets in a *post* handshake message. What this means in practice is that TLS 1.3 tickets are delivered in the first call to `SSL_read()`, rather than being issued as part of `SSL_connect()`. Consequently, `CONNECT_PROXY_SSL()` will see that the proxy has already been connected (since the call to `SSL_connect()` to the proxy was completed), so the call to `Curl_ssl_addsessionid` believes the `isProxy` is `false`, and it stores the ticket under the non proxy context.\n\nAfter the `CONNECT` call returns successfully, a connection to the original destination will be made through the established TCP tunnel. If the original destination uses https, another TLS handshake will be made. During this TLS handshake, the curl client offers the session ticket of the *proxy* to the destination.\n\nIf the proxy is malicious, at this point it could decide to terminate the TLS handshake to the upstream. Since the proxy has the corresponding session ticket key (it was the entity that issued the ticket, after all), it can complete the client -> destination TLS handshake through a resumption. Normally, this would result in a full man in the middle, as TLS certificates are not exchanged as part of a resumed connection. However, curl already performs some of its own certificate validation outside of OpenSSL in `ossl_connect_step3`, which largely mitigates this vulnerability.\n\nThe certificate validation that curl performs includes steps such as (1) checking if the certificate was self signed and (2) ensuring that the certificate contains a subject that matches the destination. The certificate of the proxy is stored in the `SSL_SESSION` that was used for resumption, so curl will attempt to perform these validations against the proxy certificate.\n\n## Steps To Reproduce:\nI've attached a reproducer in this report.\n* `server_that_fails_on_ticket.c` is a simple TLS server (listening on port 12345) that will send an alert if it receives a session resumption attempt. Under normal circumstances, curl should never be sending a ticket when connecting through a proxy, since it has never connected to this destination before. With this bug, you should be able to observe that the server receives a ticket on the first connection regardless.\n* `https_proxy.c` is a extremely rudimentary implementation of a HTTPS proxy (listening on port 12346), that only uses TLS 1.3. If a special proxy header `Mitm: 1` is passed, then the proxy will attempt to terminate the TLS connection itself, acting as a man in the middle.\n* `proxy_ca.pem` is the CA file that signs the proxy cert, `haxx.se.pem`\n* `haxx.se.pem` is the TLS certificate that the proxy uses. Notice that it has the identities: `localhost` and`haxx.se`.\n\n## Demonstrating that curl sends the proxy ticket to the original destination.\n1. Run `server_that_fails_on_ticket`. This will listen on port 12345\n2. Run `https_proxy`. This will listen on port 12346\n3. Run `curl --proxy-cacert proxy_ca.pem -x 'https://localhost:12346' 'https://localhost:12345'`\n4. Notice that the curl client receives a TLS alert, and that \"Received a TLS 1.3 ticket resumption attempt\" is printed on the server.\n\n## Demonstrating the very limited MiTM possibility.\n1. Run `https_proxy`. This will listen on port 12346\n2. Run `curl --proxy-cacert proxy_ca.pem --proxy-header 'Mitm: 1' -x 'https://localhost:12346' 'https://haxx.se'`\n3. Notice that \"MITM\" is returned, and no certificate error is thrown.\n\nThe MITM is only possible because `haxx.se` is listed as one of the subjects in the proxy certificate. Curl's certificate validation passes: (1) the proxy cert is not self signed and (2) the name haxx.se is present in the certificate is \"presented\" by the original destination.\n\n## Impact\n\nIn a very specific environment (perhaps a corporate environment where all access to the internet requires going through an HTTPS proxy), an attacker that can issue a trusted proxy certificate may be able to man in the middle connections established with libcurl, even if curl explicitly does not include the proxy CA in the trust store for normal destinations.",
+  "weakness": {
+    "id": 30,
+    "name": "Man-in-the-Middle"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1233848,
+      "file_name": "curl_tls13_bug.tar.gz",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/i08dt9bn6kyxy09ig9ykfknsaofi?response-content-disposition=attachment%3B%20filename%3D%22curl_tls13_bug.tar.gz%22%3B%20filename%2A%3DUTF-8%27%27curl_tls13_bug.tar.gz&response-content-type=application%2Fgzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSQ564LXW%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T140721Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDl76KVUFS0hN8YruFStxJXVErBlHnUq37TLzE6NJ4nVgIhANpbiTp%2BMBG4Nwb5E7dtwmMEX5oh%2FQf%2BDE1tYHw3IkRRKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5IgysR5bYjXDNHPUxaW8qjwUn5sVCnmMuonjKnG%2FT4J4WQrTsBQX1SNmTEPNbtsQv5XcKQaoPHieXQdr%2B%2B1X5avNpXfOZbh0pZ6CXdrJ4yYa55f0HXkeQiH0zcQ0fif5j1pP8jC%2Blsq%2BD9fB7SzZQg6RmosBSYA4XGzLy8%2FPyGRLQ28yjB4W8KTl8fBM4CmJJFWLBmzWUBK2SOnDwMfsDL5%2BmafcYaKkz0yszM1cg3XozTAFLh8hmoIUAWpu77QkIzg0Ht8%2B93fM%2FYsZn5uKr6IpQ2U4pqWdLfB29cuQ%2Fcqg62XxGu%2BLk6jR1jXWEegWhMonWqQeGJPWbh8kEDYxBzUAidK12bSQGyMxonksvquoUumwsvEUzmQd%2BhHIBPGEfHEpImOlgzqswJwZ%2F4JNoWjfIUk3c2lvDijlThqGBqTQoB645h%2B4iprdRTJwkrRB74qIwzHH8cv8viZ7ZrieVZK6heyAtoEGA%2BZN6Yt1%2Fh3uEHlmtJnS1Vmef8OPs7HDSzKz4njXcD7iXOt625xzMEBsfshpisEQDc6V%2BgE%2BBXbdv%2FT4XaJkVUN7kUFRWxoez0R%2FafT55iChRzC%2FCCCtXPxRwQLswXHFkjSKPv6sVfuM5MRTBUP55DDIHcRMXtwEjecS03yT%2BLa3gpqGgU9vRMfcH0LWQdYklhl1sQ6N1w3UJ%2BzTVF7HEgKCpghOKhwVCK9huxD72fxZOO6FF5FJzK3DifWVeM1v32dnnKItdegNY3N8My9s4MQJ%2B3ECyboRUjyg2nm%2BDhuYrpgIelJVrUGgu74IzyiQ2A%2FCKjoDOYFSWGrm4y%2B2UnhJeZRlQds%2FlnTD4xuiMof7htaNeiZuyDqfi6JTbOSG%2FNqB7QSE2ezcJ75qQGAqDpKeqbVdeTC34MIa2ra4GOrABDubMC6LwabfeW3Qsfz2RgL7fTEyxJw929PcIhksJK3EmRE2rUVVoVGGm7fTwmneEB55wcJn7xtg4Rs3f5YiKxBbRlxeqJEXHdJJWWaOq%2BpG%2BMHzVFgbZYimMKoU39IYu2PyQrofnOmHZ%2FEB3I1PLguFv1fjZlzVTHUwnD4kRx2g5tTJLggeCKerD5uXmMSsk8WllCOp%2FdA8M69%2BsXGmqNNPZRG6tkFF%2FJPssbKNyXTU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2b31ff7d5ab7c43f19d16846b21a5361d375b13c3640075de4bb1ea0f7bf3b63",
+      "file_size": 6705,
+      "type": "application/gzip",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2021-04-30T06:03:42.809Z",
+  "allow_singular_disclosure_after": -88070618.50269222,
+  "singular_disclosure_allowed": true,
+  "vote_count": 7,
+  "voters": [
+    "sa1tama0",
+    "bohraupasana",
+    "krishanusharma123",
+    "adass",
+    "delpan7",
+    "ekgaribadmi",
+    "meispi"
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 18844,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/curl/curl",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

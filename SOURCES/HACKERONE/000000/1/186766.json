@@ -1,0 +1,154 @@
+{
+  "id": 186766,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODY3NjY=",
+  "url": "https://hackerone.com/reports/186766",
+  "title": "Subdomain takeover on happymondays.starbucks.com due to non-used AWS S3 DNS record",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2016-11-30T06:19:05.330Z",
+  "submitted_at": "2016-11-30T06:19:05.330Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "dpgribkov",
+    "url": "/dpgribkov",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/047/548/c891760bfc8de922a431de50e941d8f70bc6481e_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 1989,
+    "url": "https://hackerone.com/starbucks",
+    "handle": "starbucks",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/989/c9aa38cf3b1a91daa085d31e23d23f34cd1874df_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/989/c9aa38cf3b1a91daa085d31e23d23f34cd1874df_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Starbucks",
+      "twitter_handle": "Starbucks",
+      "website": "http://www.starbucks.com",
+      "about": "OUR MISSION WITH EVERY CUP, WITH EVERY CONVERSATION, WITH EVERY COMMUNITY– WE NURTURE THE LIMITLESS POSSIBILITIES OF HUMAN CONNECTION"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-12-19T22:59:42.194Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-11-30T22:18:56.555Z",
+  "team_member_agreed_on_going_public_at": "2016-12-19T22:59:42.151Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\n\nI discovered that happymondays.starbucks.com DNS CNAME record is pointing to S3 AWS bucket which doesn't exist. Here's the screenshot of vulnerable domain: {F138556}\n\nAs happymondays.starbucks.com was free to register on AWS S3 service and DNS-setup is already correct set-up: {F138557} \nI was able to claim the domain for PoC using the following set-up:  {F138558}\nAlso I have placed a two files located under root directory for validation: {F138559}\nFor mitigation you should immediately remove the DNS-entry for this domain. \n\nAs you might consider, the impact of this are pretty significant. I now can publish whatever I want on this domain, even fetching httpOnly cookies. I would also be able to register SSL certificate for this domain through Let's Encrypt (it is only need meta/file verification to issue the certificate) That would end up with the ability to read secure cookies as well.\n\nIn addition, there's no way at all for a visitor of this page to validate that the content on this domain is not served by Starbucks, making it extremely easy to utilize this for targeting the organization by fake login forms / spear phishing using your own domain to plant the attack.\n\nCheers,\nDanil\n\n\n\n",
+  "weakness": {
+    "id": 75,
+    "name": "Privilege Escalation"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 138556,
+      "file_name": "Screenshot_from_2016-11-30_00-50-20.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/138/556/c01c8f0e8a8eb1df987a7f1cf291b057640dfbb7/Screenshot_from_2016-11-30_00-50-20.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2016-11-30_00-50-20.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2016-11-30_00-50-20.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2TXGU4NH%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122852Z&X-Amz-Expires=2423&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZXXLTvdjrV9%2BXTrnagiitpTSxdTNfuwI8JoO87a374wIgGdKdQ7YeIephBMysf3wfpXJkd8udROvqz%2BslCFnteH4qsgUIcBADGgwwMTM2MTkyNzQ4NDkiDJwtqkOHj%2Bhq7hwpISqPBc3oQJzChWjZ7bKD%2BccTmt7LiDYwnp%2FaW49dMRirZ9pIhrCa7YZHTLZ9RBv6n9DI4zg1cmDjgAWLZcLoHEU6HMSY4TZiQ6JhkTxfHY9%2BW8gIq%2FN6zwvc28EGhPI0bXtMQ05CUe9qLU1IqB2QvVi8ljbC0OENAKpHHW%2B4HZPV3ya4m4CUrmIsBEz02u4o%2FTUWBucXelW27TA%2FMHkcbbkFDMVuk57DqG9l6DCv91Gk0it2LxC7b8QipHE3PIzezn29GFbq0x%2FVAy8j5zhCsVA2u3PoLG8UBgJPigFlduO2n54cymHx0Kj1lPCf0XySDYAG7J%2BkbE9frSbqOenAzEKHL%2BbmTLbvIknLt0tHuWNofydq3sKSVRJUGT6kPaXiG6LcZZAjiidzALZPhPiZjjN2NFbT%2B4d3bYuhSBgSzvUsrX%2FU4t82le3n50YJtFXVQ5QFh1yFj%2BasAJo8gy4CzSP0PgdMEiJHxmad%2BFSBk1osw1BNlolWVHoYfecAbexOr2DelWZtvQEFGBxOieL0Wu0EoUhoxEA%2BwcuNd421R9g0jkhW6T1utyXajONBgYVseJBpWnbW%2BkpGImvblpF9NqajpVHpAAFM6sdMLqiQfJ1f2k9nfS8NIMIMr1C%2Fow0E8D%2FBak4EhkqC2z4QmLpn0zQ7nAVSDGC0pvQQ9HVPj%2BqgNB88SHK9rHZSyCSKf4lsEvYbKl40pk9%2FwaWVlfLBHZ9KQh3Sk5kHWBptfVKftWPHgl3kdZnZZoD7zq5BIGAq%2BfkhmJ1PLAj9CcRgLZKxPmL7BwBfMK1j9GipZrFsKu100o2ehZDw7ycR0yKIZpB5BsA2SMtYyPB%2B8lmSAWsiEcgvv%2BCmvle2pB9btBCR6tP%2FsVAwuKWsrgY6sQEOW7UlyhlECgHHWSD1IxQaKIHYvjLM%2FfiTluais8DBgTs2%2B0ozGJfGCvvwGwuCx3AVFBMiYmPRly4WjCK3xXERtAap5VTGJE61OwLy5AbGPGJEzLPgyw2xUSEbhOBlNW9NWCeq3J6Ykb0rxTuobAmesQY2%2FdIFblQ%2FHHBqxCz3Wf7QF6oiRaFXn07SukEwJwLzpGlJ6GkqAxZz63CXWtQishvehwDUwbs0xamAMs2tYiU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=05109d2b7e05bb328197913dd9beb702e5da78ecd78a36fc132c6f6b4c35a1f2",
+      "file_size": 38737,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 138557,
+      "file_name": "Screenshot_from_2016-11-30_00-58-45.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/138/557/dd4d3a4734daf9aa9d4d900b9863688322913ee6/Screenshot_from_2016-11-30_00-58-45.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2016-11-30_00-58-45.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2016-11-30_00-58-45.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2TXGU4NH%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122852Z&X-Amz-Expires=2423&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZXXLTvdjrV9%2BXTrnagiitpTSxdTNfuwI8JoO87a374wIgGdKdQ7YeIephBMysf3wfpXJkd8udROvqz%2BslCFnteH4qsgUIcBADGgwwMTM2MTkyNzQ4NDkiDJwtqkOHj%2Bhq7hwpISqPBc3oQJzChWjZ7bKD%2BccTmt7LiDYwnp%2FaW49dMRirZ9pIhrCa7YZHTLZ9RBv6n9DI4zg1cmDjgAWLZcLoHEU6HMSY4TZiQ6JhkTxfHY9%2BW8gIq%2FN6zwvc28EGhPI0bXtMQ05CUe9qLU1IqB2QvVi8ljbC0OENAKpHHW%2B4HZPV3ya4m4CUrmIsBEz02u4o%2FTUWBucXelW27TA%2FMHkcbbkFDMVuk57DqG9l6DCv91Gk0it2LxC7b8QipHE3PIzezn29GFbq0x%2FVAy8j5zhCsVA2u3PoLG8UBgJPigFlduO2n54cymHx0Kj1lPCf0XySDYAG7J%2BkbE9frSbqOenAzEKHL%2BbmTLbvIknLt0tHuWNofydq3sKSVRJUGT6kPaXiG6LcZZAjiidzALZPhPiZjjN2NFbT%2B4d3bYuhSBgSzvUsrX%2FU4t82le3n50YJtFXVQ5QFh1yFj%2BasAJo8gy4CzSP0PgdMEiJHxmad%2BFSBk1osw1BNlolWVHoYfecAbexOr2DelWZtvQEFGBxOieL0Wu0EoUhoxEA%2BwcuNd421R9g0jkhW6T1utyXajONBgYVseJBpWnbW%2BkpGImvblpF9NqajpVHpAAFM6sdMLqiQfJ1f2k9nfS8NIMIMr1C%2Fow0E8D%2FBak4EhkqC2z4QmLpn0zQ7nAVSDGC0pvQQ9HVPj%2BqgNB88SHK9rHZSyCSKf4lsEvYbKl40pk9%2FwaWVlfLBHZ9KQh3Sk5kHWBptfVKftWPHgl3kdZnZZoD7zq5BIGAq%2BfkhmJ1PLAj9CcRgLZKxPmL7BwBfMK1j9GipZrFsKu100o2ehZDw7ycR0yKIZpB5BsA2SMtYyPB%2B8lmSAWsiEcgvv%2BCmvle2pB9btBCR6tP%2FsVAwuKWsrgY6sQEOW7UlyhlECgHHWSD1IxQaKIHYvjLM%2FfiTluais8DBgTs2%2B0ozGJfGCvvwGwuCx3AVFBMiYmPRly4WjCK3xXERtAap5VTGJE61OwLy5AbGPGJEzLPgyw2xUSEbhOBlNW9NWCeq3J6Ykb0rxTuobAmesQY2%2FdIFblQ%2FHHBqxCz3Wf7QF6oiRaFXn07SukEwJwLzpGlJ6GkqAxZz63CXWtQishvehwDUwbs0xamAMs2tYiU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=24eb64b65c65732514869596edc4133a75cef749a8d099b0ffb2eeec80049fe5",
+      "file_size": 20026,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 138558,
+      "file_name": "Screenshot_from_2016-11-30_01-02-09.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/138/558/aff2df147886e59f768f3e8aed505d8fdef5b547/Screenshot_from_2016-11-30_01-02-09.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2016-11-30_01-02-09.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2016-11-30_01-02-09.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2TXGU4NH%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122852Z&X-Amz-Expires=2423&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZXXLTvdjrV9%2BXTrnagiitpTSxdTNfuwI8JoO87a374wIgGdKdQ7YeIephBMysf3wfpXJkd8udROvqz%2BslCFnteH4qsgUIcBADGgwwMTM2MTkyNzQ4NDkiDJwtqkOHj%2Bhq7hwpISqPBc3oQJzChWjZ7bKD%2BccTmt7LiDYwnp%2FaW49dMRirZ9pIhrCa7YZHTLZ9RBv6n9DI4zg1cmDjgAWLZcLoHEU6HMSY4TZiQ6JhkTxfHY9%2BW8gIq%2FN6zwvc28EGhPI0bXtMQ05CUe9qLU1IqB2QvVi8ljbC0OENAKpHHW%2B4HZPV3ya4m4CUrmIsBEz02u4o%2FTUWBucXelW27TA%2FMHkcbbkFDMVuk57DqG9l6DCv91Gk0it2LxC7b8QipHE3PIzezn29GFbq0x%2FVAy8j5zhCsVA2u3PoLG8UBgJPigFlduO2n54cymHx0Kj1lPCf0XySDYAG7J%2BkbE9frSbqOenAzEKHL%2BbmTLbvIknLt0tHuWNofydq3sKSVRJUGT6kPaXiG6LcZZAjiidzALZPhPiZjjN2NFbT%2B4d3bYuhSBgSzvUsrX%2FU4t82le3n50YJtFXVQ5QFh1yFj%2BasAJo8gy4CzSP0PgdMEiJHxmad%2BFSBk1osw1BNlolWVHoYfecAbexOr2DelWZtvQEFGBxOieL0Wu0EoUhoxEA%2BwcuNd421R9g0jkhW6T1utyXajONBgYVseJBpWnbW%2BkpGImvblpF9NqajpVHpAAFM6sdMLqiQfJ1f2k9nfS8NIMIMr1C%2Fow0E8D%2FBak4EhkqC2z4QmLpn0zQ7nAVSDGC0pvQQ9HVPj%2BqgNB88SHK9rHZSyCSKf4lsEvYbKl40pk9%2FwaWVlfLBHZ9KQh3Sk5kHWBptfVKftWPHgl3kdZnZZoD7zq5BIGAq%2BfkhmJ1PLAj9CcRgLZKxPmL7BwBfMK1j9GipZrFsKu100o2ehZDw7ycR0yKIZpB5BsA2SMtYyPB%2B8lmSAWsiEcgvv%2BCmvle2pB9btBCR6tP%2FsVAwuKWsrgY6sQEOW7UlyhlECgHHWSD1IxQaKIHYvjLM%2FfiTluais8DBgTs2%2B0ozGJfGCvvwGwuCx3AVFBMiYmPRly4WjCK3xXERtAap5VTGJE61OwLy5AbGPGJEzLPgyw2xUSEbhOBlNW9NWCeq3J6Ykb0rxTuobAmesQY2%2FdIFblQ%2FHHBqxCz3Wf7QF6oiRaFXn07SukEwJwLzpGlJ6GkqAxZz63CXWtQishvehwDUwbs0xamAMs2tYiU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9d671ef17e2268f4bfce25b0574cce319da6c3d6d0653c6dd0747f24e5be34df",
+      "file_size": 68380,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 138559,
+      "file_name": "Screenshot_from_2016-11-30_01-08-17.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/138/559/f0c762b726b53e0b5a143cbc51f8f0fe3072f3fd/Screenshot_from_2016-11-30_01-08-17.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2016-11-30_01-08-17.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2016-11-30_01-08-17.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2TXGU4NH%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122852Z&X-Amz-Expires=2423&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZXXLTvdjrV9%2BXTrnagiitpTSxdTNfuwI8JoO87a374wIgGdKdQ7YeIephBMysf3wfpXJkd8udROvqz%2BslCFnteH4qsgUIcBADGgwwMTM2MTkyNzQ4NDkiDJwtqkOHj%2Bhq7hwpISqPBc3oQJzChWjZ7bKD%2BccTmt7LiDYwnp%2FaW49dMRirZ9pIhrCa7YZHTLZ9RBv6n9DI4zg1cmDjgAWLZcLoHEU6HMSY4TZiQ6JhkTxfHY9%2BW8gIq%2FN6zwvc28EGhPI0bXtMQ05CUe9qLU1IqB2QvVi8ljbC0OENAKpHHW%2B4HZPV3ya4m4CUrmIsBEz02u4o%2FTUWBucXelW27TA%2FMHkcbbkFDMVuk57DqG9l6DCv91Gk0it2LxC7b8QipHE3PIzezn29GFbq0x%2FVAy8j5zhCsVA2u3PoLG8UBgJPigFlduO2n54cymHx0Kj1lPCf0XySDYAG7J%2BkbE9frSbqOenAzEKHL%2BbmTLbvIknLt0tHuWNofydq3sKSVRJUGT6kPaXiG6LcZZAjiidzALZPhPiZjjN2NFbT%2B4d3bYuhSBgSzvUsrX%2FU4t82le3n50YJtFXVQ5QFh1yFj%2BasAJo8gy4CzSP0PgdMEiJHxmad%2BFSBk1osw1BNlolWVHoYfecAbexOr2DelWZtvQEFGBxOieL0Wu0EoUhoxEA%2BwcuNd421R9g0jkhW6T1utyXajONBgYVseJBpWnbW%2BkpGImvblpF9NqajpVHpAAFM6sdMLqiQfJ1f2k9nfS8NIMIMr1C%2Fow0E8D%2FBak4EhkqC2z4QmLpn0zQ7nAVSDGC0pvQQ9HVPj%2BqgNB88SHK9rHZSyCSKf4lsEvYbKl40pk9%2FwaWVlfLBHZ9KQh3Sk5kHWBptfVKftWPHgl3kdZnZZoD7zq5BIGAq%2BfkhmJ1PLAj9CcRgLZKxPmL7BwBfMK1j9GipZrFsKu100o2ehZDw7ycR0yKIZpB5BsA2SMtYyPB%2B8lmSAWsiEcgvv%2BCmvle2pB9btBCR6tP%2FsVAwuKWsrgY6sQEOW7UlyhlECgHHWSD1IxQaKIHYvjLM%2FfiTluais8DBgTs2%2B0ozGJfGCvvwGwuCx3AVFBMiYmPRly4WjCK3xXERtAap5VTGJE61OwLy5AbGPGJEzLPgyw2xUSEbhOBlNW9NWCeq3J6Ykb0rxTuobAmesQY2%2FdIFblQ%2FHHBqxCz3Wf7QF6oiRaFXn07SukEwJwLzpGlJ6GkqAxZz63CXWtQishvehwDUwbs0xamAMs2tYiU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b3d61c6bd3cdbd1944e0f0b6b48ff647302e095d396a57c696a16c3ef60b82d4",
+      "file_size": 104489,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-12-30T22:18:56.603Z",
+  "allow_singular_disclosure_after": -224690996.3173056,
+  "singular_disclosure_allowed": true,
+  "vote_count": 103,
+  "voters": [
+    "tomdev",
+    "fransrosen",
+    "ziot",
+    "bogdantcaciuc",
+    "phwd",
+    "hunter",
+    "michiel",
+    "b6117130df17feef13481e3",
+    "suv",
+    "sameerphad72",
+    "and 93 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 12995,
+    "asset_type": "OTHER",
+    "asset_identifier": "Other assets",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

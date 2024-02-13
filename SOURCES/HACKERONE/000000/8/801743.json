@@ -1,0 +1,144 @@
+{
+  "id": 801743,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84MDE3NDM=",
+  "url": "https://hackerone.com/reports/801743",
+  "title": "Race condition leads to Inflation of coins when bought via Google Play Store at endpoint https://oauth.reddit.com/api/v2/gold/android/verify_purchase ",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2020-02-21T14:59:18.012Z",
+  "submitted_at": "2020-02-21T14:59:18.012Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "yashrs",
+    "url": "/yashrs",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/S9WnJuUrpWvxZ6iM38qL2HE4/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 35710,
+    "url": "https://hackerone.com/reddit",
+    "handle": "reddit",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/710/c1ae53147a025b33b7c8383200432c8b4a9b839a_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/710/c1ae53147a025b33b7c8383200432c8b4a9b839a_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Reddit",
+      "twitter_handle": "reddit",
+      "website": "https://www.reddit.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-10-27T14:08:20.920Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-10-22T17:03:38.534Z",
+  "team_member_agreed_on_going_public_at": "2021-10-27T14:08:20.755Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\n\n## Summary:\nWhen we purchase coins from Reddit's mobile app using Android, https://oauth.reddit.com/api/v2/gold/android/verify_purchase is called with parameters like `transaction_id` and `token`. There exists a race condition on this endpoint which allows an attacker to get coins many times more than it was intended to.\n\n\n## Steps To Reproduce:\n- Go to the Reddit app, click on the top right corner which has a coin icon and says `Get`:\n\n- Select a basic 50 coins package, and intercept this request when the purchase is completed:\n\n```\nPOST /api/v2/gold/android/verify_purchase?raw_json=1&feature=link_preview&sr_detail=true&expand_srs=true&from_detail=true&api_type=json&raw_json=1&always_show_media=1&request_timestamp=1582296187715 HTTP/1.1\nAuthorization: Bearer REDACTED\nClient-Vendor-ID: REDACTED\nx-reddit-device-id: REDACTED\nUser-Agent: Reddit/Version 2020.5.0/Build 255357/Android 9\nX-Dev-Ad-Id: REDACTED\nx-reddit-session: REDACTED\nx-reddit-loid: REDACTED\nx-reddaid: REDACTED\nContent-Type: application/x-www-form-urlencoded\nContent-Length: 327\nHost: oauth.reddit.com\nConnection: keep-alive\nAccept-Encoding: gzip, deflate\n\ntransaction_id=GPA.3390-9967-2355-57063&token=effmpcoplmjonhljkheipnce.AO-J1OyQ3ZXb7XM7JwoJPJqpNP3LgWYqHYUUmOE7o5hCzQtf4TC8GL0i71zvRVeZKl-I5rlQCfM0ID3Z0P8CTFSUmhbdbPvQwOIN0164LBE647_lDvB9aHzk2naeC59hSFrtJJYkYj2b&package_name=com.reddit.frontpage&product_id=com.reddit.coins_1&correlation_id=394e65c9-5f9d-45e7-a9b4-498ed64251cd\n```\n\n- We can simply repeat this request in parallel to get more coins.\n\nI did 10 parallel requests and got 9 of them through. An actual attacker will do more requests and get more coins. Like for example, they can do 40 requests and maybe if 35 of them get through they have 35x times the coins intended.\n\nTransaction ID for reference: `GPA.3390-9967-2355-57063`\n\nProof:\n{F724269}\n{F724270}\n{F724271}\n███\n\nRegards,\nYash\n\n## Impact\n\nDue to a race condition on https://oauth.reddit.com/api/v2/gold/android/verify_purchase, an attacker can get more coins than what they purchased it for. This can lead to a huge business loss for Reddit, that's why I have marked this as High.",
+  "weakness": {
+    "id": 105,
+    "name": "Time-of-check Time-of-use (TOCTOU) Race Condition"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 724269,
+      "file_name": "Screenshot_20200221-201400.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/E95GEunySCPXMUSHw23cSwsf?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_20200221-201400.jpg%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_20200221-201400.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6SCAH72%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133828Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDu%2B5Pwo%2F34eoeVeuWsr%2Ff9B54eFSJHpHqs9we%2BjQAH6gIhALp00VqCzQ3yXDicmppc8nMEwhMltHZsqN0RcGzFE1GqKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igwkers7f9aKGbx%2BvDcqjwVWDMAhBUKhOq6mxVC7xmKOa%2FU2AiQBQKvDNaKfEmdipLMP6n95LC8VlOQ3Ca%2B7a8IxSNPEW%2FMJrckmzRQkQn5Pvo7LyCxG1l6k7KZzOYPdFRTU7P2FcXBvM6OhRy8ERlHZ1Ufnved4qCHN0953KV512I88RdKF2UQ9KA9EEzg3ey2SzXbnBk2JKsmpPRc0sUDb4ZMn4GDyk%2B2mbDjFILmQt6lr%2B6v0UoAJ%2B7v4%2F%2F852Q6Ruj9P1iez9HOSmDy3175zVvNBeZ4WctM1b8jW6o%2BmI4wZT%2FgWlgSufI1k6yaDWkc%2FE3Bn%2BpLvQoQXU80KrdN1Yr3AjY%2BuRyqxmectMc5y%2Br2%2F%2FwomOAO3I7t5j85rAvGeCLnU1ZAYisFSaSSgAJ%2BfsZD3xX9YCITIgC401%2F5etOaBcdLCaIxhXTp4wk5QS7eRBWvkzPZGEUcM52Rtz1NPZ0uXWarmK9P4ZIqYLWu82nHAH0wf3c3zd07rclVWahRXRkxP0wL3906s66oMXu%2FAgOj02dajNNZpgK8AaMKZXh5LU98RMkHWul32xDirzkDtJ6wBhMOXNHeLLut%2FijTOpDPFtCEBcHCr43hYLb1oSRkvigVVHtwhd%2BDjkszCy1F3hxu7H2ujIa9DoZ20hfrH4QAdqgLvpCC5kvd9Mdm9%2Fx13AdQjdUqxw2uU5HHCcUUMvji7mFcM0YKL33beYGIrXk5AJSUULfcFoq3Vln%2FoLmEL9STeERNxXuI9ijvLiCJCbUpcqNlCitD7ewAHGbNSSxgqcuRKjxMizmXSxM5uuuRQlbl7%2BOU8q4LcVoDIFjj15cH0GRJIGCdM2OT1aQG%2F%2FURgsiaYaysR3DfHV5zWoNx%2FNh%2FdRuvtdIdbsxviMKq0ra4GOrABb%2BYWX5qJazI%2FwiuYHFwT6C%2FymmUklRtb8O7FwtNQp8ZsagCHes2g1O8LOYf5T0%2FOXV0bp7oUjKh25bYYogztfc9XxMWj9SG%2BcrOe8OCs8YNKO4wu1gapV5ceXDZq%2FbF7bPsNEkzubLAYNEzVpO8uqKPZd6oKWBP%2Frue89n87JX%2FKDXf2RuT5sO6X4%2FoVBQryJS%2B7K2SqOzxLHHOKg0mmsmeYRh0fWGzJhtEb%2B0a4xOk%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=8045182a08f0297bd90632aaab09982b783e5c348fe327871741d0984216a35e",
+      "file_size": 146181,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 724270,
+      "file_name": "Screen_Shot_2020-02-21_at_8.26.55_PM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/HmiX2sdp4dLxBwb4ULwvnzEd?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2020-02-21_at_8.26.55_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2020-02-21_at_8.26.55_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6SCAH72%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133828Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDu%2B5Pwo%2F34eoeVeuWsr%2Ff9B54eFSJHpHqs9we%2BjQAH6gIhALp00VqCzQ3yXDicmppc8nMEwhMltHZsqN0RcGzFE1GqKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igwkers7f9aKGbx%2BvDcqjwVWDMAhBUKhOq6mxVC7xmKOa%2FU2AiQBQKvDNaKfEmdipLMP6n95LC8VlOQ3Ca%2B7a8IxSNPEW%2FMJrckmzRQkQn5Pvo7LyCxG1l6k7KZzOYPdFRTU7P2FcXBvM6OhRy8ERlHZ1Ufnved4qCHN0953KV512I88RdKF2UQ9KA9EEzg3ey2SzXbnBk2JKsmpPRc0sUDb4ZMn4GDyk%2B2mbDjFILmQt6lr%2B6v0UoAJ%2B7v4%2F%2F852Q6Ruj9P1iez9HOSmDy3175zVvNBeZ4WctM1b8jW6o%2BmI4wZT%2FgWlgSufI1k6yaDWkc%2FE3Bn%2BpLvQoQXU80KrdN1Yr3AjY%2BuRyqxmectMc5y%2Br2%2F%2FwomOAO3I7t5j85rAvGeCLnU1ZAYisFSaSSgAJ%2BfsZD3xX9YCITIgC401%2F5etOaBcdLCaIxhXTp4wk5QS7eRBWvkzPZGEUcM52Rtz1NPZ0uXWarmK9P4ZIqYLWu82nHAH0wf3c3zd07rclVWahRXRkxP0wL3906s66oMXu%2FAgOj02dajNNZpgK8AaMKZXh5LU98RMkHWul32xDirzkDtJ6wBhMOXNHeLLut%2FijTOpDPFtCEBcHCr43hYLb1oSRkvigVVHtwhd%2BDjkszCy1F3hxu7H2ujIa9DoZ20hfrH4QAdqgLvpCC5kvd9Mdm9%2Fx13AdQjdUqxw2uU5HHCcUUMvji7mFcM0YKL33beYGIrXk5AJSUULfcFoq3Vln%2FoLmEL9STeERNxXuI9ijvLiCJCbUpcqNlCitD7ewAHGbNSSxgqcuRKjxMizmXSxM5uuuRQlbl7%2BOU8q4LcVoDIFjj15cH0GRJIGCdM2OT1aQG%2F%2FURgsiaYaysR3DfHV5zWoNx%2FNh%2FdRuvtdIdbsxviMKq0ra4GOrABb%2BYWX5qJazI%2FwiuYHFwT6C%2FymmUklRtb8O7FwtNQp8ZsagCHes2g1O8LOYf5T0%2FOXV0bp7oUjKh25bYYogztfc9XxMWj9SG%2BcrOe8OCs8YNKO4wu1gapV5ceXDZq%2FbF7bPsNEkzubLAYNEzVpO8uqKPZd6oKWBP%2Frue89n87JX%2FKDXf2RuT5sO6X4%2FoVBQryJS%2B7K2SqOzxLHHOKg0mmsmeYRh0fWGzJhtEb%2B0a4xOk%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d779216adf3018a77293e782fa0ae48245375c9248584a345ee12602e160a860",
+      "file_size": 18346,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 724271,
+      "file_name": "Screen_Shot_2020-02-21_at_8.26.39_PM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/SSKn6Ehj93f5rgrommw7m1iC?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2020-02-21_at_8.26.39_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2020-02-21_at_8.26.39_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6SCAH72%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133828Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDu%2B5Pwo%2F34eoeVeuWsr%2Ff9B54eFSJHpHqs9we%2BjQAH6gIhALp00VqCzQ3yXDicmppc8nMEwhMltHZsqN0RcGzFE1GqKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igwkers7f9aKGbx%2BvDcqjwVWDMAhBUKhOq6mxVC7xmKOa%2FU2AiQBQKvDNaKfEmdipLMP6n95LC8VlOQ3Ca%2B7a8IxSNPEW%2FMJrckmzRQkQn5Pvo7LyCxG1l6k7KZzOYPdFRTU7P2FcXBvM6OhRy8ERlHZ1Ufnved4qCHN0953KV512I88RdKF2UQ9KA9EEzg3ey2SzXbnBk2JKsmpPRc0sUDb4ZMn4GDyk%2B2mbDjFILmQt6lr%2B6v0UoAJ%2B7v4%2F%2F852Q6Ruj9P1iez9HOSmDy3175zVvNBeZ4WctM1b8jW6o%2BmI4wZT%2FgWlgSufI1k6yaDWkc%2FE3Bn%2BpLvQoQXU80KrdN1Yr3AjY%2BuRyqxmectMc5y%2Br2%2F%2FwomOAO3I7t5j85rAvGeCLnU1ZAYisFSaSSgAJ%2BfsZD3xX9YCITIgC401%2F5etOaBcdLCaIxhXTp4wk5QS7eRBWvkzPZGEUcM52Rtz1NPZ0uXWarmK9P4ZIqYLWu82nHAH0wf3c3zd07rclVWahRXRkxP0wL3906s66oMXu%2FAgOj02dajNNZpgK8AaMKZXh5LU98RMkHWul32xDirzkDtJ6wBhMOXNHeLLut%2FijTOpDPFtCEBcHCr43hYLb1oSRkvigVVHtwhd%2BDjkszCy1F3hxu7H2ujIa9DoZ20hfrH4QAdqgLvpCC5kvd9Mdm9%2Fx13AdQjdUqxw2uU5HHCcUUMvji7mFcM0YKL33beYGIrXk5AJSUULfcFoq3Vln%2FoLmEL9STeERNxXuI9ijvLiCJCbUpcqNlCitD7ewAHGbNSSxgqcuRKjxMizmXSxM5uuuRQlbl7%2BOU8q4LcVoDIFjj15cH0GRJIGCdM2OT1aQG%2F%2FURgsiaYaysR3DfHV5zWoNx%2FNh%2FdRuvtdIdbsxviMKq0ra4GOrABb%2BYWX5qJazI%2FwiuYHFwT6C%2FymmUklRtb8O7FwtNQp8ZsagCHes2g1O8LOYf5T0%2FOXV0bp7oUjKh25bYYogztfc9XxMWj9SG%2BcrOe8OCs8YNKO4wu1gapV5ceXDZq%2FbF7bPsNEkzubLAYNEzVpO8uqKPZd6oKWBP%2Frue89n87JX%2FKDXf2RuT5sO6X4%2FoVBQryJS%2B7K2SqOzxLHHOKg0mmsmeYRh0fWGzJhtEb%2B0a4xOk%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c4d62783217c6a3a8131aeb4fec49fb252a665a7f7fd617a54fe4cc594a44223",
+      "file_size": 269457,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 25,
+  "voters": [
+    "n1m0",
+    "fanimalikhack",
+    "run_win",
+    "th4nu_0x0",
+    "akashhamal0x01",
+    "naategh",
+    "khizer47",
+    "official_blackhat13",
+    "cryptographer",
+    "ganofins",
+    "and 15 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 18836,
+    "asset_type": "URL",
+    "asset_identifier": "oauth.reddit.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

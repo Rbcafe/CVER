@@ -3,6 +3,7 @@
 ## FOLDERS : structure.
 
 - EXPLOITDB : The "EXPLOITDB" fetched elements.
+- HACKERONE : The "HACKERONE" published reports.
 - NVD : The "NVD" sources from "2002" to "2024".
 - SPLOITUS : The "SPLOITUS" fetched elements.
 
@@ -11,5 +12,6 @@
 - https://www.exploit-db.com
 - https://github.com
 - https://github.com/Rbcafe/CVER
+- https://www.hackerone.com
 - https://nvd.nist.gov
 - https://sploitus.com

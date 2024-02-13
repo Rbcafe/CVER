@@ -1,0 +1,155 @@
+{
+  "id": 392797,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zOTI3OTc=",
+  "url": "https://hackerone.com/reports/392797",
+  "title": "Persistent Cross-Site Scripting in default Laravel installation",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-03-07T16:40:04.000Z",
+  "submitted_at": "2018-03-07T16:40:04.000Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "x1m",
+    "url": "/x1m",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/xNXhVJdYSKdKQpzHT9TUokpW/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 31823,
+    "url": "https://hackerone.com/laravel",
+    "handle": "laravel",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/031/823/cb801092d71c5c72e3bec080347cd5ada548b3d7_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/031/823/cb801092d71c5c72e3bec080347cd5ada548b3d7_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "profile": {
+      "name": "Laravel",
+      "twitter_handle": "",
+      "website": "https://laravel.com/",
+      "about": ""
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": true,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-08-10T15:57:55.973Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": true,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "# Persistent XSS in default Laravel Installation\n\nI have been using the [Laravel](https://laravel.com/) framework for quite a while now and discovered something odd.\n\nWhen following the installation instructions for the latest Laravel version **(5.6.8 at the time of writing)** you will be up and running in a matter of minutes.\n\nEven better: With a single command such as `php artisan make:auth` from the CLI, Laravel will scaffold basic login and registration views and routes.\n\nThis is a very convenient function and saves developers a lot of time. But what if there is some resource included that might be vulnerable? \n\n# POC\n\nVulnerability: Persistent Cross-site Scripting.\n\n## Installation\n\nFollowing the instruction from the [Laravel Docs](https://laravel.com/docs/5.6) we can quickly create a new project with basic authentication.\n\nYou can use the Laravel installer: `laravel new project` (where project is the directory that is going to be used for your new project.)\n\nThis requires you to global require the laravel installer first: `composer global require \"laravel/installer\"`\n\nThe other option is the \"old\" way with Composer: `composer create-project --prefer-dist laravel/laravel project`\n\nAfter running one of the above commands your project will be created and you can start developing a new application. Pretty neat.\n\nI am using the the `Vagrant/Homestead` [box](https://laravel.com/docs/5.6/homestead) for local development.\nIf you haven't tried it and you are developing PHP applications I recommend checking this out!\n\n{F331053}\n\n## User registration and authentication\n\nWe now have a fresh Laravel project. Let's start with building the user registration and authentication functionality: `php artisan make:auth`\n\nThis will create a view, some controllers and database migrations.\n\nWhen this is done all you have to do is `php artisan migrate` and you are ready to go.\n\n{F331052}\n\n## The vulnerability\n\nSo, the setup is ready. Time to show the proof of concept\n\nSince we used the `php artisan make:auth` command we now have a login and registration function.\n\n{F331055}\n\nLet's create a user:\n\n{F331054}\n\nThe vulnerability lies within the username field: using `{{ alert(document.domain) }}`  , Laravel transforms this to `<script>alert(document.domain)</script>` due to Vue.js frontend.\nThis is the default frontend framework that Laravel uses.\n\nAfter checking the `app.js` file in /project/resources/assets/js/ we can see that Laravel indeed uses Vue.js as default frontend framework:\n\n``` javascript\n\n/**\n * First we will load all of this project's JavaScript dependencies which\n * includes Vue and other libraries. It is a great starting point when\n * building robust, powerful web applications using Vue and Laravel.\n */\n\nrequire('./bootstrap');\n\nwindow.Vue = require('vue');\n\n/**\n * Next, we will create a fresh Vue application instance and attach it to\n * the page. Then, you may begin adding components to this application\n * or customize the JavaScript scaffolding to fit your unique needs.\n */\n\nVue.component('example-component', require('./components/ExampleComponent.vue'));\n\nconst app = new Vue({\n    el: '#app'\n});\n\n```\n\nThis is where the vulnerability hides, as Vue sees curly brackets and turns it into `<script>` tags. Also, the `v-pre` tags were not present in the default front end code, combined with the curly brackets this led to the persistent cross-site scripting vulnerability.\n\nAfter authenticating with a registered user that has the payload set as name:\n\n{F331056}\n\nI disclosed this issue to the creator of Laravel through email, later on via Twitter and a blogpost . The issue was fixed with the release of patch **(5.6.9)** within 15 minutes.\n\nThanks for reading, more posts @ https://x1m.nl\n\n[x1m](https://twitter.com/x1m_martijn)",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 331052,
+      "file_name": "phpartisanmigrate.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/331/052/ad9a0c0e8fb5dcdd05fa15898d658275e84f7df1/phpartisanmigrate.png?response-content-disposition=attachment%3B%20filename%3D%22phpartisanmigrate.png%22%3B%20filename%2A%3DUTF-8%27%27phpartisanmigrate.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6K7XUSGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130912Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIA5oUTkOsy%2B%2BNZW%2FsEPkxVR9Nn0bKUQajhMaZJnQUOJJAiBNVU4iwU4izaH0MK0tElopJO3KoogTT8%2FbdWX%2FkbKzuyqyBQh2EAMaDDAxMzYxOTI3NDg0OSIMERsjeYIiXpoQB0OmKo8FUViIVri3eJCOgeD2QGMLKPs4F1%2FjbhNffMNUt%2BfvAGSphgvZY2tU246xkvKwwDTX6TnzUNLh3iGOcuouArS3RIWbEfHSiDDu6%2BVZPx3Wz1I%2FCwS%2BKPH5NwJsBp0BibvHEHHji%2FALBDiXO8PioToytjyaEQNaXmQuLAn84CAb4QekxzofZnprn52iHUoXFyJNf%2Fq3ZqvA4jb30mJAxCPIjnPde1tkpNSGuAfsmY%2ByQYlN7sWxpq5yV%2BTU%2Bz0rt1WjtctGsd6w1yt88Dd%2Br74P8m7ROn2Z0ptQw5A%2BWNmX1Wanb7ILpRxe8QeaZaokqgxiSrVfnWtNKgnVUga2Z0moK4hOWv539koLmT4PBBuxJlSyZWyeMoBemGmSCiOxOKwmrf%2BCK%2FG1BpNYsaCmjPVr2A49O9rh48uqEFc8uvejj87y8pQoGWAlFjsxe1QzTC0haaEIYGygiAnZI6IKmy2%2BNlrPwjgcdHQnc15lnYbAokFqg1uW1UzqkUE4c44dN5JbBhzJaJz14CGqvz2LbrkrxeapW3SunevCGGfJdcClV%2F0zJwxxOPm7TYbX7PHfVKaL7pLvGt6ShxVaeJzf1nAj8m2nfGj9L5WdfZ6Sb9aD7w08GXkqVBejxqPrEzu%2Fin49ua4mt8x0hItGe5i0jUq8p%2BuZQ93zKwP09dFgsV6qPlGtXKwW1fddd9jt%2Bnnp1fwfIxbu4spfYa8nFjzgPqH7T%2F%2FJQgaw6dXm%2Fi4%2FblBIP3pX1Sf8fOovW1YithPw4Jt%2FdibdeIaKPPXUhJeeypNj7zindWYEDmbdjQ6xKgYfOTCGv3Kveuz%2BrIe58j5hhTO6SOGM5oLaEPjukGlkwR0S6pSULxstSwXhSCM4K2grCjC%2Fvq2uBjqyASBnlNoKKu8wzQ1P%2F0BlH14PlBBt%2Fm%2BFzSC4hnyN21lioiA3qg372zbcFqxrMin8PkMDjYnDERYVShxZWmk7L62lyLmDmK6ddoZeeuZn0a%2BBvBT61yW5%2Fafe16Wi38LTWHakxXOTJqfqznIB1OO6RKIWbBpba3WDGpf5V64%2B0hKThL7teXpfRzoD3U%2BjQs%2B7q62Fy7YrQ7qeIWla%2FIkEaOKDajC8wFKHIsPw6ZwsIvBIndQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=61e72fd5b0eeed4b57b3338875f422b066438c34fdcda8960514e7a8c6950af8",
+      "file_size": 42709,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 331053,
+      "file_name": "laravelinstall.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/331/053/b8863b455cb6f5399a5154b844028fd28da5542b/laravelinstall.png?response-content-disposition=attachment%3B%20filename%3D%22laravelinstall.png%22%3B%20filename%2A%3DUTF-8%27%27laravelinstall.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6K7XUSGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130912Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIA5oUTkOsy%2B%2BNZW%2FsEPkxVR9Nn0bKUQajhMaZJnQUOJJAiBNVU4iwU4izaH0MK0tElopJO3KoogTT8%2FbdWX%2FkbKzuyqyBQh2EAMaDDAxMzYxOTI3NDg0OSIMERsjeYIiXpoQB0OmKo8FUViIVri3eJCOgeD2QGMLKPs4F1%2FjbhNffMNUt%2BfvAGSphgvZY2tU246xkvKwwDTX6TnzUNLh3iGOcuouArS3RIWbEfHSiDDu6%2BVZPx3Wz1I%2FCwS%2BKPH5NwJsBp0BibvHEHHji%2FALBDiXO8PioToytjyaEQNaXmQuLAn84CAb4QekxzofZnprn52iHUoXFyJNf%2Fq3ZqvA4jb30mJAxCPIjnPde1tkpNSGuAfsmY%2ByQYlN7sWxpq5yV%2BTU%2Bz0rt1WjtctGsd6w1yt88Dd%2Br74P8m7ROn2Z0ptQw5A%2BWNmX1Wanb7ILpRxe8QeaZaokqgxiSrVfnWtNKgnVUga2Z0moK4hOWv539koLmT4PBBuxJlSyZWyeMoBemGmSCiOxOKwmrf%2BCK%2FG1BpNYsaCmjPVr2A49O9rh48uqEFc8uvejj87y8pQoGWAlFjsxe1QzTC0haaEIYGygiAnZI6IKmy2%2BNlrPwjgcdHQnc15lnYbAokFqg1uW1UzqkUE4c44dN5JbBhzJaJz14CGqvz2LbrkrxeapW3SunevCGGfJdcClV%2F0zJwxxOPm7TYbX7PHfVKaL7pLvGt6ShxVaeJzf1nAj8m2nfGj9L5WdfZ6Sb9aD7w08GXkqVBejxqPrEzu%2Fin49ua4mt8x0hItGe5i0jUq8p%2BuZQ93zKwP09dFgsV6qPlGtXKwW1fddd9jt%2Bnnp1fwfIxbu4spfYa8nFjzgPqH7T%2F%2FJQgaw6dXm%2Fi4%2FblBIP3pX1Sf8fOovW1YithPw4Jt%2FdibdeIaKPPXUhJeeypNj7zindWYEDmbdjQ6xKgYfOTCGv3Kveuz%2BrIe58j5hhTO6SOGM5oLaEPjukGlkwR0S6pSULxstSwXhSCM4K2grCjC%2Fvq2uBjqyASBnlNoKKu8wzQ1P%2F0BlH14PlBBt%2Fm%2BFzSC4hnyN21lioiA3qg372zbcFqxrMin8PkMDjYnDERYVShxZWmk7L62lyLmDmK6ddoZeeuZn0a%2BBvBT61yW5%2Fafe16Wi38LTWHakxXOTJqfqznIB1OO6RKIWbBpba3WDGpf5V64%2B0hKThL7teXpfRzoD3U%2BjQs%2B7q62Fy7YrQ7qeIWla%2FIkEaOKDajC8wFKHIsPw6ZwsIvBIndQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=59a9ec3ec9f3bbb41a84b584fdfd78ee7b90ecd6176bba69b4af282598fdf3ca",
+      "file_size": 58467,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 331054,
+      "file_name": "registerpayload.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/331/054/1c911c62fa9b0b6e2454c172b28295fcc9c78e33/registerpayload.png?response-content-disposition=attachment%3B%20filename%3D%22registerpayload.png%22%3B%20filename%2A%3DUTF-8%27%27registerpayload.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6K7XUSGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130912Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIA5oUTkOsy%2B%2BNZW%2FsEPkxVR9Nn0bKUQajhMaZJnQUOJJAiBNVU4iwU4izaH0MK0tElopJO3KoogTT8%2FbdWX%2FkbKzuyqyBQh2EAMaDDAxMzYxOTI3NDg0OSIMERsjeYIiXpoQB0OmKo8FUViIVri3eJCOgeD2QGMLKPs4F1%2FjbhNffMNUt%2BfvAGSphgvZY2tU246xkvKwwDTX6TnzUNLh3iGOcuouArS3RIWbEfHSiDDu6%2BVZPx3Wz1I%2FCwS%2BKPH5NwJsBp0BibvHEHHji%2FALBDiXO8PioToytjyaEQNaXmQuLAn84CAb4QekxzofZnprn52iHUoXFyJNf%2Fq3ZqvA4jb30mJAxCPIjnPde1tkpNSGuAfsmY%2ByQYlN7sWxpq5yV%2BTU%2Bz0rt1WjtctGsd6w1yt88Dd%2Br74P8m7ROn2Z0ptQw5A%2BWNmX1Wanb7ILpRxe8QeaZaokqgxiSrVfnWtNKgnVUga2Z0moK4hOWv539koLmT4PBBuxJlSyZWyeMoBemGmSCiOxOKwmrf%2BCK%2FG1BpNYsaCmjPVr2A49O9rh48uqEFc8uvejj87y8pQoGWAlFjsxe1QzTC0haaEIYGygiAnZI6IKmy2%2BNlrPwjgcdHQnc15lnYbAokFqg1uW1UzqkUE4c44dN5JbBhzJaJz14CGqvz2LbrkrxeapW3SunevCGGfJdcClV%2F0zJwxxOPm7TYbX7PHfVKaL7pLvGt6ShxVaeJzf1nAj8m2nfGj9L5WdfZ6Sb9aD7w08GXkqVBejxqPrEzu%2Fin49ua4mt8x0hItGe5i0jUq8p%2BuZQ93zKwP09dFgsV6qPlGtXKwW1fddd9jt%2Bnnp1fwfIxbu4spfYa8nFjzgPqH7T%2F%2FJQgaw6dXm%2Fi4%2FblBIP3pX1Sf8fOovW1YithPw4Jt%2FdibdeIaKPPXUhJeeypNj7zindWYEDmbdjQ6xKgYfOTCGv3Kveuz%2BrIe58j5hhTO6SOGM5oLaEPjukGlkwR0S6pSULxstSwXhSCM4K2grCjC%2Fvq2uBjqyASBnlNoKKu8wzQ1P%2F0BlH14PlBBt%2Fm%2BFzSC4hnyN21lioiA3qg372zbcFqxrMin8PkMDjYnDERYVShxZWmk7L62lyLmDmK6ddoZeeuZn0a%2BBvBT61yW5%2Fafe16Wi38LTWHakxXOTJqfqznIB1OO6RKIWbBpba3WDGpf5V64%2B0hKThL7teXpfRzoD3U%2BjQs%2B7q62Fy7YrQ7qeIWla%2FIkEaOKDajC8wFKHIsPw6ZwsIvBIndQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d547de3dafa04fafc1766d8dc6b76f4fa39114ce8cb53b97529efd47eaaf98ac",
+      "file_size": 18004,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 331055,
+      "file_name": "register.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/331/055/f69c502fa531c390a74718075a552be1f43be118/register.png?response-content-disposition=attachment%3B%20filename%3D%22register.png%22%3B%20filename%2A%3DUTF-8%27%27register.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6K7XUSGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130912Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIA5oUTkOsy%2B%2BNZW%2FsEPkxVR9Nn0bKUQajhMaZJnQUOJJAiBNVU4iwU4izaH0MK0tElopJO3KoogTT8%2FbdWX%2FkbKzuyqyBQh2EAMaDDAxMzYxOTI3NDg0OSIMERsjeYIiXpoQB0OmKo8FUViIVri3eJCOgeD2QGMLKPs4F1%2FjbhNffMNUt%2BfvAGSphgvZY2tU246xkvKwwDTX6TnzUNLh3iGOcuouArS3RIWbEfHSiDDu6%2BVZPx3Wz1I%2FCwS%2BKPH5NwJsBp0BibvHEHHji%2FALBDiXO8PioToytjyaEQNaXmQuLAn84CAb4QekxzofZnprn52iHUoXFyJNf%2Fq3ZqvA4jb30mJAxCPIjnPde1tkpNSGuAfsmY%2ByQYlN7sWxpq5yV%2BTU%2Bz0rt1WjtctGsd6w1yt88Dd%2Br74P8m7ROn2Z0ptQw5A%2BWNmX1Wanb7ILpRxe8QeaZaokqgxiSrVfnWtNKgnVUga2Z0moK4hOWv539koLmT4PBBuxJlSyZWyeMoBemGmSCiOxOKwmrf%2BCK%2FG1BpNYsaCmjPVr2A49O9rh48uqEFc8uvejj87y8pQoGWAlFjsxe1QzTC0haaEIYGygiAnZI6IKmy2%2BNlrPwjgcdHQnc15lnYbAokFqg1uW1UzqkUE4c44dN5JbBhzJaJz14CGqvz2LbrkrxeapW3SunevCGGfJdcClV%2F0zJwxxOPm7TYbX7PHfVKaL7pLvGt6ShxVaeJzf1nAj8m2nfGj9L5WdfZ6Sb9aD7w08GXkqVBejxqPrEzu%2Fin49ua4mt8x0hItGe5i0jUq8p%2BuZQ93zKwP09dFgsV6qPlGtXKwW1fddd9jt%2Bnnp1fwfIxbu4spfYa8nFjzgPqH7T%2F%2FJQgaw6dXm%2Fi4%2FblBIP3pX1Sf8fOovW1YithPw4Jt%2FdibdeIaKPPXUhJeeypNj7zindWYEDmbdjQ6xKgYfOTCGv3Kveuz%2BrIe58j5hhTO6SOGM5oLaEPjukGlkwR0S6pSULxstSwXhSCM4K2grCjC%2Fvq2uBjqyASBnlNoKKu8wzQ1P%2F0BlH14PlBBt%2Fm%2BFzSC4hnyN21lioiA3qg372zbcFqxrMin8PkMDjYnDERYVShxZWmk7L62lyLmDmK6ddoZeeuZn0a%2BBvBT61yW5%2Fafe16Wi38LTWHakxXOTJqfqznIB1OO6RKIWbBpba3WDGpf5V64%2B0hKThL7teXpfRzoD3U%2BjQs%2B7q62Fy7YrQ7qeIWla%2FIkEaOKDajC8wFKHIsPw6ZwsIvBIndQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=cb6394598c93fe21fc279c6fbab68dc2fb71bf9432b702c96de422488eb30d36",
+      "file_size": 17272,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 331056,
+      "file_name": "xsspoc.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/331/056/a87e575bccb74cf7394873da8b0cdc9d232ac00a/xsspoc.png?response-content-disposition=attachment%3B%20filename%3D%22xsspoc.png%22%3B%20filename%2A%3DUTF-8%27%27xsspoc.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6K7XUSGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130912Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIA5oUTkOsy%2B%2BNZW%2FsEPkxVR9Nn0bKUQajhMaZJnQUOJJAiBNVU4iwU4izaH0MK0tElopJO3KoogTT8%2FbdWX%2FkbKzuyqyBQh2EAMaDDAxMzYxOTI3NDg0OSIMERsjeYIiXpoQB0OmKo8FUViIVri3eJCOgeD2QGMLKPs4F1%2FjbhNffMNUt%2BfvAGSphgvZY2tU246xkvKwwDTX6TnzUNLh3iGOcuouArS3RIWbEfHSiDDu6%2BVZPx3Wz1I%2FCwS%2BKPH5NwJsBp0BibvHEHHji%2FALBDiXO8PioToytjyaEQNaXmQuLAn84CAb4QekxzofZnprn52iHUoXFyJNf%2Fq3ZqvA4jb30mJAxCPIjnPde1tkpNSGuAfsmY%2ByQYlN7sWxpq5yV%2BTU%2Bz0rt1WjtctGsd6w1yt88Dd%2Br74P8m7ROn2Z0ptQw5A%2BWNmX1Wanb7ILpRxe8QeaZaokqgxiSrVfnWtNKgnVUga2Z0moK4hOWv539koLmT4PBBuxJlSyZWyeMoBemGmSCiOxOKwmrf%2BCK%2FG1BpNYsaCmjPVr2A49O9rh48uqEFc8uvejj87y8pQoGWAlFjsxe1QzTC0haaEIYGygiAnZI6IKmy2%2BNlrPwjgcdHQnc15lnYbAokFqg1uW1UzqkUE4c44dN5JbBhzJaJz14CGqvz2LbrkrxeapW3SunevCGGfJdcClV%2F0zJwxxOPm7TYbX7PHfVKaL7pLvGt6ShxVaeJzf1nAj8m2nfGj9L5WdfZ6Sb9aD7w08GXkqVBejxqPrEzu%2Fin49ua4mt8x0hItGe5i0jUq8p%2BuZQ93zKwP09dFgsV6qPlGtXKwW1fddd9jt%2Bnnp1fwfIxbu4spfYa8nFjzgPqH7T%2F%2FJQgaw6dXm%2Fi4%2FblBIP3pX1Sf8fOovW1YithPw4Jt%2FdibdeIaKPPXUhJeeypNj7zindWYEDmbdjQ6xKgYfOTCGv3Kveuz%2BrIe58j5hhTO6SOGM5oLaEPjukGlkwR0S6pSULxstSwXhSCM4K2grCjC%2Fvq2uBjqyASBnlNoKKu8wzQ1P%2F0BlH14PlBBt%2Fm%2BFzSC4hnyN21lioiA3qg372zbcFqxrMin8PkMDjYnDERYVShxZWmk7L62lyLmDmK6ddoZeeuZn0a%2BBvBT61yW5%2Fafe16Wi38LTWHakxXOTJqfqznIB1OO6RKIWbBpba3WDGpf5V64%2B0hKThL7teXpfRzoD3U%2BjQs%2B7q62Fy7YrQ7qeIWla%2FIkEaOKDajC8wFKHIsPw6ZwsIvBIndQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bb1b2c38473c0ae2246ba9036b35ca88b64f3575f215b363ffcd748be2414810",
+      "file_size": 46011,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 57,
+  "voters": [
+    "irvinlim",
+    "barbie_girl",
+    "dirk",
+    "dyuen",
+    "alp",
+    "jobert",
+    "michiel",
+    "sameerphad72",
+    "spam404",
+    "ali",
+    "and 47 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.6,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "low",
+      "availability": "high"
+    }
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

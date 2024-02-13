@@ -1,0 +1,134 @@
+{
+  "id": 674426,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82NzQ0MjY=",
+  "url": "https://hackerone.com/reports/674426",
+  "title": "XSS For Profile Name",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2019-08-15T09:48:11.561Z",
+  "submitted_at": "2019-08-15T09:48:11.561Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mindingdata",
+    "url": "/mindingdata",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17443,
+    "url": "https://hackerone.com/vanilla",
+    "handle": "vanilla",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Vanilla",
+      "twitter_handle": "vanilla",
+      "website": "http://vanillaforums.com",
+      "about": "Vanilla is a powerfully simple discussion forum you can easily customize to make as unique as your community."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2020-03-25T19:41:54.386Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-02-24T19:41:53.443Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary:**\n\nIn short, if your username is something as simple as <script>alert(1)</script> this will not be filtered when viewing your profile page. The unfiltered script alert is echo'd underneath your image in your profile. This can be viewed by anyone viewing your profile (Although in some cases the browser will attempt to block it so you might not see it immediately - but it will show in the console etc).\n\nWhile you are unable to change your username to have <> tags via the web, I noticed if I edited the name directly in the database I could get it to prompt. \n\nFrom there I found two ways to make your name accept tags. \n\n- via the API, you can create a user with a script tag as a name and it goes through fine. \n- via social logins. Although Facebook, Twitter and Google all block <> tags in their \"Name\" field, things like Github and Steam do not and the social login plugins take the \"name\" wholesale without any filtering. \n\n**Description:**\n\n## Steps to reproduce:\n\nYou can ofcourse just edit the name of a user in the gdn_user table if you want to short circuit it. Otherwise... \n\n1. Call the API (Even via Swagger in the admin panel) with the following : (RoleId may need to be changed to suite local install)\n\n{\n  \"bypassSpam\": false,\n  \"email\": \"test@test.com\",\n  \"emailConfirmed\": true,\n  \"name\": \"<script>alert(1)</script>\",\n  \"password\": \"P@ssw0rd\",\n  \"photo\": \"\",\n  \"roleID\": [\n    8\n  ]\n}\n\n2. Login as this user/view this users profile via the front end web. You should see the alert. \n\n(And again alternatively you can set up OpenID/Social Logins with a provider that also allows script tags in the name and it will come through also)\n\n## Anything else we should know?\n\nWhile the web does block it so the exploit relies on either an API integration or a social login, I think relying on third parties to block script tags on their end so they don't get into the Vanilla DB is probably pretty dangerous. If Vanilla has inbuilt support for something like Github this would be a much larger problem etc.\n\n## Impact\n\nStandard XSS rules apply",
+  "bounty_amount": "300.0",
+  "formatted_bounty": "$300",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2020-03-25T19:41:53.506Z",
+  "allow_singular_disclosure_after": -122665492.36795916,
+  "singular_disclosure_allowed": true,
+  "vote_count": 32,
+  "voters": [
+    "bayes_the_hacker",
+    "rapiddns",
+    "mashoud1122",
+    "ali",
+    "term1nal",
+    "idiablos",
+    "coinb8797",
+    "mightyowl",
+    "mindingdata",
+    "h3lium",
+    "and 22 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 7.1,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 14811,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/vanilla/community",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

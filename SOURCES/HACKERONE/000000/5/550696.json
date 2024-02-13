@@ -1,0 +1,145 @@
+{
+  "id": 550696,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81NTA2OTY=",
+  "url": "https://hackerone.com/reports/550696",
+  "title": "CVE-2019-5436: Heap Buffer Overflow at lib/tftp.c",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2019-04-29T18:08:38.242Z",
+  "submitted_at": "2019-04-29T18:08:38.242Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "l00p3r",
+    "url": "/l00p3r",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/229/925/fb136992f17782808cc74ba197a6ceef9d9899c1_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 35663,
+    "url": "https://hackerone.com/curl",
+    "handle": "curl",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "curl",
+      "twitter_handle": "",
+      "website": "https://curl.se",
+      "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2019-5436"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-05-31T20:35:44.951Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-05-31T11:11:11.228Z",
+  "team_member_agreed_on_going_public_at": "2019-05-31T20:35:44.871Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nA heap buffer overflow can occur at line 1114 in file `lib/tftp.c` due to the fact of `state->blksize` containing the default size instead of containing the one specified in the `--tftp-blksize` parameter.\n\nThis bug could lead to a **crash** or maybe to **RCE** in the case the attacker also had a memory leak.\n\n\n### Vulnerable line:\n```\nstate->rbytes = (int)recvfrom(state->sockfd,\n                                (void *)state->rpacket.data,\n                                state->blksize + 4,\n                                0,\n                                (struct sockaddr *)&fromaddr,\n                                &fromlen);\n```\n\n\n## Steps To Reproduce:\n\n  1. Download the server script\n  1. Run it and bind to an address: `$ python evil-server.py IP PORT`\n  1. Connect to that server with curl: `$ curl --tftp-blksize N tftp://IP:PORT`\nWhere **N** should be a number lower than 293.\n\n## Impact\n\n* An attacker would also need a memory leak in order to gain full RCE.\n* The victim should explicitly set the `--blksize` argument to a value inferior to 293.\n\nThus, the impact is not very high but it's still quite dangerous to not release a patch.",
+  "bounty_amount": "200.0",
+  "formatted_bounty": "$200",
+  "weakness": {
+    "id": 5,
+    "name": "Heap Overflow"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 478252,
+      "file_name": "evil-server.py",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/478/252/8d6391cef3216646017f17e05d2d75ad582223b4/evil-server.py?response-content-disposition=attachment%3B%20filename%3D%22evil-server.py%22%3B%20filename%2A%3DUTF-8%27%27evil-server.py&response-content-type=text%2Fx-python&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5DNGZVVG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132205Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCICHLJPsWBp5sr6QP325sn3QmpUNWJkG1Rn9WpoDeqIg3AiEAiF8%2BSn1jT5ntK2r0sSCmNUGX9ZemOesqgbKFIUBuyWMqsAUIdhADGgwwMTM2MTkyNzQ4NDkiDD5dvB5yVZqhTClUciqNBapM8w3AEMj9vUut8ipBYyxkUXmIzrvgZ28gnqyQ6mhhFeeoPRU%2FpSxAJl9%2BpYrNip4ItC3BkgYDlk9abNplTrvNVi9OhutOp4ZE1wWKJlPpOzKXUOBoUe%2FRWzdh9xwCJuGDbGkQ7ngPegxy3y6LCFP5wP6sjVHLhEaT7e6L88U08XjQmZEZxAGGE5IESnoSUeW4EvOXBp5DQcR1t39zozskg4dISh5C2Ff6jgUnjDu9sYdoZA7dJgdByDPIA4VjLFdTVEjklaMXr4YtD7wTmG9hWanDSlJ11qBRruTBFPloL6Kq2YKCTOj8wC0UP9ctvuxeNwV7QKFhmu8bB6csA5mvLVxUvoelFVuLgYYhtCHZDGPo54Dzbn5soqg%2FJjzSexzqrvBtELxoPLfeuC9o2KpP0lfY7eBpdmAqxwpFPSBaxPJ66SICOozWWbpDqIqnFrnvz%2BXEMOe5z7dsDsKieBfX52kLKmUuAGG9Tv0jWo8CMlR7jOkbaaLMpho6b6rMGTGHucZmDgIYIwvcdVrd1njiiPPNTxx6qoUNz0WdZUAlGWBtiCv4fABRuY7ZjWGOAD0PFPT8FsbFoQ6mkw28XZaoMR735I%2FMJlHvafhgKlPNFVKsVzF%2F3GpLM7ECVpPoLq9VNtYgjHnuZ0U6e4r9781nElHBM1WdTrWia%2F9%2FJIwTVLKAnxWWWscJrGFA8kraj4Xrc3KPePGa2suQ5Fim1jPzWeLA%2Bfr7aEab%2FJVFYU%2F%2BIs0KPZarsTUlG%2B656GYmZcf%2Fa2gbirYZQRBwlZlZahqG0l8iMLSK0TCfJOwBIAuJd7wWISVFGCV0aYj458Ker2Pjca9HvyzcI8qiuhyhF68QiOr9MFM67rM70ExPMPHFra4GOrEB58pDHOC4avlR6xYMRYlBCOP%2F5dyV6PT6gr9Vs5I8zhf3jjEkzka6Au6GNesJTj11PvvCjC1fFqxeJeAvkQZYn2pzivrXx7RBTeI6fAxztLLN3Lu9uyUpmO1SqciT2zDRX2wO0JTz6DtjgCLlfMq%2FHCRF8EoZi0alN2KMbAkJBqtFpznpmUaem89ejwzJcKJLTQiW1rXarR6VZiM7isz2KsMf5L4b0KstHgl%2Fux6s5iUg&X-Amz-SignedHeaders=host&X-Amz-Signature=75412cf53da59394c3d3703d7dcd87f910d7f47ae9ae1f73e8cc10e9da22eadf",
+      "file_size": 1748,
+      "type": "text/x-python",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2019-06-30T11:11:11.319Z",
+  "allow_singular_disclosure_after": -145937454.34168893,
+  "singular_disclosure_allowed": true,
+  "vote_count": 13,
+  "voters": [
+    "foobar7",
+    "ali",
+    "already_in_use_",
+    "lumbridge",
+    "cr4xerbik4sh",
+    "cryptographer",
+    "odraude",
+    "vs19",
+    "brumbrum",
+    "junquera",
+    "and 3 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 1.8,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "adjacent",
+      "attack_complexity": "high",
+      "privileges_required": "high",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "none",
+      "availability": "low"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 18844,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/curl/curl",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,148 @@
+{
+  "id": 1817214,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODE3MjE0",
+  "url": "https://hackerone.com/reports/1817214",
+  "title": "Mystery with a leaked token and Reusability of email confirmation link leading to Account Takeover",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2022-12-26T20:08:14.758Z",
+  "submitted_at": "2022-12-26T20:08:14.892Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "gokulsk",
+    "url": "/gokulsk",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/azrakaohh9f5dtr165tyh7my1aq9/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 55988,
+    "url": "https://hackerone.com/sorare",
+    "handle": "sorare",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/k3n5dp9m6i6hnr2yzi9je4dud4ph/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/k3n5dp9m6i6hnr2yzi9je4dud4ph/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Sorare",
+      "twitter_handle": "sorare",
+      "website": "https://sorare.com",
+      "about": "Sorare is a global fantasy football game where managers can trade official digital collectibles."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-02-03T14:41:14.518Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-01-04T14:41:11.713Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi Team, \nFirst of all hope you are well and belated christmas wishes! Sorry for this long report. I need to write it long because many things happened during the testing and the report wont be complete if I didnt mention each and everything. During the test I end up modifying another user's profile. I'm sorry for that and I trust your safe harbor policy. \n\nIf you dont want to read everything, please read the first part and must watch the Video POCs.\n\nSo here I'm with a mystery bug and I have a long story to tell. Please listen carefully. I was fed up not getting any bugs and was thinking to try my luck using google dorking. I tried many dorks and finally I came up with this one:\n\nsite:sorare.com inurl:token\n=====================\n{F2092332}\n\nHere, as you can see there are two search results:\n\n1. A random user's Email-confirmation link\n2. A device confirmation link.\nBoth these links consists of tokens respective of the aim of these links. \n\nSo, as I said earlier I was fed up and surfing without hope through these links. \nNow:\n1. I opened up the second result which is of a confirm_device link with a token for a random user.\n2. Initially the site said me the link is no longer valid and redirected to me to a settings option which asked me to upload profile picture.\n3. Initially I thought that link was invalid and it got redirected me to my Sorare profile.\n4. But it wasnt my profile.\n5. The link brought me to a person named JACK3422's profile. Here I'd like to say thanks to Safe Harbor policy. Because I accidently changed the profile picture and some game settings the app asked me to do. Honestly I thought it is my profile.\n=====================\n6. So this leaked device confirmation link allowed me to get into a random person's profile.\n7. Now I forgot to take a POC of this issue and was desparate. I logout from his profile and I tried to use that link again and it wasn't working again. :(\nSo I was about to quit. Before explaining further let me point out the steps worked here:\n\nA. Google dorking using site:sorare.com inurl:token\nB. Go to the second link, i.e; https://sorare.com/confirm_device?token=N04J3Zczv1GaFrniJisN1QgsisoJHQ\nC. Click OK. It redirected me to that persons profile settings.\n\nUnfortunately, the above link doesn't work anymore. So I decided to leave that sadly.\n=====================\n\nThen I opened the first link which is of a email confirmation link. You can guess its result. It was an expired confirmation link. But I have a behavior of trying IDOR everywhere even if it is a random encoded string.\n\nHere  I'd like to mention the flow of Sorare sign up process:\nA user enters email, username and password and on next step sorare sends a confirm email link to the entered email. Only if the mail is confirmed a user can sign in to his new account. \n\nOn clicking email confirmation link after going to mail provider, the user directly enters into his/her account. i.e, this confirmation link signs in users and there is no need to enter credentials again.\n=====================\nSince there is no need to enter credentials again and a email confirmation link can sign in users, imagine if these links are leaked like our google dork results? Anyone can enter in to anyone's account using these email confirmation links right?So the best part is the email confirmation link can be only used once.  That's why when I opened that link it showed the profile is already verified. But what if an attacker can bypass this expired links and get into anyone's account without password? That's what the bug I observed here:\n=====================\nHow I bypassed the confirm link I got using google dorks.\n\nA. Google dork: site:sorare.com inurl:token\nB. Open the first link which is an email confirmation link:(Remember to logout from your sorare account)\n\nhttps://sorare.com/confirm_email?token=Jt7S7WS_4EphEyiDn6z_&redirectUrl=https%3A%2F%2Fsorare.com%2F\n\nC. Now it will show like this: \nErrors: was already confirmed, please try signing in\n\nD. So you may think \"Oh, the link is not valid anymore, we should try some other bugs.\" NO!\n\nJust observe this confirmation link:\n\nAlready used link: https://sorare.com/confirm_email?token=Jt7S7WS_4EphEyiDn6z_&redirectUrl=https%3A%2F%2Fsorare.com%2F  (Invalid)\n=====================\n \nNow here is a token parameter in this URL:\n\ntoken=Jt7S7WS_4EphEyiDn6z_ (invalid token)\n=====================\n\nNow focus on the numbers in this token. So what to do to reuse this link is token is to concentrate on the numbers that stays freely and not in between the alphabets. I mean '4'. Because 4 is not in between those strings but it starts after an underscore. So chage this 4 to 6 or5.\n\nNow the token manipulated to: \n\ntoken=Jt7S7WS_6EphEyiDn6z_  (Valid)\n=====================\n\nAnd the URL changes to: \n\n https://sorare.com/confirm_email?token=Jt7S7WS_6EphEyiDn6z_&redirectUrl=https%3A%2F%2Fsorare.com%2F (Valid)\n=====================\n\n\nE. Do not open this link directly. You need to go through the above steps. Open the link in step B and modify 4 to 6 from the address bar as shown in video poc.\n=====================\n\n{F2092372}\n\nF. So those two google dork results are of same person. Somehow it got leaked and anyone can use it now from Google. What happens if more people's confirmation links and device confirmation links are leaked like this?\n\nNow to check if it is valid for all email confirmation link I created a new account and tested the confirmation link I got.\n\nThe link I got:\n\nhttps://sorare.com/confirm_email?redirectUrl=https%3A%2F%2Fsorare.com%2F&token=qvQfgPqvWV-2FiM5k2f7(Invalid link)\n\nHere I observed the token and changed the number 2(after hyphen) to 5 or something:\n\nhttps://sorare.com/confirm_email?redirectUrl=https%3A%2F%2Fsorare.com%2F&token=qvQfgPqvWV-5FiM5k2f7\n\nBang! Got access to my account without password.\n\nAgain do not open this link directly. First open the invalid link and modify the url from address bar. Then only it works.\n\n{F2092373}\n\nSo that's it.\n\n## Impact\n\nEven though the email confirmation links shows theyre expired they can be reused using this method. Since these links directly sign in users an attacker who got such a leaked link didnt want to know the password to sign in. So this is a highly dangerous bug. Leakage of these links can end up in account takeover easily. (As I did here using Google Dork)",
+  "bounty_amount": "300.0",
+  "formatted_bounty": "$300",
+  "weakness": {
+    "id": 40,
+    "name": "Inadequate Encryption Strength"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 2092332,
+      "file_name": "Screenshot_2022-12-27_00_15_22.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/tb3ytn72iuvhsw99d5ok2brny9qq?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_2022-12-27_00_15_22.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_2022-12-27_00_15_22.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRCRTVIE4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143328Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCeQctGyPvXnU72NvGUmvM0aB0iR%2B3ReIxYE2qLCiw2VwIgQyic82Noq%2FQNRIacH8SD9YwyMLSzJUY5PD%2BMQxm42%2BcqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDD25y2JUZlJK2OU6WyqPBbg7l2HIPDSTaxIUZJJDn8Tn6trTptA2U5ZbpvAD8y4VG9UTF74IWjDh5l48opUUNg3Ggdv3v9pPRorgEeg%2Bt0cTVcBC3Ys8DZw9zxbNGscUvnMasc%2F9jEoPGSi%2F0qA394vVOztSTMWH%2FQRDmRDVzGe3OFxSG%2FKiCccLhDQQlNz4rNDgXi84UTa%2FJIf4%2B7wo5Sl9EkosiQSbG9bQkoJ3LCJ8wo949ry1xJnm8q3NSNvhmiSoqkPYuY0L%2B2VOl9cKxyFN6OpJFga4OKej9TD%2B5Mr9tCXDx2U4PCtxvzg1hL2Qun61lgsZLsZXWc%2F64G%2BcDMMsm0TL%2F8%2FYCO0GhFuQEEE8KHX4jcyQxQ%2BXybMwMuwJwGKTeYQgtTcJf1GJd4CVc6kprwM9ROPdonqZ7dtJfnEAztxRMBvTfRaW5ao6yR%2Fu8JBGbTOt9IDtJCqWjvU16m%2B2Xu%2B1NkHIeLQSZc42z5hKqBV6TfV%2BEoPyEVoHwmSugFJGYxlFO%2Fk9DHGpdGrOSCua0MzJ4Xm8ofejJGoEo62Z2Gfa4TF77cdudEiHTttH42gVWBfO5nG1sldCBkJy7XROJmAnRjOEz5GXa2D4P80Z3%2B7b79AhZyv9wpFpH4efOyAISK%2BUO4SuPEZIEtgzMpfzbfHFxiCJadaIb6dvicqxJbWD7XbkPKUPQTvBkeeCE943JpFNhptae73cB3ht5kmPs1eumBkkaOvtfLFjTAZEHBy8VDu9DQZbXsvXwTvu0dJsQ7ofJrR8%2BwEoUsAoSnSjY7fDzJ%2FJ%2FQWK1yOgQuqVuuEYWszzzH%2B8eP8c%2FCNpNvzhbftjVLhLeHc8OUYyxPANiPV7oh4iSx1MWdK9zHhH0Su6fGdkvHp9Pnyj1Pkwo%2FGtrgY6sQGGpYHfkhc%2F8vURSuovK%2F%2By75LlcMpKqtpNNZno5zr0R%2FX3RqbysXt6ZptOpV0W2W2Z4mtk3N79Mh9ch1InfVgL%2BwzQtS9%2B%2BIdvzw4x5m1yDnpnpA9IZoAA54fDHmDQkUeA9BqYpB6wpQ%2FR%2Bh%2FiGk4bWWRP6iSQusKWzeUSUN7FFbJhU%2FacXW5iO1svwbp7%2FHDesFAT9RFD7Ji6uHPRq08cmTFvN7TosaU3np%2BACQQzbYE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7fe537b23163ba0cf369bb0aaa2256f33f052852a722a6263d0954968dbefe09",
+      "file_size": 129603,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 2092372,
+      "file_name": "Accidental_takeover.mkv",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/mx076p3u6hq29gjqproyqh14sz7i?response-content-disposition=attachment%3B%20filename%3D%22Accidental_takeover.mkv%22%3B%20filename%2A%3DUTF-8%27%27Accidental_takeover.mkv&response-content-type=video%2Fx-matroska&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRCRTVIE4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143328Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCeQctGyPvXnU72NvGUmvM0aB0iR%2B3ReIxYE2qLCiw2VwIgQyic82Noq%2FQNRIacH8SD9YwyMLSzJUY5PD%2BMQxm42%2BcqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDD25y2JUZlJK2OU6WyqPBbg7l2HIPDSTaxIUZJJDn8Tn6trTptA2U5ZbpvAD8y4VG9UTF74IWjDh5l48opUUNg3Ggdv3v9pPRorgEeg%2Bt0cTVcBC3Ys8DZw9zxbNGscUvnMasc%2F9jEoPGSi%2F0qA394vVOztSTMWH%2FQRDmRDVzGe3OFxSG%2FKiCccLhDQQlNz4rNDgXi84UTa%2FJIf4%2B7wo5Sl9EkosiQSbG9bQkoJ3LCJ8wo949ry1xJnm8q3NSNvhmiSoqkPYuY0L%2B2VOl9cKxyFN6OpJFga4OKej9TD%2B5Mr9tCXDx2U4PCtxvzg1hL2Qun61lgsZLsZXWc%2F64G%2BcDMMsm0TL%2F8%2FYCO0GhFuQEEE8KHX4jcyQxQ%2BXybMwMuwJwGKTeYQgtTcJf1GJd4CVc6kprwM9ROPdonqZ7dtJfnEAztxRMBvTfRaW5ao6yR%2Fu8JBGbTOt9IDtJCqWjvU16m%2B2Xu%2B1NkHIeLQSZc42z5hKqBV6TfV%2BEoPyEVoHwmSugFJGYxlFO%2Fk9DHGpdGrOSCua0MzJ4Xm8ofejJGoEo62Z2Gfa4TF77cdudEiHTttH42gVWBfO5nG1sldCBkJy7XROJmAnRjOEz5GXa2D4P80Z3%2B7b79AhZyv9wpFpH4efOyAISK%2BUO4SuPEZIEtgzMpfzbfHFxiCJadaIb6dvicqxJbWD7XbkPKUPQTvBkeeCE943JpFNhptae73cB3ht5kmPs1eumBkkaOvtfLFjTAZEHBy8VDu9DQZbXsvXwTvu0dJsQ7ofJrR8%2BwEoUsAoSnSjY7fDzJ%2FJ%2FQWK1yOgQuqVuuEYWszzzH%2B8eP8c%2FCNpNvzhbftjVLhLeHc8OUYyxPANiPV7oh4iSx1MWdK9zHhH0Su6fGdkvHp9Pnyj1Pkwo%2FGtrgY6sQGGpYHfkhc%2F8vURSuovK%2F%2By75LlcMpKqtpNNZno5zr0R%2FX3RqbysXt6ZptOpV0W2W2Z4mtk3N79Mh9ch1InfVgL%2BwzQtS9%2B%2BIdvzw4x5m1yDnpnpA9IZoAA54fDHmDQkUeA9BqYpB6wpQ%2FR%2Bh%2FiGk4bWWRP6iSQusKWzeUSUN7FFbJhU%2FacXW5iO1svwbp7%2FHDesFAT9RFD7Ji6uHPRq08cmTFvN7TosaU3np%2BACQQzbYE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9d7b80efdbc7945d1ebd157acb27404410959419aa9fe22976f898dbfc002f8f",
+      "file_size": 7421287,
+      "type": "video/x-matroska",
+      "moderated": null
+    },
+    {
+      "id": 2092373,
+      "file_name": "My_Sorare.mkv",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ho2hsgdq9qvs68kjv4pal22m7s0g?response-content-disposition=attachment%3B%20filename%3D%22My_Sorare.mkv%22%3B%20filename%2A%3DUTF-8%27%27My_Sorare.mkv&response-content-type=video%2Fx-matroska&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRCRTVIE4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143328Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCeQctGyPvXnU72NvGUmvM0aB0iR%2B3ReIxYE2qLCiw2VwIgQyic82Noq%2FQNRIacH8SD9YwyMLSzJUY5PD%2BMQxm42%2BcqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDD25y2JUZlJK2OU6WyqPBbg7l2HIPDSTaxIUZJJDn8Tn6trTptA2U5ZbpvAD8y4VG9UTF74IWjDh5l48opUUNg3Ggdv3v9pPRorgEeg%2Bt0cTVcBC3Ys8DZw9zxbNGscUvnMasc%2F9jEoPGSi%2F0qA394vVOztSTMWH%2FQRDmRDVzGe3OFxSG%2FKiCccLhDQQlNz4rNDgXi84UTa%2FJIf4%2B7wo5Sl9EkosiQSbG9bQkoJ3LCJ8wo949ry1xJnm8q3NSNvhmiSoqkPYuY0L%2B2VOl9cKxyFN6OpJFga4OKej9TD%2B5Mr9tCXDx2U4PCtxvzg1hL2Qun61lgsZLsZXWc%2F64G%2BcDMMsm0TL%2F8%2FYCO0GhFuQEEE8KHX4jcyQxQ%2BXybMwMuwJwGKTeYQgtTcJf1GJd4CVc6kprwM9ROPdonqZ7dtJfnEAztxRMBvTfRaW5ao6yR%2Fu8JBGbTOt9IDtJCqWjvU16m%2B2Xu%2B1NkHIeLQSZc42z5hKqBV6TfV%2BEoPyEVoHwmSugFJGYxlFO%2Fk9DHGpdGrOSCua0MzJ4Xm8ofejJGoEo62Z2Gfa4TF77cdudEiHTttH42gVWBfO5nG1sldCBkJy7XROJmAnRjOEz5GXa2D4P80Z3%2B7b79AhZyv9wpFpH4efOyAISK%2BUO4SuPEZIEtgzMpfzbfHFxiCJadaIb6dvicqxJbWD7XbkPKUPQTvBkeeCE943JpFNhptae73cB3ht5kmPs1eumBkkaOvtfLFjTAZEHBy8VDu9DQZbXsvXwTvu0dJsQ7ofJrR8%2BwEoUsAoSnSjY7fDzJ%2FJ%2FQWK1yOgQuqVuuEYWszzzH%2B8eP8c%2FCNpNvzhbftjVLhLeHc8OUYyxPANiPV7oh4iSx1MWdK9zHhH0Su6fGdkvHp9Pnyj1Pkwo%2FGtrgY6sQGGpYHfkhc%2F8vURSuovK%2F%2By75LlcMpKqtpNNZno5zr0R%2FX3RqbysXt6ZptOpV0W2W2Z4mtk3N79Mh9ch1InfVgL%2BwzQtS9%2B%2BIdvzw4x5m1yDnpnpA9IZoAA54fDHmDQkUeA9BqYpB6wpQ%2FR%2Bh%2FiGk4bWWRP6iSQusKWzeUSUN7FFbJhU%2FacXW5iO1svwbp7%2FHDesFAT9RFD7Ji6uHPRq08cmTFvN7TosaU3np%2BACQQzbYE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=15db92742220d82bf3b13793359fc752a6f89ce7a312be5de31e66a7207d763e",
+      "file_size": 17574410,
+      "type": "video/x-matroska",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-02-03T14:41:11.790Z",
+  "allow_singular_disclosure_after": -32399536.808802053,
+  "singular_disclosure_allowed": true,
+  "vote_count": 36,
+  "voters": [
+    "gokulsk",
+    "shreyaschavhan",
+    "zain13",
+    "k3rnel_p4nic",
+    "zy9ard3",
+    "thruster",
+    "13ph03nix",
+    "winteri3coming",
+    "ali",
+    "shubham_srt",
+    "and 26 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 92340,
+    "asset_type": "URL",
+    "asset_identifier": "sorare.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

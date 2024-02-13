@@ -1,0 +1,129 @@
+{
+  "id": 1668723,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjY4NzIz",
+  "url": "https://hackerone.com/reports/1668723",
+  "title": "Security token and handler name leak from window.braveBlockRequests",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2022-08-14T05:32:51.972Z",
+  "submitted_at": "2022-08-14T05:32:52.278Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "nishimunea",
+    "url": "/nishimunea",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/JR7WgikKhgk1DcwtUvQfmtpu/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15688,
+    "url": "https://hackerone.com/brave",
+    "handle": "brave",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Brave Software",
+      "twitter_handle": "brave",
+      "website": "https://brave.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2023-06-22T05:51:03.326Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-06-22T05:51:01.556Z",
+  "team_member_agreed_on_going_public_at": "2023-06-22T05:43:17.665Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\n\nBrave for iOS protects privileged JS to native bridges by using random JavaScript handler names and security tokens.\nHowever, by altering [window.braveBlockRequests](https://github.com/brave/brave-ios/blob/08fb4b0ca43625d706b96158267f0b8da6f63250/Client/Frontend/UserContent/UserScripts/RequestBlocking.js#L6) property from scripts on the web page, these secret values can be stolen.\n\nTo be specific, `braveBlockRequests` property is set after the execution of the script on the page. Thus, by setting the malicious property as an immutable property from the page beforehand as shown below, it is possible to prevent overwriting by the legitimate property.\n```\nObject.defineProperty(window, \"braveBlockRequests\", {\n    enumerable: false,\n    configurable: false,\n    writable: false,\n    value: function(args) { window.args = args } // Steal handler name and token here\n});\n```\n\n## Products affected: \n\n* Brave for iOS Version 1.41.1 (22.7.27.20) with the default settings\n\n## Steps To Reproduce:\n\n* Open https://csrf.jp/2022/brave_token_leak.php\n* Push \"Attack\" button in the page\n* Secret handler name and security token is shown on the page\n\n## Supporting Material/References:\n\n* Attached is a movie file that demonstrate the above steps to reproduce.\n\n## Impact\n\nThe impact depends on which bridge is abused. As further features are implemented in the Brave, its potential risk tends to be increased.",
+  "bounty_amount": "700.0",
+  "formatted_bounty": "$700",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1866282,
+      "file_name": "brave_token_leak.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/813spiflnmdfu8hulmlcki6c9g20?response-content-disposition=attachment%3B%20filename%3D%22brave_token_leak.mp4%22%3B%20filename%2A%3DUTF-8%27%27brave_token_leak.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTJFGACUK%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142921Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQC3Tuf8wTsJ6HgA%2BHqgp20HmgXBHMAQ4OqTlZ9OWuKgBAIhAOvE8XTU%2BSdcCSz5sVQojGBmKatUQGh%2FA44vLbcP%2Fm%2BUKrIFCHcQAxoMMDEzNjE5Mjc0ODQ5IgzTJhZOFm4GMgT4x1sqjwW0Te4aWJuWaHDaUOwX6BTUT%2BWVM7TuVfL8jOUvJxOlkS5Lf9jEW4%2BJe6myFMRPfV3cl1jHvXdCpoZr1VDiUBakEFhwbZYmiggKueZ0JgXLv54dWJdSFx9%2BtHXdqHC5YIw8pd87hEyCWO0WVSMpU0BwL2LA12LitDPxLhy%2B1P1MKa4B8%2BolMTizbUobGSsjQpn0J03hOTYz0qMWq%2FrQBiVm4PkGhIKoPogNoueiK1FvIuGSZcrBW7I2morIEv%2B4RhCIO%2FtWPjY1Fb8vi9NQA3nVCyQ5tdSqOepqkBTUxeoREnHEvrBmcoYQDjb7R%2B0W6sA68Njxz3CqAehylnajasZOJ2DEtuipCSGNuiZSMQvkMyWdJPuUvbCwj3Hi4v9k4CyGrxZE5lIlr7fEPofWh5bufWhEAaVokadugrpSNkxC9ixU7g5OW72Npc4%2B%2FNJVwHUNDMfB4%2BqEHwn78jEGr058QH5MJiTtGFgjqIAO%2BqKsudB%2BrUHqDGsSqwTMqLSKDzvoTA7asoZMtr4dX1qcP9FXNNgHeMbOPYpPYHxGE8LY7AtAVgJMRwVF9aXrKF6vuFcFCvFIkCvLe1cE%2BJA%2Fng51Fzl0pkQmrdUa9Q%2Bh0BBJEUGLxzgjbpmEYBQBbJtSmYE1zOUsBLqKMaP%2F89PSSIxtWO6EXcpdND9bY71nEm%2FnTCVm6eR2IhxLleobZcD%2B8IUEahLjhTIcHxHghoAcOD1LC1WptK97c4lcGIkxUvzK2vkMdF4%2BWJCwwx%2B2lXSVUzCL2tvwxa%2BbkZ%2FJMvfgSy8rgkVG%2Fc7pzQKgoq3bEEnI4zhQJFANhNg8Lfec1FA1jO%2FvLzqoKR0Bla7K0r9BN%2Bxx5t5GDyGWAX4%2BdZIbMHbSMKn1ra4GOrAB%2BHYBGCq1%2BXZHyPtMlkND6b47v1CWX0jODxdKSccUpq9J1lB8OTDs8mvUAytBUPQZIFFXueEQhrZOc6CniIEFp1YyioNPcbCjcoDKzh9umDgfiq%2FemPxWdVqSpUn3piAIl5iFC704ZMHpEM68pz0ePrup8Ej3liid1kztmk2d82LQRl4AOLmnFNfmSk1j%2Fm0m8fsw96lJbJTcdjYiCigdYCatevndBo6m5MO1WyoxPtw%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7fc71cee5b91ca311865dc5a143d7ba7a1772b276c2a804b9b4a05948569cabc",
+      "file_size": 1031270,
+      "type": "video/mp4",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 10,
+  "voters": [
+    "shreyaschavhan",
+    "neeythann",
+    "zy9ard3",
+    "shubham_srt",
+    "neil-tsakatsa",
+    "shivammusic",
+    "alexanderpetree",
+    "jpalayoor",
+    "foxesfabulous",
+    "salman_hunted"
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 16463,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/brave/brave-ios",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

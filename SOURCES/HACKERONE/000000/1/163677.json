@@ -1,0 +1,141 @@
+{
+  "id": 163677,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjM2Nzc=",
+  "url": "https://hackerone.com/reports/163677",
+  "title": "2 vulns ",
+  "state": "Closed",
+  "substate": "informative",
+  "readable_substate": "Informative",
+  "created_at": "2016-08-26T22:23:29.926Z",
+  "submitted_at": "2016-08-26T22:23:29.926Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "spetr0x",
+    "url": "/spetr0x",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/038/173/80882adae0b3e0d3c19ab041b4bdf27151e61af8_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 1601,
+    "url": "https://hackerone.com/legalrobot",
+    "handle": "legalrobot",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/601/0f164c3d9618b04b006b859517ff032ec57ab42a_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/601/0f164c3d9618b04b006b859517ff032ec57ab42a_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Legal Robot",
+      "twitter_handle": "LegalRobot",
+      "website": "https://www.legalrobot.com",
+      "about": "Automated legal document review using artificial intelligence"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-08-27T00:26:07.275Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-08-27T00:02:19.175Z",
+  "team_member_agreed_on_going_public_at": "2016-08-27T00:26:07.195Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**1.** \nthe first report is concerning AWS S3 bucket Readable for authenticated aws users , the same as this report #163476 \nthe bucket is **sdk.amazonaws.com** , i believe it's yours because i found it in a Head request to https://app.legalrobot.com/ : F115189 \nlisting the bucket : 115190 \ni don't have any proof if it's your bucket , but hoping it is... \n\n**2.**\ni know it's out of scope but the second report is about a misconfigured HTTPS connection on https://app.legalrobot.com/\n\nReproduction\n=========\ncURL\n1.Send a HEAD request to https://app.legalrobot.com/ curl -I https://app.legalrobot.com/\n\n2.You will see that the server does not instruct the client to upgrade the connection to HTTPS. The server responds with an HTTP/2 200 status code instead of 301 status code with the response header Location set to https://app.legalrobot.com/\n : F115191\n\nEXPLOITABILITY & IMPACT\n==================\nGranted, it is kind of hard to exploit this vulnerability, because, first of all, it requires an attacker to be in a privileged network (he/she needs to be able to see what's going over the wire). Then the attacker would need to trick the victim into opening https://app.legalrobot.com/. in a browser that doesn't have https://app.legalrobot.com/ HSTS preloaded and which doesn't have any HSTS cookies for https://app.legalrobot.com/ from a previous secure visit to https://app.legalrobot.com/. When all these conditions are met, an attacker could for example steal the victim's https://app.legalrobot.com/ credentials, or _inject some malicious scripts into any page_. This is possible because the connection is never upgraded, and the site allows forms to be posted to non-secure endpoints  \n\nMITIGATION\n========\nNon-secure connections need to be upgraded to HTTPS as soon as possible using a permanent redirect. But i know the website is not up yet because of a misconfiguration in the index file F115195 f115196  , but if it's connection still the same , in the future the site will allow any user to send his credentials in the clear over a non-secure connection, I was also thinking that you would probably want to prevent forms from being posted to non-secure origins. One possibility is to enforce the client to only send AJAX requests to secure origins.\n\n",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 115189,
+      "file_name": "Screenshot_from_2016-08-26_22-19-16.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/115/189/640332894b583dd55a3aa3f844cbcbfae7d1f9da/Screenshot_from_2016-08-26_22-19-16.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2016-08-26_22-19-16.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2016-08-26_22-19-16.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2TXGU4NH%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122156Z&X-Amz-Expires=2839&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZXXLTvdjrV9%2BXTrnagiitpTSxdTNfuwI8JoO87a374wIgGdKdQ7YeIephBMysf3wfpXJkd8udROvqz%2BslCFnteH4qsgUIcBADGgwwMTM2MTkyNzQ4NDkiDJwtqkOHj%2Bhq7hwpISqPBc3oQJzChWjZ7bKD%2BccTmt7LiDYwnp%2FaW49dMRirZ9pIhrCa7YZHTLZ9RBv6n9DI4zg1cmDjgAWLZcLoHEU6HMSY4TZiQ6JhkTxfHY9%2BW8gIq%2FN6zwvc28EGhPI0bXtMQ05CUe9qLU1IqB2QvVi8ljbC0OENAKpHHW%2B4HZPV3ya4m4CUrmIsBEz02u4o%2FTUWBucXelW27TA%2FMHkcbbkFDMVuk57DqG9l6DCv91Gk0it2LxC7b8QipHE3PIzezn29GFbq0x%2FVAy8j5zhCsVA2u3PoLG8UBgJPigFlduO2n54cymHx0Kj1lPCf0XySDYAG7J%2BkbE9frSbqOenAzEKHL%2BbmTLbvIknLt0tHuWNofydq3sKSVRJUGT6kPaXiG6LcZZAjiidzALZPhPiZjjN2NFbT%2B4d3bYuhSBgSzvUsrX%2FU4t82le3n50YJtFXVQ5QFh1yFj%2BasAJo8gy4CzSP0PgdMEiJHxmad%2BFSBk1osw1BNlolWVHoYfecAbexOr2DelWZtvQEFGBxOieL0Wu0EoUhoxEA%2BwcuNd421R9g0jkhW6T1utyXajONBgYVseJBpWnbW%2BkpGImvblpF9NqajpVHpAAFM6sdMLqiQfJ1f2k9nfS8NIMIMr1C%2Fow0E8D%2FBak4EhkqC2z4QmLpn0zQ7nAVSDGC0pvQQ9HVPj%2BqgNB88SHK9rHZSyCSKf4lsEvYbKl40pk9%2FwaWVlfLBHZ9KQh3Sk5kHWBptfVKftWPHgl3kdZnZZoD7zq5BIGAq%2BfkhmJ1PLAj9CcRgLZKxPmL7BwBfMK1j9GipZrFsKu100o2ehZDw7ycR0yKIZpB5BsA2SMtYyPB%2B8lmSAWsiEcgvv%2BCmvle2pB9btBCR6tP%2FsVAwuKWsrgY6sQEOW7UlyhlECgHHWSD1IxQaKIHYvjLM%2FfiTluais8DBgTs2%2B0ozGJfGCvvwGwuCx3AVFBMiYmPRly4WjCK3xXERtAap5VTGJE61OwLy5AbGPGJEzLPgyw2xUSEbhOBlNW9NWCeq3J6Ykb0rxTuobAmesQY2%2FdIFblQ%2FHHBqxCz3Wf7QF6oiRaFXn07SukEwJwLzpGlJ6GkqAxZz63CXWtQishvehwDUwbs0xamAMs2tYiU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ad58ecfb2875e74444882d63c8c3e4ac1b86333cfea8907bcf820622ad6cbb5e",
+      "file_size": 107279,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 115190,
+      "file_name": "Screenshot_from_2016-08-26_22-20-55.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/115/190/3b525634ca13aa7faa5b3382998971251f953435/Screenshot_from_2016-08-26_22-20-55.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2016-08-26_22-20-55.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2016-08-26_22-20-55.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2TXGU4NH%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122156Z&X-Amz-Expires=2839&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZXXLTvdjrV9%2BXTrnagiitpTSxdTNfuwI8JoO87a374wIgGdKdQ7YeIephBMysf3wfpXJkd8udROvqz%2BslCFnteH4qsgUIcBADGgwwMTM2MTkyNzQ4NDkiDJwtqkOHj%2Bhq7hwpISqPBc3oQJzChWjZ7bKD%2BccTmt7LiDYwnp%2FaW49dMRirZ9pIhrCa7YZHTLZ9RBv6n9DI4zg1cmDjgAWLZcLoHEU6HMSY4TZiQ6JhkTxfHY9%2BW8gIq%2FN6zwvc28EGhPI0bXtMQ05CUe9qLU1IqB2QvVi8ljbC0OENAKpHHW%2B4HZPV3ya4m4CUrmIsBEz02u4o%2FTUWBucXelW27TA%2FMHkcbbkFDMVuk57DqG9l6DCv91Gk0it2LxC7b8QipHE3PIzezn29GFbq0x%2FVAy8j5zhCsVA2u3PoLG8UBgJPigFlduO2n54cymHx0Kj1lPCf0XySDYAG7J%2BkbE9frSbqOenAzEKHL%2BbmTLbvIknLt0tHuWNofydq3sKSVRJUGT6kPaXiG6LcZZAjiidzALZPhPiZjjN2NFbT%2B4d3bYuhSBgSzvUsrX%2FU4t82le3n50YJtFXVQ5QFh1yFj%2BasAJo8gy4CzSP0PgdMEiJHxmad%2BFSBk1osw1BNlolWVHoYfecAbexOr2DelWZtvQEFGBxOieL0Wu0EoUhoxEA%2BwcuNd421R9g0jkhW6T1utyXajONBgYVseJBpWnbW%2BkpGImvblpF9NqajpVHpAAFM6sdMLqiQfJ1f2k9nfS8NIMIMr1C%2Fow0E8D%2FBak4EhkqC2z4QmLpn0zQ7nAVSDGC0pvQQ9HVPj%2BqgNB88SHK9rHZSyCSKf4lsEvYbKl40pk9%2FwaWVlfLBHZ9KQh3Sk5kHWBptfVKftWPHgl3kdZnZZoD7zq5BIGAq%2BfkhmJ1PLAj9CcRgLZKxPmL7BwBfMK1j9GipZrFsKu100o2ehZDw7ycR0yKIZpB5BsA2SMtYyPB%2B8lmSAWsiEcgvv%2BCmvle2pB9btBCR6tP%2FsVAwuKWsrgY6sQEOW7UlyhlECgHHWSD1IxQaKIHYvjLM%2FfiTluais8DBgTs2%2B0ozGJfGCvvwGwuCx3AVFBMiYmPRly4WjCK3xXERtAap5VTGJE61OwLy5AbGPGJEzLPgyw2xUSEbhOBlNW9NWCeq3J6Ykb0rxTuobAmesQY2%2FdIFblQ%2FHHBqxCz3Wf7QF6oiRaFXn07SukEwJwLzpGlJ6GkqAxZz63CXWtQishvehwDUwbs0xamAMs2tYiU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=41a8f0dcfbd9c1e026040ff1f0f1dee1caa9a0996949d95472d68f73ae5b651d",
+      "file_size": 7323,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 115191,
+      "file_name": "Screenshot_from_2016-08-26_22-26-24.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/115/191/e54416b95a6ef6529401d8b6245039b3b44d8a65/Screenshot_from_2016-08-26_22-26-24.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2016-08-26_22-26-24.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2016-08-26_22-26-24.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2TXGU4NH%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122156Z&X-Amz-Expires=2839&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZXXLTvdjrV9%2BXTrnagiitpTSxdTNfuwI8JoO87a374wIgGdKdQ7YeIephBMysf3wfpXJkd8udROvqz%2BslCFnteH4qsgUIcBADGgwwMTM2MTkyNzQ4NDkiDJwtqkOHj%2Bhq7hwpISqPBc3oQJzChWjZ7bKD%2BccTmt7LiDYwnp%2FaW49dMRirZ9pIhrCa7YZHTLZ9RBv6n9DI4zg1cmDjgAWLZcLoHEU6HMSY4TZiQ6JhkTxfHY9%2BW8gIq%2FN6zwvc28EGhPI0bXtMQ05CUe9qLU1IqB2QvVi8ljbC0OENAKpHHW%2B4HZPV3ya4m4CUrmIsBEz02u4o%2FTUWBucXelW27TA%2FMHkcbbkFDMVuk57DqG9l6DCv91Gk0it2LxC7b8QipHE3PIzezn29GFbq0x%2FVAy8j5zhCsVA2u3PoLG8UBgJPigFlduO2n54cymHx0Kj1lPCf0XySDYAG7J%2BkbE9frSbqOenAzEKHL%2BbmTLbvIknLt0tHuWNofydq3sKSVRJUGT6kPaXiG6LcZZAjiidzALZPhPiZjjN2NFbT%2B4d3bYuhSBgSzvUsrX%2FU4t82le3n50YJtFXVQ5QFh1yFj%2BasAJo8gy4CzSP0PgdMEiJHxmad%2BFSBk1osw1BNlolWVHoYfecAbexOr2DelWZtvQEFGBxOieL0Wu0EoUhoxEA%2BwcuNd421R9g0jkhW6T1utyXajONBgYVseJBpWnbW%2BkpGImvblpF9NqajpVHpAAFM6sdMLqiQfJ1f2k9nfS8NIMIMr1C%2Fow0E8D%2FBak4EhkqC2z4QmLpn0zQ7nAVSDGC0pvQQ9HVPj%2BqgNB88SHK9rHZSyCSKf4lsEvYbKl40pk9%2FwaWVlfLBHZ9KQh3Sk5kHWBptfVKftWPHgl3kdZnZZoD7zq5BIGAq%2BfkhmJ1PLAj9CcRgLZKxPmL7BwBfMK1j9GipZrFsKu100o2ehZDw7ycR0yKIZpB5BsA2SMtYyPB%2B8lmSAWsiEcgvv%2BCmvle2pB9btBCR6tP%2FsVAwuKWsrgY6sQEOW7UlyhlECgHHWSD1IxQaKIHYvjLM%2FfiTluais8DBgTs2%2B0ozGJfGCvvwGwuCx3AVFBMiYmPRly4WjCK3xXERtAap5VTGJE61OwLy5AbGPGJEzLPgyw2xUSEbhOBlNW9NWCeq3J6Ykb0rxTuobAmesQY2%2FdIFblQ%2FHHBqxCz3Wf7QF6oiRaFXn07SukEwJwLzpGlJ6GkqAxZz63CXWtQishvehwDUwbs0xamAMs2tYiU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=cd466a658f35152267f3c0d687ee43e6442e52cfa92819a0469f25f44e4dfb2a",
+      "file_size": 9132,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 115195,
+      "file_name": "Screenshot_from_2016-08-26_22-59-54.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/115/195/386df4b279cb0b0ffd310321f51cbc605a6b540f/Screenshot_from_2016-08-26_22-59-54.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2016-08-26_22-59-54.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2016-08-26_22-59-54.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2TXGU4NH%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122156Z&X-Amz-Expires=2839&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZXXLTvdjrV9%2BXTrnagiitpTSxdTNfuwI8JoO87a374wIgGdKdQ7YeIephBMysf3wfpXJkd8udROvqz%2BslCFnteH4qsgUIcBADGgwwMTM2MTkyNzQ4NDkiDJwtqkOHj%2Bhq7hwpISqPBc3oQJzChWjZ7bKD%2BccTmt7LiDYwnp%2FaW49dMRirZ9pIhrCa7YZHTLZ9RBv6n9DI4zg1cmDjgAWLZcLoHEU6HMSY4TZiQ6JhkTxfHY9%2BW8gIq%2FN6zwvc28EGhPI0bXtMQ05CUe9qLU1IqB2QvVi8ljbC0OENAKpHHW%2B4HZPV3ya4m4CUrmIsBEz02u4o%2FTUWBucXelW27TA%2FMHkcbbkFDMVuk57DqG9l6DCv91Gk0it2LxC7b8QipHE3PIzezn29GFbq0x%2FVAy8j5zhCsVA2u3PoLG8UBgJPigFlduO2n54cymHx0Kj1lPCf0XySDYAG7J%2BkbE9frSbqOenAzEKHL%2BbmTLbvIknLt0tHuWNofydq3sKSVRJUGT6kPaXiG6LcZZAjiidzALZPhPiZjjN2NFbT%2B4d3bYuhSBgSzvUsrX%2FU4t82le3n50YJtFXVQ5QFh1yFj%2BasAJo8gy4CzSP0PgdMEiJHxmad%2BFSBk1osw1BNlolWVHoYfecAbexOr2DelWZtvQEFGBxOieL0Wu0EoUhoxEA%2BwcuNd421R9g0jkhW6T1utyXajONBgYVseJBpWnbW%2BkpGImvblpF9NqajpVHpAAFM6sdMLqiQfJ1f2k9nfS8NIMIMr1C%2Fow0E8D%2FBak4EhkqC2z4QmLpn0zQ7nAVSDGC0pvQQ9HVPj%2BqgNB88SHK9rHZSyCSKf4lsEvYbKl40pk9%2FwaWVlfLBHZ9KQh3Sk5kHWBptfVKftWPHgl3kdZnZZoD7zq5BIGAq%2BfkhmJ1PLAj9CcRgLZKxPmL7BwBfMK1j9GipZrFsKu100o2ehZDw7ycR0yKIZpB5BsA2SMtYyPB%2B8lmSAWsiEcgvv%2BCmvle2pB9btBCR6tP%2FsVAwuKWsrgY6sQEOW7UlyhlECgHHWSD1IxQaKIHYvjLM%2FfiTluais8DBgTs2%2B0ozGJfGCvvwGwuCx3AVFBMiYmPRly4WjCK3xXERtAap5VTGJE61OwLy5AbGPGJEzLPgyw2xUSEbhOBlNW9NWCeq3J6Ykb0rxTuobAmesQY2%2FdIFblQ%2FHHBqxCz3Wf7QF6oiRaFXn07SukEwJwLzpGlJ6GkqAxZz63CXWtQishvehwDUwbs0xamAMs2tYiU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5c177b3f1f3124ceec792f16e85bfe7cfeb6b185591d09fe5614f2857cb59241",
+      "file_size": 139977,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 115196,
+      "file_name": "Screenshot_from_2016-08-26_23-20-43.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/115/196/0d685c86dd8abda2a433bc270660508eec07f35b/Screenshot_from_2016-08-26_23-20-43.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2016-08-26_23-20-43.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2016-08-26_23-20-43.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2TXGU4NH%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122156Z&X-Amz-Expires=2839&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZXXLTvdjrV9%2BXTrnagiitpTSxdTNfuwI8JoO87a374wIgGdKdQ7YeIephBMysf3wfpXJkd8udROvqz%2BslCFnteH4qsgUIcBADGgwwMTM2MTkyNzQ4NDkiDJwtqkOHj%2Bhq7hwpISqPBc3oQJzChWjZ7bKD%2BccTmt7LiDYwnp%2FaW49dMRirZ9pIhrCa7YZHTLZ9RBv6n9DI4zg1cmDjgAWLZcLoHEU6HMSY4TZiQ6JhkTxfHY9%2BW8gIq%2FN6zwvc28EGhPI0bXtMQ05CUe9qLU1IqB2QvVi8ljbC0OENAKpHHW%2B4HZPV3ya4m4CUrmIsBEz02u4o%2FTUWBucXelW27TA%2FMHkcbbkFDMVuk57DqG9l6DCv91Gk0it2LxC7b8QipHE3PIzezn29GFbq0x%2FVAy8j5zhCsVA2u3PoLG8UBgJPigFlduO2n54cymHx0Kj1lPCf0XySDYAG7J%2BkbE9frSbqOenAzEKHL%2BbmTLbvIknLt0tHuWNofydq3sKSVRJUGT6kPaXiG6LcZZAjiidzALZPhPiZjjN2NFbT%2B4d3bYuhSBgSzvUsrX%2FU4t82le3n50YJtFXVQ5QFh1yFj%2BasAJo8gy4CzSP0PgdMEiJHxmad%2BFSBk1osw1BNlolWVHoYfecAbexOr2DelWZtvQEFGBxOieL0Wu0EoUhoxEA%2BwcuNd421R9g0jkhW6T1utyXajONBgYVseJBpWnbW%2BkpGImvblpF9NqajpVHpAAFM6sdMLqiQfJ1f2k9nfS8NIMIMr1C%2Fow0E8D%2FBak4EhkqC2z4QmLpn0zQ7nAVSDGC0pvQQ9HVPj%2BqgNB88SHK9rHZSyCSKf4lsEvYbKl40pk9%2FwaWVlfLBHZ9KQh3Sk5kHWBptfVKftWPHgl3kdZnZZoD7zq5BIGAq%2BfkhmJ1PLAj9CcRgLZKxPmL7BwBfMK1j9GipZrFsKu100o2ehZDw7ycR0yKIZpB5BsA2SMtYyPB%2B8lmSAWsiEcgvv%2BCmvle2pB9btBCR6tP%2FsVAwuKWsrgY6sQEOW7UlyhlECgHHWSD1IxQaKIHYvjLM%2FfiTluais8DBgTs2%2B0ozGJfGCvvwGwuCx3AVFBMiYmPRly4WjCK3xXERtAap5VTGJE61OwLy5AbGPGJEzLPgyw2xUSEbhOBlNW9NWCeq3J6Ykb0rxTuobAmesQY2%2FdIFblQ%2FHHBqxCz3Wf7QF6oiRaFXn07SukEwJwLzpGlJ6GkqAxZz63CXWtQishvehwDUwbs0xamAMs2tYiU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=8a590fb147abb095c082472022bafa88d8c4e2a1266f4b548503481c59f7a890",
+      "file_size": 155285,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 6,
+  "voters": [
+    "spetr0x",
+    "0x01010",
+    "dyabla",
+    "cryptosector",
+    "aghacker",
+    "xcaliber"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

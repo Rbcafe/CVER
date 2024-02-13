@@ -1,0 +1,107 @@
+{
+  "id": 47495,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NzQ5NQ==",
+  "url": "https://hackerone.com/reports/47495",
+  "title": "Same Origin Policy bypass",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-02-12T00:35:46.540Z",
+  "submitted_at": "2015-02-12T00:35:46.540Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "zoczus",
+    "url": "/zoczus",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/124/0232d6c25286896aa86b6179f4d8b5eb58f02bd0_original.JPG/cccd3716a6d2e06174d2a41492445cb1d4bf85b4611a755bc810b9246a24d951"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 65,
+    "url": "https://hackerone.com/mailru",
+    "handle": "mailru",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Mail.ru",
+      "twitter_handle": "",
+      "website": "https://vk.company/",
+      "about": "Building the Internet since 1998"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2015-03-27T14:29:12.748Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-02-25T14:29:00.281Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\r\n\r\nAfter small investigation I've probably found something that can be exploited to bypass Same Origin Policy on mail.ru services (specially your main domain and e.mail.ru). \r\n\r\nFirst of all - let's take a look about your crossdomain.xml (both for mail.ru and e.mail.ru):\r\n\r\n<cross-domain-policy>\r\n<allow-access-from domain=\"*.files.mail.ru\" to-ports=\"80\"/>\r\n<allow-access-from domain=\"img.imgsmail.ru\" to-ports=\"80\"/>\r\n<allow-access-from domain=\"win.mail.ru\" to-ports=\"80\"/>\r\n<allow-access-from domain=\"e.mail.ru\" to-ports=\"80\"/>\r\n<allow-access-from domain=\"*.corp.mail.ru\" to-ports=\"80\"/>\r\n<allow-access-from domain=\"img.mail.ru\" to-ports=\"80\"/>\r\n<site-control permitted-cross-domain-policies=\"all\"/>\r\n</cross-domain-policy>\r\n\r\nAfter time spent on searching useful files I found flash uploader on files.mail.ru which is mentioned in crossdomain. \r\n\r\nFew important things about this Flash file (https://files.mail.ru/uploader9.swf):\r\n\r\n1) It uses Security.allowDomain(\"*\") which is extreamly dangerous\r\n2) It have interesting callback to ajaxCall() method. \r\n\r\nI want to tell you more about ajaxCall() actionscript function - here's snippet: https://gist.github.com/ZoczuS/82ad1e7509dd436a2db9\r\n\r\nYou can see that before request will go on there are few checks - provided URL must starts with http:// schema, must have .mail.ru before first / (to prevent sending requests to other domain). Bypass is simple here - we can use username@hostname notation - http://.mail.ru@lab.ropchain.org/r.php?r=HTTPS://ANY-OTHER-URL.COM ;-) (r.php returns 301 and redirects us where $_GET['r'] tells). \r\n\r\nTo make this attack even simpler - ajaxCall() function have js_callback parameter, where we can handle our Cross-Origin response, and parse it. \r\n\r\nSo the example attack scenario goes like this:\r\n1. Attacker create specially crafted webpage where he embeds uploader9.swf\r\n2. Because of Security.allowDomain('*') we can interact with this file from any domain, so it works. \r\n3. Because ajax() callback we can send requests to any other webpage.\r\n4. Because of crossdomain.xml of mail.ru we can gain full response from mail.ru and pass it to our js_callback (that \"works\" for attacker's origin).\r\n\r\nIn this scenario I'll call https://mail.ru/?json=1&nano=0 that returns sort of informations about logged in user in JSON format. To watch exploit in action - visit this page: https://eip.uid0.pl/mail.php (it requires SSL, sorry for self-signed cert).\r\n\r\nVideo demonstration: https://www.youtube.com/watch?v=iIUlSJ-Wvgk (unlisted one - only me and you have this link)\r\n\r\nThanks for reading it - have a nice day!\r\nJakub Zoczek",
+  "bounty_amount": "600.0",
+  "formatted_bounty": "$600",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2015-03-27T14:29:01.124Z",
+  "allow_singular_disclosure_after": -280357651.8800199,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "sw33tlie",
+    "fantam1",
+    "shivammusic",
+    "spetr0x",
+    "bc4b5f39ded739ad062bffc"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

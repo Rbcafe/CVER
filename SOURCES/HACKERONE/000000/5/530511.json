@@ -1,0 +1,141 @@
+{
+  "id": 530511,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81MzA1MTE=",
+  "url": "https://hackerone.com/reports/530511",
+  "title": "Stored XSS at APM applications listing",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2019-04-07T10:03:38.337Z",
+  "submitted_at": "2019-04-07T10:03:38.337Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "skavans",
+    "url": "/skavans",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-08-13T10:45:15.682Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-08-11T09:28:56.178Z",
+  "team_member_agreed_on_going_public_at": "2020-08-13T10:45:15.610Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello team,\n\nI have discovered that the attacker which can create APM app or modify the existing app name can cause a stored XSS firing at APM apps listing page.\n\nThere is a script like the following at the APM apps listing page:\n```javascript\nwindow.applicationData = {\"applications\":[{\"id\":304769090,\"name\":\"APPLICATION_NAME\",\"language\":\"python\",\"reporting\":true,\"last_reported_at\":\"2019-04-07T09:31:18+00:00\",\"application_summary\":{\"response_time\":0.0,\"throughput\":0.0,\"error_rate\":0.0,\"apdex_target\":0.5,\"apdex_score\":0.0,\"host_count\":1,\"instance_count\":1},\"links\":{}}]...\n```\n\nThe `name` JSON field (containing \"APPLICATION_NAME\" in my example) is sanitized, so we cannot just use the quote sign to break the JSON to execute arbitrary JS-code. But due to the template engine is used (as I think) to generate a page, if we set the application name to some HTML-tag with attributes (e.g. `<img src=x>`), the template engine normalizes it and the name becomes `<img src=\"x\">` with quotes inside. So if we use the `<img src=-alert(document.domain)->` payload as app name, the resulting script looks like the following:\n```javascript\nwindow.applicationData = {\"applications\":[{\"id\":304769090,\"name\":\"<img src=\"-alert(document.domain)-\">\",\"language\":\"python\",\"reporting\":true,\n```\nand this is how the malicious code could be injected into a page and executed then.\n\n###Steps to reproduce\n1. Sign into the APM app with some account which can edit app name\n2. Go to some app settings and change its name (alias) to `<img src=-alert(document.domain)->`\n3. Navigate to APM main page (with apps listing) and make sure the alert box is popped up.\n{F463935}\n\nP.S.: The vulnerable script doesn't appear always, it works if the first created app is malicious but may not work for unknown reasons if there are some active apps at the account. If you have some troubles with reproduce the bug, please reach me and I will investigate this behavior further.\n\n## Impact\n\nAttacker which can create new apps or modify the existing one title can execute an arbitrary JS-code attacking account admin/owner. Setting up the new application through, for example, python NewRelic agent, and specifying the malicious name at `newrelic.ini` can also cause storing the XSS payload so every user knowing the license key can perform the attack.",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 463935,
+      "file_name": "______________2019-04-07___12.57.23.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/463/935/0a98910f7af1fababa1e063a25fefd2f296e47c7/______________2019-04-07___12.57.23.png?response-content-disposition=attachment%3B%20filename%3D%22______________2019-04-07___12.57.23.png%22%3B%20filename%2A%3DUTF-8%27%27______________2019-04-07___12.57.23.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132053Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4df1ea780329be2bfe1d4fdfd8f8651a41f51b7614b19004e42ac37da219345a",
+      "file_size": 295220,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-09-10T09:28:56.225Z",
+  "allow_singular_disclosure_after": -108100317.64082323,
+  "singular_disclosure_allowed": true,
+  "vote_count": 13,
+  "voters": [
+    "wi11",
+    "bogdantcaciuc",
+    "mik317",
+    "joaovitormaia",
+    "cr4xerbik4sh",
+    "pkhadka",
+    "vangogh001",
+    "036467383637",
+    "asteryu",
+    "ganeshdev",
+    "and 3 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 7.6,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "changed",
+      "confidentiality": "low",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 18678,
+    "asset_type": "URL",
+    "asset_identifier": "rpm.newrelic.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

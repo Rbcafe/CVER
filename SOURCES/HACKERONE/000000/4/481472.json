@@ -1,0 +1,159 @@
+{
+  "id": 481472,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80ODE0NzI=",
+  "url": "https://hackerone.com/reports/481472",
+  "title": "URL link spoofing",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2019-01-17T14:26:13.026Z",
+  "submitted_at": "2019-01-17T14:26:13.026Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "akaki",
+    "url": "/akaki",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/134/479/ab3773ce1dcf80c20a8a8eda4663358720cd0dbe_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 69,
+    "url": "https://hackerone.com/slack",
+    "handle": "slack",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Slack",
+      "twitter_handle": "slackhq",
+      "website": "https://slack.com",
+      "about": "All your team communication in one place, instantly searchable, and available wherever you go."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-04-26T03:53:43.641Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-03-27T03:53:41.179Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Words such as `http://example.com` and `example.com` included in the message are displayed by URL link. This URL link naturally links to `example.com`. However, we can spoof the link destination by changing the message post request.\n\n```diff\n POST /api/chat.postMessage HTTP/1.1\n Host: example.slack.com\n ...\n\n ...\n -----------------------------87462859699239992111770463\n Content-Disposition: form-data; name=\"text\"\n\n-http://example.com\n+<http://evil.com|http://example.com>\n -----------------------------87462859699239992111770463\n ...\n```\n\nThe URL link `http://example.com` is displayed in the message, but in fact it is linked to `evil.com`. For example, like [http://example.com](http://evil.com).\n\n{F408013}\n\nI took a screenshot of Slack on Chrome, so the link destination is displayed in the status bar. However, desktop apps and mobile apps do not have a status bar.\n\n## Impact\n\nIt is used for phishing attack. For example, an attacker posts a message like the following. Victims click on this URL link will lead to a fake login page.\n\n{F408014}\n\nIn addition, [It is already known](https://twitter.com/buritica/status/970721576034455552) that we can create Slack accounts with the same name. Therefore, an attacker can increase the success rate of phishing by spoofing an influential person.\n\n{F408015}",
+  "bounty_amount": "250.0",
+  "formatted_bounty": "$250",
+  "weakness": {
+    "id": 73,
+    "name": "Phishing"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 408013,
+      "file_name": "Screen_Shot_2019-01-16_at_7.17.04.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/408/013/c23fa9b10e74ff77668af4e33b80511cd7889f29/Screen_Shot_2019-01-16_at_7.17.04.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2019-01-16_at_7.17.04.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2019-01-16_at_7.17.04.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTUOKVM5L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131638Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2Bt0omVOHrZ9OL9Trk%2BdFKhBv%2FQrKC65W11rjrMgC%2F6QIhANia%2FTyBcfeu0XFctw1a%2FJDDLBAa34%2BWU%2F53rhxkz%2BKhKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5IgxUKMbWt1VTh5nJA5MqjgWpIiqILEweaNhgRF6m1s3guYn11lerqJNrnFjeROxUEJywbXRrt%2FcAshROQMcI4IP1FF5kzaP6N8mOGtMrRL%2FiPu4S3YpijdtIekdCS1Sn6Snt4Sh4hrILW%2Bb8ze6H%2F8%2BUjG3tsefJ2i7e6RAZ95Jy%2FsR7Gyo717mGo8tT2xBovHwjfmR5eCTxEwySxWEQvCnkU8sWiVU4TVsVyZojCQaslBXYJlwFTmuq95Ka7nfTvMgKz2HKR%2BHa7dIsA2obOMA1gq914%2BAgrDq45xv0U8MzkvK2tpK9dfMSBVfPWAFHxIt5sREveo4mZ2nlBAm%2BX77TaBAPdROjeHNp2e8Y8GU73sHmCxPEQ6RVEBNo1Cpqin5nayoOUqgSikVBZNppJWCf78ZqDFx6xAksvybCUspLPt8UiXeCwawB4vSOwq1RhpGympS%2F4X%2BAfeB4Och%2Bx%2BOR8nKDDKe3Y%2BeIUIzmLq7R63lPB%2BEoYre1R8%2Bf%2F%2BYGK3IVaxII1oWPg4zPRX6SOnrZtXGjWyAfZ%2F6lNEUsc6rYsPzapeuVSlq%2FRTHQ%2BbWGOkn3wxqxzOCLbZSltQ7LZsPVDrrri2fFwWrFwoheZZCDY0vSRv08hDQ%2Fkq3xDInCDWZMeu%2FK40kiRmv6ehFATji5N1OJbLemuPO%2BTwvrdcBn9fQS4BkDMFIrGhE%2FuOwv61gkyL1fOapjm3KOWa8BmzAuFidAmAy%2BVnosQJMh3ckcvSXiD8sLINTU%2FbSsdV7beCmMpyf6fP3p%2F7VcwiGBABGo294shnTdhd2P0IxsSt7anyRTek2yB5NqzUYBr8WXNft2l3V3HTxgS9tRQXGp0RJdLlzDT1qxWJvF2JoUm4vQH5Pwhirc51bptu0N99Iwn6%2BtrgY6sAElrGju%2FXz82pDWWGfZvz6UL%2Fm95ZWtM25B7Ca5iNmiTQUqK%2BPhqtvh3TLN14mj%2BOXWFTSoPWS4IHLzNFsgx2J0aY83%2FElbkWzC43VwT7caBSFcI5aYu4krRCov2TutbftS11vV1dOme5hlM9%2Bf%2FlUY4xpo4dgVYdlW83DxHU%2BAO74ifhWVTZa4oAIO7OK8ImejZkl87d9LyTXqXHcY75D4o2LMg4shUYHjgRj5VB%2BvcA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1241175088eec83302ae4a62bdb2fa6c6211cb81a781eb49f6345c0a2cb72eaa",
+      "file_size": 47471,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 408014,
+      "file_name": "Screen_Shot_2019-01-17_at_20.42.48.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/408/014/465b6ccbfaf56a5e68689de1c4bc01ed2b1e8d34/Screen_Shot_2019-01-17_at_20.42.48.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2019-01-17_at_20.42.48.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2019-01-17_at_20.42.48.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTUOKVM5L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131638Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2Bt0omVOHrZ9OL9Trk%2BdFKhBv%2FQrKC65W11rjrMgC%2F6QIhANia%2FTyBcfeu0XFctw1a%2FJDDLBAa34%2BWU%2F53rhxkz%2BKhKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5IgxUKMbWt1VTh5nJA5MqjgWpIiqILEweaNhgRF6m1s3guYn11lerqJNrnFjeROxUEJywbXRrt%2FcAshROQMcI4IP1FF5kzaP6N8mOGtMrRL%2FiPu4S3YpijdtIekdCS1Sn6Snt4Sh4hrILW%2Bb8ze6H%2F8%2BUjG3tsefJ2i7e6RAZ95Jy%2FsR7Gyo717mGo8tT2xBovHwjfmR5eCTxEwySxWEQvCnkU8sWiVU4TVsVyZojCQaslBXYJlwFTmuq95Ka7nfTvMgKz2HKR%2BHa7dIsA2obOMA1gq914%2BAgrDq45xv0U8MzkvK2tpK9dfMSBVfPWAFHxIt5sREveo4mZ2nlBAm%2BX77TaBAPdROjeHNp2e8Y8GU73sHmCxPEQ6RVEBNo1Cpqin5nayoOUqgSikVBZNppJWCf78ZqDFx6xAksvybCUspLPt8UiXeCwawB4vSOwq1RhpGympS%2F4X%2BAfeB4Och%2Bx%2BOR8nKDDKe3Y%2BeIUIzmLq7R63lPB%2BEoYre1R8%2Bf%2F%2BYGK3IVaxII1oWPg4zPRX6SOnrZtXGjWyAfZ%2F6lNEUsc6rYsPzapeuVSlq%2FRTHQ%2BbWGOkn3wxqxzOCLbZSltQ7LZsPVDrrri2fFwWrFwoheZZCDY0vSRv08hDQ%2Fkq3xDInCDWZMeu%2FK40kiRmv6ehFATji5N1OJbLemuPO%2BTwvrdcBn9fQS4BkDMFIrGhE%2FuOwv61gkyL1fOapjm3KOWa8BmzAuFidAmAy%2BVnosQJMh3ckcvSXiD8sLINTU%2FbSsdV7beCmMpyf6fP3p%2F7VcwiGBABGo294shnTdhd2P0IxsSt7anyRTek2yB5NqzUYBr8WXNft2l3V3HTxgS9tRQXGp0RJdLlzDT1qxWJvF2JoUm4vQH5Pwhirc51bptu0N99Iwn6%2BtrgY6sAElrGju%2FXz82pDWWGfZvz6UL%2Fm95ZWtM25B7Ca5iNmiTQUqK%2BPhqtvh3TLN14mj%2BOXWFTSoPWS4IHLzNFsgx2J0aY83%2FElbkWzC43VwT7caBSFcI5aYu4krRCov2TutbftS11vV1dOme5hlM9%2Bf%2FlUY4xpo4dgVYdlW83DxHU%2BAO74ifhWVTZa4oAIO7OK8ImejZkl87d9LyTXqXHcY75D4o2LMg4shUYHjgRj5VB%2BvcA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5d7e4b8f8b36df8230b421a50077191b7c58153f1e9ed5987fb42b8b8790245d",
+      "file_size": 62716,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 408015,
+      "file_name": "Screen_Shot_2019-01-17_at_22.44.54.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/408/015/50b87a182dfc9b30cc3da36d1121100e2879a3e7/Screen_Shot_2019-01-17_at_22.44.54.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2019-01-17_at_22.44.54.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2019-01-17_at_22.44.54.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTUOKVM5L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131638Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2Bt0omVOHrZ9OL9Trk%2BdFKhBv%2FQrKC65W11rjrMgC%2F6QIhANia%2FTyBcfeu0XFctw1a%2FJDDLBAa34%2BWU%2F53rhxkz%2BKhKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5IgxUKMbWt1VTh5nJA5MqjgWpIiqILEweaNhgRF6m1s3guYn11lerqJNrnFjeROxUEJywbXRrt%2FcAshROQMcI4IP1FF5kzaP6N8mOGtMrRL%2FiPu4S3YpijdtIekdCS1Sn6Snt4Sh4hrILW%2Bb8ze6H%2F8%2BUjG3tsefJ2i7e6RAZ95Jy%2FsR7Gyo717mGo8tT2xBovHwjfmR5eCTxEwySxWEQvCnkU8sWiVU4TVsVyZojCQaslBXYJlwFTmuq95Ka7nfTvMgKz2HKR%2BHa7dIsA2obOMA1gq914%2BAgrDq45xv0U8MzkvK2tpK9dfMSBVfPWAFHxIt5sREveo4mZ2nlBAm%2BX77TaBAPdROjeHNp2e8Y8GU73sHmCxPEQ6RVEBNo1Cpqin5nayoOUqgSikVBZNppJWCf78ZqDFx6xAksvybCUspLPt8UiXeCwawB4vSOwq1RhpGympS%2F4X%2BAfeB4Och%2Bx%2BOR8nKDDKe3Y%2BeIUIzmLq7R63lPB%2BEoYre1R8%2Bf%2F%2BYGK3IVaxII1oWPg4zPRX6SOnrZtXGjWyAfZ%2F6lNEUsc6rYsPzapeuVSlq%2FRTHQ%2BbWGOkn3wxqxzOCLbZSltQ7LZsPVDrrri2fFwWrFwoheZZCDY0vSRv08hDQ%2Fkq3xDInCDWZMeu%2FK40kiRmv6ehFATji5N1OJbLemuPO%2BTwvrdcBn9fQS4BkDMFIrGhE%2FuOwv61gkyL1fOapjm3KOWa8BmzAuFidAmAy%2BVnosQJMh3ckcvSXiD8sLINTU%2FbSsdV7beCmMpyf6fP3p%2F7VcwiGBABGo294shnTdhd2P0IxsSt7anyRTek2yB5NqzUYBr8WXNft2l3V3HTxgS9tRQXGp0RJdLlzDT1qxWJvF2JoUm4vQH5Pwhirc51bptu0N99Iwn6%2BtrgY6sAElrGju%2FXz82pDWWGfZvz6UL%2Fm95ZWtM25B7Ca5iNmiTQUqK%2BPhqtvh3TLN14mj%2BOXWFTSoPWS4IHLzNFsgx2J0aY83%2FElbkWzC43VwT7caBSFcI5aYu4krRCov2TutbftS11vV1dOme5hlM9%2Bf%2FlUY4xpo4dgVYdlW83DxHU%2BAO74ifhWVTZa4oAIO7OK8ImejZkl87d9LyTXqXHcY75D4o2LMg4shUYHjgRj5VB%2BvcA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c4b04131705981a02978a518f500c6114271faeb613ff8db26aadb13135c6773",
+      "file_size": 81622,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-04-26T03:53:41.226Z",
+  "allow_singular_disclosure_after": -119956976.98880367,
+  "singular_disclosure_allowed": true,
+  "vote_count": 355,
+  "voters": [
+    "nyantw",
+    "agrippathemagus",
+    "bochen",
+    "a_d_a_m",
+    "nagli",
+    "mashoud1122",
+    "base_64",
+    "shadowrunner",
+    "attreya",
+    "tess",
+    "and 345 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 3.5,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 15516,
+    "asset_type": "URL",
+    "asset_identifier": "slack.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

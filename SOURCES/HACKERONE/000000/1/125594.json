@@ -1,0 +1,103 @@
+{
+  "id": 125594,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjU1OTQ=",
+  "url": "https://hackerone.com/reports/125594",
+  "title": "CSRF on eng.uber.com may lead to server-side compromise",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-03-24T01:49:54.915Z",
+  "submitted_at": "2016-03-24T01:49:54.915Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jouko",
+    "url": "/jouko",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/mqyrwb0f5m6e7yq17l0nrhhz32yw/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 314,
+    "url": "https://hackerone.com/uber",
+    "handle": "uber",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/314/24ea21370a71b18eafb5722d5855825ab622b5dd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/314/24ea21370a71b18eafb5722d5855825ab622b5dd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Uber",
+      "twitter_handle": "",
+      "website": "https://www.uber.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-04-26T16:08:57.530Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-04-12T08:56:18.368Z",
+  "team_member_agreed_on_going_public_at": "2016-04-26T16:08:57.449Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "The site *eng.uber.com* uses a WordPress plugin called Fluid Responsive Slideshow. The plugin doesn't implement any CSRF check for AJAX requests. Some of these AJAX requests can be used to modify posts and pages on the system. An attacker could use this bug to inject arbitrary JavaScript in any page or post on eng.uber.com.\n\nThe attack requires that an administrator of the site can be tricked to view an attacker-controlled website. If the attack succeeds, it would normally lead to server-side compromise via the administrative WordPress functions (plugin/theme editor).\n\n#Reproducing#\nThe following HTML snippet should be a non-destructive way to test this bug. \n~~~~\n<form method=post action=\"https://eng.uber.com/wp-admin/admin-ajax.php?action=frs_show_modal\">\n<input type=text name=\"post_id\" value=\"zzz\">\n<input type=submit>\n</form>\n~~~~\nIf a logged-in WordPress user clicks the submit button, the browser should do a POST request and get a JSON response (it doesn't matter that the post_id is bogus). This shows that it's possible to access the AJAX functions of the plugin without any CSRF token or nonce. A non-logged-in user receives just a \"0\".\n\nAn attacker could use the following HTML to arbitrarily modify any page or post on the system (**destructive**):\n~~~~\n<form method=post action=\"https://eng.uber.com/wp-admin/admin-ajax.php?action=frs_save\">\n<input type=text name=\"post_id\" value=\"(ANY POST/PAGE ID)\">\n<input type=text name=\"title\" value=\"new title for the page\">\n<input type=text name=\"content\" value=\"Any HTML content, e.g. <script>alert('hello');</script>\">\n<input type=submit>\n</form>\n~~~~\nAn attacker would have to persuade a logged-in administrator to this form. It can be automatically submitted with JavaScript so a real-world attack wouldn't require a click on the button. \n\nThe frs_save AJAX action would update the post/page with the supplied ID. For example if the latest posting ID is used, the attacker-supplied JavaScript would be embedded on the \"front page\" and evaluated by any viewer. \n\nA more stealth attack might update an old or password-protected page/post and embed JavaScript that redirects the victim administrator  to that page after updating (an invisible iframe might be possible). This kind of attack wouldn't be easily detected. In this case the JavaScript, now executing with administrator privileges, could be used to execute attacker-supplied PHP on the server via the plugin or theme editor.\n\nAn example of such attack payload (different vector): https://www.youtube.com/watch?v=OCqQZJZ1Ie4\n\n\n#Details#\n\nThe problem is in the file wp-content/plugins/fluid-responsive-slideshow/ajax.php:\n\n~~~~\n/**\n * Ajax Save, Edit / Create new is the same, depend on the post id (null/not null)\n */\nadd_action('wp_ajax_frs_save', 'frs_save' ); /* for logged in user */\n\nfunction frs_save() {\n    global $wpdb; // this is how you get access to the database\n    unset($_POST['action']);\n    $id = htmlspecialchars($_POST['post_id']);\n~~~~\nThe AJAX handler function doesn't attempt to reject cross-site request forgeries which would typically happen in the beginning of the function. Later in the same function, the POST parameters are used to update any post or page:\n~~~~\n       //edit post\n        $slide_type = htmlspecialchars($_POST['slide_type']);\n        $title = htmlspecialchars($_POST['title']);\n        $content = $_POST['content'];\n        // Create post object\n        $my_post = array(\n          'post_title'    => $title,\n          'post_content'  => $content,\n          'ID'=>$id\n        );\n        // Insert the post into the database\n        wp_update_post( $my_post );\ñ~~~~\n\nI've tested this with the latest version of the plugin, and version 2.2.0 which seems to be the one used on eng.uber.com. I haven't reported this to the plugin author yet.",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-05-12T08:56:18.930Z",
+  "allow_singular_disclosure_after": -244782443.31803843,
+  "singular_disclosure_allowed": true,
+  "vote_count": 3,
+  "voters": [
+    "japz",
+    "spetr0x",
+    "dyabla"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

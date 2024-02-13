@@ -1,0 +1,130 @@
+{
+  "id": 269479,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNjk0Nzk=",
+  "url": "https://hackerone.com/reports/269479",
+  "title": "Report Private Links Leaks to Google Analytics via Query String Param",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2017-09-19T14:01:25.564Z",
+  "submitted_at": "2017-09-19T14:01:25.564Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "r3y",
+    "url": "/r3y",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/bup1a17uyqzw7c2iw73hupls4pg0/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": true,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-10-25T23:45:14.669Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-10-20T13:51:38.786Z",
+  "team_member_agreed_on_going_public_at": "2017-10-25T23:45:14.579Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello HackerOne Team,\n\nAccording to HackerOne privacy\n\n>>HackerOne sometimes partners with third-party services which may use various tracking technologies to provide certain services or features, including targeted online marketing. These technologies allow a partner to recognize your computer or mobile device each time you visit HackerOne, __but do not allow access to Your Information from HackerOne.__ For a list of current partners, please contact us at support@hackerone.com.\n\n### Summary:\n\nWhen the report is still private, no one will get access to any of the report contents aside from the reporter (participants) and security team members.\n\nBut i have found that when the report contents have a link URLs and any participants clicks the link, the link was being leaked to external domain which is Google Analytics.\n\n### Impact:\n\nMost of the researcher provides a link/url as a PoC pointing to some video reproduction steps, that link is private only for the sec team to reproduce the issue, but security teams didn't know that the link provided by the researcher already leak upon clicking the link.\n\nPlease note that most of the link for PoC video contains sensitive information such steps to reproduce the bug.\n\n### Steps to reproduce:\n\n  1. Click any url/link on the private report and capture the request using burp.\n  2. Observe that there is a `POST` that leaks the private link to google analytics before after redirecting to the external link warning page.\n\n__PoC Screenshot:__\n\n{F222163}\n\n### Scenario:\n\n  1. Look at my vimeo public profile there is no video uploaded yet: https://vimeo.com/user70143644\n  2. But in reality i have uploaded a private video with a private link: https://vimeo.com/232320359/fa452a0137\n  3. Now the private link is for the security team to reproduce the issue.\n  4. When i create a report with this content: https://vimeo.com/232320359/fa452a0137 and the sec team clicks that, the below PoC POST request was being called and it will redirect to external domain warning page.\n\n```\nPOST /r/collect HTTP/1.1\nHost: www.google-analytics.com\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:55.0) Gecko/20100101 Firefox/55.0\nAccept: */*\nAccept-Language: en-US,en;q=0.5\nContent-Type: text/plain\nReferer: https://hackerone.com/\nContent-Length: 428\nOrigin: https://hackerone.com\nDNT: 1\nConnection: close\n\nv=1&_v=j62&a=2078508761&t=pageview&_s=1&dl=https%3A%2F%2Fhackerone.com%2Fredirect%3Fsignature%3D336dc1060a5ccbf5ef7063cabbfa33873202c35e%26url%3Dhttps%253A%252F%252Fvimeo.com%252F232320359%252Ffa452a0137&ul=en-us&de=UTF-8&dt=Leaving%20HackerOne...&sd=24-bit&sr=1600x900&vp=1600x743&je=0&_u=SCCAAUAjI~&jid=346100484&gjid=1015600924&cid=1626748485.1504716574&uid=78347&tid=UA-49905813-1&_gid=545891595.1505791144&_r=1&z=1287598365\n```\n\nObserve the __dl__ and __url__ parameter:\n\n__dl:__ Contains the hackerone signature\n__url:__ Contains the private PoC link\n\n`dl=https%3A%2F%2Fhackerone.com%2Fredirect%3Fsignature%3D336dc1060a5ccbf5ef7063cabbfa33873202c35e%26url%3Dhttps%253A%252F%252Fvimeo.com%252F232320359%252Ffa452a0137`\n\nLet me know if anything else is needed.\n\nRegards\n@reydd\n",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 222163,
+      "file_name": "private_link_leaked.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/222/163/80b3e219f7d462446feeb4f809baf71836ef7d94/private_link_leaked.png?response-content-disposition=attachment%3B%20filename%3D%22private_link_leaked.png%22%3B%20filename%2A%3DUTF-8%27%27private_link_leaked.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSQ564LXW%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125035Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDl76KVUFS0hN8YruFStxJXVErBlHnUq37TLzE6NJ4nVgIhANpbiTp%2BMBG4Nwb5E7dtwmMEX5oh%2FQf%2BDE1tYHw3IkRRKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5IgysR5bYjXDNHPUxaW8qjwUn5sVCnmMuonjKnG%2FT4J4WQrTsBQX1SNmTEPNbtsQv5XcKQaoPHieXQdr%2B%2B1X5avNpXfOZbh0pZ6CXdrJ4yYa55f0HXkeQiH0zcQ0fif5j1pP8jC%2Blsq%2BD9fB7SzZQg6RmosBSYA4XGzLy8%2FPyGRLQ28yjB4W8KTl8fBM4CmJJFWLBmzWUBK2SOnDwMfsDL5%2BmafcYaKkz0yszM1cg3XozTAFLh8hmoIUAWpu77QkIzg0Ht8%2B93fM%2FYsZn5uKr6IpQ2U4pqWdLfB29cuQ%2Fcqg62XxGu%2BLk6jR1jXWEegWhMonWqQeGJPWbh8kEDYxBzUAidK12bSQGyMxonksvquoUumwsvEUzmQd%2BhHIBPGEfHEpImOlgzqswJwZ%2F4JNoWjfIUk3c2lvDijlThqGBqTQoB645h%2B4iprdRTJwkrRB74qIwzHH8cv8viZ7ZrieVZK6heyAtoEGA%2BZN6Yt1%2Fh3uEHlmtJnS1Vmef8OPs7HDSzKz4njXcD7iXOt625xzMEBsfshpisEQDc6V%2BgE%2BBXbdv%2FT4XaJkVUN7kUFRWxoez0R%2FafT55iChRzC%2FCCCtXPxRwQLswXHFkjSKPv6sVfuM5MRTBUP55DDIHcRMXtwEjecS03yT%2BLa3gpqGgU9vRMfcH0LWQdYklhl1sQ6N1w3UJ%2BzTVF7HEgKCpghOKhwVCK9huxD72fxZOO6FF5FJzK3DifWVeM1v32dnnKItdegNY3N8My9s4MQJ%2B3ECyboRUjyg2nm%2BDhuYrpgIelJVrUGgu74IzyiQ2A%2FCKjoDOYFSWGrm4y%2B2UnhJeZRlQds%2FlnTD4xuiMof7htaNeiZuyDqfi6JTbOSG%2FNqB7QSE2ezcJ75qQGAqDpKeqbVdeTC34MIa2ra4GOrABDubMC6LwabfeW3Qsfz2RgL7fTEyxJw929PcIhksJK3EmRE2rUVVoVGGm7fTwmneEB55wcJn7xtg4Rs3f5YiKxBbRlxeqJEXHdJJWWaOq%2BpG%2BMHzVFgbZYimMKoU39IYu2PyQrofnOmHZ%2FEB3I1PLguFv1fjZlzVTHUwnD4kRx2g5tTJLggeCKerD5uXmMSsk8WllCOp%2FdA8M69%2BsXGmqNNPZRG6tkFF%2FJPssbKNyXTU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=83875a1982e2ec83b4ba16cb9c6f3c3bfc59a62482d51132fd86c160ffc7bb1d",
+      "file_size": 65603,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-11-19T13:51:38.916Z",
+  "allow_singular_disclosure_after": -196729136.12522894,
+  "singular_disclosure_allowed": true,
+  "vote_count": 59,
+  "voters": [
+    "jensec",
+    "foobar7",
+    "mashoud1122",
+    "proabiral",
+    "bogdantcaciuc",
+    "bl4de",
+    "hackerhero",
+    "healdb",
+    "fa1rlight",
+    "harry_mg",
+    "and 49 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 3,
+    "asset_type": "URL",
+    "asset_identifier": "hackerone.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

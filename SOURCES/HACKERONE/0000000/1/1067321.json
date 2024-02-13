@@ -1,0 +1,146 @@
+{
+  "id": 1067321,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMDY3MzIx",
+  "url": "https://hackerone.com/reports/1067321",
+  "title": "Stored XSS via malicious key value of Synthetics monitor tag when visiting an Insights dashboard with filtering enabled",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2020-12-28T07:34:17.728Z",
+  "submitted_at": "2020-12-28T07:34:17.788Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jon_bottarini",
+    "url": "/jon_bottarini",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-04-20T15:30:25.747Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-04-13T15:17:33.234Z",
+  "team_member_agreed_on_going_public_at": "2021-04-20T15:30:25.603Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Introduction & Context\n\nThis is a complex XSS that requires multiple steps in order to setup. It also requires you to have a good understanding of both New Relic Insights, New Relic Synthetics monitors, and the NerdGraph API explorer. \n\n**Background Context:** New Relic Synthetics and the history of tags for monitors (formerly known as labels) \nNew Relic allows you to define specific tags associated with a Synthetics monitor. Once you create a monitor, you can add *tags* to the monitor itself. Back in 2018/2019 you had the ability to add tags with special characters, such as just simply: `malicious\"><img>\"`. Fast forward to 2020, and the ability to add special characters is not possible anymore... so I had to get creative. After a bit of looking around, I realized that there is another way to add tags to a Synthetics monitor instead of just the UI: using the NerdGraph API explorer. \n\n## The Vulnerability\nWhen you are editing an Insights dashboard, there is the option to enable filtering. Within the filtering options, you can specify event types that are related to Synthetics monitors. If you choose an event type of \"SyntheticCheck\" and select an attribute that is a tag with an XSS payload, the XSS payload will fire on the page. If you save the dashboard with the filter enabled, the XSS payload will fire on any user who views the dashboard in the future as well.  \n\n## Steps to Reproduce\n1. Create a new Synthetics monitor, write down the `Entity guid` of the monitor you created, we will need this later\n2. Navigate to [NerdGraph API ](https://api.newrelic.com/graphiql?)\n3. If you haven't already, create an API key \n4. Run the following query, replacing `ENTITY_GUID` with the Entity guid of the Synthetics monitor you created\n\n```\nmutation {\n    taggingAddTagsToEntity(\n        guid: \"ENTITY_GUID\",\n        tags: { key: \"tags.new\\\"><img src=x onerror=alert(`new`)\", values: [\"anything\"]}) {\n            errors {\n                message\n            }\n        }\n}\n```\n\n1. Wait about 15-20 minutes, there is a weird delay from the time that a new tag is added to a monitor, and when the tag appears within the dropdown selector of a dashboard in New Relic Insights (you can imagine how incredibly frustrating this was when trying to get the escaping correct on the XSS payload)\n2. Navigate to New Relic Insights, create a new Dashboard\n3. With the dashboard, click on the \"Edit\" button\n4.  Click on the gear icon next to \"Filter Disabled\", select \"Enable Filter\" \n5. Select the \"SyntheticsCheck\" event type \n6. In \"Attributes\" you should see the tag with the malicious XSS payload you entered earlier\n7. Select that tag, the payload should fire, but you're just looking at a self-XSS right now. Save the dashboard with the tag filter enabled. \n8. Refresh the page, the self-xss is now turned into a stored XSS for any person who views this dashboard. \n\n█████\n\n## Impact\n\nStored XSS for any user that views the malicious Insights dashboard",
+  "bounty_amount": "2123.0",
+  "formatted_bounty": "$2,123",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2021-05-13T15:17:33.323Z",
+  "allow_singular_disclosure_after": -86913881.75297244,
+  "singular_disclosure_allowed": true,
+  "vote_count": 85,
+  "voters": [
+    "wi11",
+    "jeti",
+    "m4t35z",
+    "n1m0",
+    "arthuraires",
+    "drsniper",
+    "bombon",
+    "battle_angel",
+    "wh0ru",
+    "m0chan",
+    "and 75 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 12650,
+    "asset_type": "URL",
+    "asset_identifier": "insights.newrelic.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 42958,
+      "category": "researcher",
+      "content": "Time it took me to find this bug: 3-4 hours\n\n## Resources used: \n\n* [New Relic Dashboards Documentation - Filtering](https://docs.newrelic.com/docs/query-your-data/explore-query-data/dashboards/introduction-dashboards/#filter-dashboards) \n> Never used the filtering feature before, so I had to look into how filters worked in the context of a dashboard. \n* [New Relic Entity Definition](https://docs.newrelic.com/docs/new-relic-one/use-new-relic-one/core-concepts/what-entity-new-relic/) \n> Had to figure out what type of entity to query during the API call (and also figure out what entity I was targeting). \n* [New Relic API Tagging Tutorial](https://docs.newrelic.com/docs/apis/nerdgraph/examples/nerdgraph-tagging-api-tutorial/) \n> This was my first time adding tags to New Relic entities using the API, so I needed to brush up on how to do this before I used the GraphQL explorer\n* [New Relic GraphQL Explorer](https://api.newrelic.com/graphiql) \n> Used to send the actual request(s) to add the malicious tag \n* [Stackoverflow escaping special characters question](https://stackoverflow.com/questions/19176024/how-to-escape-special-characters-in-building-a-json-string) \n> I sometimes have difficulty when I am escaping special characters, so I needed a reference \n",
+      "user": {
+        "id": 13784,
+        "username": "jon_bottarini",
+        "name": "Jon Bottarini",
+        "bio": "I ❤️  privilege escalation",
+        "cleared": true,
+        "verified": true,
+        "website": "https://www.jonbottarini.com",
+        "location": "Austin, TX ",
+        "created_at": "2014-11-04T21:03:50.565Z",
+        "url": "https://hackerone.com/jon_bottarini",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

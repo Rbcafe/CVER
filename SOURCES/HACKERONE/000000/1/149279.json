@@ -1,0 +1,104 @@
+{
+  "id": 149279,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNDkyNzk=",
+  "url": "https://hackerone.com/reports/149279",
+  "title": "Arbitrary SQL query execution and reflected XSS in the \"SQL Query Form\"",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-07-05T06:37:06.437Z",
+  "submitted_at": "2016-07-05T06:37:06.437Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "strukt",
+    "url": "/strukt",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/038/303/42cd71a4698d80f88ab65e3117fd9fc401a57048_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 265,
+    "url": "https://hackerone.com/expressionengine",
+    "handle": "expressionengine",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/265/25251ba4ab1d0b0304a6c3d197fba5c833c6003e_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/265/25251ba4ab1d0b0304a6c3d197fba5c833c6003e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "ExpressionEngine",
+      "twitter_handle": "eecms",
+      "website": "https://expressionengine.com/",
+      "about": "ExpressionEngine is a robust and flexible open-source Content Management System."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-08-18T02:22:07.937Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-07-19T02:21:55.727Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello,\n\nThe mentioned module is vulnerable to SQL injection due to the fact that a query can be done in a GET request, with the query is Base64 encoded and supplied as the value of the parameter \"thequery\".\n\nThis allows an attacker to perform arbitrary SQL queries if they trick an authenticated admin to click a specially crafted link, which can have devastating outcomes, including the deletion/dropping of whole records/databases, the insertion of new data, etc, following is a PoC:\n\nhttp://localhost/ee/admin.php?/cp/utilities/query/run-query&thequery=c2VsZWN0ICogZnJvbSBleHBfbWVtYmVycw==\n\nWith c2VsZWN0ICogZnJvbSBleHBfbWVtYmVycw== as the Base64 encoded form of `select * from exp_members`.\nAlso, the same GET parameter is vulnerable to reflected XSS, which originates from the fact that MySQL errors get thrown unencoded when a malformed SQL query is processed. This, in combination with the previously mentioned flaw, can make an attacker not only capable of executing arbitrary SQL queries, but also able to read whatever data is returned from a query, in addition to the normal attacks that can be done with an XSS, following is a PoC:\n\nhttp://localhost/ee/admin.php?/cp/utilities/query/run-query&thequery=c2VsZWN0IDxzdmcgb25sb2FkPWFsZXJ0KDEpPg==\n\nWhere c2VsZWN0IDxzdmcgb25sb2FkPWFsZXJ0KDEpPg== is the Base64 encoded form of `select <svg onload=alert(1)>`.\n\nRegards",
+  "weakness": {
+    "id": 48,
+    "name": "Denial of Service"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-08-18T02:21:55.875Z",
+  "allow_singular_disclosure_after": -236339710.38519892,
+  "singular_disclosure_allowed": true,
+  "vote_count": 4,
+  "voters": [
+    "zombiehelp54",
+    "letstoolsdohack",
+    "dyabla",
+    "otwist"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

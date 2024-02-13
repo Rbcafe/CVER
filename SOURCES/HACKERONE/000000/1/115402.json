@@ -1,0 +1,108 @@
+{
+  "id": 115402,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTU0MDI=",
+  "url": "https://hackerone.com/reports/115402",
+  "title": "XSS via modified Zomato widget (res_search_widget.php)",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-02-08T15:39:16.409Z",
+  "submitted_at": "2016-02-08T15:39:16.409Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "pr0tagon1st",
+    "url": "/pr0tagon1st",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/033/123/9e3397fc4128a6ea0579adedf2a30f47f54ad11a_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 2943,
+    "url": "https://hackerone.com/zomato",
+    "handle": "zomato",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/943/71b47f9aa21166f0989dfb97112ca10c66a9d0b2_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/943/71b47f9aa21166f0989dfb97112ca10c66a9d0b2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Zomato",
+      "twitter_handle": "Zomato",
+      "website": "https://www.zomato.com",
+      "about": "The fastest way to search for great places to eat at and order from around you. Serving 24 countries worldwide."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-03-11T06:17:58.904Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-02-10T06:17:56.247Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Table of Contents:\n1.  Short Description of Security Issue\n2. Proof of Concept\n\n#### 1. Short Description of Security Issue\n\nThe widget API endpoint at `https://www.zomato.com/widgets/res_search_widget.php` is vulnerable to XSS in the `language_id` parameter.\n\nAn attacker can create a web page that includes a Zomato widget inside an iframe with a specially crafted URL parameter that contains javascript. If a Zomato user opens this page, the iframe will load and execute the malicious javascript in the zomato.com origin using the user's active session.\n\nThis javascript can then steal a CSRF token from the zomato.com homepage and perform actions _as_ the user - actions such as inviting/removing friends, posting reviews, posting ratings and others. This can potentially be used to message other users with the malicious web page and get them to execute the malicious code, creating a sort of javascript worm or embed external malicious documents (flash, pdf, other) to continue the attack on a user's machine. On the good side, the injected javascript _may not_ steal the user's session cookie thanks to the HTTPOnly cookie parameter.\n\nThe `language_id` parameter should be filtered so that non-essential characters are removed before being output to users.\n\n#### 2. Proof of Concept\n\nI use a piece of javascript code that creates an alert box with the `document.domain`, which shows the SOP is bypassed: `\"}');alert(document.domain);console.log('`. This code is urlencoded and inserted into the `language_id` parameter of the request like so:\n\n```\nhttps://www.zomato.com/widgets/res_search_widget.php?city_id=276&language_id=%22%7D%27)%3Balert(1)%3Bconsole.log(%27&theme=blue&hideCitySearch=on&hideResSearch=on&sort=popularity\n```\n\nThis URL is used to create an iframe as described in Zomato's widget documentation: https://developers.zomato.com/widgets and the final code looks like this:\n\n```\n<html>\n    <body>\n        <iframe src=\"https://www.zomato.com/widgets/res_search_widget.php?city_id=273&language_id=%22%7D%27)%3Balert(document.domain)%3Bconsole.log(%27&theme=blue&hideCitySearch=on&hideResSearch=on&sort=popularity\" style=\"position:relative;width:100%;height:100%;\" border=\"0\" frameborder=\"0\"></iframe>\n    </body>\n</html>\n```\n\nOpening this html document, even locally, will run the javascript in the context of zomato.com as shown in the attached screenshot.\n\nLet me know if you have any questions.\n\nBest,\nMatt",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 72661,
+      "file_name": "zomato_poc.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/072/661/16d15c201d028c6f94c40f3871004d67af1a35af/zomato_poc.jpg?response-content-disposition=attachment%3B%20filename%3D%22zomato_poc.jpg%22%3B%20filename%2A%3DUTF-8%27%27zomato_poc.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQY5SNTJY%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T115716Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCop3Q63LW7Yv49h39we4XGKTgB9I7F6pJKpNEAG5240gIhAKwETGKrJzPr%2F7fM%2BGdJgnL4ieElyx642F%2B3bdwtyvMVKrIFCHAQAxoMMDEzNjE5Mjc0ODQ5IgxiJGR4b42ipezn2VQqjwWrA2dov7Kt2r6FlNqmUOd9MA4HZlBgL1aIs2MOL60HKsdB5AZvyhHiEBPXVQr4PRTgTp8Fi9ZMOPf3CAhXGbJjM9jp592k%2F7TreupWqubvRT868TwIa44%2BRxJqPSZCl254kSE6JQrHSLo4RI9TDYlrpANeUojlGlKylV9eTlYBndbRNzlqIOcwxONXEsxR818hC8%2BGtnVFIgATvsbSUH%2BiA0x7Lb32jiQVuy0oeZBUN5jX9t7XP7Jk7ecQsNQPi9QCNGheWGZgWQ8ddzaHm4csId42PSTSRLaQP5ntNNmd%2FZS5od6u37mLHNfS9V4v9e4pxXeT5WZtttJzE9Yys%2B8fmie4dZbg%2Bv2v%2Fp9p8KxHKm1rF7WKTRhCxwktkUkOyx9MAzKZeWr8PwnbUFm1cwRFNbUP8uLqBodTvabXBErW6EX1Kk50mcS1S2FwIz0UDayFMkzQ9KzbaWRrp3FrqWXtp5Z5yNZL%2BTlIv0TZiulPPU%2FaB6Q7FMNaN921cTtaFEpww368Ewb0eSXe76I3OkpT%2FGX%2FHtCYgzigJ7e5Vfb5IJgxhYd41G%2F0hpmJ%2FQ6wQyMFULMjyfrt8087O6e4BNzCrtGdfGH9m6KVsCGCh3lGYnc8VpsjPZjdftmAxBw9yds%2BVPnA62EUqSGd%2FoMQiStjwsf1c29bJFnctk2xMx4DUMKIWZoJ23jxOXwehPc7n14JsfnnVVG7RszDWeOdW624nWGdzWza36%2FDlclzHITfSbJTysPSrpPNaFgc0AnmZlVyb2thOsjfVj2wNKEOJa%2FAOjbcdoHiPxxPnQ0r1cfza05F92Aej%2FcNcVmqgKZwhrm7HX%2BYc1IKfOOz7M4P7Bhh7Ia6AcN95bPhcWLTZrmOMOGnrK4GOrABPXk11jqiK7cEnzOjvWGuSWl85sW7hizljGLFnEQMe4PXo5MCLGc8x7feomShfmj0rx927DYI79pdEmRhxSFaO9lFyhtZETXKtv3%2FvyXRabiLAGZzzkBQDRZUn%2Fr%2Fic3VGYzVuS6LhjMPI3o9Jo49wbqCEKynJJ5On5e3b2almIO4JNp3PvEktFAODdzTkgUrByaeTnasF6%2B80vs8pNG22RpLdF0sqmofolZbs%2F8BX30%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2c71762504cd2986bf026e272924fe6fa8f9e509233caab12b535ae1657b9331",
+      "file_size": 87241,
+      "type": "image/jpeg",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-03-11T06:17:56.646Z",
+  "allow_singular_disclosure_after": -250148359.6778828,
+  "singular_disclosure_allowed": true,
+  "vote_count": 0,
+  "voters": [],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

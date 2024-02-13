@@ -1,0 +1,143 @@
+{
+  "id": 1955370,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xOTU1Mzcw",
+  "url": "https://hackerone.com/reports/1955370",
+  "title": "Incorrect handling of certain characters passed to the redirection functionality in Rails can lead to a single-click XSS vulnerability.",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2023-04-20T01:32:01.375Z",
+  "submitted_at": "2023-04-20T01:32:01.552Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "meowday",
+    "url": "/meowday",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 22,
+    "url": "https://hackerone.com/rails",
+    "handle": "rails",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/022/5e2b46658c8b86bed62f574d8e1793f353cbbc63_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/022/5e2b46658c8b86bed62f574d8e1793f353cbbc63_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Ruby on Rails",
+      "twitter_handle": "rails",
+      "website": "http://rubyonrails.org/security",
+      "about": "Web development that doesn't hurt."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": true,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2023-28362"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-07-28T00:27:41.090Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2023-06-28T00:27:39.152Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "### Overview\nIncorrect handling of certain characters passed to the redirection functionality in Rails can lead to a single-click XSS vulnerability across web applications. This has been tested on the latest version of Rails as of today (7.0.4.3).\n\n### Description\nDownstream parsing of values sent to the redirect_to function will cause the 'location' header to be removed from the response when certain characters are used in the URL. For example, if the `\\b` (%08) (backspace) character is used in the URL.\n\nWhen the location header is missing from the response, it is possible to control the `href` attribute in the HTML response that would normally be briefly shown prior to the redirect, therefore by using a javascript URI, it is possible to prevent the redirect and serve an XSS payload.\n\nDuring the assessment, the `%01-%08, %0b, %0c, %0e-%1f` characters were found to be vulnerable, however there may be others.\n\nWe believe this may be attributed to the rack linters attempting to conform to rfc7230 (https://github.com/rack/rack/blob/f5666bc8cb13b8d731ea0222fbd3ada670f2cd55/lib/rack/lint.rb#L671)\n\n### Proof of Concept\nA simple instance is as follows:\n\n`app/controllers/application_controller.rb`\n```ruby\nclass ApplicationController < ActionController::Base\n  def vuln\n    redirect_to params[:redirect_url], allow_other_host: true\n  end\nend\n```\n\n`config/routes.rb`\n```ruby\nRails.application.routes.draw do\n  get \"/vuln\" => \"application#vuln\"\nend\n```\n\nAnd then when we retrieve: `http://localhost:3000/vuln?redirect_url=javascript:alert()%08`\n\nThe response will be as follows:\n```\nHTTP/1.1 302 Found\nCache-Control: no-store\nDate: Thu, 06 Apr 2023 05:16:21 GMT\nConnection: close\nContent-Length: 100\n\n<html><body>You are being <a href=\"javascript:alert(document.cookie) \">redirected</a>.</body></html>\n```\n\nAs the page does not redirect, if the user clicks on the link (expecting the redirect for example), the payload will be triggered:\n{F2303758}\n\n## Impact\n\nUser controlled values being sent to the `redirect_to` function may cause an unwanted XSS vulnerability. This was discovered in the wild and proven to be a legitimate security concern.",
+  "weakness": {
+    "id": 61,
+    "name": "Cross-site Scripting (XSS) - Reflected"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 2303758,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/jwsulxtk4g0nj8bc6wmblohnef8g?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTJFGACUK%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143613Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQC3Tuf8wTsJ6HgA%2BHqgp20HmgXBHMAQ4OqTlZ9OWuKgBAIhAOvE8XTU%2BSdcCSz5sVQojGBmKatUQGh%2FA44vLbcP%2Fm%2BUKrIFCHcQAxoMMDEzNjE5Mjc0ODQ5IgzTJhZOFm4GMgT4x1sqjwW0Te4aWJuWaHDaUOwX6BTUT%2BWVM7TuVfL8jOUvJxOlkS5Lf9jEW4%2BJe6myFMRPfV3cl1jHvXdCpoZr1VDiUBakEFhwbZYmiggKueZ0JgXLv54dWJdSFx9%2BtHXdqHC5YIw8pd87hEyCWO0WVSMpU0BwL2LA12LitDPxLhy%2B1P1MKa4B8%2BolMTizbUobGSsjQpn0J03hOTYz0qMWq%2FrQBiVm4PkGhIKoPogNoueiK1FvIuGSZcrBW7I2morIEv%2B4RhCIO%2FtWPjY1Fb8vi9NQA3nVCyQ5tdSqOepqkBTUxeoREnHEvrBmcoYQDjb7R%2B0W6sA68Njxz3CqAehylnajasZOJ2DEtuipCSGNuiZSMQvkMyWdJPuUvbCwj3Hi4v9k4CyGrxZE5lIlr7fEPofWh5bufWhEAaVokadugrpSNkxC9ixU7g5OW72Npc4%2B%2FNJVwHUNDMfB4%2BqEHwn78jEGr058QH5MJiTtGFgjqIAO%2BqKsudB%2BrUHqDGsSqwTMqLSKDzvoTA7asoZMtr4dX1qcP9FXNNgHeMbOPYpPYHxGE8LY7AtAVgJMRwVF9aXrKF6vuFcFCvFIkCvLe1cE%2BJA%2Fng51Fzl0pkQmrdUa9Q%2Bh0BBJEUGLxzgjbpmEYBQBbJtSmYE1zOUsBLqKMaP%2F89PSSIxtWO6EXcpdND9bY71nEm%2FnTCVm6eR2IhxLleobZcD%2B8IUEahLjhTIcHxHghoAcOD1LC1WptK97c4lcGIkxUvzK2vkMdF4%2BWJCwwx%2B2lXSVUzCL2tvwxa%2BbkZ%2FJMvfgSy8rgkVG%2Fc7pzQKgoq3bEEnI4zhQJFANhNg8Lfec1FA1jO%2FvLzqoKR0Bla7K0r9BN%2Bxx5t5GDyGWAX4%2BdZIbMHbSMKn1ra4GOrAB%2BHYBGCq1%2BXZHyPtMlkND6b47v1CWX0jODxdKSccUpq9J1lB8OTDs8mvUAytBUPQZIFFXueEQhrZOc6CniIEFp1YyioNPcbCjcoDKzh9umDgfiq%2FemPxWdVqSpUn3piAIl5iFC704ZMHpEM68pz0ePrup8Ej3liid1kztmk2d82LQRl4AOLmnFNfmSk1j%2Fm0m8fsw96lJbJTcdjYiCigdYCatevndBo6m5MO1WyoxPtw%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ca88ba28ec4096e22c5e8093739dae1c23d122b0de00dce981d9e1ac31f3d3c0",
+      "file_size": 118158,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-07-28T00:27:39.298Z",
+  "allow_singular_disclosure_after": -17330914.502965294,
+  "singular_disclosure_allowed": true,
+  "vote_count": 14,
+  "voters": [
+    "zy9ard3",
+    "neil-tsakatsa",
+    "paler",
+    "shivammusic",
+    "codestroker",
+    "cvjangid",
+    "kath27",
+    "dnlmengs",
+    "cu11en",
+    "as4c",
+    "and 4 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 4.3,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 160,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/rails/rails",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

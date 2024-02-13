@@ -1,0 +1,119 @@
+{
+  "id": 274267,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNzQyNjc=",
+  "url": "https://hackerone.com/reports/274267",
+  "title": "Request Hijacking Vulnerability in RubyGems 2.6.13 and earlier",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "low",
+  "readable_substate": "Informative",
+  "created_at": "2017-10-04T04:06:15.449Z",
+  "submitted_at": "2017-10-04T04:06:15.449Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "claudijd",
+    "url": "/claudijd",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/003/131/3c373767fbd4f34648ab754b0f692fb718bfb8e5_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 8212,
+    "url": "https://hackerone.com/rubygems",
+    "handle": "rubygems",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/008/212/e65eca09896d23bc029c08d3147a79a48ec1ee2f_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/008/212/e65eca09896d23bc029c08d3147a79a48ec1ee2f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "RubyGems",
+      "twitter_handle": "rubygems_status",
+      "website": "https://rubygems.org",
+      "about": "RubyGems.org is the Ruby community’s gem hosting service."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": true,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2017-0902"
+  ],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2018-12-08T20:06:30.799Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-03-16T03:15:38.782Z",
+  "team_member_agreed_on_going_public_at": "2018-12-08T20:06:30.738Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "We received this report via security@ from david@bamsoftware.com, I'm filing here for tracking and visibility purposes...\n\n\"I was looking at commit 8d91516fb7037ecfb27622f605dc40245e0f8d32, which\nwas the fix for the DNS hijacking issue CVE-2017-0902. The function\nstill handles the DNS response in a potentially unsafe way. I did not\nfind any actual vulnerabilities in the current code; the code that uses\nthe result of api_endpoint (perhaps coincidentally) discards the\npotentially malicious components of the URI that api_endpoint returns.\nBut future code may be vulnerable. I'm sending this to the security list\nbecause my checks for vulnerability may be incomplete.\n\nThe problem is that api_endpoint allows the DNS SRV response to contain\nURI-like syntax (which was the cause of CVE-2017-0902). The fix was to\nparse the syntax as if it were a URI, extract the host component, and\nonly do a comparison using the host component, rather than the entire\nstring. However, the entire string is still pasted into the return\nvalue, assuming the comparison succeeds. It can contain URI syntax\ncharacters like '?' and '#' that change the interpretation of what\nfollows them.\n\nI'm attaching a patch that adds a new test and changes api_endpoint to\ndiscard everything but the host after parsing the DNS SRV response as a\nURI. It would probably be even better simply to disallow any syntax\nother than hostname literals.\n\nThe lines that I initially thought was vulnerable, but appear not to be,\nare in lib/rubygems/source.rb:\n   bundler_api_uri = api_uri + './api/v1/dependencies'\n   uri = api_uri + \"#{Gem::MARSHAL_SPEC_DIR}#{spec_file_name}\"\n   spec_path  = api_uri + \"#{file_name}.gz\"\nThe reason they are not vulnerable is that api_url is a URI object\nrather than a string, so the + operator is actually the merge method\nrather than string concatenation. The merge operator replaces any\nexisting path, query, and fragment components, it seems. (It would not\nhelp if the attacker-provided string changed the URI's host, pass, or\nport components, but I could not think of a realistic path to\nexploitation using only those components.) However if api_uri had been\ncoerced into a string, then the code would be vulnerable. An attacker\ncould cause the client to download some other path, which could possibly\nlead to a downgrade attack or replacing one gem with another.\n<0001-Have-api_endpoint-replace-only-host-not-port-user-pa.patch>\"",
+  "weakness": {
+    "id": 58,
+    "name": "Command Injection - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 226270,
+      "file_name": "0001-Have-api_endpoint-replace-only-host-not-port-user-pa.patch",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/226/270/1eda5d0b371c77a0c61d045b4c49fda826243456/0001-Have-api_endpoint-replace-only-host-not-port-user-pa.patch?response-content-disposition=attachment%3B%20filename%3D%220001-Have-api_endpoint-replace-only-host-not-port-user-pa.patch%22%3B%20filename%2A%3DUTF-8%27%270001-Have-api_endpoint-replace-only-host-not-port-user-pa.patch&response-content-type=text%2Fx-diff&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3DOTL4Z4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125138Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCP1h%2BMnyvDRDa6h%2F4zIodqh2MzJlGISvpnoEvR4kc2fgIgP8fAE6zkU2xDXiIdq36r00FCUyYf6OQc2MuvlpSL6zgqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDJ2sbhPrB5o6p2UkMiqPBcMZAZzMf1lo6ftFZmyVLqm8Hg2J3xbj6a3GuTLabMbNJWiA%2FZsFo0hE3gxRPbyAqhG6FJuKINNLYiqNvOekzW8sar88psZuM%2FX9%2FNoLvFSAVVJpHHBKNZUcwzDsSG6dL68X0%2F81p9YWjmvjokQY%2B9nuD7359WQ659K26Fclw65VMeRybJ1hUyi2a%2FyS4P%2FH0PoUc1H0vEsvCcDRZFSU2VqX6BFziwRAbmxLuUXTN5m%2F5hWF5b3%2BkgFf3EOVPo%2BXtyBL0zsVvefLcDnkTyLYtjGuMSoKMfdzhMUUnoy%2FSkL%2FnqSrrhe9QDnvuA12WJYXs7dXUtOgD1FweSHqkAlJgnKNM8PYSjJnvj8q9w4J7BBdDstdMKFug3p2hl8P0Z3ewTKwgYQFTrJSgQ5k2oIl05GLUuZEuGlOhqiAdJ0VSwCyoN%2BcsLtWKUwcF5i%2BGCo6ppjPFD80qdzVR70b4ApfmQxVQXMoqtkj6LQcYtZ%2BagRqhM%2BtszUfSlLJd2TtHW1cmvfHpY38mbjTqSHEOfCoz%2FpdesWuHOFHT%2FPgVGOwrKnQpNMV%2FyR1KqF%2B%2F4CD%2FGMR2tktKBwuNfh2OlxQvwD2aE8XvEC%2B4mc3056ID7XSvkKVVQ5FPigZOQTgvmJ494qVF7ehsKzqTF%2B9hAoK4S6zfV7Rj7ZQPgHv3om4hYuHsgUcaD29IgjjBb7uAyiaX%2BnWynmxhoDSjS8R%2BX%2Fh548W%2F5oeVorlsLKwzmcY%2Fn5eCd84hK21TQBO83%2FN5WvC2Rjqcrcse3ypMcrNI7pSoyAYBbW7BZ7x1FSQkjJ0k9%2BmmuCWHGFTK1yvtjTnkqMZorU8FXNTbF9f5hhpv%2FD%2Bx%2FaaWxL40nM7EEpqTFiYBitKsZow7cCtrgY6sQExtT%2FZOBwnOUsXGGVn22KELl38mJ%2B5OivmNc%2Fgks2i4L3ET0mxTFvDVZpjL316NVv%2FbrIj%2Fy2VtfGofe3Raptm7CsozbMN%2FwB4%2F%2B1rcHUIoVQ8JJTc06nsi5aVYzNhXnbrwhbQkoT0dxKYDFETL%2B6%2F051XAavIrnvB5CtHwa5YaT7z83h5GNqUOlmAh9%2BiDFNSkfEsNFaYzGytNE8syYguoEi7iDkqQjn2z2qwL4LrkcU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2dec2735571f32bdf70fd894b915ed11187367971d7976ca559f1e468d401dd8",
+      "file_size": 4067,
+      "type": "text/x-diff",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 5,
+  "voters": [
+    "sameerphad72",
+    "ali",
+    "dhakal_ananda",
+    "s3rgio1993",
+    "sonalkr132"
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

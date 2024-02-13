@@ -1,0 +1,116 @@
+{
+  "id": 170156,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzAxNTY=",
+  "url": "https://hackerone.com/reports/170156",
+  "title": "Reflected XSS in Step 2 of the Installation",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-09-18T05:04:27.335Z",
+  "submitted_at": "2016-09-18T05:04:27.335Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "pavanw3b",
+    "url": "/pavanw3b",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/038/280/46fd940624527eb674a6bbc0c1affe8448757fed_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 2367,
+    "url": "https://hackerone.com/revive_adserver",
+    "handle": "revive_adserver",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/367/4f47a5b4a364515d4bbdc17550d67ea5415363cd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/367/4f47a5b4a364515d4bbdc17550d67ea5415363cd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Revive Adserver",
+      "twitter_handle": "revive_adserver",
+      "website": "https://www.revive-adserver.com",
+      "about": "Revive Adserver is a free open source ad serving system"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2016-9472"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-08-02T05:59:06.669Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-07-03T05:59:01.406Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**\"Cricetinae\"** :)\n\n### Short Description\nThe **dbName** parameter in Step 2 of Installation Wizard is vulnerable to Cross-Site Scripting vulnerability when the form is returned with error.\n\n### Vulnerability Details\nCross-Site Scripting issue let's one to run a javascript of choice. It helps most of the client side risks including but not limited to phishing, temporary deface, browser key-logger and others. Exploitation frameworks like BeEF eases the offensive attack.\n\n### Attack Vector\nThough this may be treated as a Self-XSS, the place where the issue is affecting is sensitive. If the user who is going to set up the Revive Adserver, follows an untrusted malicious guide which contains specially crafted XSS payload, can help in gaining access to the database by tricking him to enter the credential in attacker's site by redirecting or any other way.\n\t\n### Dependency\n1. Occurs at the time of installation when the Database Name contains invalid characters.\n2. Chrome's default XSS Protection blocks simple XSS payloads. Please use firefox for reproduction.\n\n### Steps to Reproduce\n1. Navigate to Installation\n2. Agree to the terms and condition in the first step\n3. In the second step, please enter  `something<script>alert('xss');</script>` for Database Name field\n4. Note the javascript alert box triggered from the above payload entered in dbName parameter\n\n### HTTP Request\n`POST /revive-adserver/www/admin/install.php HTTP/1.1\n..\n..\nConnection: close`\n\n`_qf__install-db-form=&action=database&moreFieldsShown=&dbName=something<script>alert('xss');</script>&dbUser=root&dbPassword=roots&dbHost=localhost&dbType=mysql&dbLocal=0&dbPort=3306&dbTableType=MYISAM&dbTablePrefix=rv_&save=Continue+%C2%BB`\n`\n\n###HTTP Response\n`HTTP/1.1 200 OK\n`\n..\n`<span id='errorMessages'>\n                          Database names cannot contain \"/\", \"\\\", \".\", or characters that are not allowed in filenames <br/>                          Installation failed to create the database something<script>alert('xss');</script></span>`\n        \n###Test Environment Details\n**Version**: Latest as on Sept 17: revive-adserver-3.2.4 downloaded from official website\n**Setup type**: local\n**Browser**: Firefox 47.0\n**OS**: Mac OS X\n\nCheers,\nPavan",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 121116,
+      "file_name": "revive_adserver_xss.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/121/116/bd8cc8b4a0750bf87e615a21076fb6d8c14bf83e/revive_adserver_xss.png?response-content-disposition=attachment%3B%20filename%3D%22revive_adserver_xss.png%22%3B%20filename%2A%3DUTF-8%27%27revive_adserver_xss.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYS6T2T4S%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122349Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQC%2FRlgMvrp4sI%2BNN%2Bw0e%2BHS%2Fi0X4FFUjwI6hTqAUnQWYQIgPZYpGqRtUrQEdEqyjQ7VWI1A7cqBCtguMbt4YIuIcNIqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDIwmV%2FtI2Z%2BVlVJQOCqOBc7CvK4xINdfRva6PibURBsgRmkDXf%2FsfRb09TcUdBlBFNmKVkxQPEdRC1Mnq1DDtMy%2FcGXOrpRoAxZrwVEpSHxUpZo%2FJRAHbOWAQBUrr1l1gC6t9Ol8wWC7PLi7X%2FD2%2BIDYKaPOL3QSa9PdanrueH6WdeJdiGnGVaFnEkwm%2BHPy%2BNshabbrQKXqkiQ%2FKRYoPLt1dvZ1N24FQHGKbhJBHzJTQzkx7Zrace5bXg%2BJgLt6PscN7h%2BULLdZS9N80mauppM1Bvb6ZAc1mkJWSe0udi0WKGIY51k32kzf%2FZRlsjDjv3wLANMhuaYZxtbiG3WqGDC8fit9fFP3v6IHyuIqz8W%2FJG6NK1zlTj4Bv2ofITBdDLGFFR8yKVIFqByGSOWGgKHI%2Bp%2FU758TaX5fX5ORVjWG5txmLAIp2Ye6HKb1jos9tPe0WwKFf1VXSzM%2BIPDtrwzelzeq1ecGD7Qov%2BE7m6FSNQhrPCH5MWK76q29U5jHq4v9GWkh6dO8IcaXMgC5%2BVrL8P1250J44UPDKtphXTjBb3iA00qdsdp1F%2B%2Fa15Q2N6WK4Zj8yXgSiYj5SqlvrlLooUiEv4FjCaTKJ%2B%2F6X9LlHBvM59P7vynVxy%2FZvv1tVFuE%2B1IJtkjeAr5%2BJZnYlQqnuceFw3MjImSw8YPBpzvy4Syrbl%2FiRlfszmlv0xFykH9Tf1k32eSbbbhd5%2B5c1f0w5Do%2F0wB%2B%2F7HU5grw%2Fsc%2Fa4ONp4AL9dothtFzDI9yrU86H0Tj%2BgA4bfs%2Bq8KiM04Zifmo5%2BSqSn50Vbg%2BbyS%2BCKKHCDlA%2FBvQCMxY1dpo4pqPW8%2FQk9SE5zpcrHezMMGRkJg26Wm6o5Sur%2BuuyvPlmvWPTnE137%2FSashTujC8pqyuBjqxAQugPapY7MCgoHnN3A9t0%2FPfp1FpK4tJONEidbWkGhXB6NA90wXv8DKSeZxQJFUZ19mDVzE0iG0%2BiihjuEoeGetVY82tVdAOUT4mlhJqZaL%2FmnCgfpwcatSd2OhHah3YU4JQGvlArly1nhC20oudJ%2FsRukkppx66K%2BMQZDqC%2BF8kHc8TtamF0NWCg6ZU6SXNGyIAZPkCoGCxc2Yn3P3JIGfWLiNvqDATfN7jYp4Rp1toDQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e25c6b247e3a5106689df2546352f2557f511c55d7fa3ba14efd0b8c0fc71f63",
+      "file_size": 457189,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-08-02T05:59:01.454Z",
+  "allow_singular_disclosure_after": -206173488.25853792,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "shubham_srt",
+    "eveeez",
+    "kiraak-boy",
+    "pavanw3b",
+    "sumit7"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

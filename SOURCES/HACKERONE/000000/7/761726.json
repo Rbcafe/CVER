@@ -1,0 +1,181 @@
+{
+  "id": 761726,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83NjE3MjY=",
+  "url": "https://hackerone.com/reports/761726",
+  "title": "SOP bypass using browser cache",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2019-12-19T14:26:53.248Z",
+  "submitted_at": "2019-12-19T14:26:53.248Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "aaron_costello",
+    "url": "/aaron_costello",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/89cpgLpC5JjJB9H6NtWYW3wJ/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 2809,
+    "url": "https://hackerone.com/keybase",
+    "handle": "keybase",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/809/710eb42880bb34c06cab0d1d5081488ec59aec5e_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/809/710eb42880bb34c06cab0d1d5081488ec59aec5e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Keybase",
+      "twitter_handle": "keybaseio",
+      "website": "https://keybase.io",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2019-12-24T16:42:33.833Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-12-24T16:42:33.757Z",
+  "team_member_agreed_on_going_public_at": "2019-12-24T01:04:19.930Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "### Summary\n\nAn attacker has the ability to extract sensitive information from user's accounts, due to a CORS issue. On a minor note, this also is a cross-site leak as we can fingerprint what exact keybase user has accessed the attacker's website. \n\nInformation disclosed:\n\n```\n\"passphrase_generation\":4,\"random_pw\":false},\n\"invitation_stats\":{\"available\":60,\"used\":40,\"power\":100,\"open\":0},\n\"profile\":\"emails\":{\"emails\":[{\"email\":\"x86sec@yahoo.ie\",\"is_primary\":1,\"is_verified\":1,\"when_verified\":\"2016-03-08T22:44:39.000Z\",\"visibility\":1,\"last_verify_email_date\":null}],\"primary\":{\"email\":\"x86sec@yahoo.ie\",\"is_primary\":1,\"is_verified\":1,\"when_verified\":\"2016-03-08T22:44:39.000Z\",\"visibility\":1,\"last_verify_email_date\":null}},\"billing_and_quotas\":{\"plan\":{\"plan_id\":\"b40ff8cf58afb4fa7e8dd4dc2c5f651a\",\"plan_name\":\"BASIC\",\"price_pennies\":0,\"gigabytes\":250,\"num_groups\":0,\"folders_with_writes\":500,\"billing_status\":0,\"test_mode\":null},\"usage\",\"lks_server_half\":\"a42d3be100454cc98df58d90acd402af57e40119d6a02580edc47128454a47dc\",\"passphrase_generation\":4,\"last_used_time\":1566400369},\"private_keys\":{\"all\":{}}\n```\n\nI tested this on my own account, and while there is some serious information disclosure here, I am most concerned by \"private_keys\" field. I do not believe I have a private key stored on keybase.io however if it turns out that a private key is disclosed here for people that do, I believe this is near critical impact.\n\n### Issue Overview\n\nUsers can interact with the following endpoint: https://keybase.io/_/api/1.0/user/lookup.json?username={username} to find information about other users such as public key etc. However, if they are signed in and lookup their own username, they are given some private data on themselves which is shown in the summary section (Email, stats, etc et al).\n\nThe CORS policy implemented here looks like this:\n\n```\nAccess-Control-Allow-Origin: *\nAccess-Control-Allow-Methods: GET\nAccess-Control-Allow-Headers: Content-Type, Authorization, Content-Length, X-Requested-With\nAccess-Control-Allow-Credentials: false\n```\n\nWhat we can do here:\n1. Use JS cross origin requests to read from the response, from any origin\n2. We cannot use credentials however, which means that even if we set up a payload to steal data from a victim that navigates to it, the sensitive data in the summary isn't available since they are technically 'not signed in' when the request is made.\n\nHowever, the only authentication used in this request is a session cookie which is what leads to this issue. An attacker can force the javascript fetch API to fetch an authenticated response from the browser cache, meaning we can access this sensitive data since the cache will include the cookies!\n\n### PoC\n\nPrior to this, it's important to know that an attacker can easily host a page that makes hundreds of these requests with different usernames in order to fingerprint (and then disclose sensitive info) the keybase user, but for simplicity it will use one username (yours) .\n\nAlso, this issue was reproduced on Chrome on Linux. Windows should work also. I am unsure of other browsers however. Please monitor all requests with burp suite.\n\n1) Create the following payload locally (You don't have to host it anywhere for the sake of the PoC, since the server accepts a null origin). Replace the parameter value with your username and remove the braces.\n\n```\n<html>\n<script>  \nvar url = \"https://keybase.io/_/api/1.0/user/lookup.json?username={YOUR_USERNAME}\";  \nfetch(url, {    \n\tmethod: 'GET',    \n\tcache: 'force-cache'\n\t});\n</script>\n</html>\n```\n\n2) Login to your keybase account and perform some functionality such as encrypting a message to yourself etc. This will get cause the browser to cache this search endpoint\n\n3)  Notice in burp suite, the authenticated request with cookies to https://keybase.io/_/api/1.0/user/lookup.json?username={YOUR_USERNAME} after performing the previous step. It will contain the sensitive information as mentioned in the summary. Now, remove those cookies in Burp's repeater and re-submit. You will notice this sensitive information is gone, since you're no longer authenticated to your own account. The content-length is reduced in the unauthenticated request. This is shown below.\n\nAuthenticated (My account is nopesled):\n\n{F663852}\n\nUnauthenticated:\n\n{F663854}\n\n\n4) Now, simulate navigating to an attackers payload by opening the fetch.html file in Chrome with the developer console open (An attacker will log the response, this is for payload simplicity that I'm instructing use of the dev-console). Navigate to the network tab of the developer console and you will see the that the sensitive information such as email, stats, and such was disclosed to the attacker's page (So he can steal it by logging it). You will notice that the request was fetched as 'authenticated' via abusing the disk cache (Network tab -> Headers -> General info -> \"Status Code 200 OK (from disk cache)\"). This is demonstrated in the below screenshots.\n\n{F663846}\n{F663847}\n\nFor further proof, modify the fetch.html payload by removing the 'cache: force-cache' line, and reload the page. You will see that it will not request from the cache but from the server, resulting in the request being performed unauthenticated and disclosing no sensitive info.\n\n### Wrap Up and Remediation\n\nAn attacker can simulate an 'authenticated' request by forcing the browser to retrieve the response from the cache, stealing sensitive information and bypassing the fact that requests with credentials should be blocked. It also fingerprints which keybase user is accessing the attacker's website through what is known as an [XS Leak](https://portswigger.net/daily-swig/new-xs-leak-techniques-reveal-fresh-ways-to-expose-user-information)\n\nIn order to prevent this issue of browser caching, I suggest the implementation of the Cache-control: no-store header in responses to instruct browsers not to cache it.\n\n## Impact\n\nAttacker can steal sensitive information from (and identify) keybase users through a CORS bypass + XS Leak",
+  "weakness": {
+    "id": 26,
+    "name": "Improper Access Control - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 663846,
+      "file_name": "sensitive2.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/Gr4YntpJbJs4SQC3aUbH4Soc?response-content-disposition=attachment%3B%20filename%3D%22sensitive2.PNG%22%3B%20filename%2A%3DUTF-8%27%27sensitive2.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133349Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=56ac50fd4f1e62d4b39a3ed9de579d37e17eb3e549a06e153e295e8b86998746",
+      "file_size": 43715,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 663847,
+      "file_name": "sensitive1.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/XmCKHQ7riFaBpoq2r65z1t8C?response-content-disposition=attachment%3B%20filename%3D%22sensitive1.PNG%22%3B%20filename%2A%3DUTF-8%27%27sensitive1.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133349Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=435daee915b504b466262be7fd8f15da79d40a70402ffa0570e2e00391070e29",
+      "file_size": 15468,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 663852,
+      "file_name": "withsession.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/6XJJa8uohVT3KvqdpGJFNwhS?response-content-disposition=attachment%3B%20filename%3D%22withsession.PNG%22%3B%20filename%2A%3DUTF-8%27%27withsession.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133349Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c9053cab0cda677adbf857b9a70e5a8136b912c83cad95536a41ec4727f3d47a",
+      "file_size": 109313,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 663854,
+      "file_name": "withoutsession.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/psm26x1YrKGJhyfYu6MMLzuR?response-content-disposition=attachment%3B%20filename%3D%22withoutsession.PNG%22%3B%20filename%2A%3DUTF-8%27%27withoutsession.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133349Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ef5bf5e98c9b57002c5f604df927f9f7ca28d31d8f74ade5128b0463bb5f5449",
+      "file_size": 89418,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 182,
+  "voters": [
+    "0xmagna",
+    "superhero1",
+    "sp1d3rs",
+    "stefanovettorazzi",
+    "cdl",
+    "foobar7",
+    "base_64",
+    "rook1337",
+    "ras-it",
+    "ninetynine",
+    "and 172 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 2.6,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "low",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 19416,
+      "category": "researcher",
+      "content": "Blog post of the issue can be found here: https://enumerated.wordpress.com/2019/12/24/sop-bypass-via-browser-cache/",
+      "user": {
+        "id": 16588,
+        "username": "aaron_costello",
+        "name": "Aaron Costello",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": "https://enumerated.ie",
+        "location": "",
+        "created_at": "2015-01-21T22:49:01.678Z",
+        "url": "https://hackerone.com/aaron_costello",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/89cpgLpC5JjJB9H6NtWYW3wJ/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/89cpgLpC5JjJB9H6NtWYW3wJ/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/89cpgLpC5JjJB9H6NtWYW3wJ/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

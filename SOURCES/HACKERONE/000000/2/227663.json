@@ -1,0 +1,136 @@
+{
+  "id": 227663,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMjc2NjM=",
+  "url": "https://hackerone.com/reports/227663",
+  "title": "[https://www.dashlane.com] Test Panel Disclosure",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "none",
+  "readable_substate": "Resolved",
+  "created_at": "2017-05-11T09:30:00.142Z",
+  "submitted_at": "2017-05-11T09:30:00.142Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "rbcafe",
+    "url": "/rbcafe",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/uft7o1wpafGAE3ASGWGc39AL/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 554,
+    "url": "https://hackerone.com/dashlane",
+    "handle": "dashlane",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/aigzdzSVnRXpu3pVPuYu9JUB/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/aigzdzSVnRXpu3pVPuYu9JUB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Dashlane",
+      "twitter_handle": "dashlane",
+      "website": "https://www.dashlane.com/",
+      "about": "Dashlane is the best password manager and secure digital wallet on the planet! Try our app for free at https://www.dashlane.com"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-07-21T18:45:05.191Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-06-21T18:44:59.359Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Greetings,\n\nOn https://www.dashlane.com/ , I observed that the server discloses test panel at :\n\nhttps://www.dashlane.com/app/tests/\n\n{F183690}\n\nI found no relation between an account and the following page to do unauthorized tests.\n\nThe following tests are available with no credential :\n==\n\n- https://www.dashlane.com/app/tests/encrypt.html\n- https://www.dashlane.com/app/tests/decrypt.html\n- https://www.dashlane.com/app/tests/deflate.html\n- https://www.dashlane.com/app/tests/inflate.html\n- https://www.dashlane.com/app/tests/unittest.html\n\nFor example it was possible to extract a salt or obtain various information :\n==\n\n        Debug Start encodingReceived (length: 1)1Start compressingDeflating raw input: (length: 1)49:Hex: (length: 2)31Input Base64: (length: 4)MQ==Deflating with level 7Deflated value: (length: 3)3\u0004After deflating Base64: (length: 20)AAAAAXjaMwQAADIAMg==Done compressingIn byte array: (length: 13)0:0:0:1:120:218:51:4:0:0:50:0:50:Actual data: (length: 13)0:0:0:1:120:218:51:4:0:0:50:0:50:Preparing 5 salts.Start calculating PBKDF2Feeding PBKDF2 with:- salt: '»iõ\u0012òC6g¤w-Ö~Edcn\\\\ \u001b}¶p8ûÑþ¡ò'- pass: '1'- iterations: 10204Done calculating BPKDF2, took 0.311 secondsPBKDF2: (length: 32)106:76:228:43:126:148:140:72:64:151:168:117:46:244:164:247:206:202:249:160:71:224:76:248:229:115:221:172:179:104:30:49:Calculating Bytes To Key:- iterations: 1- salt: bb69f512f2433667a4772dd67e4564636e5c5c8a201b7db67038fbd1fea19cf2Final key: (length: 32)106:76:228:43:126:148:140:72:64:151:168:117:46:244:164:247:206:202:249:160:71:224:76:248:229:115:221:172:179:104:30:49:Initial vector: (length: 16)173:220:214:98:209:30:141:67:138:196:13:63:4:202:26:199:Encrypting (length: 13)0:0:0:1:120:218:51:4:0:0:50:0:50:Encrypted data: (length: 16)Ç_£IS¤<_ÁT(ËwñEncoded & with salt: (length: 72)u2n1EvJDNmekdy3WfkVkY25cXIogG322cDj70f6hnPJLV0Mzx1...... And we are done here.\n\nI produced a video :\n==\n\n{F183691}\n\nFix :\n==\n\nThe panel should be protected with 403 or 401\n\nBest regards\n@Rbcafe\n",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 183690,
+      "file_name": "test.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/183/690/081846cff2f50a6ee3fdc098a88e6b300e063f2f/test.png?response-content-disposition=attachment%3B%20filename%3D%22test.png%22%3B%20filename%2A%3DUTF-8%27%27test.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6HKVASHV%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T124151Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCICvLhS62h5N%2BeRVQ30Kd2hHMhz8kPfjFMuOpxy7iRlG5AiAVMkShHY%2Faxq8kitFh7wszvXMcsgcmKi9tdqpm50QYnCqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMOjj6wnMlyzgGU2SnKo8FQry0DQfXwab1TdGjORsy9n8eC%2BQiBq96Fv6cODW8JqlqdjX%2BMgCnhtMC6%2Ffiyyshf2refpTUq7y9yy%2FTbtdhicOFOxvjbjcH1o0wQWifiUSDxtJQrWp6h%2F3aawaisp0RC8Kudlc208teBUU1gZOoM75eZx0qvVKNIcFvDAh9ke%2BDeTX%2F8ZnTxjr%2BDfdxuWuxGnjY1YNh8XZMg9R2wgoJLEtsag2p6xB%2FTWPNJO18CHGB4DXnAnNcpKRQoSlH%2BU%2BpZLkT3HlQZS8%2FE8lv2QNepSfaQkf%2FLCLyafmC90QLacdnT0%2F%2BpEU3UH8sDsErvW3cp8TURCbTG0djl1U7tv4NZjUEPYgNsGnzLf4XSj8zToNWejkVFjuBWeZe5y8c%2BkYBvRCCEQB5Jsab91oulIK760Xyow%2BMHdBiNVssuHdw7LCXkLRWODpb%2FPd24NniTWU5RfXeUeSwPBAewZzhnBYRlNqDr4yJsfBxbOREQPSYztKP1EoCPNFv1mQWvMqmjKrVIWOQjnPEiwJ4LmXJgn7igMJ59H9ZrIWhl1LCqVtmuL%2BPI49uYYN6J2fdhibGltLGIB21Od%2BxN%2BYo8K%2FDIIXLsGDYV3x%2B88CjiCxNn%2BEzxbzWd%2BuxZHbeaH%2FV9XY5tK4pUmyTVSFoDxRxaIfHO13YvUjdavjRtk%2BVtWLk1JuLPa142xHEC7j7Be2Jr%2FDRJgYQrtno0GeOCwMrv6z358yWjy7DNsCdYGq468o0P%2F%2B7AKYoNpiMn2uLujT2GKcomDDzqj6Ho8onsS76i%2FBgEr6GIpIEYTjp0tAB88Vn2L9CT1wWSBD3lSPHkfkcfBFqvBce61c5UOatAP7Wpp4Ig4Prz0UCl2PjSkE0SBGEvLouijDAqq2uBjqyATJBnIXPs45fNnJhfFkN0jVZ0Annb8ZWvokncI9PNKMRyazA%2BJmYE457MSLJju24jIq4aXOLtDTVdyvAsXDDWxJjbi73t8f2A0l8yl37Oa2xSMrmgfWgvJrx8153JtbyXcvU2WZbbC6GPFulho8HbzIkHgW9WcAiOQUoKdYjSIEd71%2Bv7H0LhpzgsZuiHDVKXfGCbNFjlWeRmmzNI%2Bi85fxFGKx0HUwXyRIg0Re1eeBnYHs%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f75b860f83a6d9bc72c75dab2510dcf9cc594945a87a3027d089d4dfc4ce9cdb",
+      "file_size": 27317,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 183691,
+      "file_name": "aes.mov",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/183/691/bd00881e602289f2dc25a9570b067dafafee5777/aes.mov?response-content-disposition=attachment%3B%20filename%3D%22aes.mov%22%3B%20filename%2A%3DUTF-8%27%27aes.mov&response-content-type=video%2Fquicktime&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6HKVASHV%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T124151Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCICvLhS62h5N%2BeRVQ30Kd2hHMhz8kPfjFMuOpxy7iRlG5AiAVMkShHY%2Faxq8kitFh7wszvXMcsgcmKi9tdqpm50QYnCqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMOjj6wnMlyzgGU2SnKo8FQry0DQfXwab1TdGjORsy9n8eC%2BQiBq96Fv6cODW8JqlqdjX%2BMgCnhtMC6%2Ffiyyshf2refpTUq7y9yy%2FTbtdhicOFOxvjbjcH1o0wQWifiUSDxtJQrWp6h%2F3aawaisp0RC8Kudlc208teBUU1gZOoM75eZx0qvVKNIcFvDAh9ke%2BDeTX%2F8ZnTxjr%2BDfdxuWuxGnjY1YNh8XZMg9R2wgoJLEtsag2p6xB%2FTWPNJO18CHGB4DXnAnNcpKRQoSlH%2BU%2BpZLkT3HlQZS8%2FE8lv2QNepSfaQkf%2FLCLyafmC90QLacdnT0%2F%2BpEU3UH8sDsErvW3cp8TURCbTG0djl1U7tv4NZjUEPYgNsGnzLf4XSj8zToNWejkVFjuBWeZe5y8c%2BkYBvRCCEQB5Jsab91oulIK760Xyow%2BMHdBiNVssuHdw7LCXkLRWODpb%2FPd24NniTWU5RfXeUeSwPBAewZzhnBYRlNqDr4yJsfBxbOREQPSYztKP1EoCPNFv1mQWvMqmjKrVIWOQjnPEiwJ4LmXJgn7igMJ59H9ZrIWhl1LCqVtmuL%2BPI49uYYN6J2fdhibGltLGIB21Od%2BxN%2BYo8K%2FDIIXLsGDYV3x%2B88CjiCxNn%2BEzxbzWd%2BuxZHbeaH%2FV9XY5tK4pUmyTVSFoDxRxaIfHO13YvUjdavjRtk%2BVtWLk1JuLPa142xHEC7j7Be2Jr%2FDRJgYQrtno0GeOCwMrv6z358yWjy7DNsCdYGq468o0P%2F%2B7AKYoNpiMn2uLujT2GKcomDDzqj6Ho8onsS76i%2FBgEr6GIpIEYTjp0tAB88Vn2L9CT1wWSBD3lSPHkfkcfBFqvBce61c5UOatAP7Wpp4Ig4Prz0UCl2PjSkE0SBGEvLouijDAqq2uBjqyATJBnIXPs45fNnJhfFkN0jVZ0Annb8ZWvokncI9PNKMRyazA%2BJmYE457MSLJju24jIq4aXOLtDTVdyvAsXDDWxJjbi73t8f2A0l8yl37Oa2xSMrmgfWgvJrx8153JtbyXcvU2WZbbC6GPFulho8HbzIkHgW9WcAiOQUoKdYjSIEd71%2Bv7H0LhpzgsZuiHDVKXfGCbNFjlWeRmmzNI%2Bi85fxFGKx0HUwXyRIg0Re1eeBnYHs%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1c593ff774d7f418e9eaf22fc999cf8b15d128d47bb3849a5f9959dc689770a5",
+      "file_size": 13965473,
+      "type": "video/quicktime",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-07-21T18:44:59.402Z",
+  "allow_singular_disclosure_after": -207165412.56902078,
+  "singular_disclosure_allowed": true,
+  "vote_count": 7,
+  "voters": [
+    "troubleshooter",
+    "eveeez",
+    "rbcafe",
+    "0x08",
+    "spetr0x",
+    "ffff11110000",
+    "eex"
+  ],
+  "severity": {
+    "rating": "none",
+    "score": 0.0,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

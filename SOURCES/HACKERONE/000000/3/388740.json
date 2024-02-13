@@ -1,0 +1,116 @@
+{
+  "id": 388740,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zODg3NDA=",
+  "url": "https://hackerone.com/reports/388740",
+  "title": "GitHub API Key for BrewTestBot is publicly exposed",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2018-07-31T05:47:18.646Z",
+  "submitted_at": "2018-07-31T05:47:18.646Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ejholmes",
+    "url": "/ejholmes",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/160/627/92f28d0b4c250aed2b781af48097552c8f9413ed_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 19399,
+    "url": "https://hackerone.com/homebrew",
+    "handle": "homebrew",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/019/399/2f26b1d3c096d89ed989900225c128f670ab0ef0_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/019/399/2f26b1d3c096d89ed989900225c128f670ab0ef0_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Homebrew",
+      "twitter_handle": "MacHomebrew",
+      "website": "https://brew.sh",
+      "about": "The missing package manager for macOS (and Linux)"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-08-11T13:57:57.996Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-08-11T00:33:20.808Z",
+  "team_member_agreed_on_going_public_at": "2018-08-11T13:57:57.884Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello!\n\nWhile browsing through some old reports, I found that https://jenkins.brew.sh was publicly accessible. I got curious when I saw one of the [brew bottle builds](https://jenkins.brew.sh/job/Homebrew%20Bottles/33255/console) doing a `git push` to BrewTestBot/homebrew-core, and wondered if the credentials to make authenticated pushes were accessible.\n\nSure enough, you can view environment variables for the build on [this page](https://jenkins.brew.sh/job/Homebrew%20Bottles/33255/injectedEnvVars/), which includes a `HOMEBREW_GITHUB_API_TOKEN` environment variable.\n\nThis API token belongs to the [BrewTestBot](https://github.com/BrewTestBot) user on GitHub, and this API key allows me to commit to the `BrewTestBot/homebrew-core` repository:\n\n```\n$ export GITHUB_API_TOKEN=<github token from above>\n$ curl https://api.github.com/repos/BrewTestBot/homebrew-core/git/blobs -u $GITHUB_API_TOKEN:x-oauth-basic -d '{\"content\":\"test\"}' -H \"Content-Type: application/json\"\n{\n  \"sha\": \"30d74d258442c7c65512eafab474568dd706c430\",\n  \"url\": \"https://api.github.com/repos/BrewTestBot/homebrew-core/git/blobs/30d74d258442c7c65512eafab474568dd706c430\"\n}\n```\n\n## Impact\n\nBased on the purpose of `BrewTestBot`, this might be entirely intended, but if the GitHub access token has overly permissive scopes, it might be usable to perform other actions, aside from a `git push`. In that case, an SSH deploy key may be better, and less permissive.\n\nIf exposing this API key publicly is intended behavior, please feel free to close this.",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2018-09-10T00:33:20.930Z",
+  "allow_singular_disclosure_after": -171290111.97413293,
+  "singular_disclosure_allowed": true,
+  "vote_count": 25,
+  "voters": [
+    "z3t",
+    "michiel",
+    "spam404",
+    "pesticide",
+    "pacmanx",
+    "kernelsndrs",
+    "savitar0x01",
+    "apapedulimu",
+    "akashc99",
+    "eveeez",
+    "and 15 more..."
+  ],
+  "severity": {
+    "rating": "critical",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

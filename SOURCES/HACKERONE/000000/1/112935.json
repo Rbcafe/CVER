@@ -1,0 +1,107 @@
+{
+  "id": 112935,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTI5MzU=",
+  "url": "https://hackerone.com/reports/112935",
+  "title": "Unintended HTML inclusion as a result of https://hackerone.com/reports/110578",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-01-26T19:30:00.753Z",
+  "submitted_at": "2016-01-26T19:30:00.753Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "yaworsk",
+    "url": "/yaworsk",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/046/435/8321e52445321287eea5b5b3f4c9f6ea69e92bb5_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-02-24T00:13:38.166Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-02-24T00:13:37.681Z",
+  "team_member_agreed_on_going_public_at": "2016-02-23T23:37:23.784Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\nI was just reading https://hackerone.com/reports/110578 and testing out the changes. I had previously noticed that the editor would take something like:\n\n    [test](http://www.torontowebsitedeveloper.com \"test ismap=\"yes\"')\n\nand turn it into :\n\n    <a title=\"test ismap=\"yes\"' href=\"http://www.torontowebsitedeveloper.com\">test</a>\n\nIn other words, the code would recursively look at what should be the title string and use the first single or double quote, matching it to the last single or double quote, including all others within it as the actual \" or ' as was noted in the report (I was actually looking at the git repo to try and see if there was any vulnerability in the recursive flow from an overflow perspective but couldn't find one...).\n\nAnyways, I noticed after the report, with your change, I can get some arbitrary html included in anchor tags now. Admittedly, I'm just starting out with all of this so I don't know yet how/if this could be exploited but now when I add the above\n\n    [test](http://www.torontowebsitedeveloper.com \"test ismap=\"alert xss\" yyy=\"test\"\")\n\nIt gets turned into:\n\n    <a title=\"'test\" ismap=\"alert xss\" yyy=\"test\" &#39; href=\"http://www.torontowebsitedeveloper.com\">test</a>\n\nTwo things to I would flag:\n\n1. the single quote at the beginning of what should be title=\"test\" and \n2. I was able to add ismap= and yyy= as html attributes\n\nThis reminded me of the yahoo mail xss injection recently disclosed so I thought I'd make you aware. If you don't agree it's a vulnerability, please let me close the issue.\n\nThanks!\n",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-03-24T23:37:24.239Z",
+  "allow_singular_disclosure_after": -248962695.80843318,
+  "singular_disclosure_allowed": true,
+  "vote_count": 17,
+  "voters": [
+    "drsniper",
+    "shubham_srt",
+    "akaash_pantherdefence",
+    "varlynx",
+    "safisecu",
+    "franciny",
+    "dyabla",
+    "ulisesgascon",
+    "ivrez",
+    "kondratenko",
+    "and 7 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

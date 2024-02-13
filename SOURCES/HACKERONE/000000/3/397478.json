@@ -1,0 +1,114 @@
+{
+  "id": 397478,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zOTc0Nzg=",
+  "url": "https://hackerone.com/reports/397478",
+  "title": "Privilege Escalation via Keybase Helper",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-08-20T23:04:05.380Z",
+  "submitted_at": "2018-08-20T23:04:05.380Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "xpn",
+    "url": "/xpn",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/azCTRgrwEnUcsFw23AxEDoxF/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 2809,
+    "url": "https://hackerone.com/keybase",
+    "handle": "keybase",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/809/710eb42880bb34c06cab0d1d5081488ec59aec5e_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/809/710eb42880bb34c06cab0d1d5081488ec59aec5e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Keybase",
+      "twitter_handle": "keybaseio",
+      "website": "https://keybase.io",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2018-12-18T19:28:56.310Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-12-02T06:21:58.481Z",
+  "team_member_agreed_on_going_public_at": "2018-12-18T19:28:56.246Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "A privilege escalation vulnerability exists within the KeybaseHelper application available when installing the Keybase Desktop Application on MacOS.\n\nThe issue is exposed via a LaunchDaemon plist which is installed within `/Library/LaunchDaemons/keybase.Helper.plist`. This file is responsible for launching `/Library/PrivilegedHelperTools/keybase.Helper` for the registered mach port keybase.Helper.\n\nIf we take the source code located at https://github.com/keybase/client/blob/master/osx/Helper/KBHelper.m, we can see a number of exposed \"methods\" via an XPC connection, including:\n\n* remove - Ability to remove any file on the filesystem as the root user\n* move - Ability to move any file on the filesystem as the root user\n* createDirectory - Ability to create a directory as the root user, and provide attributes such as the owner UID/GID and permissions\n* addToPath - Add applications to the /usr/local/bin directory\n* kextInstall - Add and start kext \n\nInteracting with the helper via XPC takes place via the MPMessagePack framework, which is available from https://github.com/gabriel/MPMessagePack/blob/master/XPC/MPXPCClient.m.\n\nIf we craft a very simple POC, we can see that it is trivial to place files within dangerous locations:\n\n```\n    NSError *error;\n    MPXPCClient *client = [[MPXPCClient alloc] initWithServiceName:@\"keybase.Helper\" privileged:true];\n    [client connect:&error];\n    \n    // Moves any file from \"source\" to \"destination\" as the root user\n    [client sendRequest:@\"move\" params:@[@{@\"source\":@\"/tmp/src\", @\"destination\":@\"/Library/dst\"}] completion: ^(NSError *error, id value) {\n        NSLog(@\"WORKS\");\n    }];\n ``` \n\nIt does appear than an effort has been made to avoid executing arbitrary applications by the helper, for example, we can see the following comments within the \"\" method:\n\n```\n    // Make sure the passed-in redirector binary points to a proper binary\n    // signed by Keybase, we don't want this to be able to run arbitrary code\n    // as root.\n```\n\nThis doesn't stop us from elevating privileges however, for example, we can simply use the 'move' method to copy any file (or overwrite any file). As a simple example, below we can see a simple operation moving a plist file into /Library/LaunchDaemons/com.xpnsec.test.plist:\n\n```\n    [client sendRequest:@\"move\" params:@[@{@\"source\":@\"/tmp/elevate.plist\", @\"destination\":@\"/Library/LaunchDaemons/com.xpnsec.test.plist\"}] completion: ^(NSError *error, id value) {\n        NSLog(@\"WORKS\");\n    }];\n```\n\nOn reboot, we see that our service is installed and executed as the root user.\n\nAlternatively, we can simply copy our malicious payload using the above method to `/Library/PrivilegedHelperTools/keybase.Helper` and spawn via our XPC call.\n\n## Impact\n\nThe impact would be elevation of privileges from any user with permission to access the keybase.Helper XPC service (which is currently all users) to the root user on macOS.",
+  "weakness": {
+    "id": 75,
+    "name": "Privilege Escalation"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 115,
+  "voters": [
+    "m4t35z",
+    "mirchr",
+    "samengmg",
+    "sp1d3rs",
+    "cdl",
+    "kapytein",
+    "base_64",
+    "heeeeen",
+    "michiel",
+    "sameerphad72",
+    "and 105 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

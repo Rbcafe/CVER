@@ -1,0 +1,124 @@
+{
+  "id": 124620,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjQ2MjA=",
+  "url": "https://hackerone.com/reports/124620",
+  "title": "External links should use rel=\"noopener\" or use the redirect service",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-03-20T10:03:24.436Z",
+  "submitted_at": "2016-03-20T10:03:24.436Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "lukasreschke",
+    "url": "/lukasreschke",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/037/891/e7fea4d5383dc07d1fe767b02f3bda2bc7639c63_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-04-05T10:11:35.982Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-04-05T10:11:35.562Z",
+  "team_member_agreed_on_going_public_at": "2016-04-05T09:04:00.975Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "This is a rather low severity one and a successful exploitation relies on unlikely user interaction as well as the ability to control the HTML output of an remote host. Furthermore it is a kinda new hardening features in some browsers. Though one can work around this using \"[noreferrer](https://html.spec.whatwg.org/multipage/semantics.html#link-type-noreferrer)\" which is what we use in @ownCloud for this reason since a longer time.\n\nAnyways, I thought I should give you a heads-up about this anyways :-)\n\n---------\n\n[Our program](https://hackerone.com/owncloud) has setup an integration with our internal issue tracker, this allows us to escalate reports directly into our internal tracker:\n\n{F79971}\n\nOnce escalated the report will offer a link to our internal issue tracker here, the following markup is used as can be seen in F79972:\n\n{F79972}\n\n```html\n<a class=\"word-break--all\" href=\"https://██████/███████/█████████/issues/187\" target=\"_blank\" data-reactid=\".1.1.2.$110655.1.0.1.0.0.2.1.0.1\">187</a>\n```\n\nWhat is missing here seems to be the `rel=noopener` attribute, if this is not given using `target=\"_blank\"` allows the opening side to control the origin of the linking page. See https://mathiasbynens.github.io/rel-noopener/ for more technical details.\n\nThe same is actually also valid for the CVE links as can be seen in #110655 for example.\n\nThis can behaviour can be verified with Chrome by changing the href of an escalated report to something like https://mathiasbynens.be/demo/opener. Not the coolest exploit obviously since the following pre-requirements are required:\n\n1.  Adversary is able to escalate a report into an external issue tracker\n2. Adversary is able to control the response of the external issue tracker\n\nSo one of the only likely exploit scenarios seems to be:\n\n1. User A of organisation Ananas tells HackerOne to configure an external issue tracker pointing to a self-hosted GitLab or whatever.\n2. User A of organisation Ananas modifies their GitLab in a way to return malicious Javascript that would redirect the HackerOne tab to a faked login page. \n3. User A of organisation Ananas escalates a report to that page.\n4. User B of organisation Banana is invited to organisation Ananas to help out there with triaging.\n5. User B of organisation Banana goes to the report, clicks on the escalation link and the HackerOne tab gets redirected to the faked login page \n6. User enters credentials into the faked login page assuming that the previously opened tab is still a legit HackerOne tab.\n\nAs can be seen the attack scenario is pretty small :-)\n\n------\n*Side remark: I don't expect any actual bounty for this. It's more an hardening and relies on quite some user interaction. I'd however appreciate if you could add the `rel=noopener` link to external links.*\n\n*If you believe this warrants a bounty please donate it to [Médecins Sans Frontières](http://www.msf.org/)*.",
+  "weakness": {
+    "id": 53,
+    "name": "Open Redirect"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 79971,
+      "file_name": "escalate-view.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/079/971/901a96a5f9007c37f2af3c7bdf888f53468a82d1/escalate-view.png?response-content-disposition=attachment%3B%20filename%3D%22escalate-view.png%22%3B%20filename%2A%3DUTF-8%27%27escalate-view.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYNWCPB7L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T120258Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZonlQ6XZgqcJy52%2BgLeu7rc%2BcmnwL48Jd3jP8q5%2FnAIgBqR93Cql4TkH3OcEpzuPURjNMviKVAaN%2BZ5EJ93CKHMqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDC6ruR9Bo4NPZ6hGziqOBTlv9ZKHmz6ju1OkdxDfdYMkEOLdYBFwxFeSW3uoBTkUPGqDZadsGRlOm%2FzVtXFfSNIYP7AeaBzFIeS8LcBh%2BgxgmY5hETW2LeYwB%2F3XW2H67p6e7bnzldnlj2tuACFxnKA6rcmcUQTXn4qVKPw%2FsgBonpbjVSLH1G3MhuwcdUrgeFjI7JHFzHMgd7%2BYjdjZMeFC5A7DM0sT8KjQAqMCvmyYUuytyZlFtZt%2BmkPDyj8xPC2BnGzGd8ViwG0oSBCmgyULo8%2BibDGvrMmOjHPDqqUa51uudsuIw3xXCU7yEl54SJO8XPwko%2FUDfNLlPnB%2BsrExqEFkzOUbRn8wytJZJbdlm4PKX7p1sguljWzLGzMthBAcUaMx563jGqM6UBzNW8J7ZvQGt%2B1a3uE51BbOuuys1pnhOCpDb5JVA%2F%2FnzxJBkW450qNxs7qEyti1abXcL80lTaRmG99RCoVXy4Z1np7gmDfekfXlXCBl86B94t2Ng9rjTnc7plMi%2BnjT5NpYRtvlD1UpwqSlpHw2LxzvZHpnEAjgW8aVgyKPoE6tQwMw2sgb02Lt0IOaTIVI9DmdZbb5FIIz5u0W7gGoxWgQ5yaRk5osuY5nK4GSs4uwAAb6e9hPfxePBU%2B3OK%2BLDM2L0ULVBqQLonfTFD4q0hygJNmtMZ93jUiC1uw5seAKU9RQaFXprCUTfTFtdiGuqhtRvHnqNI2%2BYtGwEaoPk45%2FBZHKWdUiA6zzx2Vh1ViwuP2bYU1TfleKuf4XSDTRnsL25sxpXHdWEdzp36j4m8m4N7y9V%2BDLGJL0W5laKN4XaBIRNCwRfNALochyxg%2FRqoYPvilO9klb%2Fo58doCSMcQFz%2B2dImB8vsUlC4TfkCpPPjC7payuBjqxAUz7jVGh5dF5HDYPCV1aK6vLNtHQn48iZT2lveCprzWjOASVNejwySv8S0Qz3%2BorxxSB4hGPZkqz36geF8d9lQ8aLh18bVe6qUL5yM5i2yxVkHovo80Uf9FwD0IrvwxhBv2vzB%2BEuch1dctBkoyLtJS470n%2BuD%2F%2BwCLVUXoH1ljlX3lPqEb2nvs0Eo4v6pGR4x8y4bHoxAxkfJRPNJ4ut4mAE9vidBtOStAITUN8HDLywA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b7e026cdc21c21e7c7fd7e607374dd7975d4ae73ab9ca70279fab2fdfccb7f83",
+      "file_size": 278071,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 79972,
+      "file_name": "link-to-site.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/079/972/e5d9190b743be5aa2e05e06c486ebffed270e246/link-to-site.png?response-content-disposition=attachment%3B%20filename%3D%22link-to-site.png%22%3B%20filename%2A%3DUTF-8%27%27link-to-site.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYNWCPB7L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T120258Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZonlQ6XZgqcJy52%2BgLeu7rc%2BcmnwL48Jd3jP8q5%2FnAIgBqR93Cql4TkH3OcEpzuPURjNMviKVAaN%2BZ5EJ93CKHMqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDC6ruR9Bo4NPZ6hGziqOBTlv9ZKHmz6ju1OkdxDfdYMkEOLdYBFwxFeSW3uoBTkUPGqDZadsGRlOm%2FzVtXFfSNIYP7AeaBzFIeS8LcBh%2BgxgmY5hETW2LeYwB%2F3XW2H67p6e7bnzldnlj2tuACFxnKA6rcmcUQTXn4qVKPw%2FsgBonpbjVSLH1G3MhuwcdUrgeFjI7JHFzHMgd7%2BYjdjZMeFC5A7DM0sT8KjQAqMCvmyYUuytyZlFtZt%2BmkPDyj8xPC2BnGzGd8ViwG0oSBCmgyULo8%2BibDGvrMmOjHPDqqUa51uudsuIw3xXCU7yEl54SJO8XPwko%2FUDfNLlPnB%2BsrExqEFkzOUbRn8wytJZJbdlm4PKX7p1sguljWzLGzMthBAcUaMx563jGqM6UBzNW8J7ZvQGt%2B1a3uE51BbOuuys1pnhOCpDb5JVA%2F%2FnzxJBkW450qNxs7qEyti1abXcL80lTaRmG99RCoVXy4Z1np7gmDfekfXlXCBl86B94t2Ng9rjTnc7plMi%2BnjT5NpYRtvlD1UpwqSlpHw2LxzvZHpnEAjgW8aVgyKPoE6tQwMw2sgb02Lt0IOaTIVI9DmdZbb5FIIz5u0W7gGoxWgQ5yaRk5osuY5nK4GSs4uwAAb6e9hPfxePBU%2B3OK%2BLDM2L0ULVBqQLonfTFD4q0hygJNmtMZ93jUiC1uw5seAKU9RQaFXprCUTfTFtdiGuqhtRvHnqNI2%2BYtGwEaoPk45%2FBZHKWdUiA6zzx2Vh1ViwuP2bYU1TfleKuf4XSDTRnsL25sxpXHdWEdzp36j4m8m4N7y9V%2BDLGJL0W5laKN4XaBIRNCwRfNALochyxg%2FRqoYPvilO9klb%2Fo58doCSMcQFz%2B2dImB8vsUlC4TfkCpPPjC7payuBjqxAUz7jVGh5dF5HDYPCV1aK6vLNtHQn48iZT2lveCprzWjOASVNejwySv8S0Qz3%2BorxxSB4hGPZkqz36geF8d9lQ8aLh18bVe6qUL5yM5i2yxVkHovo80Uf9FwD0IrvwxhBv2vzB%2BEuch1dctBkoyLtJS470n%2BuD%2F%2BwCLVUXoH1ljlX3lPqEb2nvs0Eo4v6pGR4x8y4bHoxAxkfJRPNJ4ut4mAE9vidBtOStAITUN8HDLywA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=09834a6d8f265faa17fc3b1c71f236910b3899695bfabb8032ca2037fc1a2486",
+      "file_size": 385112,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-05-05T09:04:01.360Z",
+  "allow_singular_disclosure_after": -245386737.04139474,
+  "singular_disclosure_allowed": true,
+  "vote_count": 7,
+  "voters": [
+    "lukasreschke",
+    "shubham_srt",
+    "secbughunter",
+    "demo--hacker",
+    "spetr0x",
+    "shahriyar",
+    "dyabla"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

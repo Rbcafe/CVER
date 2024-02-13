@@ -1,0 +1,123 @@
+{
+  "id": 470003,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NzAwMDM=",
+  "url": "https://hackerone.com/reports/470003",
+  "title": "Privilege Escalation via Keybase Helper (incomplete security fix)",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-12-19T16:43:13.301Z",
+  "submitted_at": "2018-12-19T16:43:13.301Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "0xcccc",
+    "url": "/0xcccc",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 2809,
+    "url": "https://hackerone.com/keybase",
+    "handle": "keybase",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/809/710eb42880bb34c06cab0d1d5081488ec59aec5e_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/809/710eb42880bb34c06cab0d1d5081488ec59aec5e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Keybase",
+      "twitter_handle": "keybaseio",
+      "website": "https://keybase.io",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2019-01-31T02:19:46.101Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-01-31T02:19:46.033Z",
+  "team_member_agreed_on_going_public_at": "2019-01-30T18:12:08.607Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "In the previous [report](https://hackerone.com/reports/397478), about the privileged helper lacks of validation so any applications can abuse it to gain root privilege.\n\nBut the security fix is incomplete.\n\nI can describe 3 different ways to bypass (possibly 4, I doubt).\n\nAll the poc are simplified to not sending the actual attack payload, but instead a simple xpc_dictionary. If the code sign check works, I should received a \"connection interrupt\" error. To prove that I have bypassed the check, I will get a \"Unable to read object\" reply (that the MPMessagePack has received the message but doesn't recognize its format).\n\n## Description\n\n1. Time of use time of check\n\nsource code: `poc1.m`\n\nUnlike Windows, macOS does not lock the executable that being executed.\nSo between my evil process's creation and the XPC, there's a time window that I can simply replace my self with a valid executable.\nSince the original binary has `@rpath` dependencies, I have to copy the whole app bundle (not the single executable)\n\nIf the code sign check works, I should received a \"connection interrupt\" error.\n\n2. pid reuse race condition\n\nAccording to the code, you've already known this, but just couln't believe that it could be an actual attack:\n \n > https://github.com/gabriel/MPMessagePack/commit/c01e974b09d8278696582c40bf73ddf74e7531ad#diff-de800048bd73ccd8bd9fea83da21f613R143\n >\n > The OS’s process ID space is relatively small, which means that process IDs are commonly reused.\n > There is a recommended alternative to process IDs, namely audit tokens (audit_token_t), but you can’t use this because a critical piece of public API is missing.\n > While you can do step 2 with an audit token (using kSecGuestAttributeAudit), there’s no public API to get an audit token from an XPC connection.\n > Fortunately, process ID wrapping problems aren’t a real threat in this context because, if you create an XPC connection per process, you can do your checking based on the process ID of that process. If the process dies, the connection goes away and you’ll end up rechecking the process ID on the new connection.\n \n This technique is the variant of Ian Beer's exploit\n https://bugs.chromium.org/p/project-zero/issues/detail?id=1223\n \n on macOS, pid can be reuse. You can even replace current executable\n to a different process with fork() / posix_spawn() while keeping the old pid.\n \n For loop for about 8 times you can trigger the race condition.\n \nIn the Console.app, search `process:keybase.Helper`\n\nI was expected to see this message repeats 8 times:\n\n``` \nFailed to pass code requirement: Error Domain=MPMessagePack Code=-67050 \"Binary failed code requirement\" UserInfo={NSLocalizedDescription=Binary failed code requirement, NSLocalizedRecoveryOptions=(\n OK\n```\n \n But instead, some of the messages got passed\n\n```\n You can attach to Keybase.Helper process, put a breakpoint at SecStaticCodeCheckValidityWithErrors to see the behavior\n```\n\n3. `DYLD_INSERT_LIBRARIES` library injection\n\nsource code: `poc1.m` and `injected.m`\n \n`DYLD_INSERT_LIBRARIES` can inject evil payload to valid signed process, without touching its code signature.\n \n To prevent this attack, you can either add LibraryValidation to whitelisted binary (I strongly recommend this) or add any custom Entitlement to the code signature.\n \n Addictionaly, XPC has the built-in support for checking entitlement.\n\nPlease refer to \n\n> (Objective See: \"Reversing to Engineer: Learning to 'Secure' XPC from a Patch\")[https://objective-see.com/blog.html]\n\nfor more information.\n\n4. (possible) abuse Electron remote debugging and process.dlopen to load untrusted code\n\n The allowed identifiers are keybase.Installer and keybase.Keybase, but I couln't find where keybase.Keybase is.\nI doubt that it's the typo for \"Keybase.Electron\" because I found this: \nhttps://github.com/keybase/client/blob/6f1e2c08d514713db6dc33081a09a6dcf9bd5493/osx/KBKit/KBKit/Component/KBAppBundle.m#L52\n\nIf so, there's the 4th bypass:\nAbuse trusted Electron to load evil library and run the exploit.\n\nKeybase gui is based on Electron, which has built in debugg option like --inspect=[port] or --inspect-brk=[port]\nThen it will expose the debug protocol on localhost that can be interacted via WebSocket\nThrough this debug protocol\n\nWe should NEVER trust such script language interpreters like Electron, node.js, or even lua or something.\nLibrary Validation can prevent them from dylib hijack, but some interpreter also have the ablity to run shellcode.\n \nSo just block them.\n\n## The advise\n\nTo implement a secure XPC server, you need to follow all of these:\n\n1. Just as the comment in https://github.com/gabriel/MPMessagePack/commit/c01e974b09d8278696582c40bf73ddf74e7531ad#diff-de800048bd73ccd8bd9fea83da21f613R143 says, don't use pid the check code signature. Use `audit_token_t`!\n\n2. PID can be reused, not to mention path. Don't trust it.\n\n2. Add Library Validation flag (https://developer.apple.com/library/archive/documentation/Security/Conceptual/CodeSigningGuide/Procedures/Procedures.html#//apple_ref/doc/uid/TP40005929-CH4-SW9) to whitelisted clients. This kills all dylib injection tricks ( (but not shellcode, so don't whitelist script interpreters)\n\n3. After the new flags applied, attackers can still grab old signed binaries. Add new custom entitlements (you can customize the name, as long as it don't starts with `com.apple.private`) check to the code sign requirements.\n\n## Impact\n\nAn attacker that can execute arbitrary code in normal user can be elevated to root privilege.",
+  "weakness": {
+    "id": 75,
+    "name": "Privilege Escalation"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 394572,
+      "file_name": "poc.zip",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/394/572/e667fc68753a5d70bcb06bf573037357445e0719/poc.zip?response-content-disposition=attachment%3B%20filename%3D%22poc.zip%22%3B%20filename%2A%3DUTF-8%27%27poc.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131533Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ef049f4dcedd1ceaf56aa1d98d6915ffc470271a1d888f44f2902f7a5d56e849",
+      "file_size": 8600,
+      "type": "application/zip",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 42,
+  "voters": [
+    "mirchr",
+    "bl4de",
+    "spam404",
+    "ali",
+    "yashrs",
+    "k3mlol",
+    "dhakal_ananda",
+    "harry_mg",
+    "savitar0x01",
+    "kunal94",
+    "and 32 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

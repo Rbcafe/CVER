@@ -1,0 +1,102 @@
+{
+  "id": 47357,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NzM1Nw==",
+  "url": "https://hackerone.com/reports/47357",
+  "title": "CSRF token from another valid user session accepted",
+  "state": "Closed",
+  "substate": "informative",
+  "readable_substate": "Informative",
+  "created_at": "2015-02-10T21:15:00.309Z",
+  "submitted_at": "2015-02-10T21:15:00.309Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "4lemon",
+    "url": "/4lemon",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/194/aa0eb7d0d4c0ee7d20ae9b2550953b4eeda26ef9_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 607,
+    "url": "https://hackerone.com/mobilevikings",
+    "handle": "mobilevikings",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/607/58ac309f0f3fb06a4bdcfe6480d51a32b699b72e_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/607/58ac309f0f3fb06a4bdcfe6480d51a32b699b72e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Mobile Vikings",
+      "twitter_handle": "mobilevikingsBE",
+      "website": "https://mobilevikings.be/",
+      "about": "Mobile Vikings is a prepaid provider that lets you connect to your Viking friends for free!"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2015-04-03T14:03:59.511Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-03-04T14:03:35.505Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "While testing website i have found interesting issue. For example request to remove sim auth:\r\nPOST /en/sims/authorization/remove/admin/1036359/ HTTP/1.1\r\nHost: mobilevikings.be\r\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:35.0) Gecko/20100101 Firefox/35.0\r\nAccept: */*\r\nAccept-Language: ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3\r\nAccept-Encoding: gzip, deflate\r\nX-CSRFToken: LI6qbdczbgPPQ7fxXR3duFENgY1qr3wB\r\nX-Requested-With: XMLHttpRequest\r\nReferer: https://mobilevikings.be/en/account/authorization/overview/\r\nCookie: mobilevikingsbe=fda79999f5d3ea86aee1cac688306948; csrftoken=LI6qbdczbgPPQ7fxXR3duFENgY1qr3wB; cookies.js=1; _ga=GA1.2.843387348.1423586164; __utmx=177304377.1C02iW_2TT2rFZKjDPjE7Q$0:0; __utmxx=177304377.1C02iW_2TT2rFZKjDPjE7Q$0:1423600511:8035200; __atuvc=5%7C6\r\nConnection: keep-alive\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nContent-Length: 0\r\n\r\nResponse:\r\nHTTP/1.1 302 FOUND\r\nServer: nginx/1.4.2\r\nDate: Tue, 10 Feb 2015 21:02:50 GMT\r\nContent-Type: text/html; charset=utf-8\r\nConnection: keep-alive\r\nVary: Cookie\r\nLocation: https://mobilevikings.be/en/account/authorization/overview/\r\nContent-Language: en-be\r\nSet-Cookie: messages=\"cc71d85271dc293bce25170e9cfb3d36beef0b5f$[[\\\"__json_message\\\"\\0540\\05425\\054\\\"Authorization on this SIM card for  has been removed.\\\"]]\"; Path=/\r\nContent-Length: 0\r\n\r\nProblem is that this request works with \r\n X-CSRFToken: LI6qbdczbgPPQ7fxXR3duFENgY1qr3wB\r\nthis token i got from another account\r\nthe real token was \r\nAlEqSERKOXKjZfSdw2WtPY4l7n5b68BM\r\n\r\nThis issue make possible to attacker bypass CSRF using his own valid token (for example thru xss). Best practice is:\r\n- token from different user do not work on other session\r\n- and much better if token change on each request\r\n",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2015-04-03T14:03:35.862Z",
+  "allow_singular_disclosure_after": -279754370.84831667,
+  "singular_disclosure_allowed": true,
+  "vote_count": 2,
+  "voters": [
+    "shivammusic",
+    "spetr0x"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

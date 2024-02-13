@@ -1,0 +1,154 @@
+{
+  "id": 384029,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zODQwMjk=",
+  "url": "https://hackerone.com/reports/384029",
+  "title": "url-parse package return wrong hostname ",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-07-19T09:49:12.041Z",
+  "submitted_at": "2018-07-19T09:49:12.041Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "leetboi",
+    "url": "/leetboi",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/198/715/a6af554d03396e57751d92e755289546d40ada21_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 23949,
+    "url": "https://hackerone.com/nodejs-ecosystem",
+    "handle": "nodejs-ecosystem",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Node.js third-party modules",
+      "twitter_handle": "",
+      "website": "https://nodejs.org/en/security/",
+      "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "no-content",
+  "cve_ids": [
+    "CVE-2018-3774"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-07-30T08:57:13.676Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-07-30T08:57:13.587Z",
+  "team_member_agreed_on_going_public_at": "2018-07-30T08:22:13.690Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "",
+  "weakness": {
+    "id": 53,
+    "name": "Open Redirect"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2018-08-29T08:22:13.882Z",
+  "allow_singular_disclosure_after": -172298730.97108114,
+  "singular_disclosure_allowed": true,
+  "vote_count": 8,
+  "voters": [
+    "cxzer0",
+    "bl4de",
+    "leetboi",
+    "savitar0x01",
+    "apapedulimu",
+    "cryptographer",
+    "sumit7",
+    "rachithraj"
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 7.5,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "high",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 12928,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "url-parse",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 9669,
+      "category": "team",
+      "content": "Jul 19th 2018 -  lolwaleet submitted a report to Node.js third-party modules.\nI would like to report url-parse package return wrong hostname in url-parse.\n\n# Module\nmodule name: url-parse\nversion: 1.4.1\nnpm page: https://www.npmjs.com/package/url-parse\n\n## Module Description\nThe url-parse method exposes two different API interfaces. The url interface that you know from Node.js and the new URL interface that is available in the latest browsers.\n\nIn version 0.1 we moved from a DOM based parsing solution, using the <a> element, to a full Regular Expression solution. The main reason for this was to make the URL parser available in different JavaScript environments as you don't always have access to the DOM. An example of such environment is the Worker interface. The RegExp based solution didn't work well as it required a lot of lookups causing major problems in FireFox. In version 1.0.0 we ditched the RegExp based solution in favor of a pure string parsing solution which chops up the URL into smaller pieces. This module still has a really small footprint as it has been designed to be used on the client side.\n\n# Vulnerability\n## Vulnerability Description\nurl-parse returns wrong hostname which leads to multiple vulnerabilities such as SSRF, Open Redirect, Bypass Authentication Protocol.\n\n# Fix\nFixes applied to version 1.4.3\n## Resources:\n* Patch landed in master, including tests to prevent regression: https://github.com/unshiftio/url-parse/commit/53b1794e54d0711ceb52505e0f74145270570d5a\n* A SECURITY.md file has been added to the repo to make it easier to report bugs, and reach me in the future, including history of the previous security reports and their fix version. https://github.com/unshiftio/url-parse/commit/d7b582ec1243e8024e60ac0b62d2569c939ef5de\n* http://0xahmed.ninja/",
+      "user": {
+        "id": 96045,
+        "username": "lirantal",
+        "name": "Liran Tal",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": "https://github.com/lirantal/",
+        "location": "Israel",
+        "created_at": "2016-07-27T19:53:42.573Z",
+        "url": "https://hackerone.com/lirantal",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/096/045/7e9d9170c9862d8d3697b11b0bb7160d40444c16_original.jpeg/d7b0d969b6320751e1c58b9e3efff1e228054ee3d8eade5c51c4c79b25513a9c"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

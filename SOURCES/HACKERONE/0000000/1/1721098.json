@@ -1,0 +1,125 @@
+{
+  "id": 1721098,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzIxMDk4",
+  "url": "https://hackerone.com/reports/1721098",
+  "title": "CVE-2022-35260: .netrc parser out-of-bounds access",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2022-10-03T16:14:04.112Z",
+  "submitted_at": "2022-10-03T16:14:04.196Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "kurohiro",
+    "url": "/kurohiro",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 35663,
+    "url": "https://hackerone.com/curl",
+    "handle": "curl",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "curl",
+      "twitter_handle": "",
+      "website": "https://curl.se",
+      "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2022-35260"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2022-10-27T14:55:15.587Z",
+  "bug_reporter_agreed_on_going_public_at": "2022-10-27T14:55:15.513Z",
+  "team_member_agreed_on_going_public_at": "2022-10-27T12:03:23.338Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nCurl expects the .netrc file to have space characters. So if there is no space character, it will do an out-of-bounds read and a 1-byte out-of-bounds write.\nThis can happen multiple times depending on the state of the memory.\n\n## Steps To Reproduce:\n\n  `curl --netrc-file .netrc test.local`\n\".netrc\" is attached.\nThe content is 'a' for 4095 bytes.\nDepending on memory conditions, even single-byte files can cause problems.\n\nIt's not exactly just spaces and newlines.\nThe condition is that the .netrc file does not contain characters for which ISSPACE() returns true (so it is also a condition that there is no line feed code).\nThere is a problem with parsenetrc() in lib/netrc.c.\nparsenetrc() has the following loop.\n```\n    while(!done && fgets(netrcbuffer, netrcbuffsize, file)) {\n      char *tok;\n      char *tok_end;\n      bool quoted;\n      if(state == MACDEF) {\n        if((netrcbuffer[0] == '\\n') || (netrcbuffer[0] == '\\r'))\n          state = NOTHING;\n        else\n          continue;\n      }\n      tok = netrcbuffer;\n      while(tok) {\n        while(ISSPACE(*tok))\n          tok++;\n        /* tok is first non-space letter */\n        if(!*tok || (*tok == '#'))\n          /* end of line or the rest is a comment */\n          break;\n\n        /* leading double-quote means quoted string */\n        quoted = (*tok == '\\\"');\n\n        tok_end = tok;\n        if(!quoted) {\n          while(!ISSPACE(*tok_end))\n            tok_end++;\n          *tok_end = 0;\n        }\n```\nThe 'a' and the terminating character '\\0' in the .netrc file are characters for which ISSPACE() returns false, so while on line 25 is true(!false).\nThis causes an out-of-bounds read.\nAlso, line 27 is an out-of-bounds write. (1 byte for '\\0).\n\n## Remediation ideas:\nI think it would be better to include the condition that *tok is not NULL in the while statement.\n\n## Impact\n\nApplication crash plus other as yet undetermined consequences.",
+  "weakness": {
+    "id": 8,
+    "name": "Out-of-bounds Read"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1967256,
+      "file_name": ".netrc",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/qfheiij11ks398oby4tqsx7exrsz?response-content-disposition=attachment%3B%20filename%3D%22.netrc%22%3B%20filename%2A%3DUTF-8%27%27.netrc&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5AHHFMEJ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143115Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD8dwfn1Kj%2BfeaL5gzEI8UQeliCkaZPwm78CLk3lspT%2FQIgHL1wmZsf1VsJQ5sjD8MiZyL7UnzjLYAzSBx0sKO8WyEqsAUIdxADGgwwMTM2MTkyNzQ4NDkiDAV4ajzpcbbLNFGYRyqNBcaHBbQY8d9HZRhiuXEHGn%2F1OtAJRNK7XpMdTbWfnCZm4bOyE574qr0jtdBxDfuWieLaPcttPkVgpHgYbxyi87pZrfg%2BQ28zxq66lNCthWBZ2doW15zNpMM%2F9nOztWVMVhIbzsixTF%2BT7l7uyl33YzXYlkb07JY2VDB58KJ7C4fAx937EkE7Yi9Pdhm7sRqy%2FCi3G1zuegmzxG8hOMgCGrhgAXLcbelYp4PpLzqYACjoDFemWIs1Q6tX0ejLyuxtFc3YFnVgK5QrjUzdl92ATZWhLfAS0EvZm4JYv3M3w7D5dc5LSUB5SRsFVo%2FJ4VuyME0SBUx%2BkQNLMkZAT2r%2Fo5RE%2F4L6KDEjmACW83f4hlQGBtlTVEwvFbuPgIyYlWxdoq0t3LUZpBDXc%2BPS2VTArbZSE%2BaT7zo8RV6LxmYMduxDABnoe%2Fsarws6IbvoTxkgtlnVD%2BKVzGhV2Kpx4Ou1kHRYFSgmTbsNYO4Y8Wb1e5%2B%2BS6s2646wAxYYg23swOTxxvzz5lNFtKoYv9SzGSHR%2Bt7jF7nMZ94klARn08fNYEITa5xCtmQPQxXYnNUGDhJwaY16V4RWgGBRnNKAVaFFvkJ1ynsUW8yhzdYRzHg2MUk3ilpDNhoDmhJcwEI%2F%2B58pkGgjaSaLJIPme8RKxLJ1GMN0iH%2BEwXdhWILcVuHYd6wa%2B%2FKXE5FDbUD7eG56743XVMOhkYP3rcFw7FVZW0UwPdqxEP%2Fn9xdX6i5mE6bavN9IwWu3oBvV2zuBIQBTADK4q1P8GuigCBpi%2BuTiNwMJNbiVlInmuPTfz1wEP2GyXJhPc6XnrMesge8t7TG7F0S%2BbNKCbtKOPQ6GDuIiaDXeKHghoIp%2F9iOV4wbqsY50MIvgra4GOrEBPkHem%2B9jI8gbVbdcOAUQ%2FDUjU7MDdxE7HFwAfLOdf%2BVcHlA15r9Z97uuaTM8oQAR5uy%2F9X3GVCa2aFmB79Ly6LQ%2BAVH5ZN78UlWslzLKbf%2BtG1X3N4Q9HzPHsMo8p%2FSdABywT4KHH4PFNjhgQtGZbJNTlDMH3n%2Fd9jZEyLjEldEDxA9aGvJgxd7k%2Bi%2F2cncXEy8E%2F8tLGOyvNAQKIwl5%2Bf%2B8GENUcLUW1FeBb7fFdSG3&X-Amz-SignedHeaders=host&X-Amz-Signature=a0e4cf9b766e278d378c7e1a2fac482c9414854186fa9db2ce36160c28c26471",
+      "file_size": 4095,
+      "type": "application/octet-stream",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2022-11-26T12:03:23.472Z",
+  "allow_singular_disclosure_after": -38370471.53806895,
+  "singular_disclosure_allowed": true,
+  "vote_count": 4,
+  "voters": [
+    "zy9ard3",
+    "shivammusic",
+    "shahrukhkhan1080",
+    "zyklonb"
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 18844,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/curl/curl",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

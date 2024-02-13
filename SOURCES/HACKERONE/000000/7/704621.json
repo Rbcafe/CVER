@@ -1,0 +1,125 @@
+{
+  "id": 704621,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83MDQ2MjE=",
+  "url": "https://hackerone.com/reports/704621",
+  "title": "SSRF via maliciously crafted URL due to host confusion",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "critical",
+  "readable_substate": "Informative",
+  "created_at": "2019-10-01T02:48:40.536Z",
+  "submitted_at": "2019-10-01T02:48:40.536Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jlleitschuh",
+    "url": "/jlleitschuh",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/388/267/887b2ef55debfc7b243bdf563d314329cf750468_original.JPG/cccd3716a6d2e06174d2a41492445cb1d4bf85b4611a755bc810b9246a24d951"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 35663,
+    "url": "https://hackerone.com/curl",
+    "handle": "curl",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "curl",
+      "twitter_handle": "",
+      "website": "https://curl.se",
+      "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2018-3774"
+  ],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-01-08T21:03:17.955Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-01-08T21:03:17.918Z",
+  "team_member_agreed_on_going_public_at": "2021-01-08T08:22:20.180Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\n\nCurl is vulnerable to SSRF due to improperly parsing the host component of the URL compared to other URL parsers and the [URL living standard](https://url.spec.whatwg.org/).\n\n## POC\n\n`curl -sD - -o /dev/null \"http://google.com:80\\\\@yahoo.com/\"`\n\nCurl makes a request to `yahoo.com` instead of `google.com`.\n\n## Supporting Material/References:\n  * [Exact question to URL standards body](https://github.com/jsdom/whatwg-url/issues/137#issuecomment-536797948)\n  * [CVE-2018-3774](https://nvd.nist.gov/vuln/detail/CVE-2018-3774) similar vulnerability in an NPM lib\n    * See also: https://hackerone.com/reports/384029\n\nTo quote the standards body issue:\n\n> Specifically the authority state deals with parsing the @ properly. However as you'll notice if it encounters the `\\` beforehand, it'll go into the host state and reset the pointer at which point it won't consider `google.com:80\\\\` auth data for `yahoo.com` anymore.\n\n## Other Libraries\n\n```javascript\nconst whatwg_url = require('whatwg-url'); // Created by the RFC maintainers\n\nconst theUrl = new whatwg_url.URL(\"https://google.com:80\\\\\\\\@yahoo.com/\");\nconst theUrl2 = new whatwg_url.URL(\"https://google.com:80\\\\@yahoo.com/\");\n\nconst nodeUrl = new URL(\"https://google.com:80\\\\\\\\@yahoo.com/\");\nconst nodeUrl2 = new URL(\"https://google.com:80\\\\@yahoo.com/\");\n\nconsole.log(theUrl.hostname); // Prints google.com\nconsole.log(theUrl2.hostname); // Prints google.com\nconsole.log(nodeUrl.hostname); // Prints google.com\nconsole.log(nodeUrl2.hostname); // Prints google.com\n```\n\n## Impact\n\nIf another library implementing the URL standard is used to white/blacklist a request by host but the actual request is made via curl or the curl library, an attacker can smuggle the request past the URL validator thus allowing an attacker to perform SSRF or an open redirect attack.",
+  "weakness": {
+    "id": 68,
+    "name": "Server-Side Request Forgery (SSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 4,
+  "voters": [
+    "rook1337",
+    "sudi",
+    "ramin0x53",
+    "rootonlinux"
+  ],
+  "severity": {
+    "rating": "critical",
+    "score": 10.0,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "changed",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 18844,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/curl/curl",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

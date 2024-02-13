@@ -1,0 +1,159 @@
+{
+  "id": 249319,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNDkzMTk=",
+  "url": "https://hackerone.com/reports/249319",
+  "title": "Race condition on the Federalist API endpoints can lead to the Denial of Service attack",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2017-07-13T14:36:09.244Z",
+  "submitted_at": "2017-07-13T14:36:09.244Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "sp1d3rs",
+    "url": "/sp1d3rs",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/079/690/6853ada3e124bdd8616b1be752223b558de38195_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 50592,
+    "url": "https://hackerone.com/gsa_bbp",
+    "handle": "gsa_bbp",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/iyPFgzbsX86VXw5wJHyfPg9s/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/iyPFgzbsX86VXw5wJHyfPg9s/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "GSA Bounty",
+      "twitter_handle": null,
+      "website": "http://gsa.gov",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-09-05T19:50:53.553Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-09-04T18:03:11.275Z",
+  "team_member_agreed_on_going_public_at": "2017-09-05T19:50:53.484Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "##Description\nHello. I discovered that the Federalist API doesn't have rate limiting in place, and executes any amount of request to the endpoint in parallel mode.\n\n##The impact\nSince you are using the cloud, and i can't test the production environment, impact is theoretical in this case - it can be a problem, or it not.\nOn my localhost instance executing of 1000 parallel GET requests to the http://localhost:1337/v0/me endpoint on behalf of authenticated user was lead to the complete instance inaccessibility. It is a light enough request, and executing of 1000 PUT requests (for example, saving site settings) will have greater impact.\n{F202845}\nEach request cause execution of the PostgreSQL command, which can lead to the high resource usage.\n{F202846}\n\n##Reproduction steps\n1) Login to the Federalist instance (unauthenticated requests is possible too, but it have too low impact)\n2) Look to the request to the `/v0/me` endpoint. Using Burp Intruder or Charles, repeat the request 1000 times in parallel mode. The server will accept and try to execute all of them in the same time. You can notice increased server resource consumption.\n3) You can repeat the test with more heavily site settings saving request.\n\n##Suggested fix\nYou can consider to implement rate-limiting on the API endpoints (for example, executing not more than 5 API requests in same time from the single user), or implement queue (accept requests from single user in сonsistent mode instead parallel), or use module like https://www.npmjs.com/package/express-rate-limit. \n\nIf your production environment somehow mitigates this issue (e.g. has load balancers in place, etc), let me know - i'll close the ticket.\n",
+  "weakness": {
+    "id": 57,
+    "name": "Violation of Secure Design Principles"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 202845,
+      "file_name": "n.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/202/845/92a0851eb7ceaad64069b0525572fd377d0513be/n.PNG?response-content-disposition=attachment%3B%20filename%3D%22n.PNG%22%3B%20filename%2A%3DUTF-8%27%27n.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYNWCPB7L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T124619Z&X-Amz-Expires=1973&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZonlQ6XZgqcJy52%2BgLeu7rc%2BcmnwL48Jd3jP8q5%2FnAIgBqR93Cql4TkH3OcEpzuPURjNMviKVAaN%2BZ5EJ93CKHMqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDC6ruR9Bo4NPZ6hGziqOBTlv9ZKHmz6ju1OkdxDfdYMkEOLdYBFwxFeSW3uoBTkUPGqDZadsGRlOm%2FzVtXFfSNIYP7AeaBzFIeS8LcBh%2BgxgmY5hETW2LeYwB%2F3XW2H67p6e7bnzldnlj2tuACFxnKA6rcmcUQTXn4qVKPw%2FsgBonpbjVSLH1G3MhuwcdUrgeFjI7JHFzHMgd7%2BYjdjZMeFC5A7DM0sT8KjQAqMCvmyYUuytyZlFtZt%2BmkPDyj8xPC2BnGzGd8ViwG0oSBCmgyULo8%2BibDGvrMmOjHPDqqUa51uudsuIw3xXCU7yEl54SJO8XPwko%2FUDfNLlPnB%2BsrExqEFkzOUbRn8wytJZJbdlm4PKX7p1sguljWzLGzMthBAcUaMx563jGqM6UBzNW8J7ZvQGt%2B1a3uE51BbOuuys1pnhOCpDb5JVA%2F%2FnzxJBkW450qNxs7qEyti1abXcL80lTaRmG99RCoVXy4Z1np7gmDfekfXlXCBl86B94t2Ng9rjTnc7plMi%2BnjT5NpYRtvlD1UpwqSlpHw2LxzvZHpnEAjgW8aVgyKPoE6tQwMw2sgb02Lt0IOaTIVI9DmdZbb5FIIz5u0W7gGoxWgQ5yaRk5osuY5nK4GSs4uwAAb6e9hPfxePBU%2B3OK%2BLDM2L0ULVBqQLonfTFD4q0hygJNmtMZ93jUiC1uw5seAKU9RQaFXprCUTfTFtdiGuqhtRvHnqNI2%2BYtGwEaoPk45%2FBZHKWdUiA6zzx2Vh1ViwuP2bYU1TfleKuf4XSDTRnsL25sxpXHdWEdzp36j4m8m4N7y9V%2BDLGJL0W5laKN4XaBIRNCwRfNALochyxg%2FRqoYPvilO9klb%2Fo58doCSMcQFz%2B2dImB8vsUlC4TfkCpPPjC7payuBjqxAUz7jVGh5dF5HDYPCV1aK6vLNtHQn48iZT2lveCprzWjOASVNejwySv8S0Qz3%2BorxxSB4hGPZkqz36geF8d9lQ8aLh18bVe6qUL5yM5i2yxVkHovo80Uf9FwD0IrvwxhBv2vzB%2BEuch1dctBkoyLtJS470n%2BuD%2F%2BwCLVUXoH1ljlX3lPqEb2nvs0Eo4v6pGR4x8y4bHoxAxkfJRPNJ4ut4mAE9vidBtOStAITUN8HDLywA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b3f42002cec58dd56aec899d68a968031bd37026db6b3159024e280558a10265",
+      "file_size": 31522,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 202846,
+      "file_name": "l.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/202/846/902c8d603cfc7d886dfe1197e8abfcd8ea9d7eaf/l.PNG?response-content-disposition=attachment%3B%20filename%3D%22l.PNG%22%3B%20filename%2A%3DUTF-8%27%27l.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYNWCPB7L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T124619Z&X-Amz-Expires=1973&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZonlQ6XZgqcJy52%2BgLeu7rc%2BcmnwL48Jd3jP8q5%2FnAIgBqR93Cql4TkH3OcEpzuPURjNMviKVAaN%2BZ5EJ93CKHMqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDC6ruR9Bo4NPZ6hGziqOBTlv9ZKHmz6ju1OkdxDfdYMkEOLdYBFwxFeSW3uoBTkUPGqDZadsGRlOm%2FzVtXFfSNIYP7AeaBzFIeS8LcBh%2BgxgmY5hETW2LeYwB%2F3XW2H67p6e7bnzldnlj2tuACFxnKA6rcmcUQTXn4qVKPw%2FsgBonpbjVSLH1G3MhuwcdUrgeFjI7JHFzHMgd7%2BYjdjZMeFC5A7DM0sT8KjQAqMCvmyYUuytyZlFtZt%2BmkPDyj8xPC2BnGzGd8ViwG0oSBCmgyULo8%2BibDGvrMmOjHPDqqUa51uudsuIw3xXCU7yEl54SJO8XPwko%2FUDfNLlPnB%2BsrExqEFkzOUbRn8wytJZJbdlm4PKX7p1sguljWzLGzMthBAcUaMx563jGqM6UBzNW8J7ZvQGt%2B1a3uE51BbOuuys1pnhOCpDb5JVA%2F%2FnzxJBkW450qNxs7qEyti1abXcL80lTaRmG99RCoVXy4Z1np7gmDfekfXlXCBl86B94t2Ng9rjTnc7plMi%2BnjT5NpYRtvlD1UpwqSlpHw2LxzvZHpnEAjgW8aVgyKPoE6tQwMw2sgb02Lt0IOaTIVI9DmdZbb5FIIz5u0W7gGoxWgQ5yaRk5osuY5nK4GSs4uwAAb6e9hPfxePBU%2B3OK%2BLDM2L0ULVBqQLonfTFD4q0hygJNmtMZ93jUiC1uw5seAKU9RQaFXprCUTfTFtdiGuqhtRvHnqNI2%2BYtGwEaoPk45%2FBZHKWdUiA6zzx2Vh1ViwuP2bYU1TfleKuf4XSDTRnsL25sxpXHdWEdzp36j4m8m4N7y9V%2BDLGJL0W5laKN4XaBIRNCwRfNALochyxg%2FRqoYPvilO9klb%2Fo58doCSMcQFz%2B2dImB8vsUlC4TfkCpPPjC7payuBjqxAUz7jVGh5dF5HDYPCV1aK6vLNtHQn48iZT2lveCprzWjOASVNejwySv8S0Qz3%2BorxxSB4hGPZkqz36geF8d9lQ8aLh18bVe6qUL5yM5i2yxVkHovo80Uf9FwD0IrvwxhBv2vzB%2BEuch1dctBkoyLtJS470n%2BuD%2F%2BwCLVUXoH1ljlX3lPqEb2nvs0Eo4v6pGR4x8y4bHoxAxkfJRPNJ4ut4mAE9vidBtOStAITUN8HDLywA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=46d523e5eb87b1e281d7b9774e7ca2c3b273c8bba8b5cbdc87997a05e21fa064",
+      "file_size": 120186,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 16,
+  "voters": [
+    "bl4de",
+    "spam404",
+    "cuso4",
+    "its_afolic",
+    "edoverflow",
+    "whitesector",
+    "r3y",
+    "eveeez",
+    "mr_r3boot",
+    "japz",
+    "and 6 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 81507,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/18f/federalist",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 5267,
+      "category": "researcher",
+      "content": "*Thanks to the 18F team for the great experience, fast fix and the bounty!*\n\nThis report describes missing rate limiting on Federalist API endpoints. Missing rate limiting is usually considered as best practice, but in this particular case it was possible to make the server unresponsive using big count of API calls in the parallel mode from single machine.\nIssue was fixed by implementing rate limiting using `express-rate-limit` package.\n\n##References\n[Running Federalist locally](https://federalist-docs.18f.gov/pages/how-federalist-works/running-federalist-locally/ \"Running Federalist locally\")",
+      "user": {
+        "id": 79690,
+        "username": "sp1d3rs",
+        "name": "Dr. Jones",
+        "bio": "Human. Possibly",
+        "cleared": false,
+        "verified": false,
+        "website": "https://go.xp.ht",
+        "location": "Ukraine",
+        "created_at": "2016-05-23T03:07:23.595Z",
+        "url": "https://hackerone.com/sp1d3rs",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/079/690/6853ada3e124bdd8616b1be752223b558de38195_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/079/690/6853ada3e124bdd8616b1be752223b558de38195_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/079/690/6853ada3e124bdd8616b1be752223b558de38195_original.png/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

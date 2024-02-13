@@ -1,0 +1,117 @@
+{
+  "id": 638685,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82Mzg2ODU=",
+  "url": "https://hackerone.com/reports/638685",
+  "title": "Restricted user can add and delete tags of APM key transactions ",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2019-07-10T04:32:10.129Z",
+  "submitted_at": "2019-07-10T04:32:10.129Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jon_bottarini",
+    "url": "/jon_bottarini",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-08-13T16:39:49.077Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-08-13T16:06:57.117Z",
+  "team_member_agreed_on_going_public_at": "2020-08-13T16:39:48.984Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Description\n\nWithin APM after you setup a connection, there is the ability for you to mark a \"key transaction\" which will then populate data on the Key Transactions page in APM. On this page, there is the ability for an admin to hover over the tag icon and add a tag to the name of the key transaction that is being tracked. This will then populate in other areas like the service maps and some of the Distributed tracing pages. \n\nA user with read only access is able to add and delete these tags, removing the tags of administrators and other users. As outlined on this doc: https://docs.newrelic.com/docs/using-new-relic/user-interface-functions/organize-your-data/labels-categories-organize-apps-monitors\n\n> Requirements\n> APM: You must be the account Owner or Admin.\n\n#Steps to Reproduce\n1. As an admin, connect an app (I used a python app) and mark a transaction as a Key Transaction\n2. Go to rpm.newrelic.com/apm > Key transactions.\n3. Select a Key transaction from the index and click on the label icon after the name of the transaction\n4. Enter a transaction tag, and click enter so it saves.\n5. Log out of the admin account and into a restricted user account with read-only priviledges\n6. Go to rpm.newrelic.com/apm > Key transactions.\n7. Go to the same key transaction tag that was just made, and click on the \"x\" icon to delete it\n8. The following request will be made, and the tag will be deleted that was made by the administrator:\n\n```\nDELETE /accounts/1523936/key_transactions/38759/tags.json HTTP/1.1\nHost: rpm.newrelic.com\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:67.0) Gecko/20100101 Firefox/67.0\nAccept: */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nX-NewRelic-ID: VRUGVVJS\nX-CSRF-Token: GIybR95V+0iclkfwYk2E33jIdGXUCXzx5vf7k6lOpCI=\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nContent-Length: 9\nConnection: close\nReferer: https://rpm.newrelic.com/accounts/1523936/key_transactions\nCookie: mycookies\n\ntag=admin\n```\n\n## Impact\n\nUser > Admin privilege escalation",
+  "bounty_amount": "750.0",
+  "formatted_bounty": "$750",
+  "weakness": {
+    "id": 75,
+    "name": "Privilege Escalation"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2020-09-12T16:06:57.150Z",
+  "allow_singular_disclosure_after": -107903872.6306103,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "wi11",
+    "ali",
+    "cr4xerbik4sh",
+    "cryptographer",
+    "tecnical_nitish"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 18678,
+    "asset_type": "URL",
+    "asset_identifier": "rpm.newrelic.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

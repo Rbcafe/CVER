@@ -1,0 +1,125 @@
+{
+  "id": 182274,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODIyNzQ=",
+  "url": "https://hackerone.com/reports/182274",
+  "title": "Null pointer dereference due to TOCTTOU bug in mrb_time_initialize",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2016-11-15T13:01:54.580Z",
+  "submitted_at": "2016-11-15T13:01:54.580Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "raydot",
+    "url": "/raydot",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15668,
+    "url": "https://hackerone.com/shopify-scripts",
+    "handle": "shopify-scripts",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "shopify-scripts",
+      "twitter_handle": "",
+      "website": "",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-01-15T19:56:05.964Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2016-12-16T19:55:50.385Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "mrb_time_initialize sets the data pointer to NULL before parsing function arguments. Parsing function arguments can call out to ruby code to call methods to do type coercion. If the type coercion method tries to access the time object it will dereference a NULL pointer.\n\nThe following snippet results in a native crash under mruby-engine:\n```\n$x = Time.new\nclass Tmp\n    def to_i\n        $x.mday\n    end\nend\n$x.initialize Tmp.new\n```\n\nAttached is a patch to mruby to fix this issue.",
+  "weakness": {
+    "id": 48,
+    "name": "Denial of Service"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 134831,
+      "file_name": "patch4.diff",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/134/831/68b941bcff7e923494ccbe34e844806d3ef81bee/patch4.diff?response-content-disposition=attachment%3B%20filename%3D%22patch4.diff%22%3B%20filename%2A%3DUTF-8%27%27patch4.diff&response-content-type=text%2Fx-diff&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2ILJLE6S%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122739Z&X-Amz-Expires=1743&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDJPm2BocKwYVHq6OvXN7Sjam7eo%2BSIxzA09VW0AVbp2gIhAJSEEdx%2Bwdp3lk64VEqNkIYIhXx%2FxKFpBdSyuvKn3uDQKrIFCHAQAxoMMDEzNjE5Mjc0ODQ5IgwDahPqWWM9RqpHhfIqjwWks8v1jlby6TsImaMYsudHHbH1Wx6QSFFy8DYbsq4sdNBOEyl9ATKaXjCK28W3pUZj7TyOZVii2jhReFgA81tdYD5PFfaf5uIAxYqN97CUjE9tYuC42DG8AfHfqoUrQSIYfsELneF%2FrwPpYOjej6pbEuJZgC5M%2FMSNXxJ9AkJT8ulcJ7ug2u26Vej6laJdmacOPyHhTSDRKqZ8bmU2qZkHjpllBjac8S0jwAJ%2FXOU29NjYq0HDmzg%2FtCQVuok6OwzgDb5hbqWacuN1sxtQGmO9mkyNT4Jw9z%2F%2FM2jKe5Ofp7a%2BsW7M29sPZWBmYpMpm8g2vSNBkxTCySmUy56WR33dkSWPoBYsFBFRxV0i7fuZNan6wwqSXVqlsDGcF4MC3juEMfOmDXorpSY3GLJ%2FVwB%2Fj80Xv6a%2Bp7E%2Bz60vHuZPKRdWwdUIM1%2FbZuj9lLL0UDjQ8xpD%2Bn0FK1fiDxHk1SpOsDjzEP1WahBgmwofMy3D1wpHA5KqDWaKaVFS70XROakujpAfdyfQE5PP6LUnATbGHMnn1bUwhuc0l2VVsshmhKcQ3B5C%2Br3sjG3Hmc9awv6w5zgQBLzR5VleYsLEogGPGtoOncfnHncG8bFUQeNJ22mQ5IuXzbJgMrGIr0P2mvs9lAWFZg6lDLV4JH5vHDviIh7FgcYJUEIkC%2FASSSfJ4S%2F1zmeydCzaoMWM1qaEMyyUrSw34Rs%2FNYdwqtXkMGgT8i40ddZ1ExgLoiuYapUfOH5SmgiRbbREJwXv%2FHCtjdpSUHP9m9syQLajUPFrc65NAq0WB5qVPRHnYKkJmfEG1uUTPQG95vZJq9AQRivJGj4HDlBYWgll%2B9E5Nd9B68J7QKUpyIIN7ophw%2FbOBQN8MMaXrK4GOrABPy7xOWyZjlcC8oDrt3gIH%2BpFpbBCNRA1BmLMfIgaiBMP5w4F8eLFwLZvlKhnztuddGA6O4Uh8OLKOQ2aMk5lW1Xis4FfdDyGJM6fgZBIafAGSXYrAN8T%2FOBBirnmKH3TipDF3gxk1HBgavZXNceHqfYGjmJlFOMF6p%2B60lxNvCERqm7z1BwOfKyvtKJeK4bvct0t59UMTMS%2FtySInE4heSVeslW4qBd%2FQRC4aXxUgJY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a681840c2126d2fe94ed1b6f6a2177f4658aba3ae2596926c4e01e52beadf491",
+      "file_size": 812,
+      "type": "text/x-diff",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-01-15T19:55:50.428Z",
+  "allow_singular_disclosure_after": -223317109.0287985,
+  "singular_disclosure_allowed": true,
+  "vote_count": 15,
+  "voters": [
+    "yipman",
+    "mpz",
+    "eveeez",
+    "jackb898",
+    "0xradi",
+    "an0n-j",
+    "japz",
+    "secbughunter",
+    "spetr0x",
+    "0x7984",
+    "and 5 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

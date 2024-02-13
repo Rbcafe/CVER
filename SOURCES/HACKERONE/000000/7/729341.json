@@ -1,0 +1,123 @@
+{
+  "id": 729341,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83MjkzNDE=",
+  "url": "https://hackerone.com/reports/729341",
+  "title": "Double linking cause XSS (but blokeced by CSP in gitlab.com)",
+  "state": "Closed",
+  "substate": "not-applicable",
+  "severity_rating": "low",
+  "readable_substate": "N/A",
+  "created_at": "2019-11-04T21:17:49.157Z",
+  "submitted_at": "2019-11-04T21:17:49.157Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ooooooo_q",
+    "url": "/ooooooo_q",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/012/811/4b35334fa2fcf93b2e510174e09470fb42bbf03a_original.gif/9a55e00ecd2cdf18a7f40678e6836e4cdc90bf95eb4b50c43f5fb775da40bb65"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 264,
+    "url": "https://hackerone.com/gitlab",
+    "handle": "gitlab",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "GitLab",
+      "twitter_handle": "gitlab",
+      "website": "https://about.gitlab.com",
+      "about": "A single application for the entire software development lifecycle."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-01-20T12:40:04.087Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-12-17T22:24:24.009Z",
+  "team_member_agreed_on_going_public_at": "2020-01-20T12:40:03.999Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "### Summary\n\nURL display on Gitlab.com is currently broken.\n\nThere is a risk of XSS due to double conversion of URLs into links.\nHowever, 12.5 incorporating the fix has not yet been released and is blocked by CSP at gitlab.com.\n\n\n### Steps to reproduce\n\n1. Login to gitlab.com\n2. Create new project\n3. Create a file with the following contents as `Gemfile`\n4. Previe the  `Gemfile`\n5. You can see in the developer tool that javascript execution has been blocked by CSP.\n\n```ruby\ngem '<img/src/onerror=alert(location)>', '2'\n```\n\n\n### Examples\n\nThe above code is converted to HTML as shown below and connected to XSS via the img tag.\n\n```html\n<span class=\"s1\">'<a href=\"<a href=\" https:=\"\" rubygems.org=\"\" gems=\"\" \"=\"\">https://rubygems.org/gems/</a><img src=\"\" onerror=\"alert(location)\">\" rel=\"nofollow noreferrer noopener\" target=\"_blank\"&gt;&lt;img/src/onerror=alert(location)&gt;'</span>\n```\n\n### What is the current *bug* behavior?\n\nThere is a problem with this MR (https://gitlab.com/gitlab-org/gitlab/merge_requests/18305/diffs) that was captured by Milestone 12.5.\n\nThe issue is here. https://gitlab.com/gitlab-org/gitlab/issues/35120\n\n### What is the expected *correct* behavior?\n\nIt is expected that there will be no processing that links the URL in the screen twice.\nProbably this MR. https://gitlab.com/gitlab-org/gitlab/merge_requests/19464\n\n\n### Relevant logs and/or screenshots\n\n{F625771}\n\nscreenshots https://gitlab.com/gitlab-org/gitlab/blob/master/Gemfile\n\n### Output of checks\n\nThis bug only occurs on GitLab.com .\n\n#### Results of GitLab environment info\n\nThe 12.5 version has not yet been released and will not occur in other environments.\n\n## Impact\n\nSince gitlab.com is blocked by CSP, there is almost no risk as XSS.\nThere are dangers of HTML injection and CSS injection.\n\nIf this issue is not fixed and a 12.5 release is made, XSS can occur in Gitlab CE / EE.",
+  "weakness": {
+    "id": 63,
+    "name": "Cross-site Scripting (XSS) - DOM"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 625771,
+      "file_name": "__________2019-11-05_6.10.27.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/WVahpHZKginPoxYyFGZEGhLY?response-content-disposition=attachment%3B%20filename%3D%22__________2019-11-05_6.10.27.png%22%3B%20filename%2A%3DUTF-8%27%27__________2019-11-05_6.10.27.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5A3QBGAF%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133058Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDOmRjyw5I%2FTlNnXkSaQt0HWBvcx4KUqlbsBDywYvgMjAIgc1T3omLkZfSHGnxG7u3M%2BDm3ZU5hXXACm6d42GSb7EAqsQUIdhADGgwwMTM2MTkyNzQ4NDkiDI1cp4QslnXVHIUCaCqOBecH%2BJNC0KwQ%2BfCYMGM86f%2FOS1Dm%2BIA%2BHjSlOORnFjZmELOvSSorEYFhUaPaxwQcFsTE7OMurOw%2BQnTNbwJzmGH%2FjDpGT%2FxwOi1Yf0v9t5xHdyje9QeqWvWnPlxRuLTKdeHLfuYjPaGYHjDPk%2ByYZLTVi%2F6fLFk1LMc7Dx726KzEvXPKCa4bME8qI31URj4F9nDQiBGwytvr7Hm1EMgKGmVAK6%2Fbzd%2BJiZVqxHd3sYJSTbmtS%2BAl2zqAc8BSfBosM0X88oi3lBTlSqMNhfG3CaAXBePpXwzrVOqz74NfDYXdsP4VQdYegntsv6fFEZFiKkjhlglh0X4pAXPbvFNkY8C7BzpUD2tNRzacCXSlRaco9RM5vUg086o63M3dgo9tb8DkSAwOHamrNu%2F2KO2aggnlYsi1aZ7EJQTnQ4h%2BcjkM2D28%2Bxcxlpa3Ec2gB5yd%2BQcUjU%2BzbbmFbStd4UJXYiE38Skp99somT%2BpCEikiE7WFVYA5Pgb9J6BqOzjaorE7DzLysbe4e0jMnv06eVq4H%2Bz42eH%2FkluYPtzip94lWrairjO%2BPy%2BVDKDVJai6d1iVpfcEFmbncPaNpU53sKrhSNhpvIUbUDu5YaFK6X%2FbL%2BeFksXVgGaf0JwUeSzAh%2FGbxLEuo6xDzuhAOmMHndLW%2FF8uphSoqM7NkjvQNWF4znkPMyfsDxu0sKfOHhED1nQ5geErhYuMeCPDWNlWvJKC2X93i%2B8i8WntV0NtA21WXhLXSnrHVz2HCPlDghBMIvH7mgPpfyFhSMGQDeGjpSbj3uInocAFuDTAgJeZIwRGGMYeOXoRMIVrM6FWdeiP%2FaI3a0LUECdOBOPVvRMLQuf7VJvF0078t1crT4PlcQMPTC%2Fwq2uBjqxAVnkBdxFUTWQ4ZupRlHVu9PZr1k7xqw4QHDS7pllKyJWE05aIrKtcQLI8f74A6IlC2qLL0KpjvsW622557lHAqxIiBIxR28dhgaLkoywMH6F6KWd%2BowMbbVNahcgFgF8sWKuHHJPaj4kiHcEz7czNhJgm88FkmgTRhhw7HW2Z01FS2x%2BrnGRx5%2BvOZPEvDu%2BIRvDNGu%2FVrwK5wtu%2BRwxD8V7oEVMXOuAFSFlduj5GO6kbQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c97afb59932326b3c541783e9ddee8f035012ace020835b692cccde1170b5499",
+      "file_size": 575319,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 6,
+  "voters": [
+    "ali",
+    "0xelkomy",
+    "dark_warlord14",
+    "exception",
+    "zimmer75",
+    "root_hunterho"
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 18138,
+    "asset_type": "URL",
+    "asset_identifier": "gitlab.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

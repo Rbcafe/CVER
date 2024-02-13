@@ -1,0 +1,157 @@
+{
+  "id": 731878,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83MzE4Nzg=",
+  "url": "https://hackerone.com/reports/731878",
+  "title": "An implementation flaw in Mail.ru can be exploited for DKIM signature spoofing and email spoofing",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2019-11-08T01:07:22.739Z",
+  "submitted_at": "2019-11-08T01:07:22.739Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jianjun",
+    "url": "/jianjun",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 65,
+    "url": "https://hackerone.com/mailru",
+    "handle": "mailru",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Mail.ru",
+      "twitter_handle": "",
+      "website": "https://vk.company/",
+      "about": "Building the Internet since 1998"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-08-31T12:53:56.415Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-08-02T23:52:30.425Z",
+  "team_member_agreed_on_going_public_at": "2020-08-31T12:53:56.305Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Domain, site, application\n--\nhttps://e.mail.ru\n\nQuick note: this report is different from my previous report (Report #727233) , and is not policy configuration or enforcement issue as well.\n\nTL;DR\n---------\nThis report disclosure an implementation bug, which chains multiple features in the Mail.ru server to bypass Mail.ru sender authentication and forge the target website's DKIM signature. \n\nHere is a demo video to impersonate admin@accounts.mail.ru on Mail.ru. Mail.ru shows the spoofing message passes both DKIM and DMARC authentication. \n\nVideo link: https://drive.google.com/open?id=1X3-TpaLnMZTpJOB3FzWt4K4SB1T3NQc9\n\nProblem explanation\n----------------------------\nThe threat model of this attack is same-domain spoofing, which means the attacker who has an account on the target email services and tries to impersonate another user's address (e.g., administrator) of the same domain.  \n\nThe spoofing attack proceeds in two phases. First, the attacker uses their account to email themselves through the email provider server. In the email, the attacker can create deceptive content in the email body, Subject header and To header, but not the From header given the Mail.ru's strict validation. When the Mail.ru server sends the message, it attaches its DKIM signature to the message.\n\nSecond, the attacker adds an extra From header with another user’s address to the DKIM-signed message and resends it to a victim. When the victim’s email server receives the message, its DKIM component may verify the original From header, and the message passes both DKIM and DMARC verification, while the MUA may show the fake From header.\n\nThe problem in the second step is that the Mail.ru server has strict message validation on the incoming messages, and rejects messages with multiple From headers. So we need another trick to bypass the validation. Here is the message we crafted in the video: (Note that the message has two From headers. In the first one, there is whitespace between the From and colon.)\n\n```\nFrom : Mail.ru Team <admin@accounts.mail.ru>\nFrom: <attacker@mail.ru>\nTo: <victim@mail.ru>\n\nDear customer ...\n```\n\n Mail.ru verifies the second one, and generate \"pass\" results for both DKIM and DMARC authentication, but Mail.ru web interface displays it as `admin@accounts.mail.ru`.\n\nSteps to reproduce\n--------------------------\nI skipped the phase one because I have generated a spoofing message with my Mail.ru account and embed it into my scripts. If you want to reproduce the phase one, please let me know.\n\n1. Download the tool I used in the demo video:  https://github.com/chenjj/espoofer\n\n2. Download the file ambiguous-replay-mailru.py into the main directory: https://drive.google.com/open?id=1LuoqhWfcW3bfo5dmgZfchJuoRdDXXVOB\n\n3. Change the \"victim_address\" in ambiguous-replay-mailru.py to a Mail.ru recipient address.\n\n4. Run the code: python3 ambiguous-replay-mailru.py\n\nHow to fix\n--------------\nThere may be two options can be applied to prevent this attack:\n\n1) Email server and client should be consistent in interpreting the spoofing message.\n\n2) Mail.ru server could use the \"oversign\" solution (suggested in RFC 6376 section 8.15) for outgoing messages,  i.e., repeat important headers, to prevent replay attacks, such as using “h=from:from:subject:subject:to:to. . .\". This will prevent attackers from replaying Mail.ru DKIM signatures on other email providers.  According to our testing, Yahoo.com has adopted this solution.\n\n## Impact\n\nA regular user of email services may send DKIM-signed messages as any other user (e.g., administrator) of the domain to a Mail.ru recipient.\n\nApart from Mail.ru,  this attack can also be used to forge DKIM signatures of other email services, such as Gmail, Outlook, and other public or private services, to a Mail.ru recipient",
+  "bounty_amount": "150.0",
+  "formatted_bounty": "$150",
+  "weakness": {
+    "id": 27,
+    "name": "Improper Authentication - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2020-09-01T23:52:30.468Z",
+  "allow_singular_disclosure_after": -108826725.34029594,
+  "singular_disclosure_allowed": true,
+  "vote_count": 17,
+  "voters": [
+    "ali",
+    "naategh",
+    "impramodsargar",
+    "zimmer75",
+    "cryptographer",
+    "l_user",
+    "leskander",
+    "adoumadje",
+    "roadkill_jim99",
+    "ranamtayyab1",
+    "and 7 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 5.0,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 245,
+    "asset_type": "URL",
+    "asset_identifier": "e.mail.ru",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 24247,
+      "category": "team",
+      "content": "An insufficient filtering in combination with inconsistency in DMARC verification logic and visual representation of sender data allowed to spoof sender's address for DMARC-protected domain with malformed e-mail message.",
+      "user": {
+        "id": 4836,
+        "username": "3apa3a",
+        "name": "Vladimir Dubrovin",
+        "bio": "En la agostada senda he visto al buen lagarto (gota de cocodrilo) meditando. ",
+        "cleared": false,
+        "verified": false,
+        "website": "https://3proxy.org/",
+        "location": "Nizhny Novgorod, Russia",
+        "created_at": "2014-04-10T22:08:47.745Z",
+        "url": "https://hackerone.com/3apa3a",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

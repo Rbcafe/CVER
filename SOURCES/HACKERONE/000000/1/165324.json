@@ -1,0 +1,113 @@
+{
+  "id": 165324,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjUzMjQ=",
+  "url": "https://hackerone.com/reports/165324",
+  "title": "XSS on expenses attachments",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-09-02T16:11:24.601Z",
+  "submitted_at": "2016-09-02T16:11:24.601Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "eboda",
+    "url": "/eboda",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/247/a6446792be4fa0fc962bcba2811ef801ddff87be_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 237,
+    "url": "https://hackerone.com/harvest",
+    "handle": "harvest",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/pyh0ce4oyfvefdxsl0z3vhga5d5b/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/pyh0ce4oyfvefdxsl0z3vhga5d5b/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Harvest",
+      "twitter_handle": "",
+      "website": "https://getharvest.com",
+      "about": "Harvest is a leader in online time tracking and invoicing. Work better, and make smarter decisions for your business."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-11-27T16:41:01.760Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-10-28T16:40:48.884Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Summary\n------\nHey there! \nAfter  #152591 was fixed, I decided to take another look at the attachments and found a new bypass to upload attachments which will be served with a user-controlled `Content-type`. \n\nThe invoices attachments are not vulnerable, as they are all served with `Content-Disposition: attachment;`. \n\nHowever, the expense receipts are served inline if we provide a content-type which includes `image/jpeg`. Then we simply need to force the browser to not interpret it as an image, this can be done by supplying `text/html image/jpeg` as content-type. The image/jpeg will just be ignored (tested on firefox and chrome).\n\nSteps to reproduce\n------\n1. Create a new expense and add a receipt.\n2. Intercept the POST request and modify the `receipt` parameter to look like this:\n\n    ```{bash}\nContent-Disposition: form-data; name=\"receipt\"; filename=\"blabla\"\nContent-Type: text/html image/jpeg\n\n    <script>alert(document.domain);</script>\n```\n3. It will create the expense and return you a URL for viewing the receipt. Open the url and you should see the XSS\n\nImpact\n-------\nExpenses can be created by regular users, therefore they could XSS their admins. However, I don't see a feature to publicly share an expense like the invoices in #152591, so I guess you can not use it to XSS cross-app.\n\n**Note**: This bypass works also on the invoices attachments. But since they are served as attachments, no XSS is possible as far as I can tell.",
+  "bounty_amount": "250.0",
+  "formatted_bounty": "$250",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-11-27T16:40:48.930Z",
+  "allow_singular_disclosure_after": -227562103.89331555,
+  "singular_disclosure_allowed": true,
+  "vote_count": 13,
+  "voters": [
+    "b1ngz",
+    "bogdantcaciuc",
+    "yaworsk",
+    "ahiezer",
+    "malcolmx",
+    "madrobot",
+    "sasi2103",
+    "fantam1",
+    "japz",
+    "sumit7",
+    "and 3 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

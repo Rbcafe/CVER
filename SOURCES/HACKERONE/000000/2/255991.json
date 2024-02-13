@@ -1,0 +1,127 @@
+{
+  "id": 255991,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNTU5OTE=",
+  "url": "https://hackerone.com/reports/255991",
+  "title": "URL Spoof / Brave Shield Bypass",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2017-08-03T03:33:55.679Z",
+  "submitted_at": "2017-08-03T03:33:55.679Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mattaustin",
+    "url": "/mattaustin",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/526/c9a3feb16fa81bdfb2e976598a2ff4006a59559b_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15688,
+    "url": "https://hackerone.com/brave",
+    "handle": "brave",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Brave Software",
+      "twitter_handle": "brave",
+      "website": "https://brave.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-08-31T21:48:19.844Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-08-30T21:19:29.163Z",
+  "team_member_agreed_on_going_public_at": "2017-08-31T21:48:19.752Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nImproper URL parsing in Brave allows an attacker to spoof the hostname shield settings are applied to.\n\n## POC:\nhttps://youtu.be/yz99T_Trfuc\n\n## Products affected: \n\n * Brave (browser-laptop) 0.18.14 rev ad92d02\n\n## Steps To Reproduce:\n\n 1. Browse to http://brave.com\n 2. Click on the Shield icon and toggle the shield from \"up\" to \"down\"\n 3. Browse to http://brave.com%60x.code-fu.org/ and notice the shield is down for this domain as well. \n\nI believe this could be used enable flash by spoofing one of the \"whitelisted\" domains. \n\nThe renderer will load the code-fu.org domain, however I believe when the  URL is later parsed in node it uses (non standards compliant?) url.parse. This leads to some confusion: \n\n``` javascript\n> url.parse('http://brave.com%60x.code-fu.org/')\nUrl {\n  href: 'http://brave.com/%60x.code-fu.org/'\n  protocol: 'http:',\n  host: 'brave.com',\n  hostname: 'brave.com',\n  pathname: '%60x.code-fu.org/',\n  path: '%60x.code-fu.org/',\n}\n```\n\nvs\n\n``` javascript\n> new url.URL('http://brave.com%60x.code-fu.org/')\nURL {\n  href: 'http://brave.com`x.code-fu.org/',\n  protocol: 'http:',\n  host: 'brave.com`x.code-fu.org',\n  hostname: 'brave.com`x.code-fu.org',\n  pathname: '/',\n}\n```\n\nNode now (7+) supports the the WHATWG through the [url.URL](https://nodejs.org/api/url.html#url_the_whatwg_url_api) . This seems to be the same / compatible with the way the render / chrome parses the URL. \n",
+  "bounty_amount": "200.0",
+  "formatted_bounty": "$200",
+  "weakness": {
+    "id": 20,
+    "name": "Use of Inherently Dangerous Function"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 209414,
+      "file_name": "Screenshot_2017-08-02_20.32.28.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/209/414/ba36c1a177ce03c81f89d81cba8fd0d87f78bd12/Screenshot_2017-08-02_20.32.28.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_2017-08-02_20.32.28.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_2017-08-02_20.32.28.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2TXGU4NH%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T124727Z&X-Amz-Expires=1308&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZXXLTvdjrV9%2BXTrnagiitpTSxdTNfuwI8JoO87a374wIgGdKdQ7YeIephBMysf3wfpXJkd8udROvqz%2BslCFnteH4qsgUIcBADGgwwMTM2MTkyNzQ4NDkiDJwtqkOHj%2Bhq7hwpISqPBc3oQJzChWjZ7bKD%2BccTmt7LiDYwnp%2FaW49dMRirZ9pIhrCa7YZHTLZ9RBv6n9DI4zg1cmDjgAWLZcLoHEU6HMSY4TZiQ6JhkTxfHY9%2BW8gIq%2FN6zwvc28EGhPI0bXtMQ05CUe9qLU1IqB2QvVi8ljbC0OENAKpHHW%2B4HZPV3ya4m4CUrmIsBEz02u4o%2FTUWBucXelW27TA%2FMHkcbbkFDMVuk57DqG9l6DCv91Gk0it2LxC7b8QipHE3PIzezn29GFbq0x%2FVAy8j5zhCsVA2u3PoLG8UBgJPigFlduO2n54cymHx0Kj1lPCf0XySDYAG7J%2BkbE9frSbqOenAzEKHL%2BbmTLbvIknLt0tHuWNofydq3sKSVRJUGT6kPaXiG6LcZZAjiidzALZPhPiZjjN2NFbT%2B4d3bYuhSBgSzvUsrX%2FU4t82le3n50YJtFXVQ5QFh1yFj%2BasAJo8gy4CzSP0PgdMEiJHxmad%2BFSBk1osw1BNlolWVHoYfecAbexOr2DelWZtvQEFGBxOieL0Wu0EoUhoxEA%2BwcuNd421R9g0jkhW6T1utyXajONBgYVseJBpWnbW%2BkpGImvblpF9NqajpVHpAAFM6sdMLqiQfJ1f2k9nfS8NIMIMr1C%2Fow0E8D%2FBak4EhkqC2z4QmLpn0zQ7nAVSDGC0pvQQ9HVPj%2BqgNB88SHK9rHZSyCSKf4lsEvYbKl40pk9%2FwaWVlfLBHZ9KQh3Sk5kHWBptfVKftWPHgl3kdZnZZoD7zq5BIGAq%2BfkhmJ1PLAj9CcRgLZKxPmL7BwBfMK1j9GipZrFsKu100o2ehZDw7ycR0yKIZpB5BsA2SMtYyPB%2B8lmSAWsiEcgvv%2BCmvle2pB9btBCR6tP%2FsVAwuKWsrgY6sQEOW7UlyhlECgHHWSD1IxQaKIHYvjLM%2FfiTluais8DBgTs2%2B0ozGJfGCvvwGwuCx3AVFBMiYmPRly4WjCK3xXERtAap5VTGJE61OwLy5AbGPGJEzLPgyw2xUSEbhOBlNW9NWCeq3J6Ykb0rxTuobAmesQY2%2FdIFblQ%2FHHBqxCz3Wf7QF6oiRaFXn07SukEwJwLzpGlJ6GkqAxZz63CXWtQishvehwDUwbs0xamAMs2tYiU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=54732ff80670d770bee9b87e5bf3e8ce7a5e5f4c422d644ed09a4ea158ea6a3f",
+      "file_size": 1321865,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-09-29T21:19:29.281Z",
+  "allow_singular_disclosure_after": -201108478.52151898,
+  "singular_disclosure_allowed": true,
+  "vote_count": 21,
+  "voters": [
+    "flamezzz",
+    "cdl",
+    "bogdantcaciuc",
+    "sameerphad72",
+    "mattaustin",
+    "bl4de",
+    "jub0bs",
+    "already_in_use_",
+    "geeknik",
+    "eveeez",
+    "and 11 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

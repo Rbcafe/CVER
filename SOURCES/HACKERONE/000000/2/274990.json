@@ -1,0 +1,148 @@
+{
+  "id": 274990,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNzQ5OTA=",
+  "url": "https://hackerone.com/reports/274990",
+  "title": "Remote code execution on rubygems.org",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2017-10-06T08:49:52.800Z",
+  "submitted_at": "2017-10-06T08:49:52.800Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "max",
+    "url": "/max",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/005/692/d1ba05a52c3350c9fde20831a8ff5962be58b49c_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 8212,
+    "url": "https://hackerone.com/rubygems",
+    "handle": "rubygems",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/008/212/e65eca09896d23bc029c08d3147a79a48ec1ee2f_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/008/212/e65eca09896d23bc029c08d3147a79a48ec1ee2f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "RubyGems",
+      "twitter_handle": "rubygems_status",
+      "website": "https://rubygems.org",
+      "about": "RubyGems.org is the Ruby community’s gem hosting service."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2017-0903"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-11-09T05:56:39.178Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-11-09T05:56:39.096Z",
+  "team_member_agreed_on_going_public_at": "2017-10-11T04:23:15.459Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "When parsing a gem POSTed to the `/api/v1/gems` endpoint, the rubygems.org application immediately calls `Gem::Package.new(body).spec` inside `app/models/pusher.rb`. The authors of the application correctly observed that parsing untrusted YAML is dangerous (since it can serialize more or less arbitrary objects), so they monkey-patched the spec parser to use `Psych.safe_load` set from `config/initializers/forbidden_yaml.rb`.\n\nHowever, `YAML.load` is called directly when parsing the gem's checksum file in `Gem::Package#read_checksums`. Using classes accessible within the application, I was able to turn this into a call to `Marshal.load` on attacker-controlled data. From there, I was able to use known Marshal exploitation techniques to achieve code execution on the server (I'm omitting some details here for brevity so that I can submit this report right away).\n\nA proof of concept, `poc.gem`, is attached. Run the exploit with the following command:\n`cat poc.gem | curl -H 'Content-Type: application/gzip' --data-binary @- -H 'Authorization: █████' https://rubygems.org/api/v1/gems`\n\nI ran the attached PoC twice. It just does a `wget` to my server.\n\nPlease let me know if I should clarify anything! Thanks for running this program.",
+  "bounty_amount": "1500.0",
+  "formatted_bounty": "$1,500",
+  "weakness": {
+    "id": 52,
+    "name": "Deserialization of Untrusted Data"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2017-11-10T04:23:15.519Z",
+  "allow_singular_disclosure_after": -197540910.22816077,
+  "singular_disclosure_allowed": true,
+  "vote_count": 50,
+  "voters": [
+    "rhynorater",
+    "sp1d3rs",
+    "bogdantcaciuc",
+    "hunter",
+    "michiel",
+    "bl4de",
+    "surfrdan",
+    "nahamsec",
+    "ooooooo_q",
+    "coldd",
+    "and 40 more..."
+  ],
+  "severity": {
+    "rating": "critical",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 2042,
+    "asset_type": "URL",
+    "asset_identifier": "rubygems.org",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 5576,
+      "category": "team",
+      "content": "An unsafe object deserialization vulnerability was found in RubyGems. Unfortunately this vulnerability can be used as a way to escalate to a remote code execution exploit.",
+      "user": {
+        "id": 82355,
+        "username": "dwradcliffe",
+        "name": "David Radcliffe",
+        "bio": "Senior Staff Production Engineer at Shopify",
+        "cleared": false,
+        "verified": false,
+        "website": "https://dwradcliffe.com",
+        "location": "Indianapolis, IN",
+        "created_at": "2016-06-01T18:39:21.008Z",
+        "url": "https://hackerone.com/dwradcliffe",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/082/355/821154e381fe27d2273bc54a18049a3a87e1591d_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/082/355/821154e381fe27d2273bc54a18049a3a87e1591d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/082/355/821154e381fe27d2273bc54a18049a3a87e1591d_original.png/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

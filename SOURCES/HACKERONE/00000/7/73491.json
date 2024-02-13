@@ -1,0 +1,103 @@
+{
+  "id": 73491,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83MzQ5MQ==",
+  "url": "https://hackerone.com/reports/73491",
+  "title": "Buffer Overflow in PHP of the AirMax Products",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-07-01T15:31:40.696Z",
+  "submitted_at": "2015-07-01T15:31:40.696Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "rbran",
+    "url": "/rbran",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/033/613/8c3e2d95cf9be1554d0d1e8de292b45c73325047_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 800,
+    "url": "https://hackerone.com/ui",
+    "handle": "ui",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/fpqjzgms7de9639u414bw6vid1be/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/fpqjzgms7de9639u414bw6vid1be/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Ubiquiti Inc.",
+      "twitter_handle": "ubiquiti",
+      "website": "https://ui.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-04-01T11:11:16.597Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-03-02T11:10:57.464Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "#Vulnerability\r\nThe function `static int ub_normalize_filename(char* filename)` (implemented by the patch `430-smart-post-upload.patch` in the file `uploadbuffer.c` on the `SDK.UBNT.v5.5`) have the following code:\r\n```\r\nstatic int ub_normalize_filename(char* filename)\r\n{\r\n\r\n    char *fwd_slash;\r\n    char *back_slash;\r\n    size_t size;\r\n    /**\r\n     *  Some comments removed\r\n     */\r\n    if (filename == 0)\r\n    {\r\n        return -1;\r\n    }\r\n    size = strlen(filename);\r\n    fwd_slash = strrchr(filename, '/');\r\n    back_slash = strrchr(filename, '\\\\');\r\n    if ((fwd_slash == 0) ||\r\n\t(back_slash == 0))\r\n    {\r\n\t    /* No slashes or backslashes */\r\n        return 0;\r\n    }\r\n    if ((back_slash - filename == size - 1) ||\r\n\t(fwd_slash - filename == size - 1))\r\n    {\r\n        return -1; /* 'Empty filename ???' */\r\n    }\r\n    /* Move file part from last backslash to last forwardslash,\r\n       Copy including ending string \\0 */\r\n    memmove(fwd_slash + 1, back_slash + 1, size - (back_slash - filename));\r\n    return 0;\r\n}\r\n```\r\nManipulating the `filename` value of a HTTP POST (like in the report [73480](https://hackerone.com/reports/73480)), it's possible to cause a buffer overflow with the following value `filename=\"\\asdfasdfasdfasdfsdfgdsfg/a\"`. The Pointers will point to the following locations:\r\n```\r\n\\asdfasdfasdfasdfsdfgdsfg/a\\0\r\n^                        ^  ^\r\n-back_slash              |  |\r\n                         |  -End of String\r\n                         |\r\n                         -fwd_slash\r\n```\r\n\t\r\nThe `memmove` will write to `fwd_slash + 1` the content of `back_slash + 1` (until the end of the String), what will copy string off the bounds. \r\n\r\n```\r\n\\asdfasdfasdfasdfsdfgdsfg/aasdfasdfasdfasdfsdfgdsfg/a\r\n^                          ^\r\n-Init                      |\r\n                           -End of String\r\n```\r\n\r\n#Consequences\r\nIt's possible to cause a buffer overflow, but it's unlikely the vulnerability to result in a arbitrary code execution (but possible), once it's allocated in a the heap memory (function `ub_parse_disposition`, file `uploadbuffer.c`, I think).",
+  "weakness": {
+    "id": 2,
+    "name": "Memory Corruption - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-04-01T11:10:57.644Z",
+  "allow_singular_disclosure_after": -248315509.48919833,
+  "singular_disclosure_allowed": true,
+  "vote_count": 3,
+  "voters": [
+    "shivammusic",
+    "dyabla",
+    "prowser"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

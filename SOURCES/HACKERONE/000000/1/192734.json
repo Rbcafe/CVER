@@ -1,0 +1,119 @@
+{
+  "id": 192734,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xOTI3MzQ=",
+  "url": "https://hackerone.com/reports/192734",
+  "title": "SIGSEGV Null Pointer mrb_str_concat()",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2016-12-20T13:06:20.011Z",
+  "submitted_at": "2016-12-20T13:06:20.011Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ston3",
+    "url": "/ston3",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15668,
+    "url": "https://hackerone.com/shopify-scripts",
+    "handle": "shopify-scripts",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "shopify-scripts",
+      "twitter_handle": "",
+      "website": "",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-02-10T21:56:48.373Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2017-01-11T21:56:43.923Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Sample\n---------------------\n\nThe following code triggers the bug (attached as mrb_str_concat.rb):\n\n\ta=String.new\n\ta.concat(a)\n\nCrash\n---------------------\n\n\tx@x:~/Desktop/research/mruby-engine/bin$ ./mruby-engine-mirb \n\tmirb - Embeddable Interactive Ruby Shell\n\n\t> a=String.new\n\ta.concat(a)\n\t => \"\"\n\t> Segmentation fault\n\nDebug\n---------------------\n\n\t(gdb) r mruby-engine-mirb \n\tStarting program: /usr/bin/ruby mruby-engine-mirb\n\t[Thread debugging using libthread_db enabled]\n\tUsing host libthread_db library \"/lib/x86_64-linux-gnu/libthread_db.so.1\".\n\t[New Thread 0x7ffff7ff7700 (LWP 27170)]\n\t[Thread 0x7ffff7ff7700 (LWP 27170) exited]\n\tprocess 27160 is executing new program: /home/x/Desktop/research/mruby-engine/ext/mruby_engine/mruby/build/host/bin/mirb\n\tmirb - Embeddable Interactive Ruby Shell\n\n\t> a=String.new\n\ta.concat(a)\n\t => \"\"\n\t> \n\tProgram received signal SIGSEGV, Segmentation fault.\n\t0x000000000041baa8 in mrb_str_concat (mrb=mrb@entry=0x6cd010, self=self@entry=..., other=...) at /home/x/Desktop/research/mruby-engine/ext/mruby_engine/mruby/src/string.c:764\n\t764\t  RSTR_PTR(s1)[len] = '\\0';\n\t(gdb) info reg\n\trax            0x0\t0\n\trbx            0x6d4c90\t7163024\n\trcx            0x0\t0\n\trdx            0x0\t0\n\trsi            0x0\t0\n\trdi            0x0\t0\n\trbp            0x6d4c90\t0x6d4c90\n\trsp            0x7fffffffc4c0\t0x7fffffffc4c0\n\tr8             0x48bee6\t4767462\n\tr9             0x1\t1\n\tr10            0x6cd010\t7131152\n\tr11            0x0\t0\n\tr12            0x0\t0\n\tr13            0x6cd010\t7131152\n\tr14            0x2\t2\n\tr15            0x6cd010\t7131152\n\trip            0x41baa8\t0x41baa8 <mrb_str_concat+280>\n\teflags         0x10246\t[ PF ZF IF RF ]\n\tcs             0x33\t51\n\tss             0x2b\t43\n\tds             0x0\t0\n\tes             0x0\t0\n\tfs             0x0\t0\n\tgs             0x0\t0\n\t(gdb) list *$rip\n\t0x41baa8 is in mrb_str_concat (/home/x/Desktop/research/mruby-engine/ext/mruby_engine/mruby/src/string.c:764).\n\t759\t  if (RSTRING_CAPA(self) < len) {\n\t760\t    resize_capa(mrb, s1, len);\n\t761\t  }\n\t762\t  memcpy(RSTR_PTR(s1)+RSTR_LEN(s1), RSTR_PTR(s2), RSTR_LEN(s2));\n\t763\t  RSTR_SET_LEN(s1, len);\n\t764\t  RSTR_PTR(s1)[len] = '\\0';  // Bug is here.\n\t765\t}\n\t766\t\n\t767\t/*\n\t768\t *  call-seq: (Caution! String(\"abcd\") remain)\n\nBacktrace\n---------------------\n\n\t(gdb) bt\n\t#0  0x000000000041baa8 in mrb_str_concat (mrb=mrb@entry=0x6cd010, self=self@entry=..., other=...) at /home/x/Desktop/research/mruby-engine/ext/mruby_engine/mruby/src/string.c:764\n\t#1  0x000000000045a1ec in mrb_str_concat2 (mrb=0x6cd010, self=...) at /home/x/Desktop/research/mruby-engine/ext/mruby_engine/mruby/mrbgems/mruby-string-ext/src/string.c:151\n\t#2  0x0000000000405cf3 in mrb_vm_exec (mrb=mrb@entry=0x6cd010, proc=<optimized out>, proc@entry=0x6d4c30, pc=0x72e098) at /home/x/Desktop/research/mruby-engine/ext/mruby_engine/mruby/src/vm.c:1171\n\t#3  0x000000000040c22c in mrb_vm_run (mrb=mrb@entry=0x6cd010, proc=proc@entry=0x6d4c30, self=..., stack_keep=stack_keep@entry=2) at /home/x/Desktop/research/mruby-engine/ext/mruby_engine/mruby/src/vm.c:772\n\t#4  0x0000000000402dd9 in main (argc=<optimized out>, argv=<optimized out>) at /home/x/Desktop/research/mruby-engine/ext/mruby_engine/mruby/mrbgems/mruby-bin-mirb/tools/mirb/mirb.c:549\n\nImpact\n---------------------\n\nThis vulnerability is caused by NullPointer error. It can not be exploited, but it can cause DoS.",
+  "weakness": {
+    "id": 48,
+    "name": "Denial of Service"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 145376,
+      "file_name": "mrb_str_concat.rb",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/145/376/819b13af68945cccf81d40bf17f3444ada039c31/mrb_str_concat.rb?response-content-disposition=attachment%3B%20filename%3D%22mrb_str_concat.rb%22%3B%20filename%2A%3DUTF-8%27%27mrb_str_concat.rb&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQU6SKXNFL%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T123105Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBsQY5L%2BFkxRPC58PY5o2r1B4FvJQHizPIG9rlwXtVRvAiAL0D5jMubGIu63HWEEj%2BrlMXD00CwCZl6n%2B2kgNXCz%2BSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIM9fJcytorMyA%2BJcGWKo8FlA6t%2FhW4ihTQDwTO66lwrpmBlh3InHCG7ZNyP57uNt%2FwRHIxvyi6PfiN2yoHKbnj3AHO%2B2d5zoBenUsjkTNVRrSUiifpdaXKnzF7u0bzX9wtP9298ZDuZh%2FGs9ROFHAwwSZO%2BvwKQLvQiKkud03lUkSsYAWSATrr7bzJ1TgRIshBwEoMxF63sGP9s7tsNfzRA%2BRBnErSD0VUQqi0BLoiz8aEpp9YWVfFSARTl85AS70jGdLFyjPSL3p4qQWEPUkiV0yqHhdAEAs09CT1fGjn4y7il2MxOD%2BwERRa3lBGnRAFCEqrktUlGxrk%2BtAvTc%2B7MYBNtBaSu88Qp3FBMeRxgNXuz4B4aE75hNE7hCdKjZkNp653DgLLcvSAVkWXKJ8bc7pY8EMi5I1A2Dl%2BW8ZHS7yWw13MauFUqTfpwfPhg4FrjlzkfofKeir9moM1Qw92DiMAzmXNA9VCWZgtwF9peq7cledMqKMhyz553%2BMG21%2FcYWqw%2FWqRrVoyVdqjqI8FKUBe%2BTS1SxpldVu8xEmCKzbfFzq%2FhT%2FkR7exoQXrx2l%2BL7t%2FuGgGEEKJunLBHXQWh79aKlW4%2FLY1zZRs3z63USsKCdupXOFqYSXN1SfICON%2Fqq6JqRCfisNv890YfHqytS0RRv6qX0n0SN%2BaUeTqSWHqTP0py0ZSVQX4asOO3F%2FAoFXsCcUW8Hln49ICQ0yyR%2Bcv27Gbe2FMzVWYlJHO79Zqq6ItXDPLhetwQl%2BNTdHzqrRFOsB9FNw7KlAliVAd2TMcGOIN3W1R76B95DRHTSvbmbHOhm%2FIFrdcghtBTzYBtLmNwUj6qld3rUi4V7xCIaxjyaDAD3J3BIh9Z56z79Puv7VTgcD1IbaGvCsbkTDaoa2uBjqyAfXgKJ7u1ZqUyaqlA35nJDggYhFUEhgBeS%2FonLnznw%2F8MZgMPwNTg9%2B%2BKneXQRJEmw0IxrRJCtp8dpbLw%2BejfQTVmdG%2FWK%2BDS%2FFX7U1sRmDMc%2FfmYPqycmml%2Bg9esPYXet%2FKlKaaFDXG3gzd7HfWF0%2BL5V0SyxaHdCxSBI4q4kLfNakyjwzmb4ALjzY0fA2TwRp16US2P1dwfWi2GjYsqaNGUOCV0dxXn6CrIbOv%2F%2Bk4ioM%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bb160ae0e6777785274efbf3e21cce5bc0d265bcac2896cb5535bf5fa522b1d4",
+      "file_size": 25,
+      "type": "text/plain",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-02-10T21:56:43.980Z",
+  "allow_singular_disclosure_after": -221063661.85155103,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "mpz",
+    "eveeez",
+    "rbcafe",
+    "spetr0x",
+    "alkapakaro"
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

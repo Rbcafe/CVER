@@ -1,0 +1,146 @@
+{
+  "id": 191380,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xOTEzODA=",
+  "url": "https://hackerone.com/reports/191380",
+  "title": "CRLF and XSS stored on ton.twitter.com",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-12-15T11:41:34.369Z",
+  "submitted_at": "2016-12-15T11:41:34.369Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "seifelsallamy",
+    "url": "/seifelsallamy",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/003/804/747fe8def9e5ba028d0fbf0ac755a88ea4992d3f_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 61,
+    "url": "https://hackerone.com/x",
+    "handle": "x",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "X (Formerly Twitter)",
+      "twitter_handle": "XSecurity",
+      "website": "https://x.com",
+      "about": "X helps you create and share ideas and information instantly, without barriers."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-07-05T23:54:50.638Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-06-29T01:15:55.716Z",
+  "team_member_agreed_on_going_public_at": "2017-07-05T23:54:50.574Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hey,\n\n###[1] CRLF:\nIt's similar to #52042 but weaker\nto reproduce go to:\nhttps://ton.twitter.com/1.1/ton/data/dm/x/%E5%98%8A%E5%98%8Dset-cookie%3A%20test%3Dtest%3B%20Domain%3D.twitter.com%3B%20Path%3D%2F%3B%20Expires%3DSat%2C%2015-Dec-2018%2009%3A45%3A55%20UTC\n\nyou will find that `test` cookie with the value `test` has been added to your cookies\n\n###[2] XSS:\nXSS can occur by injecting a `.jpg` image \nand uploading it to twitter\nthen changing the extension from `.jpg` to `.html`\nto reproduce open messages and start a conversation \nupload this image F143743 and send it in the conversation \nopen the image source url it will look alike \n\nhttps://ton.twitter.com/i/ton/data/dm/123456789/987654321/AbCdEf.jpg:large\n\nremove the last part `:large`\nand put `%23.html`\nXSS popup box will popup\n\nhowever this image can only appear to you and to the one who you send it to because it is a private message\nand to send the message you have to follow the victim and the victim has to follow you in most cases\nand ton.twitter.com has no valuable cookies at all \nso the impact will be a phishing page or let the victim downloading a malicious software after sending the injected image on a message \n\n###CRLF + XSS:\nboth bugs separately are too weak \nbut by joining them together the impact will be much more powerful\nton.twitter.com showing the image to the one who has a valid `auth_token` cookie with a value that has the right to see the injected image \nas example the attackers' `auth_token` is valid and has the right to see the injected image\nso if the attacker injected his own `auth_token` to the victim by CRLF\nthe injected image will appear to the victim even if the victim not following you\ncausing a XSS to occur \nthe following URL will:\n[1] change auth_token value to my own `auth_token` value to make the injected image appear in your pc\n[2] will redirect you to the injected imaged\n[3] Javascript will be executed causing attacker's phishing page to appear\nhttps://ton.twitter.com/1.1/ton/data/dm/809353163740483587/809353151434330112/O5hEYiOt.jpg%2523.html%E5%98%8A%E5%98%8Dset-cookie%3A%20auth_token%3Db2868e3d5fd901a1cf4819afd147ee893f331294%3B%20Domain%3D.twitter.com%3B%20Path%3D%2F%3B%20Expires%3DSat%2C%2015-Dec-2018%2009%3A45%3A55%20UTC%3BSecure%3BHTTPOnly\n\n###Impacts\n[1] phishing\n[2] crlf injection (cookie injection &  DOS may occur & cache poisoning )\n[3] under certain circumstances it may lead to bypassing CSP in https://twitter.com \n\n###POCS\nF143759\nF143760\nF143761\n\nThank you!",
+  "bounty_amount": "1680.0",
+  "formatted_bounty": "$1,680",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 143743,
+      "file_name": "xss.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/143/743/5471e7e3e7e772138f8f1ca635560f71a0f09c91/xss.jpg?response-content-disposition=attachment%3B%20filename%3D%22xss.jpg%22%3B%20filename%2A%3DUTF-8%27%27xss.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSHMH2JG6%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T123006Z&X-Amz-Expires=433&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIGZg1eLat8jYDu8ya39gYzlYHLKMMGOBerakTCivFOHfAiEA%2Bu8rTSPah8b0el3%2BS%2FpFwj4VtbM%2FFoDWeSjasMueeQUqsgUIbxADGgwwMTM2MTkyNzQ4NDkiDO%2B7PBDXCVoWHmbGyiqPBXsQMmX1xcmrqnlxF6nxE7BbslfpBP%2BYB7Dz2d5w4AF2fnczmhkr1cJfZ1wQ2hDVbMd5yE%2FwPDAbjXaOusFSzueQ6MRlfW%2FvZuEfbDtv8%2FE2YeH43nJH1Uv164UqRl8M8Vpf%2Bht266SWMAIpKMdZeP9dHL3c2Lb%2FT7%2BLL6TkdfamD2uVZsaa5njbmjr5bIzTJL7suC6pDkBTHkHYP7RDrmZsb68ztNhnQ%2FhF5%2FYW6JlWFjubRC7HPQFKDUBPZmsFR2YhgIYdBQTA6c%2BubLlluA6Q8uqhQU0j%2BRsJejozC3pcE0Cs9ZOgKhQ9MYoU5jr1oNtI7Np9OXeY0gMNtLJIK%2F8jfWmnD8FMV9KL0iZcnVTtzrY6j3oPiwtFfIljx7bgy7hbbf9rafbi30uc8wDaN08gFLYeib2Qgf6rC3suutYfZnWiDom69pyKh5pazkt90Jsn4MB6AC3vuaZ4Nk7B4GeGuDQHV9lqmdLmzcNVS1lvVGdNAbMpKCojixFWzIeBdaRCPVifTMRa2Tfn8KYYu%2F9B18cVeJIHikxS4TLr4YFNBsUnxtIX%2F4qnMfSYTpo1btQ0zei7TPr1%2BIQjVCldFlJyq%2BzTozG71G4YbfrSku7R0EOVfOmY2fw1BLK%2Bdyyl0HR5fiCjeA2roOKXNpXoXr2vFvw1%2Bna5GePjNuZkuCrRHv8TSD7Sb6AlGnQLxqOtxoUADwdZrthePfDcG5mSyiRiXWFsk3iTQCcYi6icViQPaLWhvEf14Z9gRZ0phJIoWuL5IEHRpxf5gaPvIS2ytDTU1FmzrWdwqv%2FMQsb%2FB%2FVgMJyIKxouhh5h%2Bm80zFunt0u9zsAcM3MZzBor1kVJeAjSrV5w2DyO4IM%2FlGuHh%2F8w15OsrgY6sQFVH5tUDXRPOjkahwbrWNRQbQlViBiuisF0oGGIUZSEM2emyhDTiKPd5NMjM0yePeIl%2BPxC4Dul%2F2On0NyXRRTTGrOIIl6Hy6Xv9vxQdDDYPJGcbS4J30GlwnahTG8BuM0KkchA2Wrwiy%2BJjPwi9JgZ9EIwHrxud41dg%2BdUjN4eH82KkANplyasAghysu3v1IW2Zck2vsJ%2FkBL4o45BwkwnHpOMCYfAgN4qXaf1GGzBmPY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=254d30eb5ad43795bf44ab0e84bfd8b1fd15e451c24161c6b4ae20d38edd3705",
+      "file_size": 58189,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 143759,
+      "file_name": "poc1.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/143/759/be788fa3fc51544da0f7483ead58fdf6c5ca9a8a/poc1.jpg?response-content-disposition=attachment%3B%20filename%3D%22poc1.jpg%22%3B%20filename%2A%3DUTF-8%27%27poc1.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSHMH2JG6%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T123006Z&X-Amz-Expires=433&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIGZg1eLat8jYDu8ya39gYzlYHLKMMGOBerakTCivFOHfAiEA%2Bu8rTSPah8b0el3%2BS%2FpFwj4VtbM%2FFoDWeSjasMueeQUqsgUIbxADGgwwMTM2MTkyNzQ4NDkiDO%2B7PBDXCVoWHmbGyiqPBXsQMmX1xcmrqnlxF6nxE7BbslfpBP%2BYB7Dz2d5w4AF2fnczmhkr1cJfZ1wQ2hDVbMd5yE%2FwPDAbjXaOusFSzueQ6MRlfW%2FvZuEfbDtv8%2FE2YeH43nJH1Uv164UqRl8M8Vpf%2Bht266SWMAIpKMdZeP9dHL3c2Lb%2FT7%2BLL6TkdfamD2uVZsaa5njbmjr5bIzTJL7suC6pDkBTHkHYP7RDrmZsb68ztNhnQ%2FhF5%2FYW6JlWFjubRC7HPQFKDUBPZmsFR2YhgIYdBQTA6c%2BubLlluA6Q8uqhQU0j%2BRsJejozC3pcE0Cs9ZOgKhQ9MYoU5jr1oNtI7Np9OXeY0gMNtLJIK%2F8jfWmnD8FMV9KL0iZcnVTtzrY6j3oPiwtFfIljx7bgy7hbbf9rafbi30uc8wDaN08gFLYeib2Qgf6rC3suutYfZnWiDom69pyKh5pazkt90Jsn4MB6AC3vuaZ4Nk7B4GeGuDQHV9lqmdLmzcNVS1lvVGdNAbMpKCojixFWzIeBdaRCPVifTMRa2Tfn8KYYu%2F9B18cVeJIHikxS4TLr4YFNBsUnxtIX%2F4qnMfSYTpo1btQ0zei7TPr1%2BIQjVCldFlJyq%2BzTozG71G4YbfrSku7R0EOVfOmY2fw1BLK%2Bdyyl0HR5fiCjeA2roOKXNpXoXr2vFvw1%2Bna5GePjNuZkuCrRHv8TSD7Sb6AlGnQLxqOtxoUADwdZrthePfDcG5mSyiRiXWFsk3iTQCcYi6icViQPaLWhvEf14Z9gRZ0phJIoWuL5IEHRpxf5gaPvIS2ytDTU1FmzrWdwqv%2FMQsb%2FB%2FVgMJyIKxouhh5h%2Bm80zFunt0u9zsAcM3MZzBor1kVJeAjSrV5w2DyO4IM%2FlGuHh%2F8w15OsrgY6sQFVH5tUDXRPOjkahwbrWNRQbQlViBiuisF0oGGIUZSEM2emyhDTiKPd5NMjM0yePeIl%2BPxC4Dul%2F2On0NyXRRTTGrOIIl6Hy6Xv9vxQdDDYPJGcbS4J30GlwnahTG8BuM0KkchA2Wrwiy%2BJjPwi9JgZ9EIwHrxud41dg%2BdUjN4eH82KkANplyasAghysu3v1IW2Zck2vsJ%2FkBL4o45BwkwnHpOMCYfAgN4qXaf1GGzBmPY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1b6ce5ace4d8fc43e4e83a564c8d68ac111ab9a615a901184735fc76694f1acb",
+      "file_size": 113772,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 143760,
+      "file_name": "poc2.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/143/760/c3ff5b459781c410ec2239935c9d39c58933e8e1/poc2.jpg?response-content-disposition=attachment%3B%20filename%3D%22poc2.jpg%22%3B%20filename%2A%3DUTF-8%27%27poc2.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSHMH2JG6%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T123006Z&X-Amz-Expires=433&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIGZg1eLat8jYDu8ya39gYzlYHLKMMGOBerakTCivFOHfAiEA%2Bu8rTSPah8b0el3%2BS%2FpFwj4VtbM%2FFoDWeSjasMueeQUqsgUIbxADGgwwMTM2MTkyNzQ4NDkiDO%2B7PBDXCVoWHmbGyiqPBXsQMmX1xcmrqnlxF6nxE7BbslfpBP%2BYB7Dz2d5w4AF2fnczmhkr1cJfZ1wQ2hDVbMd5yE%2FwPDAbjXaOusFSzueQ6MRlfW%2FvZuEfbDtv8%2FE2YeH43nJH1Uv164UqRl8M8Vpf%2Bht266SWMAIpKMdZeP9dHL3c2Lb%2FT7%2BLL6TkdfamD2uVZsaa5njbmjr5bIzTJL7suC6pDkBTHkHYP7RDrmZsb68ztNhnQ%2FhF5%2FYW6JlWFjubRC7HPQFKDUBPZmsFR2YhgIYdBQTA6c%2BubLlluA6Q8uqhQU0j%2BRsJejozC3pcE0Cs9ZOgKhQ9MYoU5jr1oNtI7Np9OXeY0gMNtLJIK%2F8jfWmnD8FMV9KL0iZcnVTtzrY6j3oPiwtFfIljx7bgy7hbbf9rafbi30uc8wDaN08gFLYeib2Qgf6rC3suutYfZnWiDom69pyKh5pazkt90Jsn4MB6AC3vuaZ4Nk7B4GeGuDQHV9lqmdLmzcNVS1lvVGdNAbMpKCojixFWzIeBdaRCPVifTMRa2Tfn8KYYu%2F9B18cVeJIHikxS4TLr4YFNBsUnxtIX%2F4qnMfSYTpo1btQ0zei7TPr1%2BIQjVCldFlJyq%2BzTozG71G4YbfrSku7R0EOVfOmY2fw1BLK%2Bdyyl0HR5fiCjeA2roOKXNpXoXr2vFvw1%2Bna5GePjNuZkuCrRHv8TSD7Sb6AlGnQLxqOtxoUADwdZrthePfDcG5mSyiRiXWFsk3iTQCcYi6icViQPaLWhvEf14Z9gRZ0phJIoWuL5IEHRpxf5gaPvIS2ytDTU1FmzrWdwqv%2FMQsb%2FB%2FVgMJyIKxouhh5h%2Bm80zFunt0u9zsAcM3MZzBor1kVJeAjSrV5w2DyO4IM%2FlGuHh%2F8w15OsrgY6sQFVH5tUDXRPOjkahwbrWNRQbQlViBiuisF0oGGIUZSEM2emyhDTiKPd5NMjM0yePeIl%2BPxC4Dul%2F2On0NyXRRTTGrOIIl6Hy6Xv9vxQdDDYPJGcbS4J30GlwnahTG8BuM0KkchA2Wrwiy%2BJjPwi9JgZ9EIwHrxud41dg%2BdUjN4eH82KkANplyasAghysu3v1IW2Zck2vsJ%2FkBL4o45BwkwnHpOMCYfAgN4qXaf1GGzBmPY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4975ba5f79443448fdd90122d647eb55ab2f8f079f20b46197cd9576067dd52b",
+      "file_size": 191918,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 143761,
+      "file_name": "poc3.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/143/761/68a0a39e05333572f40f908be567cf3d41bd468d/poc3.jpg?response-content-disposition=attachment%3B%20filename%3D%22poc3.jpg%22%3B%20filename%2A%3DUTF-8%27%27poc3.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSHMH2JG6%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T123006Z&X-Amz-Expires=433&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIGZg1eLat8jYDu8ya39gYzlYHLKMMGOBerakTCivFOHfAiEA%2Bu8rTSPah8b0el3%2BS%2FpFwj4VtbM%2FFoDWeSjasMueeQUqsgUIbxADGgwwMTM2MTkyNzQ4NDkiDO%2B7PBDXCVoWHmbGyiqPBXsQMmX1xcmrqnlxF6nxE7BbslfpBP%2BYB7Dz2d5w4AF2fnczmhkr1cJfZ1wQ2hDVbMd5yE%2FwPDAbjXaOusFSzueQ6MRlfW%2FvZuEfbDtv8%2FE2YeH43nJH1Uv164UqRl8M8Vpf%2Bht266SWMAIpKMdZeP9dHL3c2Lb%2FT7%2BLL6TkdfamD2uVZsaa5njbmjr5bIzTJL7suC6pDkBTHkHYP7RDrmZsb68ztNhnQ%2FhF5%2FYW6JlWFjubRC7HPQFKDUBPZmsFR2YhgIYdBQTA6c%2BubLlluA6Q8uqhQU0j%2BRsJejozC3pcE0Cs9ZOgKhQ9MYoU5jr1oNtI7Np9OXeY0gMNtLJIK%2F8jfWmnD8FMV9KL0iZcnVTtzrY6j3oPiwtFfIljx7bgy7hbbf9rafbi30uc8wDaN08gFLYeib2Qgf6rC3suutYfZnWiDom69pyKh5pazkt90Jsn4MB6AC3vuaZ4Nk7B4GeGuDQHV9lqmdLmzcNVS1lvVGdNAbMpKCojixFWzIeBdaRCPVifTMRa2Tfn8KYYu%2F9B18cVeJIHikxS4TLr4YFNBsUnxtIX%2F4qnMfSYTpo1btQ0zei7TPr1%2BIQjVCldFlJyq%2BzTozG71G4YbfrSku7R0EOVfOmY2fw1BLK%2Bdyyl0HR5fiCjeA2roOKXNpXoXr2vFvw1%2Bna5GePjNuZkuCrRHv8TSD7Sb6AlGnQLxqOtxoUADwdZrthePfDcG5mSyiRiXWFsk3iTQCcYi6icViQPaLWhvEf14Z9gRZ0phJIoWuL5IEHRpxf5gaPvIS2ytDTU1FmzrWdwqv%2FMQsb%2FB%2FVgMJyIKxouhh5h%2Bm80zFunt0u9zsAcM3MZzBor1kVJeAjSrV5w2DyO4IM%2FlGuHh%2F8w15OsrgY6sQFVH5tUDXRPOjkahwbrWNRQbQlViBiuisF0oGGIUZSEM2emyhDTiKPd5NMjM0yePeIl%2BPxC4Dul%2F2On0NyXRRTTGrOIIl6Hy6Xv9vxQdDDYPJGcbS4J30GlwnahTG8BuM0KkchA2Wrwiy%2BJjPwi9JgZ9EIwHrxud41dg%2BdUjN4eH82KkANplyasAghysu3v1IW2Zck2vsJ%2FkBL4o45BwkwnHpOMCYfAgN4qXaf1GGzBmPY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0fabd87e35106597d98199e32574f3453f71c156bab435b7a848d9cc72fd239a",
+      "file_size": 256796,
+      "type": "image/jpeg",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-07-29T01:15:55.774Z",
+  "allow_singular_disclosure_after": -206536450.72782767,
+  "singular_disclosure_allowed": true,
+  "vote_count": 28,
+  "voters": [
+    "jokebookservice1",
+    "jin",
+    "bogdantcaciuc",
+    "tess",
+    "spam404",
+    "ali",
+    "jskiba",
+    "ankitsingh",
+    "brodie_codie",
+    "gamliel",
+    "and 18 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

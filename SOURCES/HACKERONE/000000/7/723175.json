@@ -1,0 +1,125 @@
+{
+  "id": 723175,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83MjMxNzU=",
+  "url": "https://hackerone.com/reports/723175",
+  "title": "De-anonymization Attack: Cross Site Information Leakage",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2019-10-26T09:18:27.896Z",
+  "submitted_at": "2019-10-26T09:18:27.896Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "soheilkhodayari",
+    "url": "/soheilkhodayari",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 638,
+    "url": "https://hackerone.com/imgur",
+    "handle": "imgur",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/638/c66ef01545064639821798ab311aa0063acd8aa7_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/638/c66ef01545064639821798ab311aa0063acd8aa7_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Imgur",
+      "twitter_handle": "imgur",
+      "website": "http://imgur.com",
+      "about": "The most awesome images on the Internet."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-12-14T07:57:42.259Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-12-06T21:53:01.434Z",
+  "team_member_agreed_on_going_public_at": "2019-12-14T07:57:42.188Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Dear Imgur Security Team,\n\nWe are researchers at the IMDEA Software Institute in Madrid, Spain. We have been working on analyzing Cross-Site Browser Leaks (xsleaks) and building a tool for finding instances of it on target web sites. Recently we tested imgur.com and discovered a flaw that can affect Imgur users. We would like to responsibly disclose it and support you to mitigate the issue. The details follow.\n\n## Attack Overview:\nEvents-Fired xsLeak: a cross-domain attack website, say attacker.org, could embed specific resources from imgur.com in a script Tag, and check if an error or load event is triggered in one state but not in the other. \nBased on which events are triggered for each vulnerable resource, the attacker can infer the victim state (e.g. logged in vs logged out, or owner of a specific profile). This happens because the leaky endpoint return a 2xx HTTP response in one state but a 4xx in the other.\n\nIn particular, we have found 2 vulnerable (leaky) endpoints:\n\n1. The first one can be used for login detection (onerror =  logged out, onload = logged in):https://api.imgur.com/3/larynx/history?IMGURPLATFORM=web&IMGURUIDJAFO=9d77969d8b3a7a6ac6cb78943c96e48cd0bd74e02b29839f9f19aea827429db6&SESSIONCOUNT=3&client_id=546c25a59c58ad7\n\n2.  The second one can be used to track and deanonymize the owner of a Imgur profile across origins. For this, the attacker leverages the resource: https://<USERNAME>.imgur.com/all  where <USERNAME> is the username of  the victim to be fingerprinted (e.g., https://user1imdea.imgur.com/all). \nIf the victim visiting the attack page is the owner of the <USERNAME> profile, the \"onload\" event will be triggered. Otherwise, the \"onerror\" event is fired.\n\n## How to reproduce the attack:\na. We have attached a PoC attack page.\nb. Acting as the victim, login to imgur.com from a browser and load the attached page in a different tab of the same browser.c. Specify the profile/home page url of format:  https://<USERNAME>.imgur.com/all  for the target victim in the input field, and press the submit button.\nc. After a couple of seconds, popups should appear saying whether you are logged at imgur and if you are the owner of the specified account.\n\n\n## Browser/OS tested: \nWe tested the PoC on windows 10 in:  Chrome Version: 77.0.3865.120 (Official Build) (64-bit) and Firefox 67.0.3  (Official Build) (64-bit). The same attack should work on other browsers and OSes too, although we haven't verified it thoroughly!\n\n## Similarity with known attacks:\nSimilar attacks were reported in the past against Facebook (https://www.imperva.com/blog/facebook-privacy-bug/) and Twitter (https://hackerone.com/reports/329957) and the vendors have taken the necessary preventive measures.\n\nFor any further questions, we are available at your disposal.\n\n## Impact\n\n## Impact of the attack\nThe attack enables malicious web sites of the internet to uniquely determine if any of their visitors is logged at Imgur, and also to track and fingerprint Imgur users across origins who have shared particular images. ",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 618318,
+      "file_name": "imgur_attack_page.html",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/pCVZYXbWjYWvXk8PV5EvEkSe?response-content-disposition=attachment%3B%20filename%3D%22imgur_attack_page.html%22%3B%20filename%2A%3DUTF-8%27%27imgur_attack_page.html&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTRSPJQEY%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133009Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIANREuSO5xRo5uYh9p3fj5lFZASOM0CJaqF9aRTyqP1tAiBMs6gYtXIgibXyOqYUXBJZxA%2Fdza4ke6K%2F%2F0b5E9m1RSqwBQh2EAMaDDAxMzYxOTI3NDg0OSIM8OmUCbC3Pqq1SyEDKo0F3cO4ThOa4uitsGZnpJd4WSWYKi0%2F5mL8qwHwgq3ZuZ1aNUqEK3JGtjDNNtehYQzb3K%2BVzvT15T5E0DeN3sE8NL7KIl3i0Dx5W04t%2FCwofuZVDH6Rwez2OIyLRGEiHKo%2FP%2FkbGO6J7x9mVhWTOKS2bFg4igbBGqP%2Bi2aedUT3vluiB7ukP1cc428RmdmCV%2BuhSI6mu%2Fx6zanZ8MjIY1iRcGFyRSvjl0iN9Apkcqbj2H8R4UNg8b2kqipVUPR0IhWE4Repf%2B6oHnySIQcgKlfP60eivKF7%2BDxEpCbVDsb91wMe67XzEaDtj4q3yEkaR59%2FnN0%2Fg51i8gvLHyAK2aB8UWfJhpojdnN%2FB%2BaF6aGM1Zep47eAH4cQQWhMZ2I26LKQhm7iwRj6IEHbgHd2m6nHPOKHU2uWuHo13GDorNeQWMI%2FABbIu1tC%2FBPGMydY2v4uUNIntKjUUw%2BXSGO9A9lk6BbiANo%2BTxvrgKzjhYstigi28K%2FJy2l%2B50z3nW5D8NMHVXHTF9%2FfZJj2T3gBRe9rfchTv6%2Bbpy1%2Bn8nOxmudj%2B9inUeddHC6rtgTt35Y1V%2FQuDeghaOCTLBIQIRUj2dXMLrSvM6ipTuqtOLpxyjWPKhlGteSd9sRZ2GulqFnPco4IJ18%2Fn03rD%2FZTFvntG5nnCfDUN1rKUSiHRLc%2Be2fxn1LToFrzjJFDRvOSJIM%2FpzLFcAYL8tTTyFBkIKfd049EasT8fD7XkmUkbP9SU%2Fz3oask16Cc%2FxTEDv733bE%2B2WRdqbzle4n0HY%2F8WFiXHg%2FcBG11MfaIEqM74wTZ5xO8lGQRD8qVunQROTT4innfbTfWRrrpjWEVYNiOx7p4%2BZ0qgpFMn9%2F3hcTkdABX%2BMwpcOtrgY6sgEIuPpZKWB6MctyieUs6Zf8b%2FX4IKPm%2BfhMeS2tI0il7r2OReIXdjDVkC4sQOPEZhbn%2BDfZAXOoMl6LPgx5C10nOg8D%2BTLxqQZt9rcPO7a6NY6DuIvhZo5c4RdVjEGuOfc%2FAROg4UmbOf0zkue94sBg8VslzPwR4H20rwyBYQqkWxtaGVbZKYCCbNb6IEpuSkgMadMJvwHOmUUOWS2k1Jnl6yQZixJKKroR7DQEK1J3Lebd&X-Amz-SignedHeaders=host&X-Amz-Signature=5fe398c6adcce321fb2a5636f58ad36644ef5615eeda7735b974ce95964fd8d3",
+      "file_size": 1946,
+      "type": "text/html",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-01-05T21:53:01.494Z",
+  "allow_singular_disclosure_after": -129569828.15608534,
+  "singular_disclosure_allowed": true,
+  "vote_count": 22,
+  "voters": [
+    "rootz491",
+    "yxw21",
+    "rook1337",
+    "sameerphad72",
+    "tess",
+    "naategh",
+    "g30rg3",
+    "zerosin",
+    "khizer47",
+    "soheilkhodayari",
+    "and 12 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "id": 244958,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNDQ5NTg=",
+  "url": "https://hackerone.com/reports/244958",
+  "title": "No redirect uri for Twitter Oath resulting in token leak",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2017-07-01T01:01:13.790Z",
+  "submitted_at": "2017-07-01T01:01:13.790Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "b3nac",
+    "url": "/b3nac",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/125/523/65b7a47c2fea7ce71861bc6158b6c7d27408aada_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 21801,
+    "url": "https://hackerone.com/wakatime",
+    "handle": "wakatime",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/6t1wy3jbq9kayjwvqbnymavxizfx/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/6t1wy3jbq9kayjwvqbnymavxizfx/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "WakaTime",
+      "twitter_handle": "wakatime",
+      "website": "https://wakatime.com",
+      "about": "Automated metrics about your programming from text editor plugins."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-07-03T08:22:40.325Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-07-03T08:20:10.048Z",
+  "team_member_agreed_on_going_public_at": "2017-07-03T08:22:40.272Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Good afternoon,\n\nThere's an opportunity to steal Oath tokens upon the return uri in the following redirect.\n\nhttps://wakatime.com/oauth/twitter/authorize?reason=tweet&next=/share/embeddable/5e22456d-9aae-4267-b1a9-4315c2605d89/0ed2e4de-f479-4e03-a8db-464a0696c08f.svg/tweet\n\nIf I change the &next= to my profile for example /@5e22456d-9aae-4267-b1a9-4315c2605d89\n\nThis results in an open redirect to my main profile leaking the Oauth token: \n\n#POC\n\nhttps://wakatime.com/oauth/twitter/authorize?reason=tweet&next=/@5e22456d-9aae-4267-b1a9-4315c2605d89\n\nresults in F199105\n\nHere's a video demonstrating the vulnerability. F199111\n\n#Patch\nAdd a redirect uri that can't be tampered with.\n\n#References\n\nThis is almost the exact same scenario that is in this report.\nhttps://hackerone.com/reports/140432\n\n",
+  "weakness": {
+    "id": 27,
+    "name": "Improper Authentication - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 199105,
+      "file_name": "OauthTokenLeak.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/199/105/698372c9e63e20d9ea905670a349dcbf97705fc8/OauthTokenLeak.png?response-content-disposition=attachment%3B%20filename%3D%22OauthTokenLeak.png%22%3B%20filename%2A%3DUTF-8%27%27OauthTokenLeak.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSJAEOSEA%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T124521Z&X-Amz-Expires=368&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFGoM7UVkpoUFXOwmBO1YCW3cw%2F4NyxP2Yan%2BgrkBav8AiEAyCUaZteSGAOL1VybC9wE4FNtA9ZRB0rOhRCfRb1SJtUqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDK4laJFhO348YrQkpSqPBT0JpdttzMzvj7d49wHxo6XKhZp6ShyKPYUpw0Uq4AHmWnLgN8g%2BsTPzAignfCeJBrRSLMJVkOL0W5ter7990DhqIASPNW1EZwrDyGA7kuePP%2BF4tcrX3LO0OOR6gGZx9EtA5T7iJB1DFapuW5N7q%2F51A5Mu7ZLK0NaZo8zhsohgiWzzyR2iluk%2FLl3XGm%2Fa6%2BcTwHua%2BNjD%2F97XLRv1zF3YE7sSdAY3bunMdQ6NaH%2BxtZj7FOWcsouUYmSWYMItq7rFc2QX6eLL04LoQhGF%2BsAlIJRuG9morj%2FzbUBeITu4Wjw1YqZoqh4stcI25Q3hf6RXlfWGW%2FpPgFVXTaKeiqdUSu86Hp0mtdhvWjZ%2F3frTMpqYRrp2a1mbGWETUc5Uf0mzI3H5oA%2B3GNQfu3cWaPp6Vj5kQ0fBwtej92wxqBKYcwQGX1OqkYgzXEkCCIsQfZxhAaPTN%2FtgMRJ58JVzNuHtKdPerJm1tZ8fQ6tljGtPSMxjFhDzyA9m9NHez5izRf7KqXOVO9vYJFw%2Fi00wL4IHCuGJag8I%2Fxka6p1qKR%2BLgjmHhEme4qKwVcZHLFn9ks9Opq5yjYs0%2BDnJLzW8EoTTImazBY6PuaPKcKQY8cuOfRLUWHjfDoiEvtTVUk8hNiRL7PEmq8TnurN%2BlvDbNHfB1bc7T4OkQ0bkDfDKxp%2Bw6kMpFfLzp3zMh4sVkCicAf8phxPfZ3ImBweoHetjdWVM%2FAaqoQFfIvSuNFRLjBRBvd1PbhmnN5Jq5WNPDsGhoXmnlt9dIMyM30uqRrm5JWVLqPt5x3tJ%2F6XEKfiDRzBMK4wT7DJ94Iud7aggpV%2BQl9JVRf86hwRXR9rFbvmmDTUka9kitEZLd%2FlL7mfvrF8wlKGsrgY6sQG6xY6iPHcuzMUPYlF%2BiPLSQhv%2F6pGqgLnKtUql08pwI3ttBcBcKWvZH4WOc5lXL1qEfHHkJQ1HwYwKvH5vG3URLBINtmvkDZGhy%2F605sBLv1QwPSjd91a2Orn1TKno6iqHfQCQTcPrP0NyRztLXpdgkxXv3JyY%2FNXpBhGdrABNb%2BwkB78q7U4iWLt6tducslFnRZ4D7lUbbNW%2FhxyDCkCcwec2EWKyZiZLijLaLBQG2P4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b2916cdf4ec33fb002b29a94cf0594ed1e5257bf8ecbcafdc08e3960b4f9972a",
+      "file_size": 210355,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 199111,
+      "file_name": "2017-06-30_17-57-29.flv",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/199/111/212b3fb0fb394cbd41ab25b7235552e3ad4f1b82/2017-06-30_17-57-29.flv?response-content-disposition=attachment%3B%20filename%3D%222017-06-30_17-57-29.flv%22%3B%20filename%2A%3DUTF-8%27%272017-06-30_17-57-29.flv&response-content-type=video%2Fx-flv&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSJAEOSEA%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T124521Z&X-Amz-Expires=368&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFGoM7UVkpoUFXOwmBO1YCW3cw%2F4NyxP2Yan%2BgrkBav8AiEAyCUaZteSGAOL1VybC9wE4FNtA9ZRB0rOhRCfRb1SJtUqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDK4laJFhO348YrQkpSqPBT0JpdttzMzvj7d49wHxo6XKhZp6ShyKPYUpw0Uq4AHmWnLgN8g%2BsTPzAignfCeJBrRSLMJVkOL0W5ter7990DhqIASPNW1EZwrDyGA7kuePP%2BF4tcrX3LO0OOR6gGZx9EtA5T7iJB1DFapuW5N7q%2F51A5Mu7ZLK0NaZo8zhsohgiWzzyR2iluk%2FLl3XGm%2Fa6%2BcTwHua%2BNjD%2F97XLRv1zF3YE7sSdAY3bunMdQ6NaH%2BxtZj7FOWcsouUYmSWYMItq7rFc2QX6eLL04LoQhGF%2BsAlIJRuG9morj%2FzbUBeITu4Wjw1YqZoqh4stcI25Q3hf6RXlfWGW%2FpPgFVXTaKeiqdUSu86Hp0mtdhvWjZ%2F3frTMpqYRrp2a1mbGWETUc5Uf0mzI3H5oA%2B3GNQfu3cWaPp6Vj5kQ0fBwtej92wxqBKYcwQGX1OqkYgzXEkCCIsQfZxhAaPTN%2FtgMRJ58JVzNuHtKdPerJm1tZ8fQ6tljGtPSMxjFhDzyA9m9NHez5izRf7KqXOVO9vYJFw%2Fi00wL4IHCuGJag8I%2Fxka6p1qKR%2BLgjmHhEme4qKwVcZHLFn9ks9Opq5yjYs0%2BDnJLzW8EoTTImazBY6PuaPKcKQY8cuOfRLUWHjfDoiEvtTVUk8hNiRL7PEmq8TnurN%2BlvDbNHfB1bc7T4OkQ0bkDfDKxp%2Bw6kMpFfLzp3zMh4sVkCicAf8phxPfZ3ImBweoHetjdWVM%2FAaqoQFfIvSuNFRLjBRBvd1PbhmnN5Jq5WNPDsGhoXmnlt9dIMyM30uqRrm5JWVLqPt5x3tJ%2F6XEKfiDRzBMK4wT7DJ94Iud7aggpV%2BQl9JVRf86hwRXR9rFbvmmDTUka9kitEZLd%2FlL7mfvrF8wlKGsrgY6sQG6xY6iPHcuzMUPYlF%2BiPLSQhv%2F6pGqgLnKtUql08pwI3ttBcBcKWvZH4WOc5lXL1qEfHHkJQ1HwYwKvH5vG3URLBINtmvkDZGhy%2F605sBLv1QwPSjd91a2Orn1TKno6iqHfQCQTcPrP0NyRztLXpdgkxXv3JyY%2FNXpBhGdrABNb%2BwkB78q7U4iWLt6tducslFnRZ4D7lUbbNW%2FhxyDCkCcwec2EWKyZiZLijLaLBQG2P4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a89534cdc41d4c66c316ba738f0c38abd9af7edf6a25c701b2b94aaef8e38425",
+      "file_size": 9539935,
+      "type": "video/x-flv",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-08-02T08:20:10.090Z",
+  "allow_singular_disclosure_after": -206166311.15455243,
+  "singular_disclosure_allowed": true,
+  "vote_count": 6,
+  "voters": [
+    "ak1",
+    "brodie_codie",
+    "r3y",
+    "eveeez",
+    "japz",
+    "silv3rpoision"
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

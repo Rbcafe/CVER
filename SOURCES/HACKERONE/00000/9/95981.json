@@ -1,0 +1,107 @@
+{
+  "id": 95981,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85NTk4MQ==",
+  "url": "https://hackerone.com/reports/95981",
+  "title": "Http Response Splitting - Validate link",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-10-26T23:48:50.529Z",
+  "submitted_at": "2015-10-26T23:48:50.529Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "gerben_javado",
+    "url": "/gerben_javado",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/nxCLVa5sJm5BsdGjBdqzDfg8/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 2706,
+    "url": "https://hackerone.com/deriv",
+    "handle": "deriv",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/xia7qvuexg2sh23b8hnkbjt295h5/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/xia7qvuexg2sh23b8hnkbjt295h5/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Deriv.com",
+      "twitter_handle": "derivdotcom",
+      "website": "https://www.deriv.com",
+      "about": "deriv.com is one of the world's largest online brokers, founded in 1999"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2015-11-15T12:21:01.580Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-11-15T12:19:00.435Z",
+  "team_member_agreed_on_going_public_at": "2015-11-15T12:21:01.304Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "So i found a http response splitting issue in your website. If we visit the following url:\n\nhttps://www.binary.com/user/validate_link?step=account&verify_token=sometoken\n\nWe will get a response header that says: \n\n    Set-Cookie: verify_token=sometoken; expires=Wed, 28 Oct 2015 23:31:35 GMT; domain=.binary.com; path=/; secure\n\nHowever this value doesnt seem to be urlencoded which gives the attacker the option to create his own response header. For example if you were to visit:\n\nhttps://www.binary.com/user/validate_link?step=account&verify_token=%0aSet-Cookie:%20GerbenJavado=Awesome;%0a\n\nThe following response header will be included in the response: (shameless plug)\n\n    Set-Cookie: GerbenJavado=Awesome;\n\n#Attacker Scenario\nSince this attack doesnt require any user interaction to be exploited, a attacker could do lots of fun stuff using this vulnerability by including a malicious url in a Iframe or even in a IMG tag. \n\n- As the example shows the attacker can set cookies for the user on binary.com\n- The attacker can disable or bypass security headers placed by the server\n\nOne restricition the attacker has is that the request is a redirect. This made it for me impossible to XSS attacks or Cache Poisining. Maybe you guys could look a bit into this further. However i would argue that because of the fact user interaction is not needed and the fact that the attacker can set his own headers (including cookies) the attack is fairly scary.\n\n",
+  "bounty_amount": "75.0",
+  "formatted_bounty": "$75",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2015-12-15T12:19:00.663Z",
+  "allow_singular_disclosure_after": -257642936.7226389,
+  "singular_disclosure_allowed": true,
+  "vote_count": 9,
+  "voters": [
+    "apapedulimu",
+    "its_afolic",
+    "eveeez",
+    "dz_samir",
+    "shivammusic",
+    "namansahore",
+    "snappyjack",
+    "wzulfikar",
+    "issacxavier"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

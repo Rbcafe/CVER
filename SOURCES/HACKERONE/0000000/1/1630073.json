@@ -1,0 +1,150 @@
+{
+  "id": 1630073,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjMwMDcz",
+  "url": "https://hackerone.com/reports/1630073",
+  "title": "Host Header Injection Attack - www.xnxx.com",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "none",
+  "readable_substate": "Informative",
+  "created_at": "2022-07-07T15:14:22.418Z",
+  "submitted_at": "2022-07-07T15:14:22.479Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "2_princeofpersia",
+    "url": "/2_princeofpersia",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 50470,
+    "url": "https://hackerone.com/xvideos",
+    "handle": "xvideos",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/rw4sjbp7ak3bj5mifHtirndu/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/rw4sjbp7ak3bj5mifHtirndu/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "XVIDEOS",
+      "twitter_handle": "",
+      "website": "https://www.xvideos.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2022-11-08T19:25:00.170Z",
+  "bug_reporter_agreed_on_going_public_at": "2022-07-08T10:15:13.752Z",
+  "team_member_agreed_on_going_public_at": "2022-11-08T19:25:00.008Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Host Header Injection Attack - www.xnxx.com\n\nAn attacker can manipulate the Host header as seen by the web application and cause the application to behave in unexpected ways. \n\nVery often multiple websites are hosted on the same IP address. This is where the Host Header comes in. This header specifies which website should process the HTTP request. The web server uses the value of this header to dispatch the request to the specified website. Each website hosted on the same IP address is called a virtual host.\n\nBut what happens if we specify an invalid Host Header? If Apache receives an unrecognized Host Header, it passes it to the first virtual host defined in httpd.conf. Therefore, it's possible to send requests with arbitrary Host Headers to the first virtual host. \n\nAnother way to pass arbitrary Host headers is to use the X-Forwarded-Host Header. In some configurations this header will rewrite the value of the Host header. Therefore it's possible to make a request like:\n\n#PoC Request -\nGET / HTTP/1.1\nHost: www.evil.com\nCookie: session_token=c679b2593ccbf131UluWiMWIZlNaClkTnBeFmtGoF9LW8CUvgTcRJ1QifNB9WBZD4tANB3m2QsO2qNx79pUK-m7tk2fRFm_ejHw_hEL2Hn1Milyoziqsi3GsBY7MbYOtDbwKmclffY4Yj0bsmbr7YHvmBNirDPcFfV59cscW9kqtCuYNhoigtklvNyJJulrkw1kjHwyZXeYF4t-MXTEP7GboN1B0JyVbEMsMaA%3D%3D; wpn_ad_cookie=0b43478923c27e53a385d969d9b4bca2\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: https://www.xnxx.com/\nUpgrade-Insecure-Requests: 1\nSec-Fetch-Dest: document\nSec-Fetch-Mode: navigate\nSec-Fetch-Site: same-origin\nSec-Fetch-User: ?1\nTe: trailers\nConnection: close\n\n#PoC Response -\nHTTP/1.1 301 Moved Permanently\nContent-length: 0\nLocation: http://www.evil.com/\nConnection: close\n\n#PoC Payload -\r\nHost: evil.com\n\nPlease verify and fix the same.\n\n## Impact\n\nTampering of Host header can lead to the following attacks:\nWeb Cache Poisoning-Manipulating caching systems into storing a page generated with a malicious Host and serving it to others and more.",
+  "weakness": {
+    "id": 57,
+    "name": "Violation of Secure Design Principles"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1812401,
+      "file_name": "poc9.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/p33x53tcq4unq0u7gibiegp86hpf?response-content-disposition=attachment%3B%20filename%3D%22poc9.png%22%3B%20filename%2A%3DUTF-8%27%27poc9.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTJFGACUK%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142807Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQC3Tuf8wTsJ6HgA%2BHqgp20HmgXBHMAQ4OqTlZ9OWuKgBAIhAOvE8XTU%2BSdcCSz5sVQojGBmKatUQGh%2FA44vLbcP%2Fm%2BUKrIFCHcQAxoMMDEzNjE5Mjc0ODQ5IgzTJhZOFm4GMgT4x1sqjwW0Te4aWJuWaHDaUOwX6BTUT%2BWVM7TuVfL8jOUvJxOlkS5Lf9jEW4%2BJe6myFMRPfV3cl1jHvXdCpoZr1VDiUBakEFhwbZYmiggKueZ0JgXLv54dWJdSFx9%2BtHXdqHC5YIw8pd87hEyCWO0WVSMpU0BwL2LA12LitDPxLhy%2B1P1MKa4B8%2BolMTizbUobGSsjQpn0J03hOTYz0qMWq%2FrQBiVm4PkGhIKoPogNoueiK1FvIuGSZcrBW7I2morIEv%2B4RhCIO%2FtWPjY1Fb8vi9NQA3nVCyQ5tdSqOepqkBTUxeoREnHEvrBmcoYQDjb7R%2B0W6sA68Njxz3CqAehylnajasZOJ2DEtuipCSGNuiZSMQvkMyWdJPuUvbCwj3Hi4v9k4CyGrxZE5lIlr7fEPofWh5bufWhEAaVokadugrpSNkxC9ixU7g5OW72Npc4%2B%2FNJVwHUNDMfB4%2BqEHwn78jEGr058QH5MJiTtGFgjqIAO%2BqKsudB%2BrUHqDGsSqwTMqLSKDzvoTA7asoZMtr4dX1qcP9FXNNgHeMbOPYpPYHxGE8LY7AtAVgJMRwVF9aXrKF6vuFcFCvFIkCvLe1cE%2BJA%2Fng51Fzl0pkQmrdUa9Q%2Bh0BBJEUGLxzgjbpmEYBQBbJtSmYE1zOUsBLqKMaP%2F89PSSIxtWO6EXcpdND9bY71nEm%2FnTCVm6eR2IhxLleobZcD%2B8IUEahLjhTIcHxHghoAcOD1LC1WptK97c4lcGIkxUvzK2vkMdF4%2BWJCwwx%2B2lXSVUzCL2tvwxa%2BbkZ%2FJMvfgSy8rgkVG%2Fc7pzQKgoq3bEEnI4zhQJFANhNg8Lfec1FA1jO%2FvLzqoKR0Bla7K0r9BN%2Bxx5t5GDyGWAX4%2BdZIbMHbSMKn1ra4GOrAB%2BHYBGCq1%2BXZHyPtMlkND6b47v1CWX0jODxdKSccUpq9J1lB8OTDs8mvUAytBUPQZIFFXueEQhrZOc6CniIEFp1YyioNPcbCjcoDKzh9umDgfiq%2FemPxWdVqSpUn3piAIl5iFC704ZMHpEM68pz0ePrup8Ej3liid1kztmk2d82LQRl4AOLmnFNfmSk1j%2Fm0m8fsw96lJbJTcdjYiCigdYCatevndBo6m5MO1WyoxPtw%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=dfa5c7aba694aeda0bcc9306f05c49fa668dc53b0f7643a0539b1e0053c72ace",
+      "file_size": 98796,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 10,
+  "voters": [
+    "hunterr0x01",
+    "shivammusic",
+    "sey194",
+    "xpl0itme",
+    "0x4hk",
+    "2_princeofpersia",
+    "whoscls",
+    "qwertyv94",
+    "akash22uefstw",
+    "xinfohuggerx"
+  ],
+  "severity": {
+    "rating": "none",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 54940,
+    "asset_type": "URL",
+    "asset_identifier": "www.xnxx.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 216037,
+      "category": "team",
+      "content": "This is a recurrent report that is systematically rejected because it need to get access to the user computer / phone.\n\nThis is not a security issue at all.",
+      "user": {
+        "id": 1322961,
+        "username": "xvtech",
+        "name": "XVTech",
+        "bio": null,
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": null,
+        "created_at": "2020-09-15T10:11:15.591Z",
+        "url": "https://hackerone.com/xvtech",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png",
+          "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png",
+          "xtralarge": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

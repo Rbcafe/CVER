@@ -1,0 +1,114 @@
+{
+  "id": 761975,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83NjE5NzU=",
+  "url": "https://hackerone.com/reports/761975",
+  "title": "Keychain data persistence may lead to account takeover",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2019-12-19T23:00:36.457Z",
+  "submitted_at": "2019-12-19T23:00:36.457Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "0x3c3e",
+    "url": "/0x3c3e",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/qEDbNUXqt1WruDeUswBPo8Qk/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 215,
+    "url": "https://hackerone.com/qiwi",
+    "handle": "qiwi",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/215/f578bbb9421365fab2e51aa7482bea82006d7c0c_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/215/f578bbb9421365fab2e51aa7482bea82006d7c0c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "QIWI",
+      "twitter_handle": "QiwiRussia",
+      "website": "https://qiwi.com",
+      "about": "The QIWI brand is a family brand that consolidates several directions: kiosks, wallet, bank."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-09-07T14:47:57.336Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-08-14T10:10:50.766Z",
+  "team_member_agreed_on_going_public_at": "2020-09-07T14:47:57.237Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary\nWhen user deletes Qiwi iOS application Keychain isn't wiped and on first Qiwi launch after re-installation Keychain isn't wiped as well. It allows an attacker (possible buyer of second hand Iphone) to takeover account.\n\n## Steps to reproduce\n1. Find somebody who uses Qiwi (phone enumeration may help I guess) and desires to sell his Iphone (on Avito per example)\n1. Meet up with the seller and check that Iphone isn't wiped to factory settings\n1. Check that Qiwi app is deleted (seller isn't technically educated and thinks that if he have deleted an app, he is fine and safe)\n1. Navigate to Settings and type Qiwi, this way you can find that the user previously had Qiwi app installed (it was surprise for me, but this way Apple returns empty line with \"QIWI\" as text, but without an icon)\n1. Buy the Iphone and hope that the seller forgot to logout from Qiwi\n1. Install Qiwi\n1. If Qiwi asks to enter PIN, continue, either you can't get in (probably, because I have checked if Keychain wiped after log-out)\n1. Jailbreak Iphone and attach Frida or Cydia to the app\n1. Locate the function which checks PIN and find correct PIN (it was stored somewhere in class data in plaintext)\n1. Login to QIWI with found PIN\n\n## Mitigation\nWipe Keychain on first launch of application.\n\n## References\n* https://mobile-security.gitbook.io/mobile-security-testing-guide/ios-testing-guide/0x06d-testing-data-storage#data-protection-api (scroll to Keychain Data Persistence)\n\n> There's no iOS API that developers can use to force wipe data when an application is uninstalled. Instead, developers should take the following steps to prevent Keychain data from persisting between application installations:\n* When an application is first launched after installation, wipe all Keychain data associated with the application. This will prevent a device's second user from accidentally gaining access to the previous user's accounts.\n\n## Notes\nIf it's possible do not close the report as N/A, I have thought if I should to send the report for about a month or two (in that period developers added and removed Jailbreak detection, I don't know why), messaged to somebody from Qiwi security team, but got no response. (thanks for reading)\n\n## Impact\n\nAs it's a bank application, in my opinion developers should be extra careful about user security. So I think in this way security > UI (it isn't so hard to get SMS and enter it to login after re-installation of an app).",
+  "weakness": {
+    "id": 90,
+    "name": "Insufficient Session Expiration"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2020-09-13T10:10:50.829Z",
+  "allow_singular_disclosure_after": -107839381.87971897,
+  "singular_disclosure_allowed": true,
+  "vote_count": 4,
+  "voters": [
+    "arwildo",
+    "atpugsec",
+    "iamcoolcat",
+    "be9f2e097822923531f6582"
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 18746,
+    "asset_type": "APPLE_STORE_APP_ID",
+    "asset_identifier": "ru.qiwi.QIWI",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

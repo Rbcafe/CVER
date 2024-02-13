@@ -1,0 +1,134 @@
+{
+  "id": 1884159,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODg0MTU5",
+  "url": "https://hackerone.com/reports/1884159",
+  "title": "node.js process aborts when processing x509 certs with invalid public key information",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2023-02-23T02:30:33.115Z",
+  "submitted_at": "2023-02-23T02:30:33.281Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "m_r_beauchamp",
+    "url": "/m_r_beauchamp",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 22984,
+    "url": "https://hackerone.com/nodejs",
+    "handle": "nodejs",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/022/984/e600648ace4a8553247bce967d461a030aa81d49_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/022/984/e600648ace4a8553247bce967d461a030aa81d49_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Node.js",
+      "twitter_handle": "nodejs",
+      "website": "https://nodejs.org",
+      "about": "The Node.js JavaScript Runtime"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2023-30588"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-07-20T20:58:47.044Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2023-06-20T20:58:46.250Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary:** \nThe code for the CreateAsymmetric method in src/crypto/crypto_keys.cc: assumes that the certificate includes a valid public key. \nHowever, malicious actors could construct x509 certificates that can break this assumption. \n\n**Description:** \n\nWhen we run the attached reproducer, the node process aborts with the following message: \n\n /usr/local/bin/node loadcert_poc.js\nv18.14.2\nvalid:Feb 21 23:59:59 2015 GMT\n/usr/local/bin/node[392068]: ../src/crypto/crypto_keys.cc:869:static std::shared_ptr<node::crypto::KeyObjectData> node::crypto::KeyObjectData::CreateAsymmetric(node::crypto::KeyType, const node::crypto::ManagedEVPPKey&): Assertion `pkey' failed.\n 1: 0xb7b3f0 node::Abort() [/usr/local/bin/node]\n 2: 0xb7b46e  [/usr/local/bin/node]\n 3: 0xd11002 node::crypto::KeyObjectData::CreateAsymmetric(node::crypto::KeyType, node::crypto::ManagedEVPPKey const&) [/usr/local/bin/node]\n 4: 0xd29626 node::crypto::X509Certificate::PublicKey(v8::FunctionCallbackInfo<v8::Value> const&) [/usr/local/bin/node]\n 5: 0xdc12a0  [/usr/local/bin/node]\n 6: 0xdc27df v8::internal::Builtin_HandleApiCall(int, unsigned long*, v8::internal::Isolate*) [/usr/local/bin/node]\n 7: 0x1700679  [/usr/local/bin/node]\nAborted\n\nSame outcome with 19.7.0\n\nThe CHECK(pkey) in method CreateAsymmetric [1] could be made more aware of the invalid state of the provided x509 certificate to gracefully handle the situation. \n\nstd::shared_ptr<KeyObjectData> KeyObjectData::CreateAsymmetric(\n    KeyType key_type,\n    const ManagedEVPPKey& pkey) {\n  ===> CHECK(pkey);\n  return std::shared_ptr<KeyObjectData>(new KeyObjectData(key_type, pkey));\n}\n\n## Steps To Reproduce:\n/usr/local/bin/node loadcert_poc.js \nv19.7.0\n[1]\nvalid:Feb 21 23:59:59 2015 GMT\n/usr/local/bin/node[4119272]: ../src/crypto/crypto_keys.cc:869:static std::shared_ptr<node::crypto::KeyObjectData> node::crypto::KeyObjectData::CreateAsymmetric(node::crypto::KeyType, const node::crypto::ManagedEVPPKey&): Assertion `pkey' failed.\n[..]\nAborted\n\n## Impact: \n\nThere are various use cases where an application may want to access the public key info of a client-provided certificate. Developer may assume that the crypto code is safe to feed with arbitrary x509 material. \n\n## Supporting Material/References:\n\n[1] https://github.com/nodejs/node/blob/5fad0b93667ffc6e4def52996b9529ac99b26319/src/crypto/crypto_keys.cc#L881\n\n## Impact\n\nThe attacker could force interruptions of application processing, as the process terminates when accessing public key info of provided certificates from user code.  The current context of the users will be gone, and that will cause a DoS scenario, downtime, reputation and potential revenue loss.",
+  "weakness": {
+    "id": 48,
+    "name": "Denial of Service"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 2192057,
+      "file_name": "loadcert_poc.js",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/7i6kqpymjcthopmpc13et0gzsg00?response-content-disposition=attachment%3B%20filename%3D%22loadcert_poc.js%22%3B%20filename%2A%3DUTF-8%27%27loadcert_poc.js&response-content-type=application%2Fx-javascript&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUCCA7DHD%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143445Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIHCNox6LnbfpsPOZ24SuZD7SmUMmnFMuBhNP0OFwfet0AiEAkpKyZ6f33SCVR9y0RcPuuExpLASkm5tZYyuJ7xP69uUqsAUIdxADGgwwMTM2MTkyNzQ4NDkiDB%2Fr24bZLdxj8YwLKCqNBQZgUxNfuMJKIjx6tEuwLTQsXeaklTKPeMOwlhh4PwU%2F0tQ%2FtjR6k354HaHRD8XPh1ADfQxe3g2Ipn1LlV%2Fg19va7dN8NTBOYDmNzxhjHPJB1HXNn0bTlXm9rK87zq5vvXuRGXjTHZhXK4kMLiLsBkIDigJ0zFf4W0HDjcvJ44h1onKKRin0jORarhhZ%2BSFG3aPK3il8DiwiVDnc%2BSNzkaUkiwDfVfQ%2FQcw2ezgDh73EjOCYjuKPs8%2BcS8Wt3dg%2Fvlk9xxbqtuGRBe7OQ%2Fe58533M%2B4dfdcQMTPecQM3cXtwsFk%2FBtQixozl9vu8zww2o8x7Tt9FE4j%2FLBSiUWeK2XfkAZ0wwxxthtyCHFoUrv1iHkpZiLMpxTBESjaRCPVdzroU%2BsZ2ZXMbM1zN6AtvMlSYS58%2F2LFs6NwXHs4jzQgetMbS4TpIQKWT%2FsNGg%2FNISM8ELEA%2B5JP0NCh02SsjsoNlmA0c1QA5e0dVmZ%2F1szagat7B2DTfNmJKOmYUxzFIQ5gmjaEbIKCFZFAiF9h6I6BELMPURPw6%2FhynUHGSTFzb0Icg6%2B64sY%2FfDAxUGg0aBy5Gv5IyJXeYelmy6PeITj7n53UbX7X25SbXU23u4tCK7TRUAk%2F5LqsDdb0O%2FS2L7RPtIj0NHvPStoGPxxFhOlc2kQr%2Fva%2BHisWjnr9wQY4mEFpaThb4fcYaSO9SrCvVfPsDpLztRCJPs7nMowbFn4HXw1eLYUWkx%2FHFej7%2FznLYOhoL%2FtcOc1gPDjwk1qTcmHEHtVeisBKLyujEgszyMBG3icYpnYDJ3R4MWDYwhm069Wvem4%2Fhrt70H6eUkOpwp2VmRYbmNSdCwkEAWCiYcnB3JogYC9wpAoNH8q11MIfkra4GOrEB%2F81%2BY5pxMTNL3a7EKdOqnVWH149lCRgren6Mrg8PA7NsPUnghYBxjEvW7W0E6%2BAU2DxWOz1LxkPw6EzcXw3eufNxT2%2FMibPxbxPxwRw%2FLyT%2BST8mhsA80mZfUodvHSc%2B9MxjYsE0N3Y10dhMTHBLi%2FHumzhIWTtBWYrLroI6yOS2%2FgzCookRUFF5lam556jhf3xzicP75lgPdUwdZ4oDfMRWIAT19boE5ADx98CSHozY&X-Amz-SignedHeaders=host&X-Amz-Signature=6e5905c5df7f8d36c120aa4a69d0fe91b77bbab45cc05f6ace652f662e407cf8",
+      "file_size": 1820,
+      "type": "application/x-javascript",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-07-20T20:58:46.362Z",
+  "allow_singular_disclosure_after": -17948159.23982044,
+  "singular_disclosure_allowed": true,
+  "vote_count": 2,
+  "voters": [
+    "zy9ard3",
+    "carmzy"
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 5.3,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "none",
+      "availability": "low"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 666,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/nodejs/node",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

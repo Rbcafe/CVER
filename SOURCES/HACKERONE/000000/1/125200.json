@@ -1,0 +1,136 @@
+{
+  "id": 125200,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjUyMDA=",
+  "url": "https://hackerone.com/reports/125200",
+  "title": "Lack of rate limiting on get.uber.com leads to enumeration of promotion codes and estimation of a lower bound on the number of Uber drivers",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-03-23T01:41:53.615Z",
+  "submitted_at": "2016-03-23T01:41:53.615Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ddworken",
+    "url": "/ddworken",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/344/0f539160a7134b9d14cd1f9c8e38bbc32c3b3604_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 314,
+    "url": "https://hackerone.com/uber",
+    "handle": "uber",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/314/24ea21370a71b18eafb5722d5855825ab622b5dd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/314/24ea21370a71b18eafb5722d5855825ab622b5dd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Uber",
+      "twitter_handle": "",
+      "website": "https://www.uber.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-08-12T17:16:04.890Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-07-25T20:32:35.049Z",
+  "team_member_agreed_on_going_public_at": "2016-08-12T17:16:04.815Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Invite codes are 5 alphanumeric (lower case) characters. This means there are 36 (26 + 10) possible options for each space in the invite code. In total this means there are 36^5 or 60,466,176 possible invite codes. Through enumerating through all possible invite codes, one can find the total number of Uber accounts and the first name associated with each of the uber accounts. \n\nWhen loading ```https://get.uber.com/invite/[Invite Code]```, one will see one of two possible messages. If you see only ```Create your account and get moving in minutes.``` then there is no account associated with that invite code. If you see ```Sign up now to claim your free gift from [First Name] ($15 off first ride)*.```, then there is an account associated with that invite code. \n\nFor an example of each of the possible responses, see the two below links: \n\n`https://get.uber.com/invite/v1m8a`\n\n`https://get.uber.com/invite/v1m8u`\n\nA simple (but inefficient) way of exploiting this is with a simple python program like this (I have not tested the below code): \n\n``` python\nimport requests\n\ncharacters = '0123456789abcdefghijklmnopqrstuvwxyz' # \n\ndef isAccount(code):\n    if \"free gift from\" in requests.get(\"https://get.uber.com/invite/\"+code).content:\n        return True\n    return False\n\nnumAccounts = 0\n\nfor firstChar in characters:\n    for secondChar in characters: \n        for thirdChar in characters:\n            for fourthChar in characters:\n                for fifthChar in characters:\n                    if isAccount(firstChar + secondChar + thirdChar + fourthChar + fifthChar):\n                        numAccounts += 1\n```\n\nFurthermore, one does not need to actually test all 60,466,176 invite codes. Since the invite codes are distributed randomly, one can simply test a subset of that and extrapolate. For example, if I test 1 million invite codes and find 3% are valid, then I know that approximately 3% of the 60,466,176 possible invite codes are valid (only an estimate). \n\nThanks,\nDavid Dworken",
+  "bounty_amount": "3000.0",
+  "formatted_bounty": "$3,000",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-08-24T20:32:35.165Z",
+  "allow_singular_disclosure_after": -235755051.37311375,
+  "singular_disclosure_allowed": true,
+  "vote_count": 11,
+  "voters": [
+    "hunter",
+    "spam404",
+    "yaworsk",
+    "vijay_kumar",
+    "ddworken",
+    "0xradi",
+    "jens",
+    "spetr0x",
+    "dyabla",
+    "icheernoom",
+    "and 1 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 2355,
+      "category": "researcher",
+      "content": "Through enumerating Uber invite codes one could come up with a lower bound on the number of Uber drivers. This was only a lower bound because some people changed their invite codes so enumerating the ~60 million default invite codes would not find theirs. ",
+      "user": {
+        "id": 17344,
+        "username": "ddworken",
+        "name": "David Dworken",
+        "bio": "Security Engineer -- keybase.io/dworken",
+        "cleared": false,
+        "verified": false,
+        "website": "https://daviddworken.com",
+        "location": "Seattle, WA",
+        "created_at": "2015-02-09T18:16:44.568Z",
+        "url": "https://hackerone.com/ddworken",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/344/0f539160a7134b9d14cd1f9c8e38bbc32c3b3604_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/344/0f539160a7134b9d14cd1f9c8e38bbc32c3b3604_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/017/344/0f539160a7134b9d14cd1f9c8e38bbc32c3b3604_original.png/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

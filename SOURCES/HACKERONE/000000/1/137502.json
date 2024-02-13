@@ -1,0 +1,120 @@
+{
+  "id": 137502,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMzc1MDI=",
+  "url": "https://hackerone.com/reports/137502",
+  "title": "All Vimeo Private videos disclosure via Authorization Bypass",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-05-10T14:50:25.496Z",
+  "submitted_at": "2016-05-10T14:50:25.496Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "opnsec",
+    "url": "/opnsec",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/871/17ffe7f89623315912b4a69a6441247262583484_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 56,
+    "url": "https://hackerone.com/vimeo",
+    "handle": "vimeo",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/056/c3188aa0fc4a95fd486b5ee1f4b2d0b90da111d3_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/056/c3188aa0fc4a95fd486b5ee1f4b2d0b90da111d3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Vimeo",
+      "twitter_handle": "vimeo",
+      "website": "https://vimeo.com",
+      "about": "Make life worth watching"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-07-29T12:03:07.183Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-06-29T12:03:00.547Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello,\n\nThere is a vulnerability in `https://vimeo.com/[VIDEO_ID]?action=share` that makes all Vimeo private videos available to anybody.\n\nPOC link :\nhttp://opnsec.com/vimeo/vl/videoLeak.php?video=[VIDEO_ID]\n\nPOC requirements :\n- No need to be logged in Vimeo\n- Because of sensitivity of this, I put a password on the POC :\nusername : vimeo\npassword : aS3cr3tP4$$wrD7854123\n\nPOC instructions :\n1. Open the POC link replacing `[VIDEO_ID]` by any Vimeo private video id (I believe all type of private videos are vulnerable)\n2. Enter the username and password as per requirements \n3. If the Vimeo video id is correct, no matter the status of the video, the video should start playing.\n\n---------\n\nTechnical description :\n\n`https://vimeo.com/[VIDEO_ID]?action=share` is an Ajax link used to ask Vimeo for the \"Share\" code to embed the video\nBecause it is Ajax, the server is only replying if the `Header X-Requested-With is set to XMLHttpRequest`.\n\nIf the Attacker send this request with a [VIDEO_ID] of a private video that he don't have access to, the server reply with an error message. However, this message contains the link to the `config` file of the private video including a `token parameter s=[SECRET]` which will grant the attacker access to the config file.\nThe config file contains all the info about the video including the actual video file links, video title, owner vimeo account, ... which means that the attacker has complete access to the video.\n\nExample of config file with `token parameter s=[SECRET] `\n```\nhttps://player.vimeo.com/video/165266592/config?autoplay=0&byline=0&bypass_privacy=1&context=Vimeo%5CController%5CClipController.main&default_to_hd=1&portrait=0&title=0&s=bb016a22af815053eb54XXXXXXX019d8_1462989197\n```\n------\nVulnerability Mitigation \n\nTo resolve this issue, the `https://vimeo.com/[VIDEO_ID]?action=share` server should not include the token parameter `s=[SECRET]` of the config file in the error response of `https://vimeo.com/[VIDEO_ID]?action=share`if the user doesn't have right to access the video.\nThere is a good chance this vulnerability is present in other links, especially other Ajax links.\n\nIn addition, if that is possible, the `https://player.vimeo.com/video/[VIDEO_ID]/config` config file server should also check that the user has valid right to access the video even if he has a correct `s=[SECRET]` token\n\n-------------\n\nHere is the source code of `http://opnsec.com/vimeo/vl/videoLeak.php`\n\nIf you need more info or if the POC doesn't work feel free to contact me.\n\nRegards,\n\nEnguerran Gillier\n&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;\n&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 92502,
+      "file_name": "videoLeak.php",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/092/502/bce33e94210d6674e694a1cd07227941eabb5dc8/videoLeak.php?response-content-disposition=attachment%3B%20filename%3D%22videoLeak.php%22%3B%20filename%2A%3DUTF-8%27%27videoLeak.php&response-content-type=text%2Fx-php&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSJAEOSEA%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T120959Z&X-Amz-Expires=2490&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFGoM7UVkpoUFXOwmBO1YCW3cw%2F4NyxP2Yan%2BgrkBav8AiEAyCUaZteSGAOL1VybC9wE4FNtA9ZRB0rOhRCfRb1SJtUqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDK4laJFhO348YrQkpSqPBT0JpdttzMzvj7d49wHxo6XKhZp6ShyKPYUpw0Uq4AHmWnLgN8g%2BsTPzAignfCeJBrRSLMJVkOL0W5ter7990DhqIASPNW1EZwrDyGA7kuePP%2BF4tcrX3LO0OOR6gGZx9EtA5T7iJB1DFapuW5N7q%2F51A5Mu7ZLK0NaZo8zhsohgiWzzyR2iluk%2FLl3XGm%2Fa6%2BcTwHua%2BNjD%2F97XLRv1zF3YE7sSdAY3bunMdQ6NaH%2BxtZj7FOWcsouUYmSWYMItq7rFc2QX6eLL04LoQhGF%2BsAlIJRuG9morj%2FzbUBeITu4Wjw1YqZoqh4stcI25Q3hf6RXlfWGW%2FpPgFVXTaKeiqdUSu86Hp0mtdhvWjZ%2F3frTMpqYRrp2a1mbGWETUc5Uf0mzI3H5oA%2B3GNQfu3cWaPp6Vj5kQ0fBwtej92wxqBKYcwQGX1OqkYgzXEkCCIsQfZxhAaPTN%2FtgMRJ58JVzNuHtKdPerJm1tZ8fQ6tljGtPSMxjFhDzyA9m9NHez5izRf7KqXOVO9vYJFw%2Fi00wL4IHCuGJag8I%2Fxka6p1qKR%2BLgjmHhEme4qKwVcZHLFn9ks9Opq5yjYs0%2BDnJLzW8EoTTImazBY6PuaPKcKQY8cuOfRLUWHjfDoiEvtTVUk8hNiRL7PEmq8TnurN%2BlvDbNHfB1bc7T4OkQ0bkDfDKxp%2Bw6kMpFfLzp3zMh4sVkCicAf8phxPfZ3ImBweoHetjdWVM%2FAaqoQFfIvSuNFRLjBRBvd1PbhmnN5Jq5WNPDsGhoXmnlt9dIMyM30uqRrm5JWVLqPt5x3tJ%2F6XEKfiDRzBMK4wT7DJ94Iud7aggpV%2BQl9JVRf86hwRXR9rFbvmmDTUka9kitEZLd%2FlL7mfvrF8wlKGsrgY6sQG6xY6iPHcuzMUPYlF%2BiPLSQhv%2F6pGqgLnKtUql08pwI3ttBcBcKWvZH4WOc5lXL1qEfHHkJQ1HwYwKvH5vG3URLBINtmvkDZGhy%2F605sBLv1QwPSjd91a2Orn1TKno6iqHfQCQTcPrP0NyRztLXpdgkxXv3JyY%2FNXpBhGdrABNb%2BwkB78q7U4iWLt6tducslFnRZ4D7lUbbNW%2FhxyDCkCcwec2EWKyZiZLijLaLBQG2P4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c01b1b2d11ee9ab8623b02480c8b2d26d7931c9fd18d6c9a244ea60591e2f93c",
+      "file_size": 2955,
+      "type": "text/x-php",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-07-29T12:03:00.787Z",
+  "allow_singular_disclosure_after": -238032418.5616958,
+  "singular_disclosure_allowed": true,
+  "vote_count": 32,
+  "voters": [
+    "mizzle",
+    "sourc7",
+    "hunter",
+    "spam404",
+    "opnsec",
+    "lucky_sen",
+    "zombiehelp54",
+    "jutsuce",
+    "bugdiscloseguys",
+    "daiji",
+    "and 22 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

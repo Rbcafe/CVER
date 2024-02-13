@@ -1,0 +1,110 @@
+{
+  "id": 104931,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMDQ5MzE=",
+  "url": "https://hackerone.com/reports/104931",
+  "title": "CSRF in Connecting Pinterest Account",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-12-13T12:01:43.918Z",
+  "submitted_at": "2015-12-13T12:01:43.918Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mercurii",
+    "url": "/mercurii",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 1382,
+    "url": "https://hackerone.com/shopify",
+    "handle": "shopify",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/fjjiC5585s8WoDGHv2M5okbJ/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/fjjiC5585s8WoDGHv2M5okbJ/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Shopify",
+      "twitter_handle": "",
+      "website": "https://www.shopify.com",
+      "about": "Shopify is a multi-channel commerce platform that helps people sell online, in-store, and everywhere in between."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-02-02T15:23:50.884Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-02-02T15:23:50.678Z",
+  "team_member_agreed_on_going_public_at": "2016-02-02T15:14:01.256Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\n\nThe connect to Pinterest function is vulnerable to CSRF. This allows an attacker to connect his/her pinterest account to the victim's shopify. Even if the victim has already connected a pinterest account, this will allow the attacker to replace the existing connected pinterest account with the attacker's own pinterest account.\n\n\n#PoC\nNote: I have also attached screenshots showing each step\n1. Victim(mshop2-2) already has Pinterest account connected.\n2. Attacker(mshop3-2) doesn't have Pinterest account connected and attempts to connect a Pinterest account.\n3. Attacker authorize the shopify app to connect to his Pinterest account.\n4. Attacker intercepts the redirection back to `pinterest-commerce.shopifyapps.com` and drop the request. Attacker also captures the URL, e.g. `https://pinterest-commerce.shopifyapps.com/auth/pinterest/callback?code=d0c18854a3359866774d479614081453d235962f`\n5. Attacker induces Victim to load the above captured URL. \n6. Victim's connected Pinterest account has been replaced with the attacker's Pinterest account.\n\n#Possible Fixes\n* Make use of the state parameter in OAuth, which is used to prevent CSRF, when connecting to Pinterest.",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 65333,
+      "file_name": "CSRF_Pinterest.zip",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/065/333/1968660331c43452452995f27356b7e96f506072/CSRF_Pinterest.zip?response-content-disposition=attachment%3B%20filename%3D%22CSRF_Pinterest.zip%22%3B%20filename%2A%3DUTF-8%27%27CSRF_Pinterest.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDWGU53J%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T115237Z&X-Amz-Expires=2738&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIEQrBbU8Jad1w5JwSX%2BtcCe%2B%2Bf2fWuM59KuP4ISMFc4wAiBo2h1%2BGY0GcS29KJV9ChmgWe9tqhKd5ZLb1WWqvprHYiqxBQhwEAMaDDAxMzYxOTI3NDg0OSIMhG92oDXEtczQPYIjKo4Fy8fG%2F18wGKWDOaZUOzqIsPg%2F2%2Bhxtkqy9tw5WM0FnO0efhz261ude9PuTQW%2F8W1XVC%2B6%2Btv%2F%2FGVnCyHPPzSf21evTkJ%2F2elUnngDFTubvtbmQMdS4Rnt0%2FU%2FuXzMknf8g%2BX5PviUKj6nGgaRnY9Hp0kLUpB9xZV%2BBUdPCVV4HR0N%2BfR1rXE7N8YpBPWLYN%2BeSFjCXMLIPUyphbmsuZkyiXQtehFKt7nJxobss3F2hvjZloveNvwrVNVWJFNQom1gLI9F7%2BIpCnOeXjEy3MSXsLuTbawl2ybmhjHZrkvOBGKRCJZ%2B2u5iwtWDz1wnMZRyFyaeTcUEvO9J6iZaOADHjWDUQ0JKmYoztclRLBYdqnFqX4GvRgDrPlxBgIXLYhik%2BmiNM0sGzn7a7dUiYYPCq%2FdAd9zf%2Bi%2F2Nc6bbCemAOnCRpYV7CfzwpAvbOTg1ETpUulaDRVq85Dx2p0leRTu%2FT%2FWnLION%2BrUWGT9LWh7WHbiRD9czkDV6jmhMSgRB%2Bl0SrMovwZEVMZSrCU%2BLZ04O9Ixjhzq%2B1Vr0XZu7DRtQOja%2FirIkVuwQiYxCdihARcXY10a6JugOVRadvNpcM%2BWrNER7eW6Ggy%2F7f6BytYoIxde%2BqacE7wj84z9DiuAc2no4T1dj4uFJ7X6msn0%2FWRzATSRapOIgtEcp4pwGfB%2BgJFOL0hN4w15UCIL%2FBVzrYd%2BXa1P5NfHNayl%2B47A6AtIllD1sc5l2BQdyjSXlYZVLP2DEDSN%2F9jemORnER%2FjuktMS4RtWWHcTnxoCzT9%2F%2FA8uQ%2FnRXtwTrFdv9agI5vhmpVKiMFBKwXX8KP59Ilg%2Fit%2BFtjLhR36yfvnmCbVRQoElpkcYZZM0YhVFqxqlVMBMJKcrK4GOrIBANrznU6BJTMtT8T9H36XK5m%2BmVr8n6tG0lGtMpTogn8GvplsC4ZKMuQxe3g9N4DP5saesTh9dqff09EBOPWaGcNb6eKu1xWMCP6%2FWNwnlhKPZDaWoTSy84GV7wvrpprkfGE6wb4T1PsZpb%2FIZElZKvxaZpFBFfT0K3jPH7QW9j17n06s2QlpvBBCJkLlXBGs%2FcA4E70Mzy6JNhXk5S%2BRjCCYfigjYp55SDrDc%2F%2FldOze%2FA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c61de7089e1d7b5ad1e938c879aae371865cd6c1c01a836a968097fbd02500e4",
+      "file_size": 386199,
+      "type": "application/zip",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-03-03T15:14:01.423Z",
+  "allow_singular_disclosure_after": -250807115.6793372,
+  "singular_disclosure_allowed": true,
+  "vote_count": 1,
+  "voters": [
+    "ahmed_abdalla"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

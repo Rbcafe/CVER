@@ -1,0 +1,122 @@
+{
+  "id": 337189,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMzcxODk=",
+  "url": "https://hackerone.com/reports/337189",
+  "title": "Tracking Bitwarden firefox addon users",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-04-13T09:21:24.054Z",
+  "submitted_at": "2018-04-13T09:21:24.054Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "kmodi",
+    "url": "/kmodi",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/164/034/95df7d59a39c078497891cefff825eaf86197a04_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 21024,
+    "url": "https://hackerone.com/bitwarden",
+    "handle": "bitwarden",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/uHvBgHfLjcd9SPWDmjdYVf21/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/uHvBgHfLjcd9SPWDmjdYVf21/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Bitwarden",
+      "twitter_handle": "bitwarden",
+      "website": "https://bitwarden.com",
+      "about": "Open source password management solutions for individuals, teams, and business organizations."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-05-23T17:31:30.197Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2018-04-23T17:31:19.080Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Firefox web extension, generate a UUID for each web-extension and is specific to a user. Unlike chrome extensions. \nWhich means whenever the user installs Bitwarden on Firefox, it generates a different extension ID for each user.\nYou can check the extension ID by about:debugging -> under extensions.\n\nThe problem occurs when Bitwarden prompts the user with the message:\n `Should Bitwarden remember this password for you?`.  [Screenshot attached]\n\nThis prompt is loaded as a local resource from `moz-extension://UUID/bar.html?add=1`, and this can be easily read by the website and any Javascript running on that page.\n\n## Impact\n\nNow, because this is UUID is unique to each user, it is a potential userID which can be used for tracking a user:\n1. That a user is a Bitwarden user.\n2. Multiple accounts used by the user across normal windows, private windows, containers.\n3. Because this ID can also be read by a third-party javascript on the page:\n    A.com/login.html has a third-party T.com\n    B.com/login.html has a third-party T.com\nNow because T.com can also read the UUID for Bitwarden, T.com can on their backend track that it's the same user visiting A.com and B.com. It will not matter whether the user has third-party cookies disabled or not, or is using some tracking protection. Hence, Bitwarden infects the browser ecosystem and breaks the privacy protections / private browsing mode.\n\nThis ID is accessible and remains same irrespective of :\n- Private mode\n -Normal mode\n- After browser restart\n- Extension update.\n- Clearing History / Local storage\n\nThe only way to remove this UUID is by deleting and re-installing the extension.\n\nI am happy to help you with more concrete examples if needed. \nAs a demo:\n1. Firefox with Bitwarden extension installed.\n2. Visit the page: https://cdn.cliqz.com/browser-f/fun-demo/tracking-bw-users.html\n\nThis is a known issue with Firefox webextensions you can find the details here:\nhttps://bugzilla.mozilla.org/show_bug.cgi?id=1372288\n\nAs far as I can see, this needs to fixed at the extension level and not at Firefox level.\n\nPlease note, as of now I have only tested the resource loaded from this prompt. But this would be a problem anywhere the resource being loaded which is using the same pattern.",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 285332,
+      "file_name": "bitwarden-prompt.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/285/332/49313121e0e783ee40215e4c95d23f13f3c4a9fe/bitwarden-prompt.png?response-content-disposition=attachment%3B%20filename%3D%22bitwarden-prompt.png%22%3B%20filename%2A%3DUTF-8%27%27bitwarden-prompt.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6K7XUSGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130227Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIA5oUTkOsy%2B%2BNZW%2FsEPkxVR9Nn0bKUQajhMaZJnQUOJJAiBNVU4iwU4izaH0MK0tElopJO3KoogTT8%2FbdWX%2FkbKzuyqyBQh2EAMaDDAxMzYxOTI3NDg0OSIMERsjeYIiXpoQB0OmKo8FUViIVri3eJCOgeD2QGMLKPs4F1%2FjbhNffMNUt%2BfvAGSphgvZY2tU246xkvKwwDTX6TnzUNLh3iGOcuouArS3RIWbEfHSiDDu6%2BVZPx3Wz1I%2FCwS%2BKPH5NwJsBp0BibvHEHHji%2FALBDiXO8PioToytjyaEQNaXmQuLAn84CAb4QekxzofZnprn52iHUoXFyJNf%2Fq3ZqvA4jb30mJAxCPIjnPde1tkpNSGuAfsmY%2ByQYlN7sWxpq5yV%2BTU%2Bz0rt1WjtctGsd6w1yt88Dd%2Br74P8m7ROn2Z0ptQw5A%2BWNmX1Wanb7ILpRxe8QeaZaokqgxiSrVfnWtNKgnVUga2Z0moK4hOWv539koLmT4PBBuxJlSyZWyeMoBemGmSCiOxOKwmrf%2BCK%2FG1BpNYsaCmjPVr2A49O9rh48uqEFc8uvejj87y8pQoGWAlFjsxe1QzTC0haaEIYGygiAnZI6IKmy2%2BNlrPwjgcdHQnc15lnYbAokFqg1uW1UzqkUE4c44dN5JbBhzJaJz14CGqvz2LbrkrxeapW3SunevCGGfJdcClV%2F0zJwxxOPm7TYbX7PHfVKaL7pLvGt6ShxVaeJzf1nAj8m2nfGj9L5WdfZ6Sb9aD7w08GXkqVBejxqPrEzu%2Fin49ua4mt8x0hItGe5i0jUq8p%2BuZQ93zKwP09dFgsV6qPlGtXKwW1fddd9jt%2Bnnp1fwfIxbu4spfYa8nFjzgPqH7T%2F%2FJQgaw6dXm%2Fi4%2FblBIP3pX1Sf8fOovW1YithPw4Jt%2FdibdeIaKPPXUhJeeypNj7zindWYEDmbdjQ6xKgYfOTCGv3Kveuz%2BrIe58j5hhTO6SOGM5oLaEPjukGlkwR0S6pSULxstSwXhSCM4K2grCjC%2Fvq2uBjqyASBnlNoKKu8wzQ1P%2F0BlH14PlBBt%2Fm%2BFzSC4hnyN21lioiA3qg372zbcFqxrMin8PkMDjYnDERYVShxZWmk7L62lyLmDmK6ddoZeeuZn0a%2BBvBT61yW5%2Fafe16Wi38LTWHakxXOTJqfqznIB1OO6RKIWbBpba3WDGpf5V64%2B0hKThL7teXpfRzoD3U%2BjQs%2B7q62Fy7YrQ7qeIWla%2FIkEaOKDajC8wFKHIsPw6ZwsIvBIndQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=441a43c758fb1634f86fcf5392666824490a93683fb4573629ef78fdc4a4797e",
+      "file_size": 34610,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-05-23T17:31:19.181Z",
+  "allow_singular_disclosure_after": -180732668.137315,
+  "singular_disclosure_allowed": true,
+  "vote_count": 7,
+  "voters": [
+    "apapedulimu",
+    "akaash_pantherdefence",
+    "eveeez",
+    "faisalahmed",
+    "luigigubello",
+    "itx",
+    "ianling"
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 777,
+    "asset_type": "OTHER",
+    "asset_identifier": "https://addons.mozilla.org/en-US/firefox/addon/bitwarden-password-manager/",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+{
+  "id": 1365738,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMzY1NzM4",
+  "url": "https://hackerone.com/reports/1365738",
+  "title": "critical server misconfiguration lead to access to any user sensitive data which include user email and password",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2021-10-11T16:21:15.670Z",
+  "submitted_at": "2021-10-11T16:21:15.843Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mr_robert",
+    "url": "/mr_robert",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3dirnpn603jb1av0ene90dghp29y/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 32982,
+    "url": "https://hackerone.com/flickr",
+    "handle": "flickr",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/032/982/553e2f6c6682ebf04363717b01f5413d6e313e62_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/032/982/553e2f6c6682ebf04363717b01f5413d6e313e62_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Flickr",
+      "twitter_handle": "flickr",
+      "website": "https://www.flickr.com/",
+      "about": "Flickr is a global community united by photography.  It is the best place for inspiration, connection and sharing."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-11-02T15:50:55.911Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-10-30T17:24:49.631Z",
+  "team_member_agreed_on_going_public_at": "2021-11-02T15:50:55.690Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi flickr team,\nI found a critical issue lead to access to any user sensitive data which include user hashed password and possibly can lead to takeover any user account on  flickr's main site, literally i can get all  user information from database with no restrictions ,\nLet me explain how this happen:\n\nAs we know Flickr that it was belong to Yahoo and also it was  hosted on many servers, including Amazon servers,\nAnd after Flickr reboot as an independent and separate organization from Yahoo\nThis servers still has full access to Flickr’s main server databases \nThe attacker can use this old flickr server to get a lot of sensitive information belong to any user \nBy using “published user image name” and search by it ,on Flickr yahoo old server\n\nFor example :\nWe have user x  and he posted a photo named “golden_arrow_img” \nNow let’s say the attacker know his victim user and now he know how to get all user sensitive data , he will go to misconfigured server  which it’s address is : https://34.235.208.201 But when he goes to this address, he only sees an error message and the logo of Flickr, and after a while of checking the available paths, I found that when I add the word start, all the content of the server appears,the address will be https://34.235.208.201/start , you will see a search box, go to search by the name of the published user image which is for example “golden_arrow_img”, but you will not see the results in The page, server will redirect you to the first error page , the request must be stopped by burp-suite proxy and send it to the repeater then repeat the request, you will see the results, search in the repeater results for the function called ==“Y.listData”==\nYou will see under this function all user sensitive data, which is will be like :\n\n```\nY.listData = {\n\t\t\"user\": {\n\t\t\t\t\"id\": \"193923944\",\n\t\t\t\t\"first_name\": \"robert\",\n\t\t\t\t\"last_name\": \"carlos\",\n\t\t\t\t\"email\": \"robert_d1999@yahoo.com\",\n\t\t\t\t\"date_creation\": \"1631706054\",\n\t\t\t\t\"date_modified\": \"0\",\n\t\t\t\t\"password\": \"d63b6d249dcc52ef335b0eeea167fef1\",\n\t\t\t\t\"city\": \"los angelos\",\n\t\t\t\t\"country\": \"United states\",\n\t\t\t\t\"check_code\": \"\",\n\t\t\t\t\"email_conf\": \"1\",\n\t\t\t\t\"email_conf_bounce\": \"0\",\n\t\t\t\t\"nsid\": \"194016757@N08\",\n\t\t\t\t\"character_name\": \"robert_d1999\",\n\t\t\t\t\"gender\": \"M\",\n\t\t\t\t\"magic_email\": \"\",\n\t\t\t\t\"is_admin\": \"0\",\n\t\t\t\t\"is_bad\": \"0\",\n\t\t\t\t\"prefs_main_1\": \"2056\",\n\t\t\t\t\"prefs_main_2\": \"262161\",\n\t\t\t\t\"mail_buffer\": \"\",\n\t\t\t\t\"deleted\": \"0\",\n\t\t\t\t\"kill\": \"0\",\n\t\t\t\t\"kill_from\": \"0\",\n\t\t\t\t\"refer_code\": \"\",\n\t\t\t\t\"date_limit\": \"0\",\n\t\t\t\t\"photo_id_limit\": \"0\",\n\t\t\t\t\"date_premium_end\": \"0\",\n\t\t\t\t\"is_paid_pro\": \"0\",\n\t\t\t\t\"has_order_history\": \"0\",\n\t\t\t\t\"gifts_to_give\": \"0\",\n\t\t\t\t\"path_alias\": null,\n\t\t\t\t\"date_iconchange\": \"0\",\n\t\t\t\t\"pref_default_license\": \"0\",\n\t\t\t\t\"upload_email_tags\": \"\",\n\t\t\t\t\"upload_email_size\": \"2\",\n\t\t\t\t\"upload_email_body\": \"0\",\n\t\t\t\t\"timezone_id\": \"5\",\n\t\t\t\t\"timezone_dst\": \"1\",\n\t\t\t\t\"buddyicon_server\": \"0\",\n\t\t\t\t\"unread_mail\": \"0\",\n\t\t\t\t\"yid\": \"ef29e4c8-ee47-45a1-8a26-32b2203b6d83\",\n\t\t\t\t\"yhid\": \"ef29e4c8-ee47-45a1-8a26-32b2203b6d83\",\n\t\t\t\t\"dot_yjid\": null,\n\t\t\t\t\"yintl\": \"eg\",\n\t\t\t\t\"lang\": \"1\",\n\t\t\t\t\"cluster_id\": \"39\",\n\t\t\t\t\"cluster_lock\": \"0\",\n\t\t\t\t\"adultness\": \"2\",\n\t\t\t\t\"commercial\": \"0\",\n\t\t\t\t\"last_activity\": \"1633964310\",\n\t\t\t\t\"bb_partner_id\": \"0\",\n\t\t\t\t\"stats_cluster_id\": \"1\",\n\t\t\t\t\"stats_cluster_lock\": \"0\",\n\t\t\t\t\"yreg\": \"0\",\n\t\t\t\t\"has_stats\": \"0\",\n\t\t\t\t\"contact_cluster_id\": \"1\",\n\t\t\t\t\"contact_cluster_lock\": \"0\",\n\t\t\t\t\"unread_mail_inbox\": \"0\",\n\t\t\t\t\"buddyicon_max_resolution\": \"0\",\n\t\t\t\t\"coverphoto_server\": \"0\",\n\t\t\t\t\"addons\": \"0\",\n\t\t\t\t\"yalias\": \"robert_d1999@yahoo.com\",\n\t\t\t\t\"ins_ts\": \"2021-09-15 11:40:54\",\n\t\t\t\t\"upd_ts\": \"2021-10-11 14:58:49\",\n\t\t\t\t\"has_csam\": \"0\",\n\t\t\t\t\"display_yhid\": \"robert_d1999@yahoo.com\"\n\t\t\t},\n\n```\n==This is a summary, not all information, there is more fields==\n\n##Steps to reproduce :\n1. Go to https://34.235.208.201/start\n2. Open burp suite \n3. Search by the name of the published user image which is for example “golden_arrow_img” \n4. Intercept the request and send it to repeater then repeat the request\n5. search in the repeater results for the function called “Y.listData”\nYou will see under this function all user sensitive data\n\n##Screenshots:\nF1478270\nF1478271\n\n## Impact\n\nThe attacker can access to any user sensitive data which include user hashed password and possibly lead to takeover any flickr user account , literally the attacker can get all  user information from database with no restrictions",
+  "bounty_amount": "500.0",
+  "formatted_bounty": "$500",
+  "weakness": {
+    "id": 65,
+    "name": "Business Logic Errors"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1478270,
+      "file_name": "flickr-yahoo-old-server.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/s1cq8pogmq5tkg17ltqfpggxm51h?response-content-disposition=attachment%3B%20filename%3D%22flickr-yahoo-old-server.png%22%3B%20filename%2A%3DUTF-8%27%27flickr-yahoo-old-server.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3I276FVZ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T141815Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBR%2Fcj4He1YNoxuqlCR8y8rqIukyINMyDPuGH4bBYx6SAiEA9rxAEFgc%2FY9ADMxq89WI%2F4YUHMXyjEPxPzJLolchOMcqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDFBjNDAnQ2OT9fFEUCqPBdD%2BXXWBgaRxNEUUo6cEeoytD1eXvhIsF8BkIAolofhhkKHa%2FJ9rh00ejh6T8IepmFmzqyDA1to2vDIum2KthQ0U6K%2Fq21GMCUMZo7xXkyphPeZxTlJE8cbrBa9V7531H4caFbz7tu71hUjruj7poNeDwa5J2XkqEShNg6VTkYFYqW2p508BdQAm0fm%2BJSHq3faBYzcdc%2BIdgG0f6PUjEYh8ysP11Ro09SiXv3N3T6DptjJHKSv7KUv%2FZb54m8zxj0ho7JBJGg0PnntZNlzuUrPyB5o8m6NghY%2FGYTA8AM56YwOqBpjHb6CnraAhdaDe1bVoMVPvNpaoYIcwcd4aA5uVq%2F%2BMEFbgRAsaOaZwmVbJkgiy2He0wZ1y%2Bi038Z1fvfDUbGHaWHIvakM7EmAYLWhUjnVli%2B3NqZponfkOVtoUKkcIkHv%2FMcMGpAcK0LuL5c2PBD0kic3yPmgcNitophPyXa55qvUBwb0m1aYQTwhCX70%2B1MuBBNqQvAsVUygdhbSZflPVFLVYXYCw10pZBosqrbt33MeOhLAD8A8FNaf8XnRxoIDh3nC1b6UKs2zWAsQPsE7gNEmhUsXIocoqXYlZh%2FQZSSdnGUabitNEws3%2FzTErmpCZuC2pr4nC5OCy4AoCpAKYzhiaBnVjXyi1NhUFfB7kXutS3csu0Lk3ScNHi9nlMRK%2FSHZ%2BmmfQUxKvkUG6N76Rrx09p1D%2Brasm6BwCfo%2FSw7hRWxvXSZbCwxc3do9Mpm9IRFA7fgftyitVAMxs%2B8%2FYuoPx7yvUxg0bClyQ192xRI2lA%2B2Re%2FTICR8V2PH0zUKh00J8XQvEL4nx0dQPY1eX5ebqa0OrnmqUj5MM0BpBxhDPhte4fVZA92wwkMCtrgY6sQESsP34nDSGQ6%2FMJpkkUSZiwSB%2F4jJvcrOQGDnz8fYink0yrV9jUVthg%2F0T80d3eDYEK8OVRR2nDjVCUQg3IxtCiugMaPpFUdgVHqXf%2FGpaDapO5M8KW58NB4nk4LoOYgrk9ZTwWMl3jVREWlQWgRKb1D2x8jgp12%2B72xMOnvcfsjT5bTR2OBDEBsh2BamCCdP1z2L0lwJwCGwomgMutcDqcL1aIj%2F%2Fac5TUFnKnI3315E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=21e26928ce65d2a073811b2af218d1b953cbb52e08c94859cf0c347044d4d29b",
+      "file_size": 108401,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1478271,
+      "file_name": "user-data.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/czl9xxzkhzshs98u173ei757ljgq?response-content-disposition=attachment%3B%20filename%3D%22user-data.png%22%3B%20filename%2A%3DUTF-8%27%27user-data.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3I276FVZ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T141815Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBR%2Fcj4He1YNoxuqlCR8y8rqIukyINMyDPuGH4bBYx6SAiEA9rxAEFgc%2FY9ADMxq89WI%2F4YUHMXyjEPxPzJLolchOMcqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDFBjNDAnQ2OT9fFEUCqPBdD%2BXXWBgaRxNEUUo6cEeoytD1eXvhIsF8BkIAolofhhkKHa%2FJ9rh00ejh6T8IepmFmzqyDA1to2vDIum2KthQ0U6K%2Fq21GMCUMZo7xXkyphPeZxTlJE8cbrBa9V7531H4caFbz7tu71hUjruj7poNeDwa5J2XkqEShNg6VTkYFYqW2p508BdQAm0fm%2BJSHq3faBYzcdc%2BIdgG0f6PUjEYh8ysP11Ro09SiXv3N3T6DptjJHKSv7KUv%2FZb54m8zxj0ho7JBJGg0PnntZNlzuUrPyB5o8m6NghY%2FGYTA8AM56YwOqBpjHb6CnraAhdaDe1bVoMVPvNpaoYIcwcd4aA5uVq%2F%2BMEFbgRAsaOaZwmVbJkgiy2He0wZ1y%2Bi038Z1fvfDUbGHaWHIvakM7EmAYLWhUjnVli%2B3NqZponfkOVtoUKkcIkHv%2FMcMGpAcK0LuL5c2PBD0kic3yPmgcNitophPyXa55qvUBwb0m1aYQTwhCX70%2B1MuBBNqQvAsVUygdhbSZflPVFLVYXYCw10pZBosqrbt33MeOhLAD8A8FNaf8XnRxoIDh3nC1b6UKs2zWAsQPsE7gNEmhUsXIocoqXYlZh%2FQZSSdnGUabitNEws3%2FzTErmpCZuC2pr4nC5OCy4AoCpAKYzhiaBnVjXyi1NhUFfB7kXutS3csu0Lk3ScNHi9nlMRK%2FSHZ%2BmmfQUxKvkUG6N76Rrx09p1D%2Brasm6BwCfo%2FSw7hRWxvXSZbCwxc3do9Mpm9IRFA7fgftyitVAMxs%2B8%2FYuoPx7yvUxg0bClyQ192xRI2lA%2B2Re%2FTICR8V2PH0zUKh00J8XQvEL4nx0dQPY1eX5ebqa0OrnmqUj5MM0BpBxhDPhte4fVZA92wwkMCtrgY6sQESsP34nDSGQ6%2FMJpkkUSZiwSB%2F4jJvcrOQGDnz8fYink0yrV9jUVthg%2F0T80d3eDYEK8OVRR2nDjVCUQg3IxtCiugMaPpFUdgVHqXf%2FGpaDapO5M8KW58NB4nk4LoOYgrk9ZTwWMl3jVREWlQWgRKb1D2x8jgp12%2B72xMOnvcfsjT5bTR2OBDEBsh2BamCCdP1z2L0lwJwCGwomgMutcDqcL1aIj%2F%2Fac5TUFnKnI3315E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f78823e4647d9000d40101e6dcb31881f4ec0f9b00814e01483b166800225711",
+      "file_size": 213249,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 102,
+  "voters": [
+    "dsonbaker",
+    "smorgashboard",
+    "ovunc",
+    "matrixsoftsec",
+    "b19r8a14",
+    "ganeshbagaria",
+    "palaziv",
+    "7odamoo",
+    "drsniper",
+    "bombon",
+    "and 92 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 5.3,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 14539,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.flickr.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

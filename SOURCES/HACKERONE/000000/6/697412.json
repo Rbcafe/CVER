@@ -1,0 +1,153 @@
+{
+  "id": 697412,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82OTc0MTI=",
+  "url": "https://hackerone.com/reports/697412",
+  "title": "[unibet.com] Delete messages via IDOR at /mom-api/messages/unibet_█████████@unibet/",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2019-09-18T17:32:41.052Z",
+  "submitted_at": "2019-09-18T17:32:41.052Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "naaash",
+    "url": "/naaash",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/73j9odd8unsslt78s5919e2qyfcw/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 14047,
+    "url": "https://hackerone.com/kindred_group",
+    "handle": "kindred_group",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/047/30c5e0ecef105a2592f8b5a8a6102a5fae5bad0c_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/014/047/30c5e0ecef105a2592f8b5a8a6102a5fae5bad0c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Kindred Group",
+      "twitter_handle": "",
+      "website": "https://www.kindredgroup.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "no-content",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2023-04-03T09:21:10.336Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-02-11T14:32:05.875Z",
+  "team_member_agreed_on_going_public_at": "2023-04-03T09:21:10.232Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "",
+  "weakness": {
+    "id": 55,
+    "name": "Insecure Direct Object Reference (IDOR)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 82,
+  "voters": [
+    "surya_ganesan_",
+    "shreyaschavhan",
+    "nicochess",
+    "n1m0",
+    "ganeshbagaria",
+    "jamieparfet",
+    "luckz",
+    "zy9ard3",
+    "ninetynine",
+    "sameerphad72",
+    "and 72 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 7.4,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "low",
+      "availability": "low"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 3568,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.unibet.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 259502,
+      "category": "team",
+      "content": "==Below is the original, partially-redacted report==\n\n---------\n\n## Description:\nHey team,\nI found an endpoint which is vulnerable to IDOR by which I can delete **messages** of any user without their interaction at all. But sadly I can't reproduce this issue for the time being as I don't have any spare messages in my account to test and to produce a PoC. Could you ask the internal team to send me test messages to `████` and `███`. I hope you're able to reproduce this issue as well.\n\n## Steps to reproduce:\n* Visit the mentioned URL: `https://www.unibet.com`\n* Log into your account.\n* Now visit this particular URL: `https://www.unibet.com/myaccount/mydetails/mymessages` ███\n* Over here if you've messages then it'll showup.\n* Click on any message.\n* Make sure that your **Burpsuite** is intercepting all the requests.\n* Now click the `Trash Can` icon to delete the message and intercept the request.\n* You'll come across something similar to this:\n\n```\nDELETE /mom-api/messages/unibet_████████████████████@unibet/81423314 HTTP/1.1\nHost: www.unibet.com\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0\nAccept: */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nX-Requested-With: XMLHttpRequest\nDNT: 1\nConnection: close\nReferer: https://www.unibet.com/myaccount/mydetails/mymessages\nCookie: ██████\n\n```\n\n* Put this particular **request** under **repeater** tab\n* At the end of the URL you'll see `81423314` which is the ID number of that particular message. \n* I changed this particular value to `81423384`. This ID number belongs to the message on the victim's account.\n* Once changed click on **\"Send\"** and you'll get something similar to this on your repeater tab ██████\n* Click on **\"Follow redirection\"** and you'll come across this as well █████\n\n\n\n## PoC:\n\n* Unfortunately I couldn't record a video while testing it out :/\n\n## Impact\n\nDeletion of messages without any user interaction at all.",
+      "user": {
+        "id": 360834,
+        "username": "jamie-kg",
+        "name": "jamie",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": "",
+        "created_at": "2018-09-25T07:11:08.390Z",
+        "url": "https://hackerone.com/jamie-kg",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/360/834/c1b47af0e2412cede39db4703a8442600914f5d8_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/360/834/c1b47af0e2412cede39db4703a8442600914f5d8_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/360/834/c1b47af0e2412cede39db4703a8442600914f5d8_original.png/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

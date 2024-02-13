@@ -1,0 +1,154 @@
+{
+  "id": 1322322,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMzIyMzIy",
+  "url": "https://hackerone.com/reports/1322322",
+  "title": "Cookie exfiltration through XSS on the main search request of www.lahitapiola.fi",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2021-08-28T18:41:58.111Z",
+  "submitted_at": "2021-08-28T18:41:58.162Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "voiddy",
+    "url": "/voiddy",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/21674otk66u76ank3kf9cccjnss3/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 8416,
+    "url": "https://hackerone.com/localtapiola",
+    "handle": "localtapiola",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/008/416/b6fbd7e94497b0ffaee584d2e7096c5d5e2082e2_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/008/416/b6fbd7e94497b0ffaee584d2e7096c5d5e2082e2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "LocalTapiola",
+      "twitter_handle": "",
+      "website": "http://www.lahitapiola.fi",
+      "about": "LocalTapiola’s products and services cover non-life, life and pension insurance, as well as investment and saving services."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2023-01-19T21:43:52.527Z",
+  "bug_reporter_agreed_on_going_public_at": "2022-05-22T19:06:51.874Z",
+  "team_member_agreed_on_going_public_at": "2023-01-19T21:43:52.364Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Basic report information\n**Summary:** \nAdding extra search parameters generates the creation of new input fields which can be escaped, thus generating HTML injection possibilities, Cross-Site Scripting attacks, and the retrieval of the page's cookies.\n\n**Description:** \n\n - Observing the Bug\n\nI was researching the parameters of search bar from the main page. While search this creates links of the type: `https://www.lahitapiola.fi/henkilo?pagename=LTSearchResults&q=testing`. By adding additional URL parameters, `&random=parameter`, the website creates hidden input fields with the `name` being the first word (random)  and the `value` being the second word (parameter). See figure:\n\n{F1428608}\n\nBy creating a name variable with `\">`, such as `&random\">=parameter`, one can escape the input element. See figure:\n\n{F1428610}\n\nFull URL to replicate escape to HTML: `https://www.lahitapiola.fi/henkilo?pagename=LTSearchResults&q=testing&random%22%3E=parameter`\n\nIn consequence, this allows an attacker to generate any html and to inject the page with any HTML elements. For example, ** a payload can be generated to display a link towards an attacker's website**. The following link, `https://www.lahitapiola.fi/henkilo?pagename=LTSearchResults&q=test&other=anything&again%22/%3E%3C/div%3E%3Ca%20href%3D%22https://www.google.com%22%3EClicking%3C/a%3E%3Cinput%20type%3D%22hidden=alert`, does exactly that if a user clicks on the \"Clicking\" link.\n\n - XSS\n\nBasic protection impedes an attacker from triggering simple XSS payloads. However, through testing a certain payload works. See figure:\n\n{F1428612}\n\nBy hovering and moving around the screen over the *Click Me*, an XSS payload is executed.\n\nURL to reproduce: `https://www.lahitapiola.fi/henkilo?pagename=LTSearchResults&q=test&other=anything&again%22/%3E%3C/div%3E%3Cdiv%2fOnpOinTeReNter%3dconfirm&lpar;document.domain&rpar;%3Eclick%20here%3Cinput%20type%3D%22hidden=alert`\n\n**Javascript payloads can run directly in the user's browser.**\n\n- Getting Cookies\n\nRetrieving  the cookies was an extra step of difficulty, however, here is a payload that works and an image to show it working. The `document.cookie` command seems to be blocked but not the `self[Object.keys(self)[5]].cookie`. In consequence, to trigger this payload a few attempts might be required, the hardcoded `5` is the origin of this issue as Object.keys(self) changes in time I believe. I seem to make it work 1 out of 5 times.\n\n{F1428615}\n\nURL to reproduce: `https://www.lahitapiola.fi/henkilo?pagename=LTSearchResults&q=test&other=anything&again%22/%3E%3C/div%3E%3Cdiv%2fOnpOinTeReNter%3dconfirm&lpar;self[Object.keys(self)[5]].cookie&rpar;%3Eclick%20here%3Cinput%20type%3D%22hidden=alert`\n\n**Cookies and session cookies can be retrieved and exfiltrated to an attacker using javascript.** This poses a risk on any user that is sent a link from anyone else.\n\n**Impact:**\nThe vulnerability allows for HTML injection, XSS, and cookie retrieval. The impact is important as the URL is the landing page of the website and is simply triggered through a link. In consequence, an attacker could send any user a link from the website and **retrieve their session cookies** or any commonly XSS attacks. The HTML injection allows a button to be injected redirecting towards any possible websites which is an **Open Redirect** vulnerability.\n\n## Browsers / Apps Verified In:\nWorks in (all up to date at the time of the report):\n  * Google Chrome - Version 92.0.4515.159 (Official Build) (64-bit)\n  * Microsoft Edge - Version 92.0.902.84 (Official build) (64-bit)\n\n## Steps To Reproduce:\n\n  1. Modify the URL parameters of the main page to escape an html element and inject any html element. URL:\n`https://www.lahitapiola.fi/henkilo?pagename=LTSearchResults&q=testing&random%22%3E=parameter`\n  2. With the new HTML element find a way to add an XSS payload. URL:\n `https://www.lahitapiola.fi/henkilo?pagename=LTSearchResults&q=test&other=anything&again%22/%3E%3C/div%3E%3Cdiv%2fOnpOinTeReNter%3dconfirm&lpar;document.domain&rpar;%3Eclick%20here%3Cinput%20type%3D%22hidden=alert`\n  3. Retrieve cookies through `self[Object.keys(self)[5]].cookie`. URL:\n`https://www.lahitapiola.fi/henkilo?pagename=LTSearchResults&q=test&other=anything&again%22/%3E%3C/div%3E%3Cdiv%2fOnpOinTeReNter%3dconfirm&lpar;self[Object.keys(self)[5]].cookie&rpar;%3Eclick%20here%3Cinput%20type%3D%22hidden=alert`\n\n## Additional material\n\n XSS image:\n\n{F1428612}\n\nGetting cookies XSS image:\n\n{F1428615}\n\n## Related reports, best practices\n\n  * According to me, you should sanitize the first `name` value in your URL as that can be injected. I attempted with the `value` parameter for a while and that did render anything. Therefore, I believe your sanitization for the second value should be applied on the `name` value in the URL.\n\n## Impact\n\nThe vulnerability allows for HTML injection, XSS, and cookie retrieval. The impact is important as the URL is the landing page of the website and is simply triggered through a link. In consequence, an attacker could send any user a link from the website and retrieve their session cookies or perform any common XSS attacks. \nThe HTML injection allows a button to be injected redirecting towards any possible website which is an Open Redirect vulnerability.",
+  "bounty_amount": "500.0",
+  "formatted_bounty": "$500",
+  "weakness": {
+    "id": 63,
+    "name": "Cross-site Scripting (XSS) - DOM"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1428608,
+      "file_name": "html_injection.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/octtffvhew0p1st39j7de93c5r7l?response-content-disposition=attachment%3B%20filename%3D%22html_injection.PNG%22%3B%20filename%2A%3DUTF-8%27%27html_injection.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T141644Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=336d38f739ee967140e5f27fcba240b7e0bb3e7b871ed95fbc4f801764273aa3",
+      "file_size": 115215,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1428610,
+      "file_name": "html_escaping.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/rk90io853yop34idlynrc2kkmhli?response-content-disposition=attachment%3B%20filename%3D%22html_escaping.PNG%22%3B%20filename%2A%3DUTF-8%27%27html_escaping.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T141644Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1404a0c8fbc2e615852e49abb49dc0e5d56881ea398c7fb6523f156089e57f0b",
+      "file_size": 89797,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1428612,
+      "file_name": "TriggeredXSSDocumentDomain.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/0idr6kzain1jjeempe88nqoqu26y?response-content-disposition=attachment%3B%20filename%3D%22TriggeredXSSDocumentDomain.PNG%22%3B%20filename%2A%3DUTF-8%27%27TriggeredXSSDocumentDomain.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T141644Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4fc14cafdf53a79e49463625ca3ea532083d35981668bc5806b8466c5b0ee3e6",
+      "file_size": 45285,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1428615,
+      "file_name": "XSS_getting_cookies.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/e9koplgzgc3kwjij6yxkowp068i5?response-content-disposition=attachment%3B%20filename%3D%22XSS_getting_cookies.PNG%22%3B%20filename%2A%3DUTF-8%27%27XSS_getting_cookies.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T141644Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d57daf3de56e8cf849cfc503c86298eb87b326ccbbe3d889e3942d5737eeae17",
+      "file_size": 60841,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 35,
+  "voters": [
+    "shreyaschavhan",
+    "nicochess",
+    "thebeskarmandalorian",
+    "8910jq",
+    "zy9ard3",
+    "shubham_srt",
+    "n1had",
+    "h4x0r_dz",
+    "t4ym",
+    "iwannabecomfy",
+    "and 25 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 1045,
+    "asset_type": "URL",
+    "asset_identifier": "www.lahitapiola.fi",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

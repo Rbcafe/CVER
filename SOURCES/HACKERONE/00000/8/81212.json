@@ -1,0 +1,128 @@
+{
+  "id": 81212,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84MTIxMg==",
+  "url": "https://hackerone.com/reports/81212",
+  "title": "Potential XSS on sanitize/Rails::Html::WhiteListSanitizer",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-08-08T09:37:38.333Z",
+  "submitted_at": "2015-08-08T09:37:38.333Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "garnu",
+    "url": "/garnu",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 22,
+    "url": "https://hackerone.com/rails",
+    "handle": "rails",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/022/5e2b46658c8b86bed62f574d8e1793f353cbbc63_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/022/5e2b46658c8b86bed62f574d8e1793f353cbbc63_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Ruby on Rails",
+      "twitter_handle": "rails",
+      "website": "http://rubyonrails.org/security",
+      "about": "Web development that doesn't hurt."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "no-content",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-03-13T18:04:55.578Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2016-02-12T18:04:39.526Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-03-13T18:04:39.720Z",
+  "allow_singular_disclosure_after": -249932361.17346445,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "michiel",
+    "hazimaslam",
+    "cryptographer",
+    "shivammusic",
+    "dyabla"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 1252,
+      "category": "team",
+      "content": "Possible XSS vulnerability in rails-html-sanitizer\n\nThere is a possible XSS vulnerability in the white list sanitizer in the\nrails-html-sanitizer gem. This vulnerability has been assigned the CVE\nidentifier CVE-2015-7580.\n\nVersions Affected:  All.\nNot affected:       None.\nFixed Versions:     v1.0.3\n\nImpact\n------\nCarefully crafted strings can cause user input to bypass the sanitization in\nthe white list sanitizer which will can lead to an XSS attack.\n\nVulnerable code will look something like this:\n\n  <%= sanitize user_input, tags: %w(em) %>\n\nAll users running an affected release should either upgrade or use one of the\nworkarounds immediately.\n\nReleases\n--------\nThe FIXED releases are available at the normal locations.\n\nWorkarounds\n-----------\nPutting the following monkey patch in an initializer can help to mitigate the\nissue:\n\n```\nclass Rails::Html::PermitScrubber\n  alias :old_scrub :scrub\n  alias :old_skip_node? :skip_node?\n\n  def scrub(node)\n    if node.cdata?\n      text = node.document.create_text_node node.text\n      node.replace text\n      return CONTINUE\n    end\n    old_scrub node\n  end\n\n  def skip_node?(node); node.text?; end\nend\n```\n\nPatches\n-------\nTo aid users who aren't able to upgrade immediately we have provided patches for\nthe two supported release series. They are in git-am format and consist of a\nsingle changeset.\n\n* 1-0-whitelist_sanitizer_xss.patch - Patch for 1.0 series\n\nCredits\n-------\nThanks to Arnaud Germis, Nate Clark, John Colvin and Yassine ABOUKIR for reporting this issue.",
+      "user": {
+        "id": 4981,
+        "username": "rafaelfranca",
+        "name": "Rafael França",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": "",
+        "location": "",
+        "created_at": "2014-04-14T22:32:11.816Z",
+        "url": "https://hackerone.com/rafaelfranca",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/004/981/dd3b6bb41f9c33e3448ebbc47303f5a135f25105_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/981/dd3b6bb41f9c33e3448ebbc47303f5a135f25105_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/004/981/dd3b6bb41f9c33e3448ebbc47303f5a135f25105_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

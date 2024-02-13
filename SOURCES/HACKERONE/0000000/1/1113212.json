@@ -1,0 +1,133 @@
+{
+  "id": 1113212,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTEzMjEy",
+  "url": "https://hackerone.com/reports/1113212",
+  "title": "gifts.flocktory.com/phpmyadmin is vulnerable csrf",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2021-02-28T10:10:41.504Z",
+  "submitted_at": "2021-02-28T10:10:41.574Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ganofins",
+    "url": "/ganofins",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/DLYrMU1d3oy1E4vAxd1reZES/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 215,
+    "url": "https://hackerone.com/qiwi",
+    "handle": "qiwi",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/215/f578bbb9421365fab2e51aa7482bea82006d7c0c_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/215/f578bbb9421365fab2e51aa7482bea82006d7c0c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "QIWI",
+      "twitter_handle": "QiwiRussia",
+      "website": "https://qiwi.com",
+      "about": "The QIWI brand is a family brand that consolidates several directions: kiosks, wallet, bank."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2019-12616",
+    "CVE-2019-12922"
+  ],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-04-14T08:36:02.931Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-04-03T18:09:35.297Z",
+  "team_member_agreed_on_going_public_at": "2021-04-14T08:36:02.810Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "# Summary:\nHello Team,\nI found that the PHPMyAdmin login panel is publicly accessible on https://gifts.flocktory.com and it is using the 4.6.6 version of PHPMyAdmin, which is vulnerable to several CVEs\nhttps://www.cvedetails.com/vulnerability-list/vendor_id-784/product_id-1341/version_id-251928/Phpmyadmin-Phpmyadmin-4.6.6.html\nhttps://www.cybersecurity-help.cz/vdb/phpmyadmin/phpmyadmin/4.6.6/\n{F1212091}\nOut of which 2 of them are CSRF vulnerability in it.\n\n\n# Description:\n**CVE-2019-12616:**\n## Details:\nThe vulnerability exists due to insufficient validation of the HTTP request origin in \"tbl_sql.php\" script. A remote attacker can trick the victim to visit a specially crafted web page and perform arbitrary actions on behalf of the victim on the vulnerable website, such as execute arbitrary INSERT or DELETE statements.\n\n## Steps to reproduce/POC:\nhttps://gifts.flocktory.com/tbl_sql.php?sql_query=INSERT+INTO+%60pma__bookmark%60+(%60id%60%2C+%60dbase%60%2C+%60user%60%2C+%60label%60%2C+%60query%60)+VALUES+(DAYOFWEEK(%27%27)%2C+%27%27%2C+%27%27%2C+%27%27%2C+%27%27)&show_query=1&db=phpmyadmin&table=pma__bookmark\n\nAn attacker can create a CSRF HTML page using the above URL, and when the victim visits any such page. Then an insert query will be fired created by the attacker\n\n## Impact:\nAn attacker can perform arbitrary actions on behalf of the victim, such as execute arbitrary INSERT or DELETE statements.\n\n## References:\nhttps://www.cybersecurity-help.cz/vdb/SB2019060501\nhttps://nvd.nist.gov/vuln/detail/CVE-2019-12616\n\n\n**CVE-2019-12922:**\n## Details:\nThe vulnerability exists due to insufficient validation of the HTTP request origin. A remote attacker can trick the victim to visit a specially crafted web page and perform arbitrary actions on behalf of the victim on the vulnerable website, such as delete an arbitrary server on the Setup page.\n\n## Steps to reproduce/POC:\n```html\n<p>Deleting Server 1</p>\n<img src=\"\nhttps://gifts.flocktory.com/phpmyadmin/setup/index.php?page=servers&mode=remove&id=1\"\nstyle=\"display:none;\" />\n```\nAn attacker can create a CSRF HTML page using the above HTML code, and when the victim visits any such page. Then an server will be deleted with id=1\n\n## Impact:\nAn attacker can perform arbitrary actions on behalf of the victim, such as delete an arbitrary server on the Setup page.\n\n## References:\nhttps://www.exploit-db.com/exploits/47385\nhttps://nvd.nist.gov/vuln/detail/CVE-2019-12922\n\n\nThanks and regards,\n@ganofins\n\n## Impact\n\nAn attacker can perform arbitrary actions on behalf of the victim, such as execute arbitrary INSERT or DELETE statements, delete an arbitrary server on the Setup page.",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1212091,
+      "file_name": "flocktory_phpmyadmin1.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/tewweul4787fogb5et5hxmlgma05?response-content-disposition=attachment%3B%20filename%3D%22flocktory_phpmyadmin1.png%22%3B%20filename%2A%3DUTF-8%27%27flocktory_phpmyadmin1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVWHFSNNE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T140624Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZLzSSHKxWIGhQtGT81DYUaazxK%2BA4b%2BeBse1XlfNIBwIgfPS8dRNp%2FxmFBCNrWLDxkracRrBYrm5cEg%2BjJDXIvNsqsgUIdRADGgwwMTM2MTkyNzQ4NDkiDNaBwIyE1dVL1zGF0iqPBeiofcLE831cuz%2Fg3%2FBj%2BOAUaL0qSPB0iFluwPLKGuVB6sGEff4eb%2BhiIZV7BGnszG7nUhp9GzIuA1YXeX1txWBdpF9oemEmi5NywysgHkWri0j4Huf8Kqc0veGGY9SjOhiXwycQ8YsHi0vPSebpPPXh0TfZnOU4brttYbmYDQt11ba4sYpdhFcGj2JT98cBsee%2Fc5T7bN4P2XDVhPiRuRw9aGFMqvz1hVd7umv69rNFED1JWINyJdd5C%2F6agSSB8sgbH71ksUBWB6gZbJY81x4rscmVfXXofwqa8PBk5Og2PopEsHO5gC2m6ONQs7oHx%2FwcPVQk3JG%2BUI5vzVw25Vs4%2BdZdhcmlVKrn%2B%2FAnPLwb1UVjUdIZ1Bh2A7dxoauy7mugTmVoaADIScHYKRRYQ6ymOT%2B5HZKcppxrXZOnvSp0bLZxAWUdNfX%2BptG8LPBB0HFsGwGHJM3e67F2eH8OPbwOv4CEGzSDxBRn5jAtojFIeM0zYT71ER7JqwYdvVMhHEmS6yzxVkocSBRdqjcwtHkc%2F3o0qHipZYK%2FYAM9qv8hFeWan6Sa185DBwXF3TgIsvbA%2Fcjp8pWqNUeqtz6soCDoRJUku0qJamW5nH6N7sH%2BtO5tJv6FlKTWPWglmSjgtpptDiSnxBFAQX9CJ8spiVo69mOdSoiBjJLiBs9VWBWsOKdxglim0NnAzaWeTydCoRC1TZO3P1tZhKm4UqA86wCtToWZwff54BVenmfxX29vKT622UzSbI49YSFrYIcmrAYj0mP7dMKGXpl0tZCD4BdH226Uje%2FjlE7N5BpXxeyGKIWjtnsKMm2g%2BMxP7x2yGOeguUUjYzkWYTTS1FwwtYRKn3lLwjDgiYO0bzSZF0Ew1bitrgY6sQHIue94FUiYiMOMkDJ9Ayf9fPYms2aIIAO2H9bXmuaR5lH9obA9b%2FPrvjiRxAZ6lxqcr%2B9QPKlzkknLInDxqbq5txCl1Rij1JaLqv%2B4UxnGRb8ZIpj0ICFXmBBF2kEefQwHF5kj7QtGSa2JcGxgdtN3u7o%2BaXyb07mhLfzaH6hd1QUtvhvVRlbD%2FIk%2F25jmafq1vwS1a1GzXy59j%2BKSs8AfLJwUQzk9Ye%2BpIrlwwlAnAww%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=34b4cfd71f8d52398805df9b3e787749d5bb835d9ef1940e457580ba8b1110ab",
+      "file_size": 67847,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2021-05-03T18:09:35.382Z",
+  "allow_singular_disclosure_after": -87767809.24742886,
+  "singular_disclosure_allowed": true,
+  "vote_count": 32,
+  "voters": [
+    "shino001",
+    "shuvam321",
+    "battle_angel",
+    "thaivu",
+    "prakash142",
+    "ali",
+    "xsstestov",
+    "0nlymohammed",
+    "f_m",
+    "h4x0r_dz",
+    "and 22 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 18739,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.flocktory.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

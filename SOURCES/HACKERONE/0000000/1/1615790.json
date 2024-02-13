@@ -1,0 +1,146 @@
+{
+  "id": 1615790,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjE1Nzkw",
+  "url": "https://hackerone.com/reports/1615790",
+  "title": "Any expired reset password link can still be used to reset the password",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2022-06-28T05:32:43.640Z",
+  "submitted_at": "2022-06-28T05:32:43.918Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mrccrqr",
+    "url": "/mrccrqr",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/kyriiwcxl827mxwwaf28sf3q4qj0/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13428,
+    "url": "https://hackerone.com/acronis",
+    "handle": "acronis",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Acronis",
+      "twitter_handle": "Acronis",
+      "website": "https://www.acronis.com",
+      "about": "Acronis sets the standard for cyber protection through its backup, anti-ransomware and cyber infrastructure"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2022-09-01T09:31:42.112Z",
+  "bug_reporter_agreed_on_going_public_at": "2022-08-24T13:42:20.101Z",
+  "team_member_agreed_on_going_public_at": "2022-09-01T09:31:41.974Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello Aronis team!\n\nWhen requesting a password reset link at https://alt.5nine.com/passwordrecovery.aspx and using it, after a short time the link becomes invalid.\nWhen I open the link I get the message:\n*\"Your validation request is invalid or expired\"*\nBut it is still possible to use it to reset the password, because it is still linked with the \"__VIEWSTATE\" parameter on the server side and this is the only value needed in the password reset process, and it can be used infinite times to reset the password.\nSo in short, you use the reset link to get the value of \"__VIEWSTATE\" and use it to reset the password\n\nTherefore, in a scenario where an attacker has somehow gained access to the victim's inbox, they can use any expired link to change the user's password.\n\n##STEPS TO REPRODUCE\n\n1- Go to https://alt.5nine.com/passwordrecovery.aspx\n2- Enter your account email and click \"reset\"\n3- Use the link and reset your password\n4- Wait some time (about 30 min) for the link to expire, as shown below\n\n{F1795088}\n*(just to confirm it's expired and you can use it to reset the password anyway)*\n\n5- Now view the page source code, search for \"viewstate\" and capture its value\n{F1795365}\n\n6- Encode it's value as url --> https://urlencode.org\n7- Now use the encoded value in the following request\n\n```\nPOST /TokenValidation.aspx HTTP/2\nHost: alt.5nine.com\nContent-Type: application/x-www-form-urlencoded\nContent-Length: 405\n\n__VIEWSTATE=<viewstate-here>&ctl00%24mainContentId%24Password=hacked123&ctl00%24mainContentId%24ConfirmPassword=hacked123&ctl00%24mainContentId%24FinalizeRegistration=Submit\n```\n8- And the password will be changed to \"hacked123\"\n{F1795370}\n\n##References\nhttps://hackerone.com/reports/898841\nhttps://hackerone.com/reports/772886\n\n## Impact\n\nPassword reset link must become completely useless after used, to prevent someone malicious who has access to it use it to reset the password, in this case the user will lose the account if the attacker has access to any old link",
+  "bounty_amount": "100.0",
+  "formatted_bounty": "$100",
+  "weakness": {
+    "id": 26,
+    "name": "Improper Access Control - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1795088,
+      "file_name": "1.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/8qhnv7xrspvozb1gbh9ecdxfh38d?response-content-disposition=attachment%3B%20filename%3D%221.jpg%22%3B%20filename%2A%3DUTF-8%27%271.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ7M54J673%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142733Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2FaXkHLiTu6JAlK%2F%2FJnx7CoOwtccnG75tgpYUKRnE3xgIhANREYBTpCaW3JM29ZZx8LW0d5%2BVqFzsx8ObXtUngWgMGKrEFCHcQAxoMMDEzNjE5Mjc0ODQ5IgzwBTCJ7KBGPnaqS%2FQqjgW%2BcrdfIx%2FSKxGuk6AHYcF%2FIRcvLyvZdIzwBqUcKAjP1Ior%2FMqJ33yw8cq8JXOrhT3SiP%2FwM%2Bu53Kuxy8H4MN5GBSEgiuQuG9nlkTsMSDNUsrTzPunwnriT%2BxkmzARMn5ZVPc%2BhTCcYbRF8UjxBFk0hq%2FmJsuMpTaHx7%2Fxrx6%2BPmTQBxbg23iAZF%2Fmgez%2FQ2HU40CJkcQww3886u2Rv%2FTY1NnCacfJtgYyToNbHWjQSUBN3BTsjWMDL5iQrcaeEmy9jTN1cBb5E%2BthOTBZ52d8dKMXI7EfAJmd2jsi0Ux8bAoDIgy8SrRd%2F0A0Nt6YeJJIm4VnVuWJ7wMWhQYMqhXPTxbxr2ANUslwzc%2BlOd39q7aLj1zAc5w3OnoZ9C74gcepXCJ92JP9%2FQDVjhiP2vXnj77JhlvEBMSJ1sDVGA3bzPKweK9dO5kmudF8K0gLugT2w7mboMx%2BWUEL94bfsth5Cr3%2BxRK%2FmDk1N8drxhcqT9pEoB7uhRHWjm5DjKzhxX%2FxpNEKuBgcBT%2FS5Q36%2FEBBcqdj8XuOl6U67CloKyunrrCSLhTFUaFHWCV%2BD%2BTNnGJ6jCn6%2Bd6OPn%2FZfKFCmhesLQicESfEP7vHbPUbnJ3tEwrS2UXMYBpH7KGj%2FTtPckuJyKgqLNn3Oq8VDPuJQVEMHRZweP%2Fakpvr8i2%2FNvwEQ8cCR7afoYqwI4zdKjqJgB7gULg3g2%2BTI6Swrsk3ygociks6FlHqYrBQ1Ic7elsq7b59POu8SYbpJd22D27eMK20HZzu7e%2FQOFeAELWUavctR67eOKXgPPOtktzshLAVvQU7CsYPcMEKxXdEEDesgLF%2By25RCmxQ7TW%2FnC04UIMsikew1kVRdz695f3pAIREw9eetrgY6sAFt5e%2FgBb3z6GUCPSY%2BbSpvu9318kCiOKXdmT8p52LNQRSkPxHFLhbrjTKuUqpurg1d3yQ%2B54ohHL%2FGB2jRPrX7qid5WdlXO42XDSEK0e2DQkICwpWfF9dhPwkvWoqnjmBr%2BZqGJOAD%2BDKfqMr9EVwgYEKWaPjJYoY9K5062IbgoYAcuYAxM2I2rDtSBCHlbaJlRKGx9j2%2FOO74MzSF65C7Em0o7VM2NP6pIOsd16f4tQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e6c1d0cf25214088310b25234bf2b6586b3527268b7c71dc29ca28756b7e6101",
+      "file_size": 25553,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 1795365,
+      "file_name": "2.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/0crk6ubccy6l01p30jafr6kfvxmr?response-content-disposition=attachment%3B%20filename%3D%222.png%22%3B%20filename%2A%3DUTF-8%27%272.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ7M54J673%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142733Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2FaXkHLiTu6JAlK%2F%2FJnx7CoOwtccnG75tgpYUKRnE3xgIhANREYBTpCaW3JM29ZZx8LW0d5%2BVqFzsx8ObXtUngWgMGKrEFCHcQAxoMMDEzNjE5Mjc0ODQ5IgzwBTCJ7KBGPnaqS%2FQqjgW%2BcrdfIx%2FSKxGuk6AHYcF%2FIRcvLyvZdIzwBqUcKAjP1Ior%2FMqJ33yw8cq8JXOrhT3SiP%2FwM%2Bu53Kuxy8H4MN5GBSEgiuQuG9nlkTsMSDNUsrTzPunwnriT%2BxkmzARMn5ZVPc%2BhTCcYbRF8UjxBFk0hq%2FmJsuMpTaHx7%2Fxrx6%2BPmTQBxbg23iAZF%2Fmgez%2FQ2HU40CJkcQww3886u2Rv%2FTY1NnCacfJtgYyToNbHWjQSUBN3BTsjWMDL5iQrcaeEmy9jTN1cBb5E%2BthOTBZ52d8dKMXI7EfAJmd2jsi0Ux8bAoDIgy8SrRd%2F0A0Nt6YeJJIm4VnVuWJ7wMWhQYMqhXPTxbxr2ANUslwzc%2BlOd39q7aLj1zAc5w3OnoZ9C74gcepXCJ92JP9%2FQDVjhiP2vXnj77JhlvEBMSJ1sDVGA3bzPKweK9dO5kmudF8K0gLugT2w7mboMx%2BWUEL94bfsth5Cr3%2BxRK%2FmDk1N8drxhcqT9pEoB7uhRHWjm5DjKzhxX%2FxpNEKuBgcBT%2FS5Q36%2FEBBcqdj8XuOl6U67CloKyunrrCSLhTFUaFHWCV%2BD%2BTNnGJ6jCn6%2Bd6OPn%2FZfKFCmhesLQicESfEP7vHbPUbnJ3tEwrS2UXMYBpH7KGj%2FTtPckuJyKgqLNn3Oq8VDPuJQVEMHRZweP%2Fakpvr8i2%2FNvwEQ8cCR7afoYqwI4zdKjqJgB7gULg3g2%2BTI6Swrsk3ygociks6FlHqYrBQ1Ic7elsq7b59POu8SYbpJd22D27eMK20HZzu7e%2FQOFeAELWUavctR67eOKXgPPOtktzshLAVvQU7CsYPcMEKxXdEEDesgLF%2By25RCmxQ7TW%2FnC04UIMsikew1kVRdz695f3pAIREw9eetrgY6sAFt5e%2FgBb3z6GUCPSY%2BbSpvu9318kCiOKXdmT8p52LNQRSkPxHFLhbrjTKuUqpurg1d3yQ%2B54ohHL%2FGB2jRPrX7qid5WdlXO42XDSEK0e2DQkICwpWfF9dhPwkvWoqnjmBr%2BZqGJOAD%2BDKfqMr9EVwgYEKWaPjJYoY9K5062IbgoYAcuYAxM2I2rDtSBCHlbaJlRKGx9j2%2FOO74MzSF65C7Em0o7VM2NP6pIOsd16f4tQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c01b9346a3d34affb46325845e64c7734301055dc5bb5d0d4b6b796eececde60",
+      "file_size": 82056,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1795370,
+      "file_name": "3.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/jxdvk1xydis8yfn8jvjx9skv9xqb?response-content-disposition=attachment%3B%20filename%3D%223.jpg%22%3B%20filename%2A%3DUTF-8%27%273.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ7M54J673%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142733Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2FaXkHLiTu6JAlK%2F%2FJnx7CoOwtccnG75tgpYUKRnE3xgIhANREYBTpCaW3JM29ZZx8LW0d5%2BVqFzsx8ObXtUngWgMGKrEFCHcQAxoMMDEzNjE5Mjc0ODQ5IgzwBTCJ7KBGPnaqS%2FQqjgW%2BcrdfIx%2FSKxGuk6AHYcF%2FIRcvLyvZdIzwBqUcKAjP1Ior%2FMqJ33yw8cq8JXOrhT3SiP%2FwM%2Bu53Kuxy8H4MN5GBSEgiuQuG9nlkTsMSDNUsrTzPunwnriT%2BxkmzARMn5ZVPc%2BhTCcYbRF8UjxBFk0hq%2FmJsuMpTaHx7%2Fxrx6%2BPmTQBxbg23iAZF%2Fmgez%2FQ2HU40CJkcQww3886u2Rv%2FTY1NnCacfJtgYyToNbHWjQSUBN3BTsjWMDL5iQrcaeEmy9jTN1cBb5E%2BthOTBZ52d8dKMXI7EfAJmd2jsi0Ux8bAoDIgy8SrRd%2F0A0Nt6YeJJIm4VnVuWJ7wMWhQYMqhXPTxbxr2ANUslwzc%2BlOd39q7aLj1zAc5w3OnoZ9C74gcepXCJ92JP9%2FQDVjhiP2vXnj77JhlvEBMSJ1sDVGA3bzPKweK9dO5kmudF8K0gLugT2w7mboMx%2BWUEL94bfsth5Cr3%2BxRK%2FmDk1N8drxhcqT9pEoB7uhRHWjm5DjKzhxX%2FxpNEKuBgcBT%2FS5Q36%2FEBBcqdj8XuOl6U67CloKyunrrCSLhTFUaFHWCV%2BD%2BTNnGJ6jCn6%2Bd6OPn%2FZfKFCmhesLQicESfEP7vHbPUbnJ3tEwrS2UXMYBpH7KGj%2FTtPckuJyKgqLNn3Oq8VDPuJQVEMHRZweP%2Fakpvr8i2%2FNvwEQ8cCR7afoYqwI4zdKjqJgB7gULg3g2%2BTI6Swrsk3ygociks6FlHqYrBQ1Ic7elsq7b59POu8SYbpJd22D27eMK20HZzu7e%2FQOFeAELWUavctR67eOKXgPPOtktzshLAVvQU7CsYPcMEKxXdEEDesgLF%2By25RCmxQ7TW%2FnC04UIMsikew1kVRdz695f3pAIREw9eetrgY6sAFt5e%2FgBb3z6GUCPSY%2BbSpvu9318kCiOKXdmT8p52LNQRSkPxHFLhbrjTKuUqpurg1d3yQ%2B54ohHL%2FGB2jRPrX7qid5WdlXO42XDSEK0e2DQkICwpWfF9dhPwkvWoqnjmBr%2BZqGJOAD%2BDKfqMr9EVwgYEKWaPjJYoY9K5062IbgoYAcuYAxM2I2rDtSBCHlbaJlRKGx9j2%2FOO74MzSF65C7Em0o7VM2NP6pIOsd16f4tQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f72b3bdd962afb615b374e45bd8959b18e53bbaedc10875e2600b1cd0ebdd5cf",
+      "file_size": 49705,
+      "type": "image/jpeg",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 13,
+  "voters": [
+    "shreyaschavhan",
+    "7odamoo",
+    "zy9ard3",
+    "someonealt-86",
+    "f1ras",
+    "sa1tama0",
+    "shivammusic",
+    "motu-vai",
+    "krunalchavda0788",
+    "paulgann",
+    "and 3 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 63086,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.5nine.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

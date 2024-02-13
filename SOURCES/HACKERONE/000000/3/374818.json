@@ -1,0 +1,110 @@
+{
+  "id": 374818,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zNzQ4MTg=",
+  "url": "https://hackerone.com/reports/374818",
+  "title": "SSRF in rompager-check",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "low",
+  "readable_substate": "Informative",
+  "created_at": "2018-06-30T19:40:10.517Z",
+  "submitted_at": "2018-06-30T19:40:10.517Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": true,
+    "username": "bb9866f3f743d6bf69b6836",
+    "url": "/bb9866f3f743d6bf69b6836",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 30278,
+    "url": "https://hackerone.com/hannob",
+    "handle": "hannob",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/030/278/97035f061f6de55a9362b39edae4f5948bda6735_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/030/278/97035f061f6de55a9362b39edae4f5948bda6735_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Hanno's projects",
+      "twitter_handle": "hanno",
+      "website": "https://hboeck.de/",
+      "about": "Personal web projects from Hanno Böck."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2018-11-09T14:54:12.318Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-11-09T14:46:01.287Z",
+  "team_member_agreed_on_going_public_at": "2018-11-09T14:54:12.270Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary\n\nThe script `rompager.php` does not restrict which hosts can be requested. Thereby, an attacker can send HTTP requests to localhost and other servers of the same local network segment, on port 80 and 7547. \n\n## Description\n\nIn `rompager.php`, the value of `CURLOPT_URL` is fully controlled:\n\n```php\n<?php\n// [...]\nfunction checkHost($ip, $port) {\n\t$ch = curl_init();\n\tcurl_setopt($ch, CURLOPT_URL, \"http://\".$ip);\n\tcurl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 1);\n\tcurl_setopt($ch, CURLOPT_TIMEOUT, 1);\n\tcurl_setopt($ch, CURLOPT_HEADER, TRUE);\n\tcurl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);\n\tcurl_setopt($ch, CURLOPT_PORT, $port);\n\t$data = curl_exec($ch);\n// [...]\n\t} else {\n\t\t$ip = $_GET['ip'];\n\t}\n\toutput(\"<h4>Port 80</h4>\\n\");\n\tcheckHost($ip, 80);\n\toutput(\"<h4>Port 7547</h4>\\n\");\n\tcheckHost($ip, 7547);\n```\n\n## Steps To Reproduce\n\n  1. Access https://rompager.hboeck.de/?ip=localhost;\n  1. Notice that *No RomPager found* is shown under *Port 80*.\n\n## Impact\n\nAn attacker could force `rompager.hboeck.de` to perform HTTP requests to localhost or servers of the same local network segment.",
+  "weakness": {
+    "id": 68,
+    "name": "Server-Side Request Forgery (SSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 2,
+  "voters": [
+    "ryotak",
+    "eveeez"
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 11139,
+    "asset_type": "URL",
+    "asset_identifier": "invalid.hboeck.de",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

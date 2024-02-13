@@ -1,0 +1,126 @@
+{
+  "id": 258578,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNTg1Nzg=",
+  "url": "https://hackerone.com/reports/258578",
+  "title": "application/x-brave-tab should not be readable.",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2017-08-10T09:33:18.962Z",
+  "submitted_at": "2017-08-10T09:33:18.962Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "qab",
+    "url": "/qab",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15688,
+    "url": "https://hackerone.com/brave",
+    "handle": "brave",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Brave Software",
+      "twitter_handle": "brave",
+      "website": "https://brave.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-11-07T22:20:27.250Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-11-03T20:57:24.129Z",
+  "team_member_agreed_on_going_public_at": "2017-11-07T22:20:27.054Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "\n## Summary:\n\nIt is possible to read a dragged tab object if user is coerced into drag and dropping it into attacker controlled page. This is bad because tab history is mentioned within the object, thus information leaks are possible through a trick.\n\n## Products affected: \n\n \nBrave: 0.18.14 \nrev: ad92d029e184c4cff01b2e9f4916725ba675e3c8 \nMuon: 4.3.6 \nlibchromiumcontent: 60.0.3112.78 \nV8: 6.0.286.44 \nNode.js: 7.9.0 \nUpdate Channel: dev \nOS Platform: Microsoft Windows \nOS Release: 10.0.14393 \nOS Architecture: x64\n\n## Steps To Reproduce:\n\n1. Open PoC and click on button.\n2. Popup should appear loading facebook and then should direct to a dummy page\n3. Attempt to drag and drop the newly opened windows tab into the big 'O' under the button. (as if you are trying to move the tab but instead you drop it into the O)\n4. We can successfully read 'x-brave-tab' object including history.\n\nAs I mentioned before, so much information is available in the output, specifically I want to point to the history section, where we can extract victims facebook name by reading URL after redirect.\nThis is done by opening a popup pointing to 'https://www.facebook.com/me' which will instantly redirect to 'https://www.facebook.com/{your name}' and then we redirect into a dummy page in order to create a history object.\n\nGiven that the user is not dragging directly from facebook.com then it is not the same as having a user copy paste or drag n drop their facebook URL. This is pretty much completely done within attacker controlled website.\n\n## Supporting Material/References:\n\nPoC attached.\nAlso, I wonder if something worse could happen messing with this object. I haven't been able to produce my own custom tabs yet, but if that is even theoretically possible then we 'theoretically' also have control of all the variables mentioned in the tab object.\n\nHere is a sample of the output:\n```\n{\"showOnRight\":false,\"security\":{\"isSecure\":false,\"runInsecureContent\":false},\"src\":\"about:blank\",\"lastAccessedTime\":1502356944847,\"computedThemeColor\":null,\"guestInstanceId\":44,\"adblock\":{},\"partition\":\"persist:default\",\"findDetail\":{\"searchString\":\"\",\"caseSensitivity\":false},\"noScript\":{},\"endLoadTime\":1502356942486,\"navbar\":{\"urlbar\":{\"location\":\"http://localhost/wut.html\",\"suggestions\":{\"selectedIndex\":null,\"searchResults\":[],\"suggestionList\":null,\"shouldRender\":false},\"selected\":false,\"focused\":false,\"active\":false}},\"trackingProtection\":{},\"tabId\":322,\"zoomLevel\":0,\"breakpoint\":\"default\",\"partitionNumber\":0,\"history\":[\"https://www.facebook.com/abdulrahman.alqabandi.3\",\"https://www.facebook.com/abdulrahman.alqabandi.3\",\"http://localhost/wut.html\"],\"audioMuted\":false,\"startLoadTime\":1502356941347,\"provisionalLocation\":\"https://www.facebook.com/abdulrahman.alqabandi.3\",\"location\":\"http://localhost/wut.html\",\"fingerprintingProtection\":{},\"httpsEverywhere\":{},\"audioPlaybackActive\":false,\"disposition\":\"new-popup\",\"title\":\"localhost/wut.html\",\"searchDetail\":null,\"icon\":null,\"isPrivate\":false,\"openerTabId\":5,\"parentFrameKey\":null,\"loading\":false,\"hrefPreview\":\"\",\"unloaded\":false,\"key\":1}\n```",
+  "bounty_amount": "250.0",
+  "formatted_bounty": "$250",
+  "weakness": {
+    "id": 46,
+    "name": "Privacy Violation"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 211167,
+      "file_name": "dnds.html",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/211/167/9c4f20b5171ab29dd1b7bfe442bb1623fc25a149/dnds.html?response-content-disposition=attachment%3B%20filename%3D%22dnds.html%22%3B%20filename%2A%3DUTF-8%27%27dnds.html&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5A3QBGAF%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T124749Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDOmRjyw5I%2FTlNnXkSaQt0HWBvcx4KUqlbsBDywYvgMjAIgc1T3omLkZfSHGnxG7u3M%2BDm3ZU5hXXACm6d42GSb7EAqsQUIdhADGgwwMTM2MTkyNzQ4NDkiDI1cp4QslnXVHIUCaCqOBecH%2BJNC0KwQ%2BfCYMGM86f%2FOS1Dm%2BIA%2BHjSlOORnFjZmELOvSSorEYFhUaPaxwQcFsTE7OMurOw%2BQnTNbwJzmGH%2FjDpGT%2FxwOi1Yf0v9t5xHdyje9QeqWvWnPlxRuLTKdeHLfuYjPaGYHjDPk%2ByYZLTVi%2F6fLFk1LMc7Dx726KzEvXPKCa4bME8qI31URj4F9nDQiBGwytvr7Hm1EMgKGmVAK6%2Fbzd%2BJiZVqxHd3sYJSTbmtS%2BAl2zqAc8BSfBosM0X88oi3lBTlSqMNhfG3CaAXBePpXwzrVOqz74NfDYXdsP4VQdYegntsv6fFEZFiKkjhlglh0X4pAXPbvFNkY8C7BzpUD2tNRzacCXSlRaco9RM5vUg086o63M3dgo9tb8DkSAwOHamrNu%2F2KO2aggnlYsi1aZ7EJQTnQ4h%2BcjkM2D28%2Bxcxlpa3Ec2gB5yd%2BQcUjU%2BzbbmFbStd4UJXYiE38Skp99somT%2BpCEikiE7WFVYA5Pgb9J6BqOzjaorE7DzLysbe4e0jMnv06eVq4H%2Bz42eH%2FkluYPtzip94lWrairjO%2BPy%2BVDKDVJai6d1iVpfcEFmbncPaNpU53sKrhSNhpvIUbUDu5YaFK6X%2FbL%2BeFksXVgGaf0JwUeSzAh%2FGbxLEuo6xDzuhAOmMHndLW%2FF8uphSoqM7NkjvQNWF4znkPMyfsDxu0sKfOHhED1nQ5geErhYuMeCPDWNlWvJKC2X93i%2B8i8WntV0NtA21WXhLXSnrHVz2HCPlDghBMIvH7mgPpfyFhSMGQDeGjpSbj3uInocAFuDTAgJeZIwRGGMYeOXoRMIVrM6FWdeiP%2FaI3a0LUECdOBOPVvRMLQuf7VJvF0078t1crT4PlcQMPTC%2Fwq2uBjqxAVnkBdxFUTWQ4ZupRlHVu9PZr1k7xqw4QHDS7pllKyJWE05aIrKtcQLI8f74A6IlC2qLL0KpjvsW622557lHAqxIiBIxR28dhgaLkoywMH6F6KWd%2BowMbbVNahcgFgF8sWKuHHJPaj4kiHcEz7czNhJgm88FkmgTRhhw7HW2Z01FS2x%2BrnGRx5%2BvOZPEvDu%2BIRvDNGu%2FVrwK5wtu%2BRwxD8V7oEVMXOuAFSFlduj5GO6kbQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=608f610a6a385af8dc3fb18eb36d46d452b4c52b83df3fb8f61e05ba715007d1",
+      "file_size": 6301,
+      "type": "text/html",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-12-03T20:57:24.233Z",
+  "allow_singular_disclosure_after": -195493825.564722,
+  "singular_disclosure_allowed": true,
+  "vote_count": 10,
+  "voters": [
+    "sp1d3rs",
+    "bl4de",
+    "cuso4",
+    "eveeez",
+    "japz",
+    "bugs3ra",
+    "0xm1racle",
+    "spetr0x",
+    "b4155f7c29acd42c27d007a",
+    "joman112"
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

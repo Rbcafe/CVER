@@ -1,0 +1,129 @@
+{
+  "id": 297751,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yOTc3NTE=",
+  "url": "https://hackerone.com/reports/297751",
+  "title": "Registered users can change app password permissions for any user",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2017-12-14T04:42:47.787Z",
+  "submitted_at": "2017-12-14T04:42:47.787Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "netranger",
+    "url": "/netranger",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2017-0936"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-02-08T14:29:22.710Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-02-08T14:29:22.582Z",
+  "team_member_agreed_on_going_public_at": "2018-02-08T11:38:55.360Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Vulnerable URL\n\nhttp://[server]/nextcloud/index.php/settings/personal/authtokens/[token ID]\n\n## Summary\n\nNextcloud users can create app-specific passwords, also called authtokens, giving an app limited access to their account. Users can grant or deny access to their files for each app password.\n\nThe function to change a password's  file access (\"filesystem\") permissions contains an IDOR vulnerability. An authenticated user can change permissions for other user's app passwords by changing the app password ID number when submitting the vulnerable request.\n\nThe vulnerable parameter is in the JSON body sent to the vulnerable URL. Sample request:\n\nPUT /nextcloud/index.php/settings/personal/authtokens/95 HTTP/1.1\nHost: 192.168.1.22\nUser-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0\nAccept: application/json, text/javascript, */*; q=0.01\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nContent-Type: application/json\nrequesttoken: vc5TVyC0GjTVwEX/YNUMeJ79CWq4W9G0/F6dJTOKMvE=:i6U7bkv2Tna8lXe2NbN6OdO/QgSKP7X1tR/kV1TsC6Q=\nOCS-APIREQUEST: true\nX-Requested-With: XMLHttpRequest\nContent-Length: 109\nCookie: oc0xkd23iidt=prfrkbtr1t6bdqou018cajubv7; oc_sessionPassphrase=mz4sLu%2BmEY3MNj1ItWaTYM6PsBpJikK34msNsw1zA%2BuUJoM9J2zXY26eF7PDr9Dy9DpafNTaWN8iIBrGmh%2FDghSJASzTIwQhjW4gC%2B%2BTjIDBXm0THC7nixmxvdfIPxNA; nc_sameSiteCookielax=true; nc_sameSiteCookiestrict=true\nConnection: close\n\n{\"id\":95,\"name\":\"thisiatest\",\"lastActivity\":1513224099,\"type\":1,\"scope\":{\"filesystem\":true},\"canDelete\":true}\n\nThe \"id\" parameter is the one vulnerable to IDOR.\n\n## Reproduction\n\nPre-requisites: a Nextcloud server with a couple of test users, a browser setup to go through a proxy like Burp. A WebDav client is also helpful; I used cadaver on Ubuntu.\n\n- Go to Burp, click the \"Proxy\" tab, click the \"Intercept\" subtab, and click \"Intercept is On\" to toggle interception off (if it's not already off)\n- Login to Nextcloud with a test user\n- Create an app password and uncheck \"Allow filesystem access\"\n- Go to Burp, click the \"Proxy\" tab, click the \"HTTP history\" subtab, scroll down the list and find the call to the vulnerable URL. Note the value for the authtoken ID. It's the number at the end of the URL and is also the \"id\" value in the JSON request body\n- Logout of Nextcloud\n- If you have a webdav client, login with the password. For cadaver, open up a terminal and enter \"cadaver http://[server]/remote.php/webdav\", login with the app password, and issue the \"ls\" command. Nothing should appear, since this password lacks permission to the user's files\n- Login to Nextcloud as the second user\n- Create an app password for this user and uncheck 'Allow filesystem access\"\n- Go to Burp -> Proxy -> Intercept and toggle interception on\n- Go back to the browser and re-check the \"Allow filesystem access\" box for the app we just created.\n- Burp should stall the request for viewing. The request should be to the vulnerable URL; if it isn't, click \"Forward\" until the vulnerable URL appears\n- In the JSON request body, change the value of the \"id\" parameter to the authtoken ID noted earlier, from the first victim user\n- Forward the request (or toggle interception off, either works)\n- Go back to the webdav client and issue the \"ls\" command again. You should now get a directory listing for the victim user. If you don't, exit the webdav client and try logging in again\n- If you don't have a webdav client, log out of Nextcloud and log back in as the first user. Go to their Personal settings, scroll down to the authtoken/app specific password and click the 3 dot elipses icon. \"Allow filesystem access\" should now be checked, indicating our IDOR attack was successful in changing this authtoken's permissions\n\n## Screenshots\n\n1_request - vulnerable request as seen in Burp.\n\n## Impact\n\n## Impact/Notes\n\nIf an attacker gained access to an app password that did not have file system access, and the attacker had an account on the same Nextcloud server, he or she could grant file system permissions to the compromised app password and then gain access to the victim's files.\n\nA malicious user could write a quick script to loop through app password IDs and revoke file system access. But this would not really affect data confidentiality and would be more of an annoyance for the victims.\n\nWhile an attacker won't know the app password ID just by compromising it, he or she could use automation to try changing permissions on possible app password IDs.  Since the ID seems to start at 1 and increase sequentially, it should be feasible to \"flip the switch\" on the compromised password in a fairly short time, starting from 1 and working upwards.\n\nTested on Nextcloud 12.0.3, 12.0.4.\n\nIf I can provide any further information please let me know. Thanks!",
+  "bounty_amount": "100.0",
+  "formatted_bounty": "$100",
+  "weakness": {
+    "id": 55,
+    "name": "Insecure Direct Object Reference (IDOR)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 246742,
+      "file_name": "1_request.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/246/742/d0597c0b79b16a6d0dc08dbdea0543913f4e28ab/1_request.png?response-content-disposition=attachment%3B%20filename%3D%221_request.png%22%3B%20filename%2A%3DUTF-8%27%271_request.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3DOTL4Z4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125555Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCP1h%2BMnyvDRDa6h%2F4zIodqh2MzJlGISvpnoEvR4kc2fgIgP8fAE6zkU2xDXiIdq36r00FCUyYf6OQc2MuvlpSL6zgqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDJ2sbhPrB5o6p2UkMiqPBcMZAZzMf1lo6ftFZmyVLqm8Hg2J3xbj6a3GuTLabMbNJWiA%2FZsFo0hE3gxRPbyAqhG6FJuKINNLYiqNvOekzW8sar88psZuM%2FX9%2FNoLvFSAVVJpHHBKNZUcwzDsSG6dL68X0%2F81p9YWjmvjokQY%2B9nuD7359WQ659K26Fclw65VMeRybJ1hUyi2a%2FyS4P%2FH0PoUc1H0vEsvCcDRZFSU2VqX6BFziwRAbmxLuUXTN5m%2F5hWF5b3%2BkgFf3EOVPo%2BXtyBL0zsVvefLcDnkTyLYtjGuMSoKMfdzhMUUnoy%2FSkL%2FnqSrrhe9QDnvuA12WJYXs7dXUtOgD1FweSHqkAlJgnKNM8PYSjJnvj8q9w4J7BBdDstdMKFug3p2hl8P0Z3ewTKwgYQFTrJSgQ5k2oIl05GLUuZEuGlOhqiAdJ0VSwCyoN%2BcsLtWKUwcF5i%2BGCo6ppjPFD80qdzVR70b4ApfmQxVQXMoqtkj6LQcYtZ%2BagRqhM%2BtszUfSlLJd2TtHW1cmvfHpY38mbjTqSHEOfCoz%2FpdesWuHOFHT%2FPgVGOwrKnQpNMV%2FyR1KqF%2B%2F4CD%2FGMR2tktKBwuNfh2OlxQvwD2aE8XvEC%2B4mc3056ID7XSvkKVVQ5FPigZOQTgvmJ494qVF7ehsKzqTF%2B9hAoK4S6zfV7Rj7ZQPgHv3om4hYuHsgUcaD29IgjjBb7uAyiaX%2BnWynmxhoDSjS8R%2BX%2Fh548W%2F5oeVorlsLKwzmcY%2Fn5eCd84hK21TQBO83%2FN5WvC2Rjqcrcse3ypMcrNI7pSoyAYBbW7BZ7x1FSQkjJ0k9%2BmmuCWHGFTK1yvtjTnkqMZorU8FXNTbF9f5hhpv%2FD%2Bx%2FaaWxL40nM7EEpqTFiYBitKsZow7cCtrgY6sQExtT%2FZOBwnOUsXGGVn22KELl38mJ%2B5OivmNc%2Fgks2i4L3ET0mxTFvDVZpjL316NVv%2FbrIj%2Fy2VtfGofe3Raptm7CsozbMN%2FwB4%2F%2B1rcHUIoVQ8JJTc06nsi5aVYzNhXnbrwhbQkoT0dxKYDFETL%2B6%2F051XAavIrnvB5CtHwa5YaT7z83h5GNqUOlmAh9%2BiDFNSkfEsNFaYzGytNE8syYguoEi7iDkqQjn2z2qwL4LrkcU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bc0a9f55c172e22d7e380799d39a5e498f7da9d4698391fac1a01e92206243a3",
+      "file_size": 231614,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-03-10T11:38:55.492Z",
+  "allow_singular_disclosure_after": -187147020.2626087,
+  "singular_disclosure_allowed": true,
+  "vote_count": 14,
+  "voters": [
+    "foobar7",
+    "gamliel",
+    "eveeez",
+    "khizer47",
+    "rashedul_css",
+    "flex0geek",
+    "cr4xerbik4sh",
+    "japz",
+    "cryptographer",
+    "walidhossain010",
+    "and 4 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

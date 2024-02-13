@@ -1,0 +1,125 @@
+{
+  "id": 185041,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODUwNDE=",
+  "url": "https://hackerone.com/reports/185041",
+  "title": "Type confusion in mrb_exc_set leading to memory corruption",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2016-11-25T09:46:06.737Z",
+  "submitted_at": "2016-11-25T09:46:06.737Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "raydot",
+    "url": "/raydot",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15668,
+    "url": "https://hackerone.com/shopify-scripts",
+    "handle": "shopify-scripts",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "shopify-scripts",
+      "twitter_handle": "",
+      "website": "",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-12-16T20:26:40.161Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-12-16T20:26:40.119Z",
+  "team_member_agreed_on_going_public_at": "2016-12-16T20:00:29.479Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Similar to #181871, but the bug is more general. The E_*_ERROR macros are not constants, so the exception types can be redefined to not be exceptions:\n\n    #define E_NOTIMP_ERROR              (mrb_class_get(mrb, \"NotImplementedError\"))\n\nThis means that any code calling mrb_raise on an exception macro can instead get a non-exception object, leading to memory corruption and arbitrary code execution. This snippet causes a native crash in mruby-engine:\n\n    NotImplementedError = String\n    Module.constants # mrb_raise(mrb, E_NOTIMP_ERROR, \"Module.constants not implemented\");\n\nThis should be fixed by making mrb_exc_set check that it is an exception type. Attached is a patch to mruby to fix this problem.\n",
+  "weakness": {
+    "id": 48,
+    "name": "Denial of Service"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 136993,
+      "file_name": "patch5.diff",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/136/993/5cc62237616af576766dba1f6034ea9079657770/patch5.diff?response-content-disposition=attachment%3B%20filename%3D%22patch5.diff%22%3B%20filename%2A%3DUTF-8%27%27patch5.diff&response-content-type=text%2Fx-diff&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2JWCBEGQ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122826Z&X-Amz-Expires=636&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQC%2FUOBUX4k3hk3E%2Be6snO9LPeTekkyoO2NoMEQpFLXEBwIhAJtkXXn5eL0ikTtvqv%2F2fgGtuhZUPvLulWFuhYzEiLfuKrAFCG8QAxoMMDEzNjE5Mjc0ODQ5Igx%2BsOWizWfx0tzigpsqjQUuFNaEEdzMHGeLBy6s%2Bkoye8hS0hWPfE4WrdAunw9kpHYBx3YQZH%2FutD5pqzkJ0%2FpSWNbJpNfcWoCwQfdsMFN%2F3JTaogDPpUe%2FUAwScnqabVUL9jhgbAfxzoi6vdePXcWwC3rPpDdJZOWII30adweaKN3r73pvMjzWQOzrFwQRQ2qqkd6ueKTpUI%2Fv4YvwK2UEvpnWlXVfdWza8QTDZ%2BVAhjMIgYhtNwiWvsrwTlWirEbz9gqK%2FzOzBvugRZ98k6lTo4fLL9%2F23SfytoJCVdDDIwGtU9XGeEckRTNfnCgQgTT%2FZaoU54aipxAM0Bk2%2FOy9qyQgNo%2Bc4a%2BtxjohyY6lmRwPOUw0Pc6tciCZLAfzTSCwKGLeWeoHYecu2a8TObYqts0FTVzlDxQi0dXbDKcGkreaslLTdMzFIWj7k%2FvKf0zZ7SIjn5wlEWYmpN6UNwCGxRlHEIiWuB874izqCmy7qw9LCJb0ZLpm1%2FSPsUBljWnIWg8YKhR5G%2BlRT4AnTpGmbQ1duSnA4UOAFqFF9ooGKFMwleUudDqIrFYn0NrgGkKuZ0FyHukrzdoftt2m1CLmNvKjrzoE0ES2uqov8Tj9QQRIEQFjtg7I5ZpK9maHPpHk4CLN0O0Y4rauWiSIHQif1cMtqKARg%2BcskG0crI1mZl2Me%2BZZ8g9Jr6A9TO%2BG6B%2BAuHvyOlBnEQo9ApBQ4g3JZp7uSyRCH7wyxu5avVfWBP0kR4X6PVPNS2njxovFuRYhrsoaOxr5qCj6HG4uUNqbsm3ZbdAMFLxXzT5KEhmDSNZSAkWhXSd3CbLn6PLU3H1wZKL%2BRTr3YWP6V%2BPBJOgG3%2F1%2FtAW8La4mIXOfKOuKrxAT6UJ%2F3ezUbaPUnzCVlKyuBjqwAYUQRBNZktTPJUzRxaZYc7FlEKaYCo56JYwdR1VwuNznpSAuwrJmZ8ZvnXNFJPLlJdcNccsiJ5fTCzfeWcf9BpY1wSj3EzyoYZKwzbfX52pXogACNTVaQkOfGOJAlQQWdAcneFKpYzmbv463sdm5nxdVudTTpGAS2KhfaCeHX8P%2BR4cx6Nfp5GhC4hDj4dSg1VosbQKNMaotjyBFcyuRuboj987f2kN16pdIanTNBi4a&X-Amz-SignedHeaders=host&X-Amz-Signature=f02d0cb5e4fa1eecd54d18d3c56bf984d0a61e242647771dfe7a44719948132b",
+      "file_size": 2211,
+      "type": "text/x-diff",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-01-15T20:00:29.567Z",
+  "allow_singular_disclosure_after": -223316876.92100006,
+  "singular_disclosure_allowed": true,
+  "vote_count": 40,
+  "voters": [
+    "dkasak",
+    "beched",
+    "bogdantcaciuc",
+    "michiel",
+    "adibou",
+    "mpz",
+    "r3y",
+    "eveeez",
+    "khizer47",
+    "ak1t4",
+    "and 30 more..."
+  ],
+  "severity": {
+    "rating": "critical",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

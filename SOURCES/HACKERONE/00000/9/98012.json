@@ -1,0 +1,104 @@
+{
+  "id": 98012,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85ODAxMg==",
+  "url": "https://hackerone.com/reports/98012",
+  "title": "Stored XSS on https://www.algolia.com/realtime-search-demo/*",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-11-05T09:20:15.131Z",
+  "submitted_at": "2015-11-05T09:20:15.131Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "stefanovettorazzi",
+    "url": "/stefanovettorazzi",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/2udi3vbdhzbpwjlrvhxisg1q29dk/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 443,
+    "url": "https://hackerone.com/algolia",
+    "handle": "algolia",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/443/6dc48cd913e21beebc873e81aaf28fd3b6b9e12e_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/443/6dc48cd913e21beebc873e81aaf28fd3b6b9e12e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Algolia",
+      "twitter_handle": "algolia",
+      "website": "https://algolia.com",
+      "about": "Hosted search API that delivers instant and relevant results from the first keystroke"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-02-03T22:15:05.264Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-01-06T09:27:28.925Z",
+  "team_member_agreed_on_going_public_at": "2016-02-03T22:15:05.122Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "__Description__\n\nWhen you generate a UI demo, the values of the Attributes are not escaped when printed in the page of the demo.\nThere is a protection by CloudFlare, but because the values of the Attributes are printed in Javascript code, I found a way to abuse this to execute Javascript code.  Seems like ClodFlare is a little more permissive when the malicious code is in the name of the parameter instead of the value: `'+something+'` is allowed.\n\n__Proof of concept__\n\n1. Using an existing user, go to https://www.algolia.com/explorer.\n2. At the bottom of  the right side of the page click on _GENERATE A UI DEMO_.\n3. Enter any _Title_.\n4. Click on _NEXT_.\n5. Right click the field for _Primary attribute_ and click on _Inspect Element_.\n6. Change the _name_ of the `<input>` to:\n\n        engine[primary_attribute]['+document.write`${unescape`%3cimg%20src%3dx%20onerror%3dalert%28document.domain%29%3e`}`+']\n\n7. Click on _NEXT_.\n8. Click on _GENERATE UI & SHARE_.\n9. `alert(document.domain)` is executed.\n10. Copy the address from the address bar of your browser.\n11. Open the link with other user.\n12. `alert(document.domain)` is executed.\n\nI noticed that the same issue is with the other Attributes fields.\n\nI have a live demo here https://www.algolia.com/realtime-search-demo/some-title.\nPlease, let me know if something is not clear.\n\n",
+  "bounty_amount": "100.0",
+  "formatted_bounty": "$100",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-02-05T09:27:29.122Z",
+  "allow_singular_disclosure_after": -253160499.5964282,
+  "singular_disclosure_allowed": true,
+  "vote_count": 2,
+  "voters": [
+    "hacklad",
+    "shivammusic"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

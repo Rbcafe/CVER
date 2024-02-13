@@ -1,0 +1,143 @@
+{
+  "id": 2218334,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMjE4MzM0",
+  "url": "https://hackerone.com/reports/2218334",
+  "title": "IDOR vulnerability in unreleased HackerOne Copilot feature",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2023-10-20T21:58:50.328Z",
+  "submitted_at": "2023-10-20T21:58:50.535Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "bebiks",
+    "url": "/bebiks",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/bi3hlflvumggqht6louu1ld537t3/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-10-25T23:17:15.093Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-10-25T23:17:14.941Z",
+  "team_member_agreed_on_going_public_at": "2023-10-25T23:12:27.507Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary:**\nHello HackerOne security team :-)\nFor a while now I have been monitoring H1 js files. I've just noticed some new GraphQL queries about `HackerOne Copilot`. While this feature has not yet been released, the vulnerability must be fixed.\n`DestroyLlmConversation` GraphQL mutation is vulnerable to IDOR.\n\n### Steps To Reproduce\n1. Navigate to `https://hackerone.com/opportunities/all`\n2. Execute this JS command to show `Hackerone Copilot` GUI\n```javascript\ndocument.querySelectorAll('div').forEach(e => {\n    e.classList.remove('hidden');\n    e.classList.remove('dark:text-white');\n});\n```\n{F2790650}\n3. Hackerone Copilot GUI will appear, here you can create a new conversation. Looks like you can't talk to LLM at the moment.\n4. After creating a new conversation, look for `\"operationName\":\"NewConversation\",` graphql request in your `Proxy History` and store somewhere the value of `data.newConversation.llm_conversation.id` from the response.\n5. From the second (attacker) account, send the following graphql request:\n```json\n{\"operationName\":\"DestroyLlmConversation\",\"variables\":{\"llmConversationId\":\"#\"},\"query\":\"\\n  mutation DestroyLlmConversation($llmConversationId: ID!) {\\n    destroyConversation(input: { llm_conversation_id: $llmConversationId }) {\\n      destroyed\\n    }\\n  }\\n\"}\n```\n6. Go back to the victim account, refresh the page, execute the script again, and notice that the conversation is gone.\n\n## Impact\n\nThis vulnerability allows the attacker to remove any LLM conversation in the unreleased `HackerOne Copilot` feature. This feature has not been released yet although this might still be vulnerable in the future when this feature is released.",
+  "bounty_amount": "2500.0",
+  "formatted_bounty": "$2,500",
+  "weakness": {
+    "id": 55,
+    "name": "Insecure Direct Object Reference (IDOR)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 2790650,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/s8m5nug1calsc5393ifk9sxiknxs?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVBHFY2S7%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T144005Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQC9GwGscRwJFAMoDL4f0PgHCafPcoKiw%2BdMVBZsejK%2FowIhAKhtlIOx9XBt1W%2BbJb1zofyOZVXyTdfjP7HaJtGmM8VEKrIFCHcQAxoMMDEzNjE5Mjc0ODQ5IgyxgNWh10s%2BvzOdA2IqjwUD%2BgaXbPhfJg1vwZSLpSSO42BtO5Jh0nNKD2CGIMVzdNMrQ2kGVGC%2BJUeiI7K6DckSwtVRTt892323G6IbL82IflLFfijrFvapIKU8a1otURJl0nYHfsGACuGyIXm5kB61pIgiGA%2FeE%2FX7n9p4BLXPAwwKCKDmH0qQI8VJ81wh1GiHYjb0lNqTmWIro28N0KPWqBgxhmM3DvACwGT7DpOyYB9yWLqC4Ai5uvKohIl8fMZpIuUJZoEewxNzGHvvCvJgnIb287LNuarbXrEteIFpoa9sfV09w5nfwf8QNFZZ8PSR%2BXVokOzyV%2F1PTZmle0G9Mv5E9APcw4OhpYd044bK0T98Ff6Fh2sGYMPgGeAVNqoe5SB%2B43XJVBBZu%2BlNVKMo3PXRB%2BloslQLdfbUljsEmBfrb0cqUZbcQXT3A08JdWVOudPCEgD6j9K2BAcJNtVo5xabmzElen90gxJQrDR4wHLW73ueBkeejBPNRJbFEm1ezNFrRNsMr7JgyuyPjWMo772bTR96s43UN5RlcNrqrSpuSWFyu2xs0xvGOQUckaoVWPgimGNx3tB%2FV6fM%2BoM2m3C5pVP1SYaYJ7kE1lcEJVaoBskQmDzi9C5JjAydPuoNQRw43U5%2B32HD7aURCtpEa1s48LCl1ZdWB78N4aSdPRFRsWj6AMTXh58luiANfACaqM%2BH1q7%2B2zIOWK2r7ERmCMvAjELcUsQZZ0fRiQSN4ZnTffmYel8M%2BGQ0z8TkBY0J9mymB1MVE0MuSyCFmw2oEuPAuuBFj2vRfjKZ0BI3D%2F92%2Fvw%2F19ko20%2BPGFa8wMsPjh6ZqXgNJ1r9m%2Fbg3IVIGRcen5pJAKZEUIQwDKyFnjHA0dIjJEVuqYQOvztVMIDera4GOrABuKna6%2Bj%2FNjOYj4RQJLOnftwizyrXBx%2FmP5%2B2sf2RnOzkJeucfAyMxQgfK6z5L0I8pIpMwwOgx7P82CfuFlu%2BKyaf1uaJyN8K5oy9gS2e%2F4QGtx5jXWxC1dY2RQ7EBPZcNTqP4B0O1Tp3QEDPJHrTYA3sMD3DFYHunCTfRHRNisnUu47GiWlRWYqOfyQSXFP%2BhODsCBYsF4kov2o3FcpOrEYJnddAlKtyKxWly2XzUW0%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0bfa0b0fe1691eb9683e44caa82d9494414f1e40058e766788ad2e51e7237c16",
+      "file_size": 11236,
+      "type": "image/png",
+      "moderated": false
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-11-24T23:12:27.796Z",
+  "allow_singular_disclosure_after": -6967658.158000458,
+  "singular_disclosure_allowed": true,
+  "vote_count": 167,
+  "voters": [
+    "0xm5awy",
+    "maskopatol",
+    "shreyaschavhan",
+    "iieitaimuss",
+    "0xcyborg",
+    "8910jq",
+    "r31n",
+    "n1m0",
+    "ganeshbagaria",
+    "mrmax4o4",
+    "and 157 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 5.0,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 3,
+    "asset_type": "URL",
+    "asset_identifier": "hackerone.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

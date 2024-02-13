@@ -1,0 +1,111 @@
+{
+  "id": 205884,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMDU4ODQ=",
+  "url": "https://hackerone.com/reports/205884",
+  "title": "Interger overflow in str_substr leading to read/write out of bound memory",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2017-02-13T05:26:12.272Z",
+  "submitted_at": "2017-02-13T05:26:12.272Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "beyondchain",
+    "url": "/beyondchain",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/0wnj1p3k54xx2xuzz7amf277lnmd/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15668,
+    "url": "https://hackerone.com/shopify-scripts",
+    "handle": "shopify-scripts",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "shopify-scripts",
+      "twitter_handle": "",
+      "website": "",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-03-15T01:29:48.346Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-03-15T01:29:48.307Z",
+  "team_member_agreed_on_going_public_at": "2017-03-14T21:07:11.577Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Failed check len & beg in str_substr when call mrb_str_aref_m by String. This can lead to read/write into invalid memory which may be memory corruption or  RCE.\nthis snippet causes a crash in mruby(i can't check mruby-engine by error undefined symbol >rb_utf8_str_new ):\n```\n$b=\"B\"*2048\n$expand=$b[0x40,0x7fffffff]\nputs $expand.size()\nputs $expand\n```\nAnd, here is error: beg=0x40, len=0x7fffffff, clen=0x800=> beg+len < clen(Integer Overflow)\n```\nstatic mrb_value\nstr_substr(mrb_state *mrb, mrb_value str, mrb_int beg, mrb_int len)\n{\n/**\n*..some code here\n**/\nif (beg + len > clen) => Integer overflow here\n    len = clen - beg;\n  if (len <= 0) {\n    len = 0;\n  }\n  return str_subseq(mrb, str, beg, len);\n}\n```",
+  "bounty_amount": "100.0",
+  "formatted_bounty": "$100",
+  "weakness": {
+    "id": 48,
+    "name": "Denial of Service"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2017-04-13T21:07:11.612Z",
+  "allow_singular_disclosure_after": -215710077.23632053,
+  "singular_disclosure_allowed": true,
+  "vote_count": 4,
+  "voters": [
+    "mpz",
+    "eveeez",
+    "spetr0x",
+    "markopetrynuok"
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

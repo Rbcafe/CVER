@@ -1,0 +1,138 @@
+{
+  "id": 1976449,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xOTc2NDQ5",
+  "url": "https://hackerone.com/reports/1976449",
+  "title": "DOS via cache poisoning on [developer.mozilla.org]",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2023-05-07T18:23:40.872Z",
+  "submitted_at": "2023-05-07T18:23:41.051Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "zhero_",
+    "url": "/zhero_",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/6grh8hcn63ib83x4e31wb386pq54/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 61236,
+    "url": "https://hackerone.com/mozilla_core_services",
+    "handle": "mozilla_core_services",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/0p8e6gg8xoy45dhjxs5wh4iti6k8/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/0p8e6gg8xoy45dhjxs5wh4iti6k8/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Mozilla Core Services",
+      "twitter_handle": "",
+      "website": "https://www.mozilla.org",
+      "about": "Mozilla web bug bounty program specific to encouraging security research in Mozilla's products and core services."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-06-05T16:10:09.062Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-06-05T16:07:35.858Z",
+  "team_member_agreed_on_going_public_at": "2023-06-05T16:10:08.882Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nHello, after some research it appears that it is possible for an attacker to perform a DOS attack on the https://developer.mozilla.org page for an indefinite period.\nThis is possible by adding an ```X-Forwarded-Host``` header and a value causing an error on the back-end side (error 404), the bad configuration of the cache makes it possible to save the response there and to serve it to users visiting the page, making the page completely inaccessible for an indefinite period.\nNo information about the caching period is available in the response, but it is anyway possible to reinterpret the manipulation indefinitely.\nFor obvious reasons I performed my tests using a cache-buster - adding a URL parameter as we will see in the POC - so as not to affect the user experience.\n\n## Steps To Reproduce:\n\n  1. Pass your HTTP requests through your preferred proxy\n  2. Go to : https://developer.mozilla.org then - in your proxy - send the request to your repeater\n  3. Add the parameter of your choice to the URL, it will serve as a cache-buster and will not \"poison\" the site visited by users. In other words, the DOS will only be effective on the URL containing your parameter, you probably know this but let me clarify: this is very important in order not to damage the services.\n  4. Add the following header :\n\n```\nX-Forwarded-Host: XXX\n```\nThe request ready to send (```?my_cache_buster=test```) being my cache-buster :\n\n{F2339007}\n\nOnce the request has been sent, the response will - as expected - contain a 404 error. Open another browser in incognito mode, and enter the full URL containing your cache-buster. You should get a 404 error. If this is still not the case, resend the request several times until the cache is poisoned :\n\n{F2339009}\n\n## Impact\n\nAn attacker can perform this attack (without a cache-buster this time) in order to make the service unavailable indefinitely. It is also possible in the case where the cache will be reset to make a small script to send requests every minute (for example) so that the cache is permanently poisoned making the site completely unavailable and causing financial damage to the company.",
+  "weakness": {
+    "id": 175,
+    "name": "Cache Poisoning"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 2339007,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/gkk2eprpzem68vfwd6cweey9f85t?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQR3LOZ34E%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143634Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIDWrw%2BabNi5FYA36SsKLXsWapZP8oD0cb6mlyJZlOiG%2BAiEA27B8%2Fr%2FSmYlcTxqwi5r8KNFFVvDYBNDLIZ1pULigN9cqsQUIdxADGgwwMTM2MTkyNzQ4NDkiDMDsoyRbmB2fznYP4SqOBZjZXRr4HW3gTNvoF6bdzvFgr1e7M%2BOpNIGjIPuSkr%2BbNv4pUSvE4S5VhqZAsWhc2lMKM6Bf9oBvU8aHtLZVKIg2nP7QY4Pi82JMTD6v83qvK6HMq%2BO0LEPP05zjE6rTFOMC7SrToKkZcVkZ3lWzUKGq18RnktiHbRvvRNy3SGBzhBvyiAFtMed%2BO0533NiNsVN7uOTlEx%2Bw85oqT87ZRrZR9w6pcBQpeDiMzh19WA9AUUYLPiP9pSiNVrB6k08wdqhTg%2FyVB0jNFS8u2WfrzSb7%2BoGsyZmsKqpmnxLnh8btcBepkwtzR216nLyuFvgTJmCzirFN8unanAFRHZ3qJFumdvVRfe2xS8p7F5u5mgBdDzv4mhKKoESpW32ogutCs2K20K1SKM12mcGO4BBQPJwaWRzmby5TkuByrfaYxMMwp%2BIaonr%2FCg5m9WOzNKLl7bFYfbyUhxz4I0CjRbrDboLzKq9FxRz2okU3iF6KQT3RP5urmkUImjbo69gl2Lhp1csaq%2BsPv4g30eibN5ZKAKi%2FV%2FkXhc26dpaQKRIjQYnYKK7m5Aauh9%2BgpNbdhx4C6VgAM8FJw5X04P4RMb13iT7njO5E8BMbTDOHhmCCnleZtu81gNCeGe1OWHLKa9s7RTS9U%2BMTFr8kOSUnSEuxr6z5F32VsdsLED6Rzoz5p6bKWccOP83MMhRHwxS21p4UPQAPVIlO1Y1GNfOJJT1bSstX%2FJ9e74s%2B6V6tqnsDjT%2B9%2Fl2%2FpzHlT3xbu8yqZ%2B0xN%2BqAJOtHaEp7LUa1yqoxiGD28i7FwsXDckebTHZyjbmZzLh4OHnFxKt8Ru2ahBhbCOSNIJI2hjT8EUGAdQ9sPkg4sAcKxEj4MgzDnDBqvDDP5a2uBjqxAXjDc1bWWv1wT0%2Fj5w4MwPmTV%2FMmryvYoNlEQArqMA%2Fo5WTEHb3sNECRCIjLuJJkv%2FU0alCBR0%2FF92NDKHPPmMRhnRlTrdW0hDQElJMPdIEBgNIvxoUaSZe1DtJHz1ZbRVRAzQDOizEnnvSgxTRbi6cGd57MGitOqp7nVl%2BEg7V302txJLPRb%2BDM8%2BVHdjgizI36AjILXohDhlS%2BQ2PBzXouPgj%2BRMrtc4nvrAA0DRZhkg%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b55eb06409cf7fc76cd245cecfaf800bd87109ef8ac48a014e9a972111123e6e",
+      "file_size": 324508,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 2339009,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/uqpwjhcdjc3ngddksxijx1swz5zu?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQR3LOZ34E%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143634Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIDWrw%2BabNi5FYA36SsKLXsWapZP8oD0cb6mlyJZlOiG%2BAiEA27B8%2Fr%2FSmYlcTxqwi5r8KNFFVvDYBNDLIZ1pULigN9cqsQUIdxADGgwwMTM2MTkyNzQ4NDkiDMDsoyRbmB2fznYP4SqOBZjZXRr4HW3gTNvoF6bdzvFgr1e7M%2BOpNIGjIPuSkr%2BbNv4pUSvE4S5VhqZAsWhc2lMKM6Bf9oBvU8aHtLZVKIg2nP7QY4Pi82JMTD6v83qvK6HMq%2BO0LEPP05zjE6rTFOMC7SrToKkZcVkZ3lWzUKGq18RnktiHbRvvRNy3SGBzhBvyiAFtMed%2BO0533NiNsVN7uOTlEx%2Bw85oqT87ZRrZR9w6pcBQpeDiMzh19WA9AUUYLPiP9pSiNVrB6k08wdqhTg%2FyVB0jNFS8u2WfrzSb7%2BoGsyZmsKqpmnxLnh8btcBepkwtzR216nLyuFvgTJmCzirFN8unanAFRHZ3qJFumdvVRfe2xS8p7F5u5mgBdDzv4mhKKoESpW32ogutCs2K20K1SKM12mcGO4BBQPJwaWRzmby5TkuByrfaYxMMwp%2BIaonr%2FCg5m9WOzNKLl7bFYfbyUhxz4I0CjRbrDboLzKq9FxRz2okU3iF6KQT3RP5urmkUImjbo69gl2Lhp1csaq%2BsPv4g30eibN5ZKAKi%2FV%2FkXhc26dpaQKRIjQYnYKK7m5Aauh9%2BgpNbdhx4C6VgAM8FJw5X04P4RMb13iT7njO5E8BMbTDOHhmCCnleZtu81gNCeGe1OWHLKa9s7RTS9U%2BMTFr8kOSUnSEuxr6z5F32VsdsLED6Rzoz5p6bKWccOP83MMhRHwxS21p4UPQAPVIlO1Y1GNfOJJT1bSstX%2FJ9e74s%2B6V6tqnsDjT%2B9%2Fl2%2FpzHlT3xbu8yqZ%2B0xN%2BqAJOtHaEp7LUa1yqoxiGD28i7FwsXDckebTHZyjbmZzLh4OHnFxKt8Ru2ahBhbCOSNIJI2hjT8EUGAdQ9sPkg4sAcKxEj4MgzDnDBqvDDP5a2uBjqxAXjDc1bWWv1wT0%2Fj5w4MwPmTV%2FMmryvYoNlEQArqMA%2Fo5WTEHb3sNECRCIjLuJJkv%2FU0alCBR0%2FF92NDKHPPmMRhnRlTrdW0hDQElJMPdIEBgNIvxoUaSZe1DtJHz1ZbRVRAzQDOizEnnvSgxTRbi6cGd57MGitOqp7nVl%2BEg7V302txJLPRb%2BDM8%2BVHdjgizI36AjILXohDhlS%2BQ2PBzXouPgj%2BRMrtc4nvrAA0DRZhkg%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ea7e5e5bf15840931ccb5bfd6ec17b4e80e9bdec4daae8d2b89cbd3704d18f22",
+      "file_size": 27658,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-07-05T16:07:35.962Z",
+  "allow_singular_disclosure_after": -19261738.720190547,
+  "singular_disclosure_allowed": true,
+  "vote_count": 41,
+  "voters": [
+    "daemoon",
+    "maskopatol",
+    "shreyaschavhan",
+    "xzemit42",
+    "zy9ard3",
+    "zhero_",
+    "goldenstone",
+    "shubham_srt",
+    "anomaly_",
+    "keizo",
+    "and 31 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 297506,
+    "asset_type": "URL",
+    "asset_identifier": "developer.mozilla.org",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

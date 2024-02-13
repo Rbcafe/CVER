@@ -1,0 +1,141 @@
+{
+  "id": 1436558,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNDM2NTU4",
+  "url": "https://hackerone.com/reports/1436558",
+  "title": "Universal XSS with Playlist feature",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2021-12-27T10:44:49.508Z",
+  "submitted_at": "2021-12-27T10:44:49.676Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "nishimunea",
+    "url": "/nishimunea",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/JR7WgikKhgk1DcwtUvQfmtpu/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15688,
+    "url": "https://hackerone.com/brave",
+    "handle": "brave",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Brave Software",
+      "twitter_handle": "brave",
+      "website": "https://brave.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2023-06-22T05:51:24.392Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-06-22T05:51:24.262Z",
+  "team_member_agreed_on_going_public_at": "2023-06-22T05:42:58.957Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\n\nBrave iOS has three weaknesses described below. By combining them, Universal XSS can be achieved.\n\n1. Exposure of UserScriptManager.securityToken\n[Playlist.js](https://github.com/brave/brave-ios/blob/fdff99ca3997816322015fe5efcd63490193b88d/Client/Frontend/UserContent/UserScripts/Playlist.js#L353) embeds the exact value of the `$<notifyNode>` into `HTMLVideoElement.prototype.setAttribute`. By reading the value, an attacker can retrieve the hidden security token.\n\n2. Exposure of UserScriptManager.messageHandlerToken\nAlso, [WindowRenderHelper.js](https://github.com/brave/brave-ios/blob/83eb41ac922d7bd18fd311e0a4279e02cdd8e190/Client/Frontend/UserContent/UserScripts/WindowRenderHelper.js#L12) embeds the exact value of the `$<handler>` into `W{securityToken}.postMessage`. By reading the value, an attacker can retrieve the hidden message handler token.\n\n3. UXSS in PlaylistHelper through nodeTag\n[PlaylistHelper.swift](https://github.com/brave/brave-ios/blob/83eb41ac922d7bd18fd311e0a4279e02cdd8e190/Client/Frontend/Browser/PlaylistHelper.swift#L228) concatenates strings to build a JavaScript code and executes it on the mainframe of a WebView. Then, `nodeTag` given from a webpage is directly included in the code. So, if the `nodeTag`, named as `tagId` in JS world, passed from the page contained `');alert(document.location);//`, unintended `alert()` is executed on the mainframe.\n\n## Products affected: \n\n * Brave iOS 1.32.3 and higher (include the latest Nightly)\n\n## Steps To Reproduce:\n\n * Visit the Google page: https://sites.google.com/view/nishimunea-brave-uxss1/page\n* This page contains a cross origin malicious page https://csrf.jp/brave/playlist.php in an iframe\n* The iframe exploits the above three weaknesses to send a message to playlistHelper\n* Push `Add to Brave Playlist` and `Open` button in the setting menu\n* An alert dialog is appear on the sites.google.com\n\n## Supporting Material/References:\n\n  * Demonstration movie is attached\n\n## Impact\n\n* Universal XSS on the arbitrary domains",
+  "bounty_amount": "750.0",
+  "formatted_bounty": "$750",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1560018,
+      "file_name": "uxss_with_playlist.mov",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/aa023h1uci4q98yfmfyz0vac3wlc?response-content-disposition=attachment%3B%20filename%3D%22uxss_with_playlist.mov%22%3B%20filename%2A%3DUTF-8%27%27uxss_with_playlist.mov&response-content-type=video%2Fquicktime&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3I276FVZ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142112Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBR%2Fcj4He1YNoxuqlCR8y8rqIukyINMyDPuGH4bBYx6SAiEA9rxAEFgc%2FY9ADMxq89WI%2F4YUHMXyjEPxPzJLolchOMcqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDFBjNDAnQ2OT9fFEUCqPBdD%2BXXWBgaRxNEUUo6cEeoytD1eXvhIsF8BkIAolofhhkKHa%2FJ9rh00ejh6T8IepmFmzqyDA1to2vDIum2KthQ0U6K%2Fq21GMCUMZo7xXkyphPeZxTlJE8cbrBa9V7531H4caFbz7tu71hUjruj7poNeDwa5J2XkqEShNg6VTkYFYqW2p508BdQAm0fm%2BJSHq3faBYzcdc%2BIdgG0f6PUjEYh8ysP11Ro09SiXv3N3T6DptjJHKSv7KUv%2FZb54m8zxj0ho7JBJGg0PnntZNlzuUrPyB5o8m6NghY%2FGYTA8AM56YwOqBpjHb6CnraAhdaDe1bVoMVPvNpaoYIcwcd4aA5uVq%2F%2BMEFbgRAsaOaZwmVbJkgiy2He0wZ1y%2Bi038Z1fvfDUbGHaWHIvakM7EmAYLWhUjnVli%2B3NqZponfkOVtoUKkcIkHv%2FMcMGpAcK0LuL5c2PBD0kic3yPmgcNitophPyXa55qvUBwb0m1aYQTwhCX70%2B1MuBBNqQvAsVUygdhbSZflPVFLVYXYCw10pZBosqrbt33MeOhLAD8A8FNaf8XnRxoIDh3nC1b6UKs2zWAsQPsE7gNEmhUsXIocoqXYlZh%2FQZSSdnGUabitNEws3%2FzTErmpCZuC2pr4nC5OCy4AoCpAKYzhiaBnVjXyi1NhUFfB7kXutS3csu0Lk3ScNHi9nlMRK%2FSHZ%2BmmfQUxKvkUG6N76Rrx09p1D%2Brasm6BwCfo%2FSw7hRWxvXSZbCwxc3do9Mpm9IRFA7fgftyitVAMxs%2B8%2FYuoPx7yvUxg0bClyQ192xRI2lA%2B2Re%2FTICR8V2PH0zUKh00J8XQvEL4nx0dQPY1eX5ebqa0OrnmqUj5MM0BpBxhDPhte4fVZA92wwkMCtrgY6sQESsP34nDSGQ6%2FMJpkkUSZiwSB%2F4jJvcrOQGDnz8fYink0yrV9jUVthg%2F0T80d3eDYEK8OVRR2nDjVCUQg3IxtCiugMaPpFUdgVHqXf%2FGpaDapO5M8KW58NB4nk4LoOYgrk9ZTwWMl3jVREWlQWgRKb1D2x8jgp12%2B72xMOnvcfsjT5bTR2OBDEBsh2BamCCdP1z2L0lwJwCGwomgMutcDqcL1aIj%2F%2Fac5TUFnKnI3315E%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=fdb09547c27f2c396311b01cdff14d0d93574bed9ea3285280b47b891d7bfd18",
+      "file_size": 2374806,
+      "type": "video/quicktime",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 25,
+  "voters": [
+    "shreyaschavhan",
+    "zy9ard3",
+    "imranhudaa",
+    "ritsuy",
+    "h4x0r_dz",
+    "neil-tsakatsa",
+    "zaigta",
+    "alexanderpetree",
+    "eriksebastian",
+    "buddymasakona",
+    "and 15 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.3,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 16463,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/brave/brave-ios",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

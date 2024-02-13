@@ -1,0 +1,153 @@
+{
+  "id": 1662194,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjYyMTk0",
+  "url": "https://hackerone.com/reports/1662194",
+  "title": "Secret API Key is logged in cleartext ",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2022-08-07T20:49:40.602Z",
+  "submitted_at": "2022-08-07T20:49:40.671Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "sim4n6",
+    "url": "/sim4n6",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/fshyyvbxpllzb0pbwjof6u6k3o8s/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 21045,
+    "url": "https://hackerone.com/omise",
+    "handle": "omise",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3n81bowbb6rfygj60saig3h7t8o5/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3n81bowbb6rfygj60saig3h7t8o5/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Omise",
+      "twitter_handle": "omise",
+      "website": "https://www.opn.ooo",
+      "about": "Next generation of payment Platform"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2022-12-23T09:25:17.056Z",
+  "bug_reporter_agreed_on_going_public_at": "2022-11-23T09:25:16.314Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\n\nWhile code-reviewing the repository <https://github.com/omise/omise-python/>, I have found that you log in clear-text some sensitive data. \n\n## Steps To Reproduce:\n\n  1. Check here [omise/request.py#L88](https://github.com/omise/omise-python/blob/bfcf283378a823139b9f19f10e84d42a98c5b1ac/omise/request.py#L88) and here [omise/request.py#L111](https://github.com/omise/omise-python/blob/bfcf283378a823139b9f19f10e84d42a98c5b1ac/omise/request.py#L111)\n 1. The code source explicitly logs in debugging mode the secret API key.\n```\nlogger.debug('Authorization: %s', self.api_key)\n```\n\n 1. Activate logging level debug and run the following sample.py file \n```\nimport omise\nomise.api_secret = 'skey_test_5sqdfyjv0rtqzs9f2x2'\n\ncustomer = omise.Customer.create(\n   description='John Doe',\n   email='john.doe@example.com'\n)\n```\n\nYou will get:\n\n{F1857247}\n\n## Impact\n\n- sensitive data logged in clear text may end up in unusual places: recorded demonstrations, copied logs, etc.\n\n## Remediation\n\n- I suggest you log at least a partial part of the secret API key if not remove the L88 and L111 in whole.",
+  "weakness": {
+    "id": 33,
+    "name": "Cleartext Storage of Sensitive Information"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1857247,
+      "file_name": "Screenshot_at_2022-08-07_21-39-21.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/xvzp7vt2ry1tabif1dawthm9q4pc?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_at_2022-08-07_21-39-21.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_at_2022-08-07_21-39-21.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ43X7AVE6%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142904Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDznDy3u4j3aU1sms08KaMsM2p6nJOQrLe%2BCTfeWWCkSwIhAN48aveVhvKijHDcGElNAxLhza0KLS1LZpPsSe93o0ybKrIFCHcQAxoMMDEzNjE5Mjc0ODQ5IgwvK7%2FEh50UvTXqd%2BwqjwVxALUb2SGRm7B6YVLCblNNJeLEYMP9eIFwrJx2n6mICmSbIypS9B3yAvnt1%2BfS1D83t7Rn1VdVWYB61ugOxItGvtspBCQbXB1pAL3PJp%2B0MLQAKAmma7ose%2F1rTL8LmERwMc3DMPMz1BxbiV5ymD1yhwLenC4zB4Mi8qZbidecDuh5nIlhdqF13XV%2B6KAm8QxD1BYrGzLH5N8f1uIpHfSlVg9b3RaGqG7tXatKEc%2B0kWfbfUKqD9%2B%2FL2XfbnPwDH1S%2BUX%2FyzPVW3JjJKYXhEss2yUFN6Tq9n9CoByuvA%2FYcrxiazMFwRBj5yJetai%2FnnCY8chCHiy9HZQjOkoREByf9TIt%2FSn9%2BVx0bD6%2FffrCjAtZLSC2UpZhTy4nVEe8y1%2FIbu6x2%2FOmY2betwfiloRXuJGAbh7Y0Mzp7IdJoZ6MaFPx2YupBJcGkKwsazmjVgOGT9CCe2KX4O6FLZT%2FF04eYIAqylXx69Q0SJ4J%2Br3RqGHy%2FzI47AhETUW%2Bi4lZLQ0wDIbveIUxwP1kgMxwuVQS6N%2FiLcZe0zSnootH4Lg99WNWg1Po6rwj5rMTmspG8l6UeqsgAslqfH%2FmHKcyFo%2FGR59%2FTJAN00M3F0ALdFU2wmz%2FW16CObf08RwhGO53QGyZZudBb%2BChF%2BpPNPqSngXXSYwU2rO2N8xnjsyOSK66xMWefmZRHPT7taGtLN6EJZMVT1mD6FBLF3ox%2BOYe2XQHl%2FdMCrnAd9QUx63EfvaiCO1DfgwvG0hm%2FZWbTYdIz1nAGAFtW%2FKlljmoQkXVyuC9Qqh%2BXa4VNGPK4dkoFjWqC6MdHke4pQdrA45BsaV1miTY8BuEGuVLO6T6c%2BABWwLNbYlTCqMQboOp5OZ462crMOfdra4GOrABu16tnzpO9sY5jSfF4SRn89CN5OTZwIwBghBLVe9PUEJnt4KrBEP0pTNIIOd3sKPaeVHx4e0zt6lMfhuxqLIxMx6DGzDq96UYpkaP6lrsHHfJx8Ry2vyAV6vtzyL98gbyqNKLq%2FoUPM3Cyq8LSy5CEIjU%2FHaV%2B0M8dW2L8Uj8HH0cWoRL%2FQiBHOoEB8WaQyBZi2Ijbeu6e2CUfWR%2FeGa2O6X3Hq4au7KLmZHgx6sJOqA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=223e9d7a9e250e992db7cf4109d2730b46af44b39d2ef6970c637de507e90dfd",
+      "file_size": 91526,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2022-12-23T09:25:16.427Z",
+  "allow_singular_disclosure_after": -36047027.93700799,
+  "singular_disclosure_allowed": true,
+  "vote_count": 28,
+  "voters": [
+    "jumpydata",
+    "shreyaschavhan",
+    "zy9ard3",
+    "shubham_srt",
+    "mickeyjoe",
+    "sim4n6",
+    "sa1tama0",
+    "zeb0x01",
+    "shivammusic",
+    "shohag_sp",
+    "and 18 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 18115,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "github.com",
+    "max_severity": "high"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 271593,
+      "category": "researcher",
+      "content": "By [@Sim4n6](https://sim4n6.beehiiv.com/)",
+      "user": {
+        "id": 672743,
+        "username": "sim4n6",
+        "name": "sim4n6",
+        "bio": "...",
+        "cleared": false,
+        "verified": false,
+        "website": "https://github.com/sim4n6/",
+        "location": "",
+        "created_at": "2019-07-10T15:15:03.833Z",
+        "url": "https://hackerone.com/sim4n6",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/fshyyvbxpllzb0pbwjof6u6k3o8s/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/fshyyvbxpllzb0pbwjof6u6k3o8s/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/fshyyvbxpllzb0pbwjof6u6k3o8s/d7b0d969b6320751e1c58b9e3efff1e228054ee3d8eade5c51c4c79b25513a9c"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

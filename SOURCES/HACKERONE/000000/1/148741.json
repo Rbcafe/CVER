@@ -1,0 +1,143 @@
+{
+  "id": 148741,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNDg3NDE=",
+  "url": "https://hackerone.com/reports/148741",
+  "title": "Stored Cross-Site-Scripting in CMS Airship's  authors profiles",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-07-01T18:39:17.554Z",
+  "submitted_at": "2016-07-01T18:39:17.554Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "lukasreschke",
+    "url": "/lukasreschke",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/037/891/e7fea4d5383dc07d1fe767b02f3bda2bc7639c63_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 8539,
+    "url": "https://hackerone.com/paragonie",
+    "handle": "paragonie",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/008/539/72f76fed45e5220b47ba2f679371ebf9ccb19c70_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/008/539/72f76fed45e5220b47ba2f679371ebf9ccb19c70_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Paragon Initiative Enterprises",
+      "twitter_handle": "ParagonIE",
+      "website": "https://github.com/paragonie",
+      "about": "Cryptography and Application Security Consultants - We Produce Various Open Source Libraries"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-07-01T18:59:30.269Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-07-01T18:59:30.205Z",
+  "team_member_agreed_on_going_public_at": "2016-07-01T18:55:47.638Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "I'm just checking out CMS Airship and some of the security features look pretty nice. Awesome job on that!\n\nAfter clicking around a bit I stumbled however upon a stored XSS vulnerability in the Bridge.  As per `/bridge/help` I use 1.1.0 version (installed via Docker), as I couldn't find any reference with regard to this in the 1.1.1 changelog from https://github.com/paragonie/airship/commit/29dc60a1b0178222c3c984915f2eda6322ca3453 I believe that it probably is affected as well.\n\nTo reproduce this:\n\n1. Install CMS Airship\n2. Make sure to use the default settings (or at least do not uncheck \"Enable registration\")\n3. Take another browser tab and go to http://localhost:8081/bridge/board to register a new account\n4. Login with that account at http://localhost:8081/bridge/login\n5. Go to http://localhost:8080/bridge/author/new\n6. Create a new author with the name \"<script>alert(1)</script>\"\n7. Send the author edit link to another user, such as the captain user (e.g. http://localhost:8080/bridge/author/edit/3)\n8. Open it as captain\n\nThen you see the XSS executed, or well, if your browser supports CSP a decent CSP warning in your browser console :-)\n\n{F102848}\n\nThe HTML in question is:\n\n```\n    <div id=\"bridge_main\">    <h2>Edit Author \"<script>alert(1)</script>\" Details</h2>\n<form method=\"post\"><input type=\"hidden\" name=\"_CSRF_TOKEN\" value=\"ijYiRqBM1DKBw9Kevvn4zjEw:frKdBMZxXK3VUgI0ZEuQHdHerw9NnVwTx8a62QiJhiY3\" />\n    <div class=\"table full-width table-pad-1\">\n        <div class=\"table-row\">\n            <div class=\"table-cell table-label\">\n                <label for=\"author_name\">Author Name:</label>\n            </div>\n            <div class=\"table-cell\">\n                <input class=\"full-width\" id=\"author_name\" name=\"name\" placeholder=\"e.g.&#x20;Information&#x20;Technology&#x20;Department\" value=\"&lt;script&gt;alert&#x28;1&#x29;&lt;&#x2F;script&gt;\" type=\"text\" />\n            </div>\n        </div>\n```\n\nSince I don't have libsodium and PECL installed locally on my dev machine I couldn't include a tested patch for this. Sorry :-)",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 102848,
+      "file_name": "2016-07-01_20-37-23.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/102/848/4bd8a3edb1386791985f901f3e111b0b2fa35792/2016-07-01_20-37-23.png?response-content-disposition=attachment%3B%20filename%3D%222016-07-01_20-37-23.png%22%3B%20filename%2A%3DUTF-8%27%272016-07-01_20-37-23.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVTTDODC5%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T121638Z&X-Amz-Expires=2521&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCID693ry3aCpgBNFsLct8mX9l7wvdQVVWmYvwUqQvdF7KAiAdSWhaIMNlELgXMB1NayYXnCw6MIPveltDKhf1Pi%2B%2BTyqwBQhwEAMaDDAxMzYxOTI3NDg0OSIMeqywxoUQIynbQlHaKo0Fe46aHEdpcC3YOcWFSo5%2FPlZo075PznbuWjwixp8hH9KoO504Zlpv8JLUnFg74E6gJX2Pzn6degdSTgZnR5pabWfzyUK8VgXDaKbyAFRNB%2FyiW7CL8buOijnGB5LMGC5Ub%2F9PQMqeJNBBXAPsrE2UmPn5gjwK%2BcmefaWW6Om1oc0S1AV3aRbhGGvIClMNowpzTKwY2cJTazvo68YT8nj3r309uf6oeoYAkiKsNrl%2BjkyZbeoLxh7SHRp8LKYpVp0AUljQRc7ju8bMAnPrwLNpjmKCItKxSTuRi5VImCSNPx09yJCbKX96Xvw6RTIGCqXL00kHQirGwcGSECVbRwBXyqwSrUnWLlWDhKOIoR4uRBX%2FrJncOHzHnBjG88wj4DZCIWvtRO6lIJiVTjHHbovQsiiJCR0CJXmjYGVNWnw4STKNqENdThA%2BoAV93oc6KqslrIJmA3%2FWJ3hHDu6iH0QRCr%2BjD8ov4r9%2FYkW5PGztwXFMNbLy4f6rp9yO2cASIidty2s2Mwgg77tW2G6y2AjRt54do8MP%2FrgBf7esv1UwT6fQ6XjsyzN3TqTaKSluaLLWRsx0Id1DPlYH8SlSQ9%2Fs99pLiQ2Sn5jTbGhNv3VI5HN9xkY6JRZOgOatpa6LQ2W9vfAbDtFPcM2bXjMi0BjYPrupuQyWaBoKitSLtA8lcpnkoeQMpvieH4lXp25sDLR2uj1DbhZCb9f3xGyqmq2BVWWkEikHPubnbBcz6S%2B3llBAPkBgkclDIYxgcNz%2FsUjcCG5IDos27e%2BJdPmqBJfx%2BJ%2BYUFK89%2BU4mf8c1lZt7Jc%2Fk9AQ0ddyoy6T8ONZB0MJiUW0NWWnVen9QrW3kc6QcKD746D2hijmtUanVoow%2FZ2srgY6sgFwqSMrw5iR24CiM4ABdXApjpqkvMnlPO0VHwff6rzOhZ30z96Ny68KEUlqUgm3VT%2F4GLbY4JggAV2nXvLhY1y%2FwS5H0X633oYXQkKXO4zi4dxnYqgtqo9JA3MGCN3%2FIA87gZovDG5MZKsJRKCek87Fz6I78w%2BmgpQE0H%2FeDHHGMzt2%2BHwXcAXSOO8R7zQrGHfPfRZTdnYt8bnek5BsbmnxSNcyVmYaIFqhXHYmXyHFbmZM&X-Amz-SignedHeaders=host&X-Amz-Signature=09322ba709fe78d58c74bf317bb17e123b138414c3b48bf75ea488feb3d378db",
+      "file_size": 380220,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-07-31T18:55:47.718Z",
+  "allow_singular_disclosure_after": -237835250.53964797,
+  "singular_disclosure_allowed": true,
+  "vote_count": 24,
+  "voters": [
+    "lukasreschke",
+    "jobert",
+    "michiel",
+    "akkilion",
+    "supernatural",
+    "ibram",
+    "paresh_parmar",
+    "jens",
+    "avicoder_",
+    "sumit7",
+    "and 14 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 2155,
+      "category": "team",
+      "content": "For an in-depth analysis, check out the **[post-mortem posted on CSPR.NG](https://cspr.ng/blog/2016/07/cms-airship-1-1-2-stored-xss-post-mortem)**.\n\nLessons learned:\n\n1. If you rely on auto-escaping, make *sure* it's being applied everywhere. Where it's not applied, escape manually.\n2. Be more skeptical of patterns intended to promote i18n.\n3. Turn off `Content-Security-Policy` headers when testing locally so it's easier to catch these failures.\n",
+      "user": {
+        "id": 51441,
+        "username": "paragonie-scott",
+        "name": "Scott Arciszewski",
+        "bio": "@CiPHPerCoder on Twitter",
+        "cleared": false,
+        "verified": false,
+        "website": "https://paragonie.com/blog/author/scott-arciszewski",
+        "location": "Orlando, FL",
+        "created_at": "2016-01-17T06:06:42.628Z",
+        "url": "https://hackerone.com/paragonie-scott",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/051/441/089de22b2f1b80a1e57a2792318dede5cbad81db_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/051/441/089de22b2f1b80a1e57a2792318dede5cbad81db_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/051/441/089de22b2f1b80a1e57a2792318dede5cbad81db_original.png/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

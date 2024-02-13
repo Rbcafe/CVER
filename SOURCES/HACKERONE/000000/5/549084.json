@@ -1,0 +1,130 @@
+{
+  "id": 549084,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81NDkwODQ=",
+  "url": "https://hackerone.com/reports/549084",
+  "title": "Stored XSS firing at transaction map (applicationName field)",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2019-04-26T18:52:59.310Z",
+  "submitted_at": "2019-04-26T18:52:59.310Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "skavans",
+    "url": "/skavans",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/014/089/00a08f6b566bcdfe82b2f0be62bdde605a030823_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-08-13T10:58:48.842Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-08-11T09:32:56.586Z",
+  "team_member_agreed_on_going_public_at": "2020-08-13T10:58:48.760Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hey team,\n\nI have discovered the stored XSS vulnerability which is triggered at transaction map. The transaction map is retrieved via GET-request to the URL like `https://rpm.newrelic.com/accounts/2319495/applications/143826822/transactions/2877762416/transaction_map`. The response contains the following script:\n```javascript\n<script>\n  RPM.initCatMap({\n    url: \"/accounts/2319495/applications/143826822/cat_maps/5b225765625472616e73616374696f6e2f46756e6374696f6e2f5f5f6d61696e5f5f3a275c227834747873733e3c696d67207372633d7834747873733e4d61696e48616e646c65722e676574222c22225d\",\n    applicationName: \"\"-alert(document.domain)-\"\",\n    transactionName: \"/__main__:MainHandler.get\",\n    elementID: \"5b225765625472616e73616374696f6e2f46756e6374696f6e2f5f5f6d61696e5f5f3a275c227834747873733e3c696d67207372633d7834747873733e4d61696e48616e646c65722e676574222c22225d\",\n    callback: function(success){$('.loading').hide();  $('.catmap_logging').removeClass('start_hidden'); if(!success){$(\".catmap-5b225765625472616e73616374696f6e2f46756e6374696f6e2f5f5f6d61696e5f5f3a275c227834747873733e3c696d67207372633d7834747873733e4d61696e48616e646c65722e676574222c22225d svg.catmap\").hide();}}\n  });\n</script>\n```\nAs you can see, the `applicationName` field is not properly sanitized so the XSS payload can be injected inside it and the malicious JS-code is executed after victim opens the transaction map tab.\n\n###Steps to reproduce\n1. Sign into an APM app with some account which can change the app alias (title)\n2. Navigate to some active app (which has some transactions)\n3. Navigate to Settings -> Application and change the app alias to `\"-alert(document.domain)-\"`\n4. Navigate to Transactions, choose one of the transactions available and then open the Transaction Map tab\n5. Make sure the XSS payload fires\n\n###Video-PoC:\n{F476752}\n\n## Impact\n\nAn attacker can perform any actions on behalf of a victim.",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 476752,
+      "file_name": "nr_stored_xss_transaction_map_appname.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/476/752/76f35f40fa129d037967b754ac06017a5ee70e69/nr_stored_xss_transaction_map_appname.mp4?response-content-disposition=attachment%3B%20filename%3D%22nr_stored_xss_transaction_map_appname.mp4%22%3B%20filename%2A%3DUTF-8%27%27nr_stored_xss_transaction_map_appname.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVWHFSNNE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132159Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZLzSSHKxWIGhQtGT81DYUaazxK%2BA4b%2BeBse1XlfNIBwIgfPS8dRNp%2FxmFBCNrWLDxkracRrBYrm5cEg%2BjJDXIvNsqsgUIdRADGgwwMTM2MTkyNzQ4NDkiDNaBwIyE1dVL1zGF0iqPBeiofcLE831cuz%2Fg3%2FBj%2BOAUaL0qSPB0iFluwPLKGuVB6sGEff4eb%2BhiIZV7BGnszG7nUhp9GzIuA1YXeX1txWBdpF9oemEmi5NywysgHkWri0j4Huf8Kqc0veGGY9SjOhiXwycQ8YsHi0vPSebpPPXh0TfZnOU4brttYbmYDQt11ba4sYpdhFcGj2JT98cBsee%2Fc5T7bN4P2XDVhPiRuRw9aGFMqvz1hVd7umv69rNFED1JWINyJdd5C%2F6agSSB8sgbH71ksUBWB6gZbJY81x4rscmVfXXofwqa8PBk5Og2PopEsHO5gC2m6ONQs7oHx%2FwcPVQk3JG%2BUI5vzVw25Vs4%2BdZdhcmlVKrn%2B%2FAnPLwb1UVjUdIZ1Bh2A7dxoauy7mugTmVoaADIScHYKRRYQ6ymOT%2B5HZKcppxrXZOnvSp0bLZxAWUdNfX%2BptG8LPBB0HFsGwGHJM3e67F2eH8OPbwOv4CEGzSDxBRn5jAtojFIeM0zYT71ER7JqwYdvVMhHEmS6yzxVkocSBRdqjcwtHkc%2F3o0qHipZYK%2FYAM9qv8hFeWan6Sa185DBwXF3TgIsvbA%2Fcjp8pWqNUeqtz6soCDoRJUku0qJamW5nH6N7sH%2BtO5tJv6FlKTWPWglmSjgtpptDiSnxBFAQX9CJ8spiVo69mOdSoiBjJLiBs9VWBWsOKdxglim0NnAzaWeTydCoRC1TZO3P1tZhKm4UqA86wCtToWZwff54BVenmfxX29vKT622UzSbI49YSFrYIcmrAYj0mP7dMKGXpl0tZCD4BdH226Uje%2FjlE7N5BpXxeyGKIWjtnsKMm2g%2BMxP7x2yGOeguUUjYzkWYTTS1FwwtYRKn3lLwjDgiYO0bzSZF0Ew1bitrgY6sQHIue94FUiYiMOMkDJ9Ayf9fPYms2aIIAO2H9bXmuaR5lH9obA9b%2FPrvjiRxAZ6lxqcr%2B9QPKlzkknLInDxqbq5txCl1Rij1JaLqv%2B4UxnGRb8ZIpj0ICFXmBBF2kEefQwHF5kj7QtGSa2JcGxgdtN3u7o%2BaXyb07mhLfzaH6hd1QUtvhvVRlbD%2FIk%2F25jmafq1vwS1a1GzXy59j%2BKSs8AfLJwUQzk9Ye%2BpIrlwwlAnAww%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0ec985525bd6b4851aa6c56761a1a967c92cb93dd7568e33bdc972f1f4030058",
+      "file_size": 8585356,
+      "type": "video/mp4",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-09-10T09:32:56.642Z",
+  "allow_singular_disclosure_after": -108100143.0925373,
+  "singular_disclosure_allowed": true,
+  "vote_count": 17,
+  "voters": [
+    "wi11",
+    "e4366eolywrgpidfbio",
+    "ali",
+    "salahhasoneh",
+    "joaovitormaia",
+    "cryptographer",
+    "pkhadka",
+    "rajeshmoravaneni",
+    "harshpshkar",
+    "b71728d7009b6664f0e2350",
+    "and 7 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 18678,
+    "asset_type": "URL",
+    "asset_identifier": "rpm.newrelic.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

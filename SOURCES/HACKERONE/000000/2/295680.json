@@ -1,0 +1,121 @@
+{
+  "id": 295680,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yOTU2ODA=",
+  "url": "https://hackerone.com/reports/295680",
+  "title": "Invalid read leading to a segfault",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2017-12-06T13:49:53.358Z",
+  "submitted_at": "2017-12-06T13:49:53.358Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "dgaletic",
+    "url": "/dgaletic",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15668,
+    "url": "https://hackerone.com/shopify-scripts",
+    "handle": "shopify-scripts",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "shopify-scripts",
+      "twitter_handle": "",
+      "website": "",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-12-28T12:02:30.059Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-12-28T12:02:29.975Z",
+  "team_member_agreed_on_going_public_at": "2017-12-18T22:44:18.887Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "PoC\n===\nThe attached POC demonstrates invalid reads leading to a segfault.\n\nDebug info\n==========\n\ngdb report:\n\n    423│ dispatch_linked(codegen_scope *s, int pc)\n    424│ {\n    425│   mrb_code i;\n    426│   int pos;\n    427│\n    428│   if (!pc) return;\n    429│   for (;;) {\n    430├───> i = s->iseq[pc];\n\n    (gdb) p pc\n    $1 = -32730\n\nvalgrind report:\n\n    ==21952== Memcheck, a memory error detector\n    ==21952== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.\n    ==21952== Using Valgrind-3.13.0 and LibVEX; rerun with -h for copyright info\n    ==21952== Command: mruby 2.rb\n    ==21952== \n    ==21952== Invalid read of size 4\n    ==21952==    at 0x17E1C2: dispatch_linked (codegen.c:430)\n    ==21952==    by 0x177D68: codegen (codegen.c:1374)\n    ==21952==    by 0x17F988: lambda_body (codegen.c:738)\n    ==21952==    by 0x17D635: codegen (codegen.c:2767)\n    ==21952==    by 0x17792C: codegen (codegen.c:1314)\n    ==21952==    by 0x17E72E: scope_body (codegen.c:767)\n    ==21952==    by 0x178B40: codegen (codegen.c:1624)\n    ==21952==    by 0x1770BC: mrb_generate_code (codegen.c:3049)\n    ==21952==    by 0x14C353: mrb_load_exec (parse.y:5815)\n    ==21952==    by 0x14C8F6: mrb_load_file_cxt (parse.y:5849)\n    ==21952==    by 0x10CD82: main (mruby.c:227)\n    ==21952==  Address 0x5df11a8 is 65,816 bytes inside a block of size 131,072 free'd\n    ==21952==    at 0x4C2F13F: realloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)\n    ==21952==    by 0x140295: mrb_default_allocf (state.c:55)\n    ==21952==    by 0x10D6BC: mrb_realloc_simple (gc.c:206)\n    ==21952==    by 0x17DAF7: codegen_realloc (codegen.c:136)\n    ==21952==    by 0x17DCA1: genop (codegen.c:154)\n    ==21952==    by 0x17CC20: codegen (codegen.c:2600)\n    ==21952==    by 0x17FE50: gen_call (codegen.c:893)\n    ==21952==    by 0x178B65: codegen (codegen.c:1629)\n    ==21952==    by 0x179180: codegen (codegen.c:1729)\n    ==21952==    by 0x177ADF: codegen (codegen.c:1350)\n    ==21952==    by 0x17F988: lambda_body (codegen.c:738)\n    ==21952==    by 0x17D635: codegen (codegen.c:2767)\n    ==21952==  Block was alloc'd at\n    ==21952==    at 0x4C2F13F: realloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)\n    ==21952==    by 0x140295: mrb_default_allocf (state.c:55)\n    ==21952==    by 0x10D6BC: mrb_realloc_simple (gc.c:206)\n    ==21952==    by 0x17DAF7: codegen_realloc (codegen.c:136)\n    ==21952==    by 0x17DCA1: genop (codegen.c:154)\n    ==21952==    by 0x177B11: codegen (codegen.c:1351)\n    ==21952==    by 0x17F988: lambda_body (codegen.c:738)\n    ==21952==    by 0x17D635: codegen (codegen.c:2767)\n    ==21952==    by 0x17792C: codegen (codegen.c:1314)\n    ==21952==    by 0x17E72E: scope_body (codegen.c:767)\n    ==21952==    by 0x178B40: codegen (codegen.c:1624)\n    ==21952==    by 0x1770BC: mrb_generate_code (codegen.c:3049)\n    ==21952== \n    ==21952== Invalid read of size 4\n    ==21952==    at 0x17DEEC: dispatch (codegen.c:399)\n    ==21952==    by 0x17E1E8: dispatch_linked (codegen.c:432)\n    ==21952==    by 0x177D68: codegen (codegen.c:1374)\n    ==21952==    by 0x17F988: lambda_body (codegen.c:738)\n    ==21952==    by 0x17D635: codegen (codegen.c:2767)\n    ==21952==    by 0x17792C: codegen (codegen.c:1314)\n    ==21952==    by 0x17E72E: scope_body (codegen.c:767)\n    ==21952==    by 0x178B40: codegen (codegen.c:1624)\n    ==21952==    by 0x1770BC: mrb_generate_code (codegen.c:3049)\n    ==21952==    by 0x14C353: mrb_load_exec (parse.y:5815)\n    ==21952==    by 0x14C8F6: mrb_load_file_cxt (parse.y:5849)\n    ==21952==    by 0x10CD82: main (mruby.c:227)\n    ==21952==  Address 0x5df11a8 is 65,816 bytes inside a block of size 131,072 free'd\n    ==21952==    at 0x4C2F13F: realloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)\n    ==21952==    by 0x140295: mrb_default_allocf (state.c:55)\n    ==21952==    by 0x10D6BC: mrb_realloc_simple (gc.c:206)\n    ==21952==    by 0x17DAF7: codegen_realloc (codegen.c:136)\n    ==21952==    by 0x17DCA1: genop (codegen.c:154)\n    ==21952==    by 0x17CC20: codegen (codegen.c:2600)\n    ==21952==    by 0x17FE50: gen_call (codegen.c:893)\n    ==21952==    by 0x178B65: codegen (codegen.c:1629)\n    ==21952==    by 0x179180: codegen (codegen.c:1729)\n    ==21952==    by 0x177ADF: codegen (codegen.c:1350)\n    ==21952==    by 0x17F988: lambda_body (codegen.c:738)\n    ==21952==    by 0x17D635: codegen (codegen.c:2767)\n    ==21952==  Block was alloc'd at\n    ==21952==    at 0x4C2F13F: realloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)\n    ==21952==    by 0x140295: mrb_default_allocf (state.c:55)\n    ==21952==    by 0x10D6BC: mrb_realloc_simple (gc.c:206)\n    ==21952==    by 0x17DAF7: codegen_realloc (codegen.c:136)\n    ==21952==    by 0x17DCA1: genop (codegen.c:154)\n    ==21952==    by 0x177B11: codegen (codegen.c:1351)\n    ==21952==    by 0x17F988: lambda_body (codegen.c:738)\n    ==21952==    by 0x17D635: codegen (codegen.c:2767)\n    ==21952==    by 0x17792C: codegen (codegen.c:1314)\n    ==21952==    by 0x17E72E: scope_body (codegen.c:767)\n    ==21952==    by 0x178B40: codegen (codegen.c:1624)\n    ==21952==    by 0x1770BC: mrb_generate_code (codegen.c:3049)\n    ==21952== \n    bug: dispatch on non JMP op\n    ==21952== \n    ==21952== HEAP SUMMARY:\n    ==21952==     in use at exit: 1,785,001 bytes in 4,587 blocks\n    ==21952==   total heap usage: 4,691 allocs, 104 frees, 2,301,641 bytes allocated\n    ==21952== \n    ==21952== LEAK SUMMARY:\n    ==21952==    definitely lost: 0 bytes in 0 blocks\n    ==21952==    indirectly lost: 0 bytes in 0 blocks\n    ==21952==      possibly lost: 1,495,096 bytes in 87 blocks\n    ==21952==    still reachable: 289,905 bytes in 4,500 blocks\n    ==21952==         suppressed: 0 bytes in 0 blocks\n    ==21952== Rerun with --leak-check=full to see details of leaked memory\n    ==21952== \n    ==21952== For counts of detected and suppressed errors, rerun with: -v\n    ==21952== ERROR SUMMARY: 2 errors from 2 contexts (suppressed: 0 from 0)\n\n\nTest platform\n=============\n* Arch Linux\n\nmruby SHA: 0e46b14b9e8cece4fd75b003a7a3391116dd6eee\n\nThank you,\nDinko Galetic\nDenis Kasak\n\n## Impact\n\nDenial of service by causing segfaults.",
+  "bounty_amount": "800.0",
+  "formatted_bounty": "$800",
+  "weakness": {
+    "id": 8,
+    "name": "Out-of-bounds Read"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 244784,
+      "file_name": "2.rb",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/244/784/4d42f33591c1fe9adff17d1fe31cd74ba133efc4/2.rb?response-content-disposition=attachment%3B%20filename%3D%222.rb%22%3B%20filename%2A%3DUTF-8%27%272.rb&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125533Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=41b342715df355bf69647709cabbc9c6b8551c2909b3e9328beda9521da72c55",
+      "file_size": 22012,
+      "type": "text/plain",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-01-17T22:44:18.986Z",
+  "allow_singular_disclosure_after": -191599874.38276598,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "dgaletic",
+    "eveeez",
+    "t4ym",
+    "cr4xerbik4sh",
+    "japz"
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

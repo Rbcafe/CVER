@@ -1,0 +1,131 @@
+{
+  "id": 737315,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83MzczMTU=",
+  "url": "https://hackerone.com/reports/737315",
+  "title": "'X-Forwarded-Host' key used in input without sanitation - possible cache poisoning",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2019-11-14T11:52:10.340Z",
+  "submitted_at": "2019-11-14T11:52:10.340Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "rhetoric",
+    "url": "/rhetoric",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 2450,
+    "url": "https://hackerone.com/radancy",
+    "handle": "radancy",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/lozsi85c1p7jtt7jphw7vzpyocr2/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/lozsi85c1p7jtt7jphw7vzpyocr2/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Radancy",
+      "twitter_handle": "",
+      "website": "https://radancy.nl",
+      "about": "Radancy NL is a full-service agency specialised in employer branding and recruitment advertising in the Netherlands"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2020-02-14T16:38:07.514Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2020-01-15T16:38:05.121Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Domain and URL:**\nmaximum.nl\n\n**Summary:** \nThe HTTP 'X-Forwarded-Host' is dynamically used in the application without sanitization, allowing an attacker control of the input key. This can allow for self-XSS, or when a CDN or caching service is deployed, risk the CDN caching the request and serving the injected payload to other users.\n\nPoC:\n\n```$ curl -v https://www.maximum.nl/ -H 'X-Forwarded-Host: exampleinject' 2>&1 | grep 'exampleinject'\n                <link rel=\"alternate\" hreflang=\"nl\" type=\"application/atom+xml\" href=\"https://exampleinject/feed-page\" title=\"Page Feed\">\n                <link rel=\"alternate\" hreflang=\"nl\" type=\"application/atom+xml\" href=\"https://exampleinject/feed-vacancy\" title=\"Vacancy Feed\">\n    <meta property=\"og:url\" content=\"https://exampleinject\" />\n```\nHere my input is returned in the web applications response. When cached this it will return to other users.\n\n\n## Steps To Reproduce:\n\nSee PoC\n\n## Impact\n\nInjected response being returned to users",
+  "weakness": {
+    "id": 72,
+    "name": "Resource Injection"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2020-02-14T16:38:05.325Z",
+  "allow_singular_disclosure_after": -126132820.07970509,
+  "singular_disclosure_allowed": true,
+  "vote_count": 10,
+  "voters": [
+    "ali",
+    "javo",
+    "sa1tama0",
+    "hamzaavvan",
+    "exception",
+    "cryptographer",
+    "0xm1racle",
+    "iftek",
+    "diamondkill",
+    "emprass"
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 3.1,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 162,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.maximum.nl",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

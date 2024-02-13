@@ -1,0 +1,103 @@
+{
+  "id": 83803,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84MzgwMw==",
+  "url": "https://hackerone.com/reports/83803",
+  "title": "apps.owncloud.com: SSL Server Allows Anonymous Authentication Vulnerability (SMTP)",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-08-21T03:09:01.889Z",
+  "submitted_at": "2015-08-21T03:09:01.889Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ashesh",
+    "url": "/ashesh",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/003/791/220e701eb9be549162dfdb1da9b1a1b72ee2dd08_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 3059,
+    "url": "https://hackerone.com/owncloud",
+    "handle": "owncloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/003/059/d31dc64427bbbf2e428a0b0b97bce59b98d2ba0d_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/059/d31dc64427bbbf2e428a0b0b97bce59b98d2ba0d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "ownCloud",
+      "twitter_handle": "ownCloud",
+      "website": "https://www.owncloud.com",
+      "about": "ownCloud GmbH is the company behind the ownCloud Project - the most downloaded open source project for data and file sync, share and view."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2015-09-11T09:36:03.645Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-09-11T09:36:03.488Z",
+  "team_member_agreed_on_going_public_at": "2015-09-11T07:06:06.764Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Domain: https://apps.owncloud.com\r\n\r\nThe Secure Socket Layer (SSL) protocol allows for secure communication between a client and a server. The client usually authenticates the server using an algorithm like RSA or DSS. Some SSL ciphers allow SSL communication without authentication. Most common Web browsers like Microsoft Internet Explorer, Netscape and Mozilla do not use anonymous authentication ciphers by default.\r\n\r\nA vulnerability exists in SSL communications when clients are allowed to connect using no authentication algorithm. SSL client-server communication may use several different types of authentication: RSA, Diffie-Hellman, DSS or none. When 'none' is used, the communications are vulnerable to a man-in-the-middle attack.\"\r\n\r\nImpact:\r\nAn attacker can exploit this vulnerability to impersonate your server to clients.\r\n\r\nSolution:\r\nDisable support for anonymous authentication.\r\n\r\n1) Apache: \r\nTypically, for Apache/mod_ssl, httpd.conf or ssl.conf should have the following lines:\r\nSSLProtocol -ALL +SSLv3 +TLSv1\r\nSSLCipherSuite ALL:!aNULL:!ADH:!eNULL:!LOW:!EXP:RC4+RSA:+HIGH:+MEDIUM\r\n\r\nFor Apache/apache_ssl include the following line in the configuration file (httpsd.conf):\r\nSSLRequireCipher ALL:!aNULL:!ADH:!eNULL:!LOW:!EXP:RC4+RSA:+HIGH:+MEDIUM\r\n2) IIS: \r\nFor IIS please see: How to disable PCT 1.0, SSL 2.0, SSL 3.0, or TLS 1.0 in Internet Information Services, How to Restrict the Use of Certain Cryptographic Algorithms and Protocols in Schannel.dll, How to Determine the Cipher Suite for the Server and Client, , and How to restrict the use of certain ciphers in Internet Information Services 5.0\r\n\r\n3) Wu-FTP: For Wu-FTP which supports TLS, the ciphers parameter in TLS configuration file should be set to -ALL +SSLv3 +TLSv1\r\nFor more details please consult the docs/HOWTO/ssl_and_tls_ftpd.HOWTO file provided by wu-ftpd distribution.\r\n\r\n4) Lighttpd: For lighttpd: Locate the lighttpd config file and modify the following ssl.ciper-list line to include !aNULL. A restart of the lightttpd application is necessary.\r\nExample: ssl.cipher-list = \"TLSv1+HIGH !SSLv2 RC4+MEDIUM !aNULL !eNULL !3DES @STRENGTH\"\r\n\r\nAdditional reading: \r\nhttp://www.cisco.com/web/about/ac123/ac147/archived_issues/ipj_1-1/ssl.html \r\nhttp://httpd.apache.org/docs/2.0/mod/mod_ssl.html#sslciphersuite \r\nhttp://www.megasecurity.org/Info/ssl_servers.html\r\n\r\nResults:\r\n\r\n    CIPHER KEY-EXCHANGE AUTHENTICATION MAC ENCRYPTION(KEY-STRENGTH) GRADE\r\n    SSLv3_SUPPORTS_CIPHERS_WITH_NO_AUTHENTICATION _ _ _ _ _\r\n    ADH-RC4-MD5 DH None MD5 RC4(128)_ MEDIUM_\r\n    ADH-DES-CBC3-SHA DH None SHA1 3DES(168)_ HIGH_\r\n    ADH-AES128-SHA DH None SHA1 AES(128)_ MEDIUM_\r\n    ADH-AES256-SHA DH None SHA1 AES(256)_ HIGH_\r\n    ADH-CAMELLIA128-SHA DH None SHA1 Camellia(128)_ MEDIUM_\r\n    ADH-CAMELLIA256-SHA DH None SHA1 Camellia(256)_ HIGH_\r\n    ADH-SEED-SHA DH None SHA1 SEED(128)_ MEDIUM_\r\n    AECDH-RC4-SHA ECDH None SHA1 RC4(128)_ MEDIUM_\r\n    AECDH-DES-CBC3-SHA ECDH None SHA1 3DES(168)_ HIGH_\r\n    AECDH-AES128-SHA ECDH None SHA1 AES(128)_ MEDIUM_\r\n    AECDH-AES256-SHA ECDH None SHA1 AES(256)_ HIGH_\r\n    TLSv1_SUPPORTS_CIPHERS_WITH_NO_AUTHENTICATION _ _ _ _ _\r\n    ADH-RC4-MD5 DH None MD5 RC4(128) _MEDIUM_\r\n    ADH-DES-CBC3-SHA DH None SHA1 3DES(168) _HIGH_\r\n    ADH-AES128-SHA DH None SHA1 AES(128) _MEDIUM_\r\n    ADH-AES256-SHA DH None SHA1 AES(256) _HIGH_\r\n    ADH-CAMELLIA128-SHA DH None SHA1 Camellia(128) _MEDIUM_\r\n    ADH-CAMELLIA256-SHA DH None SHA1 Camellia(256) _HIGH_\r\n    ADH-SEED-SHA DH None SHA1 SEED(128) _MEDIUM_\r\n    AECDH-RC4-SHA ECDH None SHA1 RC4(128) _MEDIUM_\r\n    AECDH-DES-CBC3-SHA ECDH None SHA1 3DES(168) _HIGH_\r\n    AECDH-AES128-SHA ECDH None SHA1 AES(128) _MEDIUM_\r\n    AECDH-AES256-SHA ECDH None SHA1 AES(256) _HIGH_",
+  "weakness": {
+    "id": 2,
+    "name": "Memory Corruption - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2015-10-11T07:06:06.981Z",
+  "allow_singular_disclosure_after": -263277507.75685906,
+  "singular_disclosure_allowed": true,
+  "vote_count": 3,
+  "voters": [
+    "shivammusic",
+    "delinquent",
+    "rm-rf"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

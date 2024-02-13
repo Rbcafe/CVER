@@ -1,0 +1,103 @@
+{
+  "id": 49357,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80OTM1Nw==",
+  "url": "https://hackerone.com/reports/49357",
+  "title": "Substantially weakened authenticity verification when using 'Remember me for a week'",
+  "state": "Closed",
+  "substate": "informative",
+  "readable_substate": "Informative",
+  "created_at": "2015-02-27T03:48:46.203Z",
+  "submitted_at": "2015-02-27T03:48:46.203Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "guido",
+    "url": "/guido",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/983/e55b0b2324777fb7efc2de4212fd8d337ca816bd_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2015-03-12T16:29:30.505Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-03-12T16:29:29.591Z",
+  "team_member_agreed_on_going_public_at": "2015-03-12T15:58:34.046Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello HackerOne,\r\n\r\nI noticed that in order to access data bound to a user's permissions, say their own bug reports, or CSRF-token, you only need one certain cookie, which is ```remember_user_token```, and although it is sent when the user uses HackerOne in a normal fashion, the ```session``` cookie is ignored and thus not required. This only works if the user has the \"Remember me for a week\" option ticked when logging in.\r\n\r\nBoth cookies are values base64-encoded values. Decoding the ```session``` cookie value results in a binary sequence of 602 bytes, and the ```remember_user_token``` results in a sequence 38 bytes wide.\r\n\r\nBoth cookies also include a trailing 20 byte value, presumably a hash value. So ```session``` comprises 602 + 20 = 622 bytes, and ```remember_user_token``` 38+20 = 58.\r\n\r\nBeing able to see confidential data with the 58 bytes rather than 622 bytes obviously lowers the amount of computing power, the number of tries in a brute-force attack, or any way you want to see it, significantly. Presupposing that both values are uniformly random data, then:\r\n\r\n```python\r\nmath.log10((256**622) / (256**58))\r\n1358.2473404358832\r\n```\r\n\r\nIn other words, that is 1358 orders of magnitude of difference, which is substantial.\r\n\r\nI furthermore noticed that the various ```remember_user_token``` values that I yielded upon subsequent logins did not look random at all, but they instead looked quite similar to each other. Suspecting that the login date and time were encoded in this value, I did some statistical tests to see if I could reliably correlate the cookie value with the date and time it was set. Calculations involving these data ( cookie value -> base64 decode -> value of binary sequence as integer on one axis, login date/time as number of seconds since epoch on the other axis), eventually yielded me a 0.93 Pearson correlation coefficient for the last 8 bytes of the binary sequence in my (admittedly limited) test data. It follows that if my test data was sufficiently large to establish this degree of correlation, then knowing when a user logged in can further lower the amount of computation required to successfully guess the ```remember_user_token```. Even if the login time is not known, an attacker can user their common sense and assume no one logged in prior to the inception of HackerOne ( < 2013 ? ) nor in the future ( say > March 2015).\r\n\r\nFinally, it looks to me that ```session``` is frequently updated with a new value whereas ```remember_user_token``` remains constant for the remainder of the session.\r\n\r\nTo reproduce:\r\n\r\n```\r\ncurl https://hackerone.com/current_user -H 'Cookie: remember_user_token={{REMEMBER_USER_TOKEN}}'\r\n```\r\n\r\nWhere {{REMEMBER_USER_TOKEN}} is the value that you copy from your browser once you are logged in. This also works for bug reports in the form\r\n\r\n```\r\nhttps://hackerone.com/reports/[0-9]\\+.json\r\n```\r\n\r\nGuido",
+  "weakness": {
+    "id": 32,
+    "name": "Cryptographic Issues - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2015-04-11T15:58:35.060Z",
+  "allow_singular_disclosure_after": -279056298.5305561,
+  "singular_disclosure_allowed": true,
+  "vote_count": 3,
+  "voters": [
+    "shubham_srt",
+    "shivammusic",
+    "dyabla"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

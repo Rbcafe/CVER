@@ -1,0 +1,125 @@
+{
+  "id": 403083,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80MDMwODM=",
+  "url": "https://hackerone.com/reports/403083",
+  "title": "Authenticated Code Execution through Phar deserialization in CSV Importer as Shop manager in WooCommerce",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-08-30T16:37:09.891Z",
+  "submitted_at": "2018-08-30T16:37:09.891Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "simonscannell",
+    "url": "/simonscannell",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/HvE5FGgP56eXFMNMr4rwmunu/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 111,
+    "url": "https://hackerone.com/automattic",
+    "handle": "automattic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Automattic",
+      "twitter_handle": "",
+      "website": "https://automattic.com",
+      "about": "WordPress.com, Jetpack, Texts, Akismet, Gravatar, WooCommerce, Crowdsignal, Tumblr and more!"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2019-12-19T14:26:02.746Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-11-19T14:26:00.303Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "This vulnerability is based on the following exploitation technique:\n\nhttps://blog.ripstech.com/2018/new-php-exploitation-technique/\n\nIt is easier to explain this vulnerability by having watched the PoC first:\nhttps://www.youtube.com/watch?v=mr3bAOIUwd4\n\nHere is what's happening:\n\n1. Since a valid phar file needs o be uploaded to the server (the extension doesn't matter) I upload the poc.jpg via the media uploader\n2. I begin the Import process with a valid CSV file\n3.  The importer asks if I am sure that I want to run the import on these files\n4. I confirm and modify the  POST parameter to my phar:// wrapper and deserialize the file\n5. The PHP code executes\n\nThe source of the vulnerability within the source code lies in the /woocommerce/includes/import/class-wc-product-csv-importer.php:\n\n```\n\tpublic function __construct( $file, $params = array() ) {\n\t\t$default_args = array(\n\t\t\t'start_pos'        => 0, // File pointer start.\n\t\t\t'end_pos'          => -1, // File pointer end.\n\t\t\t'lines'            => -1, // Max lines to read.\n\t\t\t'mapping'          => array(), // Column mapping. csv_heading => schema_heading.\n\t\t\t'parse'            => false, // Whether to sanitize and format data.\n\t\t\t'update_existing'  => false, // Whether to update existing items.\n\t\t\t'delimiter'        => ',', // CSV delimiter.\n\t\t\t'prevent_timeouts' => true, // Check memory and time usage and abort if reaching limit.\n\t\t\t'enclosure'        => '\"', // The character used to wrap text in the CSV.\n\t\t\t'escape'           => \"\\0\", // PHP uses '\\' as the default escape character. This is not RFC-4180 compliant. This disables the escape character.\n\t\t);\n\n\t\t$this->params = wp_parse_args( $params, $default_args );\n\t\t$this->file   = $file;\n\n\t\tif ( isset( $this->params['mapping']['from'], $this->params['mapping']['to'] ) ) {\n\t\t\t$this->params['mapping'] = array_combine( $this->params['mapping']['from'], $this->params['mapping']['to'] );\n\t\t}\n\n\t\t$this->read_file();\n\t}\n\n\t/**\n\t * Read file.\n\t */\n\tprotected function read_file() {\n\t\t$handle = fopen( $this->file, 'r' ); // @codingStandardsIgnoreLine.\n\n\t\tif ( false !== $handle ) {\n\t\t\t$this->raw_keys = version_compare( PHP_VERSION, '5.3', '>=' ) ? fgetcsv( $handle, 0, $this->params['delimiter'], $this->params['enclosure'], $this->params['escape'] ) : fgetcsv( $handle, 0, $this->params['delimiter'], $this->params['enclosure'] ); // @codingStandardsIgnoreLine\n\n...\n```\n\nAs can be seen, the constructor calls read_file, which in turn calls fopen without any checks, which leads to the deserialization of the Phar object.\n\nI recommend to check the file parameter and see if it actually is a CSV file before calling fopen on it.\n\nI have attached the poc.jpg that worked for my PHP version.\n\n## Impact\n\nI only displayed the contents of the /etc/passwd file in the PoC video. However, since I can execute arbitrary PHP code, a complete compromise of the WordPress installation is possible. If an attacker can gain access to a Shop manager account, he can easily and without restrictions take over the server.",
+  "weakness": {
+    "id": 52,
+    "name": "Deserialization of Untrusted Data"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 340061,
+      "file_name": "poc.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/340/061/0979cc385adeebe32a96dd6b225b073e1d9f4d13/poc.jpg?response-content-disposition=attachment%3B%20filename%3D%22poc.jpg%22%3B%20filename%2A%3DUTF-8%27%27poc.jpg&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4S26OA6W%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131014Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBrwAoewzxY3bz1ssFSdtEyK39n4ige2HCt%2FqgWXMxo6AiEA8W9QZL7h8ed7oBtuSQFGPQDGjUswee0LimM2YHTA1jMqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDIMSY8w9rHi0W5K3diqPBbjGizLrTlN6ZGbFF9LhBmPFJ1m5swtpZ7QtuQ1ecm6xRS32Vw6P29QnZ1nCvXxHRHo6hca4PRPlC%2F0SuWjzk0o8NKsd8UrMzywQ79MxoK3cqCgX8WV8kEyJZ1wthUKdW7fS3ASByTHh9EDJx35aAAaV%2FjyX21PDJbVpBrxSai%2BI8NCYDMrESdXzFg96JAx0%2FwVm%2BdX91kGoUyEspJy20Nir3f1bZWjC7MdtcCOSsjRRpflXb4gfaH%2BL1WT1rmstsNmGjj3W3W7TeYhR6pZtPFJdtb6k%2FghNKP4k29rXq2vgyXJX%2BVcohZ1zGAdsXYKgnKO2Y3m%2BPX7s9J%2BEwjIpNQnCTqqMY1fdtAuglpVQs9wOIOz5AsX%2F3fV3pu%2FvQSQRA8Du6Cj%2BeC4F1CXAi0KT8j%2B0b0OBcdCMFF7x0ZDWnp2IvcnhJbnULpfzrU3BcnLBK5G1w73sljokf7mqqRRV2mJeZ0Ksp5PbOgcxO2a9zF3%2F8KWFXZX25btNrQCkx2iy6DjaS4wWdbHTtaTyA9KPaMdPFCZK0C8QMd1EIcXXBkK42tdRHldBFv0Qtop0xhubZI7kmNI9gIAuHZhtoU%2F051v4TKLQUh2TAOI42M0%2BTEJLZph2o6AOjkFRtLNFt7YY1LhWRiyVjOtaBUNN8WQ3Qh3vWd2mGOGt3XUF8k06PdeLUGh8KHoKU7J50qkgwAmhpZgQn9UvombEZfjpL9rMdjKsr48SewAEp5ii613cBEjgvmV9GqfxRnaBt9%2BBnmZqq%2Bqdlb6QUuoAocNShZpYRVRCujWv0rbK5%2BJsewBiul9SD4qpCHDP0iLsOH3MbGI4L4Vl8HvxUyotCrHJVcTbSu85yQg3fmRmZR%2FKVxNQjZkwy8atrgY6sQF65KaBWFLOPDup9JZh9E6aRNnp6nOc2RJjfDBuEZqnqO%2FE0eIR6%2FMnB5jQvVkuHRSmXTStKVhFSTodnbxf6Jx%2FV%2Bb7oAvc4YN%2FjwysEYMAdJ7G1ipFcWKNk%2Fy8IJiu93NTzXgZ%2BUcmX9FJKhedbl1puxNoeG9%2FJnYsNGqtzqjFHuyw9oeW7ona11lhu%2Bwq%2BU434QKAOt%2FmsX3wWtY1amD8a%2F8TawrYCNcXdx0m%2F%2FsKhD8%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=3a8e9a36ddcb6abcf83c7ee10c0a285dd40003252e28813d49bd1a625128b8a6",
+      "file_size": 351,
+      "type": "application/octet-stream",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2019-12-19T14:26:00.352Z",
+  "allow_singular_disclosure_after": -131064253.84667554,
+  "singular_disclosure_allowed": true,
+  "vote_count": 84,
+  "voters": [
+    "k0z3r0",
+    "redeyehere",
+    "snorlhax",
+    "p1stachios",
+    "foobar7",
+    "cinzinga",
+    "mashoud1122",
+    "base_64",
+    "sameerphad72",
+    "tess",
+    "and 74 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

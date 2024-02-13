@@ -1,0 +1,131 @@
+{
+  "id": 889160,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84ODkxNjA=",
+  "url": "https://hackerone.com/reports/889160",
+  "title": "Poll loop/hang on incomplete HTTP header",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "medium",
+  "readable_substate": "Informative",
+  "created_at": "2020-06-02T08:45:04.680Z",
+  "submitted_at": "2020-06-02T08:45:04.680Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "kugghjul",
+    "url": "/kugghjul",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 35663,
+    "url": "https://hackerone.com/curl",
+    "handle": "curl",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "curl",
+      "twitter_handle": "",
+      "website": "https://curl.se",
+      "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-01-22T15:27:41.643Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-01-22T15:27:41.583Z",
+  "team_member_agreed_on_going_public_at": "2021-01-08T08:19:29.723Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nWhen an incomplete server header is missing its value, the curl client will receive the packet but hang while parsing it.  Examples of vulnerable server headers:  `Location`, `Content-Range` and `Connection`. Adding the `--max-time`option will terminate the request as intended.\n\n## Steps To Reproduce:\n  1. Set up server:  `echo -e \"HTTP/1.1 200 OK\\r\\nLocation:\\r\\nContent-Range:\\r\\nConnection:\\r\\n\" | nc -l -p 1337`\n  2. Make the request: `curl --connect-timeout 1 http://localhost:1337`\n\n## Supporting Material/References:\nThe bug was found using AFL with network support. The repository https://github.com/kugg/fuzzminator with the commit hash id `08a0102fbf633e5de3d43a01b995e1ca8e68bbd3`. \n\n* The attached file named `hangs.tar.gz` contains results from AFL including headers resulting in a hang. \n* Note: Location header is parsed even without the `--location` option and also when the server indicate `200 OK`.\n\n**Strace output**\n`$ strace curl -v --connect-timeout 1 http://localhost:1337`\n```\nconnect(3, {sa_family=AF_INET, sin_port=htons(1337), sin_addr=inet_addr(\"127.0.0.1\")}, 16) = -1 EINPROGRESS (Operation now in progress)\npoll([{fd=3, events=POLLOUT|POLLWRNORM}], 1, 0) = 1 ([{fd=3, revents=POLLOUT|POLLWRNORM}])\ngetsockopt(3, SOL_SOCKET, SO_ERROR, [0], [4]) = 0\ngetpeername(3, {sa_family=AF_INET, sin_port=htons(1337), sin_addr=inet_addr(\"127.0.0.1\")}, [128->16]) = 0\ngetsockname(3, {sa_family=AF_INET, sin_port=htons(37502), sin_addr=inet_addr(\"127.0.0.1\")}, [128->16]) = 0\nwrite(2, \"*\", 1*)                        = 1\nwrite(2, \" \", 1 )                        = 1\nwrite(2, \"Connected to localhost (127.0.0.\"..., 50Connected to localhost (127.0.0.1) port 1337 (#0)\n) = 50\nsendto(3, \"GET / HTTP/1.1\\r\\nHost: localhost:\"..., 78, MSG_NOSIGNAL, NULL, 0) = 78\nwrite(2, \">\", 1>)                        = 1\nwrite(2, \" \", 1 )                        = 1\nwrite(2, \"GET / HTTP/1.1\\r\\n\", 16GET / HTTP/1.1\n)      = 16\nwrite(2, \">\", 1>)                        = 1\nwrite(2, \" \", 1 )                        = 1\nwrite(2, \"Host: localhost:1337\\r\\n\", 22Host: localhost:1337\n) = 22\nwrite(2, \">\", 1>)                        = 1\nwrite(2, \" \", 1 )                        = 1\nwrite(2, \"User-Agent: curl/7.58.0\\r\\n\", 25User-Agent: curl/7.58.0\n) = 25\nwrite(2, \">\", 1>)                        = 1\nwrite(2, \" \", 1 )                        = 1\nwrite(2, \"Accept: */*\\r\\n\", 13Accept: */*\n)         = 13\nwrite(2, \">\", 1>)                        = 1\nwrite(2, \" \", 1 )                        = 1\nwrite(2, \"\\r\\n\", 2\n)                     = 2\npoll([{fd=3, events=POLLIN|POLLPRI|POLLRDNORM|POLLRDBAND}], 1, 0) = 1 ([{fd=3, revents=POLLIN|POLLRDNORM}])\nrecvfrom(3, \"HTTP/1.1 200 OK\\nLocation:\\nConten\"..., 102400, 0, NULL, NULL) = 60\nwrite(2, \"<\", 1<)                        = 1\nwrite(2, \" \", 1 )                        = 1\nwrite(2, \"HTTP/1.1 200 OK\\n\", 16HTTP/1.1 200 OK\n)       = 16\nwrite(2, \"<\", 1<)                        = 1\nwrite(2, \" \", 1 )                        = 1\nwrite(2, \"Location:\\n\", 10Location:\n)             = 10\nwrite(2, \"<\", 1<)                        = 1\nwrite(2, \" \", 1 )                        = 1\nwrite(2, \"Content-Range:\\n\", 15Content-Range:\n)        = 15\nwrite(2, \"<\", 1<)                        = 1\nwrite(2, \" \", 1 )                        = 1\nwrite(2, \"Connection: Close\\n\", 18Connection: Close\n)     = 18\nwrite(2, \"<\", 1<)                        = 1\nwrite(2, \" \", 1 )                        = 1\nwrite(2, \"\\n\", 1\n)                       = 1\nrt_sigaction(SIGPIPE, {sa_handler=SIG_IGN, sa_mask=[PIPE], sa_flags=SA_RESTORER|SA_RESTART, sa_restorer=0x7f60c90e1890}, NULL, 8) = 0\npoll([{fd=3, events=POLLIN}], 1, 198)   = 0 (Timeout)\nrt_sigaction(SIGPIPE, NULL, {sa_handler=SIG_IGN, sa_mask=[PIPE], sa_flags=SA_RESTORER|SA_RESTART, sa_restorer=0x7f60c90e1890}, 8) = 0\nrt_sigaction(SIGPIPE, {sa_handler=SIG_IGN, sa_mask=[PIPE], sa_flags=SA_RESTORER|SA_RESTART, sa_restorer=0x7f60c90e1890}, NULL, 8) = 0\npoll([{fd=3, events=POLLIN|POLLPRI|POLLRDNORM|POLLRDBAND}], 1, 0) = 0 (Timeout)\nrt_sigaction(SIGPIPE, {sa_handler=SIG_IGN, sa_mask=[PIPE], sa_flags=SA_RESTORER|SA_RESTART, sa_restorer=0x7f60c90e1890}, NULL, 8) = 0\npoll([{fd=3, events=POLLIN}], 1, 1)     = 0 (Timeout)\n```\n\n## Impact\n\nThis vulnerability could lead to denial of service of one given http request.\nCurl is often used for crawling, when this is the case a curl process could be blocked indefinitely by a server providing incomplete headers.\nIf curl is used for fetching third party information through a web interface an attacker with SSRF or XXE access could use this bug to exhaust process id numbers or amount of allowed forks for the process by locking up curl clients.",
+  "weakness": {
+    "id": 48,
+    "name": "Denial of Service"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 852076,
+      "file_name": "hangs.tar.gz",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/NUUh1TwiLu9ZJ5hKXxNKi3yZ?response-content-disposition=attachment%3B%20filename%3D%22hangs.tar.gz%22%3B%20filename%2A%3DUTF-8%27%27hangs.tar.gz&response-content-type=application%2Fgzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTUOKVM5L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134605Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2Bt0omVOHrZ9OL9Trk%2BdFKhBv%2FQrKC65W11rjrMgC%2F6QIhANia%2FTyBcfeu0XFctw1a%2FJDDLBAa34%2BWU%2F53rhxkz%2BKhKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5IgxUKMbWt1VTh5nJA5MqjgWpIiqILEweaNhgRF6m1s3guYn11lerqJNrnFjeROxUEJywbXRrt%2FcAshROQMcI4IP1FF5kzaP6N8mOGtMrRL%2FiPu4S3YpijdtIekdCS1Sn6Snt4Sh4hrILW%2Bb8ze6H%2F8%2BUjG3tsefJ2i7e6RAZ95Jy%2FsR7Gyo717mGo8tT2xBovHwjfmR5eCTxEwySxWEQvCnkU8sWiVU4TVsVyZojCQaslBXYJlwFTmuq95Ka7nfTvMgKz2HKR%2BHa7dIsA2obOMA1gq914%2BAgrDq45xv0U8MzkvK2tpK9dfMSBVfPWAFHxIt5sREveo4mZ2nlBAm%2BX77TaBAPdROjeHNp2e8Y8GU73sHmCxPEQ6RVEBNo1Cpqin5nayoOUqgSikVBZNppJWCf78ZqDFx6xAksvybCUspLPt8UiXeCwawB4vSOwq1RhpGympS%2F4X%2BAfeB4Och%2Bx%2BOR8nKDDKe3Y%2BeIUIzmLq7R63lPB%2BEoYre1R8%2Bf%2F%2BYGK3IVaxII1oWPg4zPRX6SOnrZtXGjWyAfZ%2F6lNEUsc6rYsPzapeuVSlq%2FRTHQ%2BbWGOkn3wxqxzOCLbZSltQ7LZsPVDrrri2fFwWrFwoheZZCDY0vSRv08hDQ%2Fkq3xDInCDWZMeu%2FK40kiRmv6ehFATji5N1OJbLemuPO%2BTwvrdcBn9fQS4BkDMFIrGhE%2FuOwv61gkyL1fOapjm3KOWa8BmzAuFidAmAy%2BVnosQJMh3ckcvSXiD8sLINTU%2FbSsdV7beCmMpyf6fP3p%2F7VcwiGBABGo294shnTdhd2P0IxsSt7anyRTek2yB5NqzUYBr8WXNft2l3V3HTxgS9tRQXGp0RJdLlzDT1qxWJvF2JoUm4vQH5Pwhirc51bptu0N99Iwn6%2BtrgY6sAElrGju%2FXz82pDWWGfZvz6UL%2Fm95ZWtM25B7Ca5iNmiTQUqK%2BPhqtvh3TLN14mj%2BOXWFTSoPWS4IHLzNFsgx2J0aY83%2FElbkWzC43VwT7caBSFcI5aYu4krRCov2TutbftS11vV1dOme5hlM9%2Bf%2FlUY4xpo4dgVYdlW83DxHU%2BAO74ifhWVTZa4oAIO7OK8ImejZkl87d9LyTXqXHcY75D4o2LMg4shUYHjgRj5VB%2BvcA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bd4bf83dc43f31149d84d750f74ecd3295ba7240b004dd59682385b9f1f00bab",
+      "file_size": 7590,
+      "type": "application/gzip",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 3,
+  "voters": [
+    "shikaarii",
+    "kugghjul",
+    "hackingrock"
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 6.5,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "none",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 18844,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/curl/curl",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

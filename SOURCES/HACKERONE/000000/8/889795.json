@@ -1,0 +1,138 @@
+{
+  "id": 889795,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84ODk3OTU=",
+  "url": "https://hackerone.com/reports/889795",
+  "title": "Allows any user to share their \"Root\" level folder by sharing \".\"",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "none",
+  "readable_substate": "Resolved",
+  "created_at": "2020-06-03T04:18:22.837Z",
+  "submitted_at": "2020-06-03T04:18:22.837Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "chevonphillip",
+    "url": "/chevonphillip",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/0j6xe0wr6tyyuhaq0vxc7c5cqdjy/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2020-06-03T12:04:05.385Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-06-03T12:04:05.203Z",
+  "team_member_agreed_on_going_public_at": "2020-06-03T08:12:56.288Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "There seems to be a bug in the \"File to Share\" feature of Nextcloud Talk. This allows any authenticated user/admin to share their \"root\" level folder by manipulating the ```\"path\":``` parameter in the JSON body request to the remote API ```/nextcloud/ocs/v2.php/apps/files_sharing/api/v1/shares```\n\nSteps to repo:\n1. Create a new user account with no permissions/shared files\n1. In the admin account enable Nextcloud Talk(speed)\n1. Invite the new user to the chat\n1. Click on the file symbol in the chat window\n1. The file to share dialog window will popup\n1. select any folder from the admin account.\n1. Capture tat HTTP POST request in burp repeater \n1. Change the ```\"path:\"/<folder_name>\"``` to ```path:\".\"``` which indicated the \"root level of the folder\"\n\nYou might get a 403 but if you look at the chat window on the user side you will see the admin \"root\" folder shared to the user.\nThis also works if you create a group chat and do the same steps.\n\n## Expected Request\n```\nPOST /nextcloud/ocs/v2.php/apps/files_sharing/api/v1/shares HTTP/1.1\nHost: [removed]\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:77.0) Gecko/20100101 Firefox/77.0\nAccept: application/json, text/plain, */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nContent-Type: application/json;charset=utf-8\nrequesttoken: [removed]\nContent-Length: 82\nOrigin: [removed]\nConnection: close\nCookie: [removed]; oc_sessionPassphrase=[removed]; nc_sameSiteCookielax=true; nc_sameSiteCookiestrict=true; nc_username=[removed]; nc_token=[removed]; nc_session_id=[removed]\n\n{\"shareType\":10,\"path\":\"/Payroll\",\"shareWith\":\"4uuxs2yg\"}\n```\n## Expected Behavior\nAdmin or user is only allowed to share folders that are visible within the \"root\" folder directory.\n\n## Modified Request\n```\nPOST /nextcloud/ocs/v2.php/apps/files_sharing/api/v1/shares HTTP/1.1\nHost: [removed]\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:77.0) Gecko/20100101 Firefox/77.0\nAccept: application/json, text/plain, */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nContent-Type: application/json;charset=utf-8\nrequesttoken: [removed]\nContent-Length: 82\nOrigin: [removed]\nConnection: close\nCookie: [removed]; oc_sessionPassphrase=[removed]; nc_sameSiteCookielax=true; nc_sameSiteCookiestrict=true; nc_username=[removed]; nc_token=[removed]; nc_session_id=[removed]\n\n{\"shareType\":10,\"path\":\".\",\"shareWith\":\"4uuxs2yg\"}\n```\n\n## Modified Behavior \nThe user is able to see all folders and any newly created folders in the admin account which can lead to sensitive information leakage. The reason this is an issue is once you go back home to the admin account there is no shared icon on the admin folders. This misleads the admin to think that there are no folders being shared.\n\n## Impact\n\nAn admin can create another user that they trust and that the user can conduct the malicious attack but sharing out the entire root folder without the admin noticing because there are not shared icons on the folders. This can also lead to admin creating sensitive documents/folder in which the user would be able to see everything newly created file and folder.",
+  "weakness": {
+    "id": 26,
+    "name": "Improper Access Control - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 853164,
+      "file_name": "bandicam_2020-06-03_00-07-36-061.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/pod2wFSXQ8BdXoFRTcVBXz8o?response-content-disposition=attachment%3B%20filename%3D%22bandicam_2020-06-03_00-07-36-061.mp4%22%3B%20filename%2A%3DUTF-8%27%27bandicam_2020-06-03_00-07-36-061.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3DOTL4Z4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134609Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCP1h%2BMnyvDRDa6h%2F4zIodqh2MzJlGISvpnoEvR4kc2fgIgP8fAE6zkU2xDXiIdq36r00FCUyYf6OQc2MuvlpSL6zgqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDJ2sbhPrB5o6p2UkMiqPBcMZAZzMf1lo6ftFZmyVLqm8Hg2J3xbj6a3GuTLabMbNJWiA%2FZsFo0hE3gxRPbyAqhG6FJuKINNLYiqNvOekzW8sar88psZuM%2FX9%2FNoLvFSAVVJpHHBKNZUcwzDsSG6dL68X0%2F81p9YWjmvjokQY%2B9nuD7359WQ659K26Fclw65VMeRybJ1hUyi2a%2FyS4P%2FH0PoUc1H0vEsvCcDRZFSU2VqX6BFziwRAbmxLuUXTN5m%2F5hWF5b3%2BkgFf3EOVPo%2BXtyBL0zsVvefLcDnkTyLYtjGuMSoKMfdzhMUUnoy%2FSkL%2FnqSrrhe9QDnvuA12WJYXs7dXUtOgD1FweSHqkAlJgnKNM8PYSjJnvj8q9w4J7BBdDstdMKFug3p2hl8P0Z3ewTKwgYQFTrJSgQ5k2oIl05GLUuZEuGlOhqiAdJ0VSwCyoN%2BcsLtWKUwcF5i%2BGCo6ppjPFD80qdzVR70b4ApfmQxVQXMoqtkj6LQcYtZ%2BagRqhM%2BtszUfSlLJd2TtHW1cmvfHpY38mbjTqSHEOfCoz%2FpdesWuHOFHT%2FPgVGOwrKnQpNMV%2FyR1KqF%2B%2F4CD%2FGMR2tktKBwuNfh2OlxQvwD2aE8XvEC%2B4mc3056ID7XSvkKVVQ5FPigZOQTgvmJ494qVF7ehsKzqTF%2B9hAoK4S6zfV7Rj7ZQPgHv3om4hYuHsgUcaD29IgjjBb7uAyiaX%2BnWynmxhoDSjS8R%2BX%2Fh548W%2F5oeVorlsLKwzmcY%2Fn5eCd84hK21TQBO83%2FN5WvC2Rjqcrcse3ypMcrNI7pSoyAYBbW7BZ7x1FSQkjJ0k9%2BmmuCWHGFTK1yvtjTnkqMZorU8FXNTbF9f5hhpv%2FD%2Bx%2FaaWxL40nM7EEpqTFiYBitKsZow7cCtrgY6sQExtT%2FZOBwnOUsXGGVn22KELl38mJ%2B5OivmNc%2Fgks2i4L3ET0mxTFvDVZpjL316NVv%2FbrIj%2Fy2VtfGofe3Raptm7CsozbMN%2FwB4%2F%2B1rcHUIoVQ8JJTc06nsi5aVYzNhXnbrwhbQkoT0dxKYDFETL%2B6%2F051XAavIrnvB5CtHwa5YaT7z83h5GNqUOlmAh9%2BiDFNSkfEsNFaYzGytNE8syYguoEi7iDkqQjn2z2qwL4LrkcU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c6518a8cc97f5f4d1b73e80cf9aee1a076b84d37e729f295ffec6911c374dd31",
+      "file_size": 13908156,
+      "type": "video/mp4",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-07-03T08:12:56.349Z",
+  "allow_singular_disclosure_after": -114067993.2772319,
+  "singular_disclosure_allowed": true,
+  "vote_count": 8,
+  "voters": [
+    "foobar7",
+    "iamgk808",
+    "ali",
+    "brahim_boufakri01",
+    "knoch_knoch",
+    "neptunian",
+    "jtommi",
+    "allani"
+  ],
+  "severity": {
+    "rating": "none",
+    "score": 0.0,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 14804,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "nextcloud/spreed",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

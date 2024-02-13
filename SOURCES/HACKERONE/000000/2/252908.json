@@ -1,0 +1,155 @@
+{
+  "id": 252908,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNTI5MDg=",
+  "url": "https://hackerone.com/reports/252908",
+  "title": "Reflected XSS on https://www.starbucks.co.uk/shop/paymentmethod/ (bypass for 227486)",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2017-07-24T08:14:25.062Z",
+  "submitted_at": "2017-07-24T08:14:25.062Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "bayotop",
+    "url": "/bayotop",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/036/633/10a34b6ba8511f5ae6c9664bafcd04aeb25982f8_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 1989,
+    "url": "https://hackerone.com/starbucks",
+    "handle": "starbucks",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/989/c9aa38cf3b1a91daa085d31e23d23f34cd1874df_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/989/c9aa38cf3b1a91daa085d31e23d23f34cd1874df_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Starbucks",
+      "twitter_handle": "Starbucks",
+      "website": "http://www.starbucks.com",
+      "about": "OUR MISSION WITH EVERY CUP, WITH EVERY CONVERSATION, WITH EVERY COMMUNITY– WE NURTURE THE LIMITLESS POSSIBILITIES OF HUMAN CONNECTION"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-06-16T21:19:02.783Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-05-22T13:41:13.275Z",
+  "team_member_agreed_on_going_public_at": "2020-06-16T21:19:02.682Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi guys,\n\nI am now able to prove my concerns from #227486 (see my last comment). `\"`s are still not correctly encoded when rendered into the page in the `<link rel=\"canonical\" href=\"current_full_url\" />` element on almost any https://starbucks.co.uk/ page.\n\nThe WAF is bypassed by encoding `\"`s as `%2522` in the URL path. This won't work when the payload is part of the query string.\n\n**Description**\n\nTake a look on the source code of https://www.starbucks.co.uk/shop/card/egift/anthing%2522. You can see a quote is injected to break the `href` attribute context.\n\n```html\n<link rel=\"canonical\" href=\"https://www.starbucks.co.uk/shop/card/egift/anthing\"\" />\n```\n\n**Exploitation**\n\nUsing the same tricks as described in #227486 this injection can be leveraged to achieve arbitrary JS execution on `/shop/paymentmethod/`. Also note that this is just **one** example and more ways may exist to achieve JS execution. Steps to reproduce (use **Firefox**):\n\n1. Login at https://www.starbucks.co.uk and add a card into basket on https://www.starbucks.co.uk/shop/card/egift/birthday\n2. Visit https://www.starbucks.co.uk/shop/paymentmethod/hkjhk%2522onclick=%2522confirm(/-/g+this.ownerDocument.domain)%2522id=%2522checkoutButton\n3. Click somewhere around the Checkout header. \n4. An alert showing the current domain pops up.\n\n**Recommendation**\n\nAgain, correctly encode the URL before reflecting it back in the response. \n\nIn #227486 the fix was blocking requests containing `%u0022` in the query string. This was shown to be bypassable so fixing this issue by blocking `%2522` in URL paths could be bypassed again in future. \n\n",
+  "weakness": {
+    "id": 61,
+    "name": "Cross-site Scripting (XSS) - Reflected"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2020-06-21T13:41:13.357Z",
+  "allow_singular_disclosure_after": -115081539.63570137,
+  "singular_disclosure_allowed": true,
+  "vote_count": 12,
+  "voters": [
+    "ali",
+    "brahim_boufakri01",
+    "0xelkomy",
+    "terrylcc",
+    "woofy",
+    "komic_sans",
+    "kashsec",
+    "s0ulr1pp3r",
+    "n0bug",
+    "williampatton",
+    "and 2 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 4.2,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 13017,
+    "asset_type": "URL",
+    "asset_identifier": "www.starbucks.co.uk",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 23024,
+      "category": "team",
+      "content": "bayotop discovered a reflected XSS on www.starbucks.co.uk due to lack of encoding that was a bypass for report #227486.\n@bayotop — thank you for reporting this vulnerability and for confirming the resolution.",
+      "user": {
+        "id": 706273,
+        "username": "agedsumatra",
+        "name": "agedSumatra",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": "",
+        "created_at": "2019-08-12T17:50:49.926Z",
+        "url": "https://hackerone.com/agedsumatra",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/yjUg6PZmutR2o3qPxEP2MT1J/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/yjUg6PZmutR2o3qPxEP2MT1J/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/yjUg6PZmutR2o3qPxEP2MT1J/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

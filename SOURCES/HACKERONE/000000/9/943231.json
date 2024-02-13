@@ -1,0 +1,144 @@
+{
+  "id": 943231,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC85NDMyMzE=",
+  "url": "https://hackerone.com/reports/943231",
+  "title": "SOCK_RAW sockets reachable from Webkit process allows triggering double free in IP6_EXTHDR_CHECK",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2020-07-26T16:18:58.179Z",
+  "submitted_at": "2020-07-26T16:18:58.179Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "theflow0",
+    "url": "/theflow0",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 44879,
+    "url": "https://hackerone.com/playstation",
+    "handle": "playstation",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/8uyqZE6d69UGEYq8qwzS4Z3Q/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/8uyqZE6d69UGEYq8qwzS4Z3Q/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "PlayStation",
+      "twitter_handle": "PlayStation",
+      "website": "https://www.playstation.com",
+      "about": "Recognized as a global leader in interactive and digital entertainment, Sony Interactive Entertainment (SIE) is responsible for the PlayStation brand."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "no-content",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-01-12T20:33:19.193Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-12-17T20:13:31.145Z",
+  "team_member_agreed_on_going_public_at": "2021-01-12T20:33:19.070Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "",
+  "bounty_amount": "10000.0",
+  "formatted_bounty": "$10,000",
+  "weakness": {
+    "id": 49,
+    "name": "Double Free"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 280,
+  "voters": [
+    "trein",
+    "thdee",
+    "an40r1",
+    "0xfabiof",
+    "primeministerofcats",
+    "ds82",
+    "n1m0",
+    "xploiterr",
+    "dazaiii",
+    "mashoud1122",
+    "and 270 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 40736,
+    "asset_type": "HARDWARE",
+    "asset_identifier": "PlayStation 4",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 26233,
+      "category": "team",
+      "content": "## Summary\n\nMemory corruption can be achieved by sending fragmented IPv6 packets to loopback interface due to poor and inconsistent use of `IP6_EXTHDR_CHECK`.\n\nThe macro `IP6_EXTHDR_CHECK` can free the mbuf if the packet is sent to loopback interface. This fact is not considered in `dest6_input()`, `frag6_input()` and more. For example in `dest6_input()`, the double pointer is not updated:\n```\nint\ndest6_input(struct mbuf **mp, int *offp, int proto)\n{\n\tstruct mbuf *m = *mp;\n\t...\n\tIP6_EXTHDR_CHECK(m, off, sizeof(*dstopts), return IPPROTO_DONE);\n\t...\n\t*offp = off;\n\treturn dstopts->ip6d_nxt;\n}\n```\n\nHence, when parsing next headers, the mbuf can be free'd once again, leading to a double free which behaves like a use-after-free when we allocate mbuf's again.\n\nNormally, this path would not be triggerable, because sending to loopback interface requires SOCK_RAW root privileges. **However, for some reason on the PS4 SOCK_RAW sockets can be opened in Webkit process!**\n\nAttached is `poc.c` which must run with root privileges on a FreeBSD 9 machine. It demonstrates being able to escalate privileges to kernel.\nAttached is also `ps4.c` which is slightly adjusted to work on the PS4 (you'd need to add includes etc to be able to compile it with your official sdk, I compiled it with a custom framework).\n\nThe reliability of `poc.c` is very high, around 80%, whereas`ps4.c` is not very high, I guess around 20%.\n\n## Impact\n\n- In conjunction with a WebKit exploit, a fully chained remote attack can be achieved.\n- It is possible to steal/manipulate user data.\n- Dump and run pirated games.",
+      "user": {
+        "id": 319901,
+        "username": "serv",
+        "name": "s",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": "",
+        "created_at": "2018-07-30T18:21:23.048Z",
+        "url": "https://hackerone.com/serv",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/obdkgpjb63bss7ni534fyptzklcx/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/obdkgpjb63bss7ni534fyptzklcx/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/obdkgpjb63bss7ni534fyptzklcx/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

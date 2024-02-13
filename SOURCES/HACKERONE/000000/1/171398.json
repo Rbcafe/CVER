@@ -1,0 +1,116 @@
+{
+  "id": 171398,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzEzOTg=",
+  "url": "https://hackerone.com/reports/171398",
+  "title": "(HackerOne SSO-SAML) Login CSRF, Open Redirect, and Self-XSS Possible Exploitation",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2016-09-23T09:17:18.019Z",
+  "submitted_at": "2016-09-23T09:17:18.019Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "whhackersbr",
+    "url": "/whhackersbr",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/013/529/88a70e872d0b669249b3ef2269fb7ec7eaab85f7_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-10-27T05:01:49.129Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-10-27T05:01:49.074Z",
+  "team_member_agreed_on_going_public_at": "2016-10-19T01:01:32.521Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "###Summary:###\n\nLogin CSRF, Open Redirect, and Self-XSS Possible Exploitation through HackerOne SSO-SAML\n\n###PoC###\n\n- Go to █████;\n\nUse a browser window with clear cookies.\n\nSource-code:\n\n```\n<html>\n<body>\n\t<iframe id=\"login_csrf_frame\" src=\"████████\" style=\"width:0;height:0;border:0;border:none;\"></iframe>\n\t<script>\n\t\tsetTimeout(function(){document.location.href = \"https://hackerone.com/users/saml/sign_in?email=████&remember_me=true\";}, 5000);\n\t</script>\n</body>\n</html>\n```\n\n###Impact:###\n\n1) Information Leak\n\nAn attacker can use Logout CSRF + Login CSRF against a victim to steal all information sent by the victim to the HackerOne website while using the malicious session, including confidential bug reports.\n\n2) Open Redirect\n\nSince the SSO-SAML l​ogin flow can be started automatically (`GET https://hackerone.com/users/saml/sign_in?email=███`) by an attacker and it redirects to external URLs, the attacker can redirect the user to anywhere.\n\n3) Self-XSS Possible Exploitation​\n\nSome stored Self-XSS's (internal areas accessed just by the victim, etc.) can be exploited through Login CSRF.\n\n```\nMalicious page -> HackerOne Login CSRF -> Self-XSS triggers -> Logout -> Wait user actions\n```\n\nIf the user interacts with the page (sign in with his account, etc.), the attacker can exploit the Self-XSS.\n\nP.S.:\n\nAn attacker can add extra dots to the SAML Email Domain in the config dialog.\nI didn't test all the implications, but registering a very similar domain could be a bad thing, like `hackerone..com`, `hackerone.com.`, `.hackerone.com` or even `gmail..com` because of typing mistakes (`victim@hackerone..com would redirect the victim to the attacker external login flow`).",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-11-18T01:01:32.572Z",
+  "allow_singular_disclosure_after": -228396154.05977055,
+  "singular_disclosure_allowed": true,
+  "vote_count": 41,
+  "voters": [
+    "noman0",
+    "whhackersbr",
+    "bogdantcaciuc",
+    "bytehope",
+    "sameerphad72",
+    "spam404",
+    "aryan2808",
+    "harry_mg",
+    "bugdiscloseguys",
+    "xsam",
+    "and 31 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

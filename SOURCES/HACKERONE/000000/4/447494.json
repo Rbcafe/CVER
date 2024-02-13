@@ -1,0 +1,142 @@
+{
+  "id": 447494,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NDc0OTQ=",
+  "url": "https://hackerone.com/reports/447494",
+  "title": "Share recipient can modify a share's expiration date",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2018-11-20T05:07:57.241Z",
+  "submitted_at": "2018-11-20T05:07:57.241Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "netranger",
+    "url": "/netranger",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2020-8122"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2020-01-31T16:17:17.929Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-01-31T16:17:17.830Z",
+  "team_member_agreed_on_going_public_at": "2020-01-31T13:37:47.949Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Vulnerable URL\n\nhttp://[server]/nextcloud/ocs/v2.php/apps/files_sharing/api/v1/shares/[share ID number]\n\n## Summary\n\nNextcloud users can set expiration dates on documents they share with others. However, the function to update a share does not appear to properly validate the requester is the owner when changing a share's expiration date. A user could exploit the vulnerability to extend the expiration date of a file shared with them.\n\nThe vulnerable parameter appears to be the share ID number at the end of the request URL. Sample request:\n\nPUT /nextcloud/ocs/v2.php/apps/files_sharing/api/v1/shares/74 HTTP/1.1\nOCS-APIREQUEST: true\nAuthorization: Basic anJlYWNoZXI6d0xzVU5vVnpDZDFsNGpkdmIxZnFtOWlGUHpWbDRmWkNHTDdTMUtxRml3R3M1ZlFhc1FVUXNOV2tvY3gwcUVmbllnNmdBMVJR\nUser-Agent: Mozilla/5.0 (Android) ownCloud-android/3.3.2\nHost: 192.168.1.22\nCookie: nc_sameSiteCookielax=true; nc_sameSiteCookiestrict=true; oc_sessionPassphrase=O5dbusaO3KwFs6e2P4ew7oE99UlUYbbpGa8ZwH01u6gHsvVjPiXfj362cyMkq4XNIIbYCqHESynLeG9VCWUDHHM%2B%2FHeitr910brNsOOTc5NnBy7g0JoY1uj1aY9KRQf7; oc0xkd23iidt=fc7vbute5s5efftqf2k9af9op0\nContent-Length: 21\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nConnection: close\n\nexpireDate=2018-11-25\n\n\n## Reproduction\n\nPre-requisites: a Nextcloud server with a couple of test users, a browser setup to go through a proxy like Burp. \n\n- Go to Burp, click the \"Proxy\" tab, click the \"Intercept\" subtab, and click \"Intercept is On\" to toggle interception off (if it's not already off)\n- Login to Nextcloud with a test user\n- Share a file with another user. Set an expiration date, for example 17-05-2019\n- Go to Burp, click the \"Proxy\" tab, click the \"HTTP history\" subtab, scroll down the list and find the call to the vulnerable URL. Note the value for the share ID (the integer at the end of the URL)\n- Logout of Nextcloud\n- Login to Nextcloud as the user you just shared the file with\n\nAt this point, we need to submit the vulnerable request as this second user. However, the vulnerable URL uses the PUT method so copy/pasting into a browser isn't really feasible. One way is to use a legitimate request as a \"template\" and insert the share ID of the file shared with us.\n\n- As the second user, open a file's sharing dialog and share it with any user\n- Go to Burp -> Proxy -> Intercept and toggle interception on\n- Go back to the browser and set an expiration date such as 17-05-2020\n- Burp should stall the request for viewing. The request should be to the vulnerable URL; if it isn't, click \"Forward\" until the vulnerable URL appears\n- At the end of the URL, change the share ID number to the share ID noted earlier (the share ID of the file shared with the current user by the first user)\n- Forward the request (or toggle interception off, either works)\n- Logout and log back in as the first user. Navigate to the shared file and look at the expiration date. It should be 17-05-2020, demonstrating the share recipient has extended their access to the file by a year.\n\n## Screenshots\n\n1_request - vulnerable request as seen in Burp.\n\n## Impact\n\n## Impact/Notes\n\nIf someone shares a static file with another user, the vulnerability is less of an issue. The user granted access could download an offline copy  and refer to it after share access expires.\n\nWhere this issue becomes more concerning is with \"living\" files that an individual might frequently edit, like a spreadsheet. A share recipient could extend their access and continue to view updated file contents until someone noticed the share instance was still in place.\n\nThis does not appear to affect groups; i.e. if a group is the recipient of a share I have not been able to successfully invoke this vulnerability as a group member.\n\nIf I can provide any further information or help with proof of concept please let me know. Thanks!",
+  "bounty_amount": "100.0",
+  "formatted_bounty": "$100",
+  "weakness": {
+    "id": 26,
+    "name": "Improper Access Control - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 378094,
+      "file_name": "1_request.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/378/094/c7b9a601da1151984fc65cc9a013a2b8e9e71512/1_request.png?response-content-disposition=attachment%3B%20filename%3D%221_request.png%22%3B%20filename%2A%3DUTF-8%27%271_request.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131407Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=69233d3e3ec96a26395dbc27ae734bfec0abb5cbd684d9688c6c3f9d058182c4",
+      "file_size": 91241,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-03-01T13:37:48.021Z",
+  "allow_singular_disclosure_after": -124760179.89273666,
+  "singular_disclosure_allowed": true,
+  "vote_count": 8,
+  "voters": [
+    "foobar7",
+    "ali",
+    "khizer47",
+    "cryptographer",
+    "luhgar",
+    "jnull",
+    "w0rmer",
+    "rodmartin"
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 4.3,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 13,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "nextcloud/server",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

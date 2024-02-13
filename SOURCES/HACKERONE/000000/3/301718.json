@@ -1,0 +1,137 @@
+{
+  "id": 301718,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMDE3MTg=",
+  "url": "https://hackerone.com/reports/301718",
+  "title": "https://fundl.qiwi.com CSRF на подтверждении sms ",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2018-01-02T02:48:33.760Z",
+  "submitted_at": "2018-01-02T02:48:33.760Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "circuit",
+    "url": "/circuit",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/049/373/9546ab66ad2f00ec9496a084aae519e512aa11bb_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 215,
+    "url": "https://hackerone.com/qiwi",
+    "handle": "qiwi",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/215/f578bbb9421365fab2e51aa7482bea82006d7c0c_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/215/f578bbb9421365fab2e51aa7482bea82006d7c0c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "QIWI",
+      "twitter_handle": "QiwiRussia",
+      "website": "https://qiwi.com",
+      "about": "The QIWI brand is a family brand that consolidates several directions: kiosks, wallet, bank."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2018-03-11T21:40:55.435Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-02-09T21:40:36.430Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Доброго времени суток. Я тут нашел достаточно серьезную CSRF, как мне кажется. Она позволяет привязать номер телефона злоумышленника -> угнать деньги. И основана она отчасти на старой CSRF, которую я репортил совсем недавно (https://hackerone.com/reports/300676)\n\nТак вот, тогда я не доглядел еще одну серьезную CSRF (а точнее даже две, но я объединил в одну).\n\nСмотрите. На указанный в профиле номер, как я понимаю, приходит собранная с определенного проекта денежка. Номер сохраняется в профиле в 2 этапа.\n\n1 этап - отправка смс сообщения с кодом (данную CSRF я уже репортил)\n{F250801}\n2 этап - ввод кода на сайте и окончательная привязка.\n{F250802}\n\nТак вот, на ввод кода разработчики забыли сделать токен. А я считаю что тут он обязательно нужен. Немного позже объясню почему.\n\nСам запрос выглядит так:\n```\nhttps://fundl.qiwi.com/user/qiwi/check/sms\n```\n```\nPOST /user/qiwi/check/sms HTTP/1.1\nHost: fundl.qiwi.com\nConnection: keep-alive\nContent-Length: 79\nAccept: */*\nOrigin: https://fundl.qiwi.com\nX-Requested-With: XMLHttpRequest\nUser-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nReferer: https://fundl.qiwi.com/personal/\nAccept-Encoding: gzip, deflate, br\nAccept-Language: ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7\nCookie: _ym_uid=1512756320171871561; _ga=GA1.2.405923632.1512250944; _ga_cid=405923632.1512250944; _gid=GA1.2.1944034652.1514664504; spa_upstream=f6a379788bf7d1c4070169996915c20a; _ym_isad=1; token-tail=833ac8aa4f98c622; _ym_visorc_45809457=w; PHPSESSID=cb4p3o9g12br9vee6lkm19nc73; _ga_info=106|6|1514859125338|r=https://fundl.qiwi.com/project/lavina|5a2580fc421d4b5e3384eba69a465ba911995493d9c3449dd33ee0042c638f72\n```\n```\ncode=тут код с телефона\n```\n\nКроме этого, если к qiwi кошельку привязана почта, то нет токена на подтверждение email кода\n\n{F250804}\n\nИ опять же, токена мы не наблюдаем!\n\nЗапрос уже немного другой:\n```\nhttps://fundl.qiwi.com/user/qiwi/check/email\n```\n```\nPOST /user/qiwi/check/email HTTP/1.1\nHost: fundl.qiwi.com\nConnection: keep-alive\nContent-Length: 10\nAccept: */*\nOrigin: https://fundl.qiwi.com\nX-Requested-With: XMLHttpRequest\nUser-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nReferer: https://fundl.qiwi.com/personal/\nAccept-Encoding: gzip, deflate, br\nAccept-Language: ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7\nCookie: _ym_uid=1512756320171871561; _ga=GA1.2.405923632.1512250944; _ga_cid=405923632.1512250944; _gid=GA1.2.1944034652.1514664504; spa_upstream=f6a379788bf7d1c4070169996915c20a; _ym_isad=1; token-tail=833ac8aa4f98c622; _ym_visorc_45809457=w; PHPSESSID=cb4p3o9g12br9vee6lkm19nc73; _ga_info=106|6|1514859125338|r=https://fundl.qiwi.com/project/lavina|5a2580fc421d4b5e3384eba69a465ba911995493d9c3449dd33ee0042c638f72\n```\n```\ncode=тут код с почты\n```\n\n## Impact\n\nВ итоге, что мы имеем?\n\nИспользуя комбинацию уязвимостей мы можем угнать деньги с определенного проекта.\n\nИтоговый POC такой:\n1. Ищем жертву, желательно такой проект который собрал всю сумму и ожидает выплату;\n2. Эксплуатируем CSRF на отправку смс на свой номер, узнаем код;\n3. Эксплуатируем CSRF на подтверждение смс кода;\n4. Ждем деньги;\n\np.s. эксплуатация в реальных условиях достаточно тяжела, но возможно.\nподводный камень - потенциально привязаный эмайл.\n\nЕсли он не привязан, то все окей) мы получаем в итоге такой ответ и радуемся жизни:\n```\n{\"success\":true,\"need_email_code\":false}\n```\n\nЕсли будут какие-то вопросы то с радостью отвечу. Дыра очевидная) Успехов. vk.com/lc",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 250801,
+      "file_name": "csrf1.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/250/801/47949f0bc51970bf236d9203a6c4889701da2c72/csrf1.png?response-content-disposition=attachment%3B%20filename%3D%22csrf1.png%22%3B%20filename%2A%3DUTF-8%27%27csrf1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3DOTL4Z4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125644Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCP1h%2BMnyvDRDa6h%2F4zIodqh2MzJlGISvpnoEvR4kc2fgIgP8fAE6zkU2xDXiIdq36r00FCUyYf6OQc2MuvlpSL6zgqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDJ2sbhPrB5o6p2UkMiqPBcMZAZzMf1lo6ftFZmyVLqm8Hg2J3xbj6a3GuTLabMbNJWiA%2FZsFo0hE3gxRPbyAqhG6FJuKINNLYiqNvOekzW8sar88psZuM%2FX9%2FNoLvFSAVVJpHHBKNZUcwzDsSG6dL68X0%2F81p9YWjmvjokQY%2B9nuD7359WQ659K26Fclw65VMeRybJ1hUyi2a%2FyS4P%2FH0PoUc1H0vEsvCcDRZFSU2VqX6BFziwRAbmxLuUXTN5m%2F5hWF5b3%2BkgFf3EOVPo%2BXtyBL0zsVvefLcDnkTyLYtjGuMSoKMfdzhMUUnoy%2FSkL%2FnqSrrhe9QDnvuA12WJYXs7dXUtOgD1FweSHqkAlJgnKNM8PYSjJnvj8q9w4J7BBdDstdMKFug3p2hl8P0Z3ewTKwgYQFTrJSgQ5k2oIl05GLUuZEuGlOhqiAdJ0VSwCyoN%2BcsLtWKUwcF5i%2BGCo6ppjPFD80qdzVR70b4ApfmQxVQXMoqtkj6LQcYtZ%2BagRqhM%2BtszUfSlLJd2TtHW1cmvfHpY38mbjTqSHEOfCoz%2FpdesWuHOFHT%2FPgVGOwrKnQpNMV%2FyR1KqF%2B%2F4CD%2FGMR2tktKBwuNfh2OlxQvwD2aE8XvEC%2B4mc3056ID7XSvkKVVQ5FPigZOQTgvmJ494qVF7ehsKzqTF%2B9hAoK4S6zfV7Rj7ZQPgHv3om4hYuHsgUcaD29IgjjBb7uAyiaX%2BnWynmxhoDSjS8R%2BX%2Fh548W%2F5oeVorlsLKwzmcY%2Fn5eCd84hK21TQBO83%2FN5WvC2Rjqcrcse3ypMcrNI7pSoyAYBbW7BZ7x1FSQkjJ0k9%2BmmuCWHGFTK1yvtjTnkqMZorU8FXNTbF9f5hhpv%2FD%2Bx%2FaaWxL40nM7EEpqTFiYBitKsZow7cCtrgY6sQExtT%2FZOBwnOUsXGGVn22KELl38mJ%2B5OivmNc%2Fgks2i4L3ET0mxTFvDVZpjL316NVv%2FbrIj%2Fy2VtfGofe3Raptm7CsozbMN%2FwB4%2F%2B1rcHUIoVQ8JJTc06nsi5aVYzNhXnbrwhbQkoT0dxKYDFETL%2B6%2F051XAavIrnvB5CtHwa5YaT7z83h5GNqUOlmAh9%2BiDFNSkfEsNFaYzGytNE8syYguoEi7iDkqQjn2z2qwL4LrkcU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=34af341fdba78207450c0991d37c4fd7216a63c6a6e400b82adc3ea7ff6c1bf7",
+      "file_size": 10650,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 250802,
+      "file_name": "csrf2.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/250/802/c10488f4bd942bf38fba4d4ff6cfefeee44385fa/csrf2.png?response-content-disposition=attachment%3B%20filename%3D%22csrf2.png%22%3B%20filename%2A%3DUTF-8%27%27csrf2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3DOTL4Z4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125644Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCP1h%2BMnyvDRDa6h%2F4zIodqh2MzJlGISvpnoEvR4kc2fgIgP8fAE6zkU2xDXiIdq36r00FCUyYf6OQc2MuvlpSL6zgqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDJ2sbhPrB5o6p2UkMiqPBcMZAZzMf1lo6ftFZmyVLqm8Hg2J3xbj6a3GuTLabMbNJWiA%2FZsFo0hE3gxRPbyAqhG6FJuKINNLYiqNvOekzW8sar88psZuM%2FX9%2FNoLvFSAVVJpHHBKNZUcwzDsSG6dL68X0%2F81p9YWjmvjokQY%2B9nuD7359WQ659K26Fclw65VMeRybJ1hUyi2a%2FyS4P%2FH0PoUc1H0vEsvCcDRZFSU2VqX6BFziwRAbmxLuUXTN5m%2F5hWF5b3%2BkgFf3EOVPo%2BXtyBL0zsVvefLcDnkTyLYtjGuMSoKMfdzhMUUnoy%2FSkL%2FnqSrrhe9QDnvuA12WJYXs7dXUtOgD1FweSHqkAlJgnKNM8PYSjJnvj8q9w4J7BBdDstdMKFug3p2hl8P0Z3ewTKwgYQFTrJSgQ5k2oIl05GLUuZEuGlOhqiAdJ0VSwCyoN%2BcsLtWKUwcF5i%2BGCo6ppjPFD80qdzVR70b4ApfmQxVQXMoqtkj6LQcYtZ%2BagRqhM%2BtszUfSlLJd2TtHW1cmvfHpY38mbjTqSHEOfCoz%2FpdesWuHOFHT%2FPgVGOwrKnQpNMV%2FyR1KqF%2B%2F4CD%2FGMR2tktKBwuNfh2OlxQvwD2aE8XvEC%2B4mc3056ID7XSvkKVVQ5FPigZOQTgvmJ494qVF7ehsKzqTF%2B9hAoK4S6zfV7Rj7ZQPgHv3om4hYuHsgUcaD29IgjjBb7uAyiaX%2BnWynmxhoDSjS8R%2BX%2Fh548W%2F5oeVorlsLKwzmcY%2Fn5eCd84hK21TQBO83%2FN5WvC2Rjqcrcse3ypMcrNI7pSoyAYBbW7BZ7x1FSQkjJ0k9%2BmmuCWHGFTK1yvtjTnkqMZorU8FXNTbF9f5hhpv%2FD%2Bx%2FaaWxL40nM7EEpqTFiYBitKsZow7cCtrgY6sQExtT%2FZOBwnOUsXGGVn22KELl38mJ%2B5OivmNc%2Fgks2i4L3ET0mxTFvDVZpjL316NVv%2FbrIj%2Fy2VtfGofe3Raptm7CsozbMN%2FwB4%2F%2B1rcHUIoVQ8JJTc06nsi5aVYzNhXnbrwhbQkoT0dxKYDFETL%2B6%2F051XAavIrnvB5CtHwa5YaT7z83h5GNqUOlmAh9%2BiDFNSkfEsNFaYzGytNE8syYguoEi7iDkqQjn2z2qwL4LrkcU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e68b389485828bf1dd510ab411979f1762b630872eb320e1400efd1951f9d381",
+      "file_size": 13521,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 250804,
+      "file_name": "csrf3.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/250/804/a46f3c45fa15f15560e775ceebbb8a4063ffcadc/csrf3.png?response-content-disposition=attachment%3B%20filename%3D%22csrf3.png%22%3B%20filename%2A%3DUTF-8%27%27csrf3.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3DOTL4Z4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125644Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCP1h%2BMnyvDRDa6h%2F4zIodqh2MzJlGISvpnoEvR4kc2fgIgP8fAE6zkU2xDXiIdq36r00FCUyYf6OQc2MuvlpSL6zgqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDJ2sbhPrB5o6p2UkMiqPBcMZAZzMf1lo6ftFZmyVLqm8Hg2J3xbj6a3GuTLabMbNJWiA%2FZsFo0hE3gxRPbyAqhG6FJuKINNLYiqNvOekzW8sar88psZuM%2FX9%2FNoLvFSAVVJpHHBKNZUcwzDsSG6dL68X0%2F81p9YWjmvjokQY%2B9nuD7359WQ659K26Fclw65VMeRybJ1hUyi2a%2FyS4P%2FH0PoUc1H0vEsvCcDRZFSU2VqX6BFziwRAbmxLuUXTN5m%2F5hWF5b3%2BkgFf3EOVPo%2BXtyBL0zsVvefLcDnkTyLYtjGuMSoKMfdzhMUUnoy%2FSkL%2FnqSrrhe9QDnvuA12WJYXs7dXUtOgD1FweSHqkAlJgnKNM8PYSjJnvj8q9w4J7BBdDstdMKFug3p2hl8P0Z3ewTKwgYQFTrJSgQ5k2oIl05GLUuZEuGlOhqiAdJ0VSwCyoN%2BcsLtWKUwcF5i%2BGCo6ppjPFD80qdzVR70b4ApfmQxVQXMoqtkj6LQcYtZ%2BagRqhM%2BtszUfSlLJd2TtHW1cmvfHpY38mbjTqSHEOfCoz%2FpdesWuHOFHT%2FPgVGOwrKnQpNMV%2FyR1KqF%2B%2F4CD%2FGMR2tktKBwuNfh2OlxQvwD2aE8XvEC%2B4mc3056ID7XSvkKVVQ5FPigZOQTgvmJ494qVF7ehsKzqTF%2B9hAoK4S6zfV7Rj7ZQPgHv3om4hYuHsgUcaD29IgjjBb7uAyiaX%2BnWynmxhoDSjS8R%2BX%2Fh548W%2F5oeVorlsLKwzmcY%2Fn5eCd84hK21TQBO83%2FN5WvC2Rjqcrcse3ypMcrNI7pSoyAYBbW7BZ7x1FSQkjJ0k9%2BmmuCWHGFTK1yvtjTnkqMZorU8FXNTbF9f5hhpv%2FD%2Bx%2FaaWxL40nM7EEpqTFiYBitKsZow7cCtrgY6sQExtT%2FZOBwnOUsXGGVn22KELl38mJ%2B5OivmNc%2Fgks2i4L3ET0mxTFvDVZpjL316NVv%2FbrIj%2Fy2VtfGofe3Raptm7CsozbMN%2FwB4%2F%2B1rcHUIoVQ8JJTc06nsi5aVYzNhXnbrwhbQkoT0dxKYDFETL%2B6%2F051XAavIrnvB5CtHwa5YaT7z83h5GNqUOlmAh9%2BiDFNSkfEsNFaYzGytNE8syYguoEi7iDkqQjn2z2qwL4LrkcU%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b4c029afc30382e0c7ef3ab93195fb1f1cc2c57873ee345c072cacbaf029782c",
+      "file_size": 16815,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-03-11T21:40:36.569Z",
+  "allow_singular_disclosure_after": -187024568.12070686,
+  "singular_disclosure_allowed": true,
+  "vote_count": 15,
+  "voters": [
+    "bagipro",
+    "cheatboss",
+    "catferq",
+    "circuit",
+    "eveeez",
+    "bagget",
+    "iframe",
+    "cr4xerbik4sh",
+    "exadmin",
+    "japz",
+    "and 5 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

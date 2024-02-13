@@ -1,0 +1,139 @@
+{
+  "id": 592090,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81OTIwOTA=",
+  "url": "https://hackerone.com/reports/592090",
+  "title": "IDOR in sending support email upon Verifying user business domain",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2019-05-29T06:19:09.200Z",
+  "submitted_at": "2019-05-29T06:19:09.200Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "secnugget",
+    "url": "/secnugget",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/UFURpMi4MxAVynK33SLeHEJS/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17716,
+    "url": "https://hackerone.com/trustpilot",
+    "handle": "trustpilot",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/716/e296d52d7545dbe47efbbabc561a3fc4b91d24f4_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/716/e296d52d7545dbe47efbbabc561a3fc4b91d24f4_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Trustpilot",
+      "twitter_handle": "",
+      "website": "https://www.trustpilot.com/",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2019-08-21T08:17:12.032Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-06-25T09:18:01.278Z",
+  "team_member_agreed_on_going_public_at": "2019-08-21T08:17:11.923Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Summary**\nTrustpilot Business is making sure that you own the domain you have registered before continuing the process so they set 5 choices on how to verify. But there's another one, which is through sending a support ticket. By this you can send message to a support and hope to help you out.\n\nThere is a bit problem in this process. 1.) The `email` parameter is letting you to send email to another user, which don't own. 2.) The `phoneNumber` parameter is controllable. You can add text upto 94 characters enough to fool a user.\n\n**How to reproduce**\nFirst you need to register a valid account. If you don't own a domain it's Ok. There's a way to bypass the check. Just intercept the post request on `https://api.trustpilot.com/v1/business-requests/signup?utm_source=sign_up_link&utm_medium=business_login_page&utm_campaign=login` and modify the `email` parameter to your preferred email. Once set, check your email and click the verify.\n\nIf you've follow above step, you will be redirected to `https://businessapp.b2b.trustpilot.com/#/claim/` and here's where the magic happens. On the bottom there's a link called `Fill out this form`. Fill up the form and intercept the request. The request looks like this:\n```\nPOST /v1/private/business-users/5cee035f00bf83001b207d67/activation/support HTTP/1.1\nHost: api.trustpilot.com\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0\nAccept: application/json, text/plain, */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: https://businessapp.b2b.trustpilot.com/\nContent-Type: application/json;charset=utf-8\nAuthorization: Bearer [reducted]\nApiKey: [reducted]\nContent-Length: 182\nOrigin: https://businessapp.b2b.trustpilot.com\nConnection: close\n\n{\"name\":\"test\",\"email\":\"[reducted]\",\"domain\":\"\",\"phoneNumber\":\". Please follow this link to verify https://e-corp.ord\",\"message\":\"test. pls ignore\",\"locale\":\"en-US\"}\n```\n\nFinal step is to modify the `email` and `phoneNumber` parameter. This is will send an email you a target user and let you add a malicious link in the email.\n\n\n\nPOC: F498456\n\n## Impact\n\nIDOR which leads a phishing email to target any users",
+  "weakness": {
+    "id": 65,
+    "name": "Business Logic Errors"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 498456,
+      "file_name": "Screenshot_from_2019-05-28_23-18-23.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/498/456/608f53353e80dab2398e0f4e01ac60b5ac7edbb5/Screenshot_from_2019-05-28_23-18-23.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_from_2019-05-28_23-18-23.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_from_2019-05-28_23-18-23.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5DNGZVVG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132317Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCICHLJPsWBp5sr6QP325sn3QmpUNWJkG1Rn9WpoDeqIg3AiEAiF8%2BSn1jT5ntK2r0sSCmNUGX9ZemOesqgbKFIUBuyWMqsAUIdhADGgwwMTM2MTkyNzQ4NDkiDD5dvB5yVZqhTClUciqNBapM8w3AEMj9vUut8ipBYyxkUXmIzrvgZ28gnqyQ6mhhFeeoPRU%2FpSxAJl9%2BpYrNip4ItC3BkgYDlk9abNplTrvNVi9OhutOp4ZE1wWKJlPpOzKXUOBoUe%2FRWzdh9xwCJuGDbGkQ7ngPegxy3y6LCFP5wP6sjVHLhEaT7e6L88U08XjQmZEZxAGGE5IESnoSUeW4EvOXBp5DQcR1t39zozskg4dISh5C2Ff6jgUnjDu9sYdoZA7dJgdByDPIA4VjLFdTVEjklaMXr4YtD7wTmG9hWanDSlJ11qBRruTBFPloL6Kq2YKCTOj8wC0UP9ctvuxeNwV7QKFhmu8bB6csA5mvLVxUvoelFVuLgYYhtCHZDGPo54Dzbn5soqg%2FJjzSexzqrvBtELxoPLfeuC9o2KpP0lfY7eBpdmAqxwpFPSBaxPJ66SICOozWWbpDqIqnFrnvz%2BXEMOe5z7dsDsKieBfX52kLKmUuAGG9Tv0jWo8CMlR7jOkbaaLMpho6b6rMGTGHucZmDgIYIwvcdVrd1njiiPPNTxx6qoUNz0WdZUAlGWBtiCv4fABRuY7ZjWGOAD0PFPT8FsbFoQ6mkw28XZaoMR735I%2FMJlHvafhgKlPNFVKsVzF%2F3GpLM7ECVpPoLq9VNtYgjHnuZ0U6e4r9781nElHBM1WdTrWia%2F9%2FJIwTVLKAnxWWWscJrGFA8kraj4Xrc3KPePGa2suQ5Fim1jPzWeLA%2Bfr7aEab%2FJVFYU%2F%2BIs0KPZarsTUlG%2B656GYmZcf%2Fa2gbirYZQRBwlZlZahqG0l8iMLSK0TCfJOwBIAuJd7wWISVFGCV0aYj458Ker2Pjca9HvyzcI8qiuhyhF68QiOr9MFM67rM70ExPMPHFra4GOrEB58pDHOC4avlR6xYMRYlBCOP%2F5dyV6PT6gr9Vs5I8zhf3jjEkzka6Au6GNesJTj11PvvCjC1fFqxeJeAvkQZYn2pzivrXx7RBTeI6fAxztLLN3Lu9uyUpmO1SqciT2zDRX2wO0JTz6DtjgCLlfMq%2FHCRF8EoZi0alN2KMbAkJBqtFpznpmUaem89ejwzJcKJLTQiW1rXarR6VZiM7isz2KsMf5L4b0KstHgl%2Fux6s5iUg&X-Amz-SignedHeaders=host&X-Amz-Signature=9f83537819e90cc01e43d982e0c355cc7b6082b52b2193a300b7921408645490",
+      "file_size": 148407,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 43,
+  "voters": [
+    "hexpwn",
+    "wi11",
+    "ali",
+    "ahmd_halabi",
+    "mik317",
+    "m0x01",
+    "ronr",
+    "hakercic",
+    "r0hack",
+    "eveeez",
+    "and 33 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 3.7,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "physical",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "changed",
+      "confidentiality": "low",
+      "integrity": "none",
+      "availability": "low"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 21519,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*api.trustpilot.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

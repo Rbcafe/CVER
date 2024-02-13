@@ -1,0 +1,112 @@
+{
+  "id": 129091,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjkwOTE=",
+  "url": "https://hackerone.com/reports/129091",
+  "title": "CPU utilization 99% on visiting wordpress site url & open redirect found",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-04-07T19:41:31.604Z",
+  "submitted_at": "2016-04-07T19:41:31.604Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "csanuragjain",
+    "url": "/csanuragjain",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/058/139/bbabf05f3cf79c652d18dd0fbfe79e515798b03e_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 111,
+    "url": "https://hackerone.com/automattic",
+    "handle": "automattic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/111/7f89e1ea233f92916202521a069fdbfe9eced339_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Automattic",
+      "twitter_handle": "",
+      "website": "https://automattic.com",
+      "about": "WordPress.com, Jetpack, Texts, Akismet, Gravatar, WooCommerce, Crowdsignal, Tumblr and more!"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-07-23T10:30:48.394Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-06-23T10:30:36.154Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "**Working POC for making CPU 99% for wordpress user**\n+ Login to wordpress account\n+ Visit any of the below url's which are sent by attacker to victim (since these are wordpress url so victim will accept & open)\n1.https://wordpress.com/post/20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n2.https://wordpress.com/design/1000000000000000000000\n3.https://wordpress.com/pages/anurag.wordpress.com/-10000000000000000000000000000000000000000000000\n+ Check your CPU usage in task manager. It would go to 99% as shown in attached.\n+ This happens since these pages continues to send unlimited requests to https://pixel.wp.com/g.gif?v=wpcom-no-pv&x_newdash_pageviews=route&t=0.1642450245826501\n+ Unlimited request are send since I think the variable holding the Post id cannot hold a value as long as 20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 which throws an exception.\n+ **Problem:** User CPU goes 99% causing the browser to go very very slow & unresponsive. Negative impact on customer.\n\n**Working POC for open redirect**\n+ Access wordpress using url https://wordpress.com/wp-login.php?redirect_to=https%3A%2F%2Fgoogle.com%2Fsearch?q=myFakeSite&reauth=1\n+ After login you will be redirected to https://www.google.co.in/search?q=myFakeSite&gws_rd=cr&ei=WLYGV8fUHIq8uATj56uIBA which is incorrect. Wordpress should not allow redirecting to external websites like google,yahoo.\n+ **Problem:** In future if there is any bug in these external site then this open redirect from wordpress could cause harm to users.",
+  "weakness": {
+    "id": 53,
+    "name": "Open Redirect"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 83893,
+      "file_name": "wordpress.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/083/893/3af67c05d96f48ad18769e158b8e22306441189d/wordpress.png?response-content-disposition=attachment%3B%20filename%3D%22wordpress.png%22%3B%20filename%2A%3DUTF-8%27%27wordpress.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTF44ZAEY%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T120625Z&X-Amz-Expires=2547&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFEl8GqbU4%2BAZWXm076AaH%2B3S407ekrwvRLdQXFj8maSAiEA7oNJs0dICVPaCtN3NpIrAoDbQV6Ejyi77KrlQuPRpBUqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDNahsKqUdewADnORUCqPBbSt2LFuIdf7dnF6%2BSGZ9cPoiAZQMWLALN%2BWYyomEtoEWkOWvMa3f%2FvHfanqxv8y5APokVYlWhRKSi8EMnvvYlLkZCoZfEBYxrita%2BGJmOnAfLzKbAP4Y1yam8eHRyWd6gZv7A4xifGB4%2ByVBYpUwFfY%2FtSjbc%2FADNbGz8H5boNvsNv97iDrtAsWuhS%2BTsE9HMWty2Q5Kps5ZGh719NET5yzc4Q%2FtQXq6VZEsGmZJkhBk53ZbFfobOPyei9pZmZ6%2F2Mdq5510O22TvjtOWihXdrUVF18IGjoWAOzpmqJcFgY3pqd5Ptl8Jdv66jxrsyfzyou5wCExfQr5qzH9Vpmay4uCPhR%2FSyOG0CWwOh8b8NbDwQiT7n2e8mRdgfAZzQDYWZ3kDf3xJl4T%2BjizpvEyF4k8cnRHigJ9psCKck22rc%2FdJIeRzDPuK5gMydq%2BbZEiPRUgdLry1vf%2FHAVYzhqB51d5Ia44hsUeGvDrXu3hn5jGoJVb3p%2Bu8LXRAkstmLBEwTwx74%2BZLrtaIUbsPvoibM71bPShjn%2BeifHzFDMz1pzYAEKS3bKR%2BF6mAsb4TJcHb1aEgl%2F2VZr38huYt8TwDwXCn28i8e7UPTktLQ2%2BMY1xUbNU3qxurYTVuFskexXKmi%2BnALorE9k8A7GDdADBu%2BosuLTO%2FnUPwqP7dZYKwg749EtuHvA2OFyp16mblUz6KrLb%2FfAf3TLzS6zHIe9WcnoK0psjQn6DQdUv66ZNqunDkraEzFI7GUBVlDXzoFJMpTnm5cbS7icJeTI6SUbCamKJgZz1LYzEzm33%2FlZTz%2BFyEGL8HyorVpd5vY4dHVbb%2FeMQNELRsc2s1ONbdE6YfwyrhFyYvYBiYx9Ye%2F4ssowjpisrgY6sQFmStbg5zGr%2B68rMwEIJwcr9jwJvywdn4oxOR6RXInAJwN7lgch%2FvzVf1lSeRFZ6LuihOe%2FS4iwHxeNi0t9Xh3zgBPmKv%2FWlXb8g%2B6ZDByHn%2FH6haAptR1xW4BXNpTl7xRg1NW7b9aUxDCrRqOG%2Fy%2Bh2qYMDczVX6rGrxtEquYnaLpzcZzZ9hdZysgVk1A1SxT6%2Bkfp2tIiSadsRwSyKAYEPliJeaGXm3nwn7sIZmazF5Y%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=fabb08136941ae7b7a86dc804594b8c294e390fe1b8ce41d25e7807d04706d02",
+      "file_size": 263631,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-07-23T10:30:36.205Z",
+  "allow_singular_disclosure_after": -207020149.4087238,
+  "singular_disclosure_allowed": true,
+  "vote_count": 3,
+  "voters": [
+    "eveeez",
+    "zerotoone",
+    "japz"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

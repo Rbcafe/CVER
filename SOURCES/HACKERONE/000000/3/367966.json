@@ -1,0 +1,134 @@
+{
+  "id": 367966,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zNjc5NjY=",
+  "url": "https://hackerone.com/reports/367966",
+  "title": "FileUpload Plugin: CSRF (delete all attached files)",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-06-18T08:46:01.666Z",
+  "submitted_at": "2018-06-18T08:46:01.666Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "foobar7",
+    "url": "/foobar7",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/197/817/efb62be6777043aba724654aa495ebeccabb9e72_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17443,
+    "url": "https://hackerone.com/vanilla",
+    "handle": "vanilla",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Vanilla",
+      "twitter_handle": "vanilla",
+      "website": "http://vanillaforums.com",
+      "about": "Vanilla is a powerfully simple discussion forum you can easily customize to make as unique as your community."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-04-06T11:19:07.200Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-03-07T11:18:55.128Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Description\n------------\n\nThe current version (1.9.1) of the official [FileUpload](https://github.com/vanilla/addons/tree/master/plugins/FileUpload) plugin is vulnerable to CSRF. A successful attack allows the removal of files the attacked user has the permission to delete. Administrators for example have the permission to delete all attached files.\n\nAs the request to delete files is GET based, and as users can post image tags, an attacker does not need to get a user to visit an attacker-controlled website. Instead, it is enough if a user views the post of a user.\n\nPOC\n---\n\nCreate a new post or comment with the following content (where `localhost` represents the domain which hosts vanilla):\n\n\t<img src=\"http://localhost/vanilla-core-2-6/plugin/fileupload/delete/1?DeliveryType=VIEW&DeliveryMethod=JSON\" alt=\"test\">\n\t<img src=\"http://localhost/vanilla-core-2-6/plugin/fileupload/delete/2?DeliveryType=VIEW&DeliveryMethod=JSON\" alt=\"test\">\n\t<img src=\"http://localhost/vanilla-core-2-6/plugin/fileupload/delete/3?DeliveryType=VIEW&DeliveryMethod=JSON\" alt=\"test\">\n\t[...]\n\t<img src=\"http://localhost/vanilla-core-2-6/plugin/fileupload/delete/999?DeliveryType=VIEW&DeliveryMethod=JSON\" alt=\"test\">\n\nOnce a user views the post, the file(s) with the specified id will be deleted. The attack can target files 1 to n - where n is the most recent id - , and will successfully delete all files if an administrator views the post.\n\nSolution\n--------\n\nThe same TransientKey mechanism that protects other requests against CSRF can be used.\n\n## Impact\n\nDeletion of all images",
+  "bounty_amount": "300.0",
+  "formatted_bounty": "$300",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2019-04-06T11:18:55.190Z",
+  "allow_singular_disclosure_after": -153280041.12056348,
+  "singular_disclosure_allowed": true,
+  "vote_count": 24,
+  "voters": [
+    "ninetynine",
+    "sameerphad72",
+    "ali",
+    "savitar0x01",
+    "eveeez",
+    "khizer47",
+    "pwnsauc3_",
+    "sleepnotf0und",
+    "silv3rpoision",
+    "cryptographer",
+    "and 14 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 7.5,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "none",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 2101,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.vanillaforums.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

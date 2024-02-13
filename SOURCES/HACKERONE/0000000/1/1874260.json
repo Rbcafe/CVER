@@ -1,0 +1,136 @@
+{
+  "id": 1874260,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODc0MjYw",
+  "url": "https://hackerone.com/reports/1874260",
+  "title": "HTML injection that may lead to XSS on HackerOne.com through H1 Triage Wizard Chrome Extension",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2023-02-14T18:53:24.813Z",
+  "submitted_at": "2023-02-14T18:53:24.931Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jobert",
+    "url": "/jobert",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": true,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-02-14T20:17:48.764Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-02-14T20:09:20.467Z",
+  "team_member_agreed_on_going_public_at": "2023-02-14T20:17:48.533Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "To reproduce:\n\n* ensure you have the H1 Triage Wizard Chrome extension enabled\n* visit https://hackerone.com/reports/1622449?subject=security&/bugs=1\n* right-click the report, select \"View Triage Questionnaire (Beta)\"\n* observe an HTML payload being injected\n\n{F2173699}\n\nThe payload is stored in █████████. The contents of this file are dynamically loaded through the Chrome extension.\n\nThe vulnerability is caused by the following code in the `triage-extension-private` repository:\n\n```js\nbuildTriageQuestionnaireModal = (\n  modalElement,\n  triageQuestionnaireModalOptions\n) => {\n  let questionnaireResponses =\n    triageQuestionnaireModalOptions.questionnaireResponses;\n  if (questionnaireResponses) {\n    modalElement.innerHTML = triageQuestionnaireHTML\n      .replace(\"{{handle}}\", triageQuestionnaireModalOptions.handle) // <-- the handle here is taken from the subject parameter (i.e. \"security\")\n      .replace(\"{{1}}\", questionnaireResponses[1]) // <-- the response to the questionnaire is interpolated without sanitizing it\n      .replace(\"{{2}}\", questionnaireResponses[2]) // <-- this applies to all of these\n      .replace(\"{{3}}\", questionnaireResponses[3])\n// ...\n```\n\n## Impact\n\nThis vulnerability may lead to compromising confidential information or impact its integrity.",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 2173699,
+      "file_name": "Screen_Recording_2023-02-14_at_10.46.41_AM.mov",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/yj54tor2f4ostwjwxxzof78c19m5?response-content-disposition=attachment%3B%20filename%3D%22Screen_Recording_2023-02-14_at_10.46.41_AM.mov%22%3B%20filename%2A%3DUTF-8%27%27Screen_Recording_2023-02-14_at_10.46.41_AM.mov&response-content-type=video%2Fquicktime&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQUCCA7DHD%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143430Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIHCNox6LnbfpsPOZ24SuZD7SmUMmnFMuBhNP0OFwfet0AiEAkpKyZ6f33SCVR9y0RcPuuExpLASkm5tZYyuJ7xP69uUqsAUIdxADGgwwMTM2MTkyNzQ4NDkiDB%2Fr24bZLdxj8YwLKCqNBQZgUxNfuMJKIjx6tEuwLTQsXeaklTKPeMOwlhh4PwU%2F0tQ%2FtjR6k354HaHRD8XPh1ADfQxe3g2Ipn1LlV%2Fg19va7dN8NTBOYDmNzxhjHPJB1HXNn0bTlXm9rK87zq5vvXuRGXjTHZhXK4kMLiLsBkIDigJ0zFf4W0HDjcvJ44h1onKKRin0jORarhhZ%2BSFG3aPK3il8DiwiVDnc%2BSNzkaUkiwDfVfQ%2FQcw2ezgDh73EjOCYjuKPs8%2BcS8Wt3dg%2Fvlk9xxbqtuGRBe7OQ%2Fe58533M%2B4dfdcQMTPecQM3cXtwsFk%2FBtQixozl9vu8zww2o8x7Tt9FE4j%2FLBSiUWeK2XfkAZ0wwxxthtyCHFoUrv1iHkpZiLMpxTBESjaRCPVdzroU%2BsZ2ZXMbM1zN6AtvMlSYS58%2F2LFs6NwXHs4jzQgetMbS4TpIQKWT%2FsNGg%2FNISM8ELEA%2B5JP0NCh02SsjsoNlmA0c1QA5e0dVmZ%2F1szagat7B2DTfNmJKOmYUxzFIQ5gmjaEbIKCFZFAiF9h6I6BELMPURPw6%2FhynUHGSTFzb0Icg6%2B64sY%2FfDAxUGg0aBy5Gv5IyJXeYelmy6PeITj7n53UbX7X25SbXU23u4tCK7TRUAk%2F5LqsDdb0O%2FS2L7RPtIj0NHvPStoGPxxFhOlc2kQr%2Fva%2BHisWjnr9wQY4mEFpaThb4fcYaSO9SrCvVfPsDpLztRCJPs7nMowbFn4HXw1eLYUWkx%2FHFej7%2FznLYOhoL%2FtcOc1gPDjwk1qTcmHEHtVeisBKLyujEgszyMBG3icYpnYDJ3R4MWDYwhm069Wvem4%2Fhrt70H6eUkOpwp2VmRYbmNSdCwkEAWCiYcnB3JogYC9wpAoNH8q11MIfkra4GOrEB%2F81%2BY5pxMTNL3a7EKdOqnVWH149lCRgren6Mrg8PA7NsPUnghYBxjEvW7W0E6%2BAU2DxWOz1LxkPw6EzcXw3eufNxT2%2FMibPxbxPxwRw%2FLyT%2BST8mhsA80mZfUodvHSc%2B9MxjYsE0N3Y10dhMTHBLi%2FHumzhIWTtBWYrLroI6yOS2%2FgzCookRUFF5lam556jhf3xzicP75lgPdUwdZ4oDfMRWIAT19boE5ADx98CSHozY&X-Amz-SignedHeaders=host&X-Amz-Signature=c7c4aa1853c281564d98bbe28f27123c1367e9bec19a49c841f5855bcd6a462f",
+      "file_size": 8415870,
+      "type": "video/quicktime",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-03-16T20:09:20.666Z",
+  "allow_singular_disclosure_after": -28837509.774357773,
+  "singular_disclosure_allowed": true,
+  "vote_count": 19,
+  "voters": [
+    "shreyaschavhan",
+    "zy9ard3",
+    "shubham_srt",
+    "f_m",
+    "gamliel",
+    "r3y",
+    "m7mdharoun",
+    "japz",
+    "hunterr0x01",
+    "shivammusic",
+    "and 9 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 3.7,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "low",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

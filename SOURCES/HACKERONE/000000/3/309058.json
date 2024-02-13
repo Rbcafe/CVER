@@ -1,0 +1,121 @@
+{
+  "id": 309058,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMDkwNTg=",
+  "url": "https://hackerone.com/reports/309058",
+  "title": "Open Redirect on the nl.wordpress.net",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2018-01-25T17:33:02.479Z",
+  "submitted_at": "2018-01-25T17:33:02.479Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "sp1d3rs",
+    "url": "/sp1d3rs",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/079/690/6853ada3e124bdd8616b1be752223b558de38195_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 55,
+    "url": "https://hackerone.com/wordpress",
+    "handle": "wordpress",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/055/f114d1d31f904e3b903cd99a6cf566bb531f8401_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "WordPress",
+      "twitter_handle": "wordpress",
+      "website": "https://wordpress.org/",
+      "about": "Beautiful sites of any kind."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-02-22T22:53:16.427Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-02-22T22:53:16.339Z",
+  "team_member_agreed_on_going_public_at": "2018-01-26T15:30:08.213Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "##Description\nHello. I discovered an Open redirect vulnerability on the `nl.wordpress.org`.\n\n##Root cause\nThe 301 Redirect contains full hostname, followed with `@` without trailing slash, when using:\n```\nGET /@google.com HTTP/1.1\nHost: nl.wordpress.net\nUser-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:57.0) Gecko/20100101 Firefox/57.0\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nConnection: keep-alive\nUpgrade-Insecure-Requests: 1\n\n```\n```\nHTTP/1.1 301 Moved Permanently\nDate: Thu, 25 Jan 2018 17:26:07 GMT\nServer: Apache\nLocation: http://nl.wordpress.org@google.com\nContent-Length: 242\nKeep-Alive: timeout=2, max=100\nConnection: Keep-Alive\nContent-Type: text/html; charset=iso-8859-1\n\n```\n\n##POC (Google Chrome)\nhttp://nl.wordpress.net/@google.com\n\n##Suggested fix\nAppending the trailing slash after location hostname should fix the issue.\ne.g.\n```\nLocation: http://nl.wordpress.org@google.com\n```\n=>\n```\nLocation: http://nl.wordpress.org/@google.com\n```\n\n## Impact\n\nThe attacker can redirect the victim to the malicious site using legit *.wordpress.net subdomain name, which can be the copy of the real site, asking for the user credentials.",
+  "weakness": {
+    "id": 53,
+    "name": "Open Redirect"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2018-02-25T15:30:08.291Z",
+  "allow_singular_disclosure_after": -188256452.50876564,
+  "singular_disclosure_allowed": true,
+  "vote_count": 14,
+  "voters": [
+    "emitrani",
+    "apapedulimu",
+    "michan",
+    "whitesector",
+    "eveeez",
+    "cr4xerbik4sh",
+    "japz",
+    "silv3rpoision",
+    "sumit7",
+    "666reda",
+    "and 4 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 2763,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.wordpress.net",
+    "max_severity": "low"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

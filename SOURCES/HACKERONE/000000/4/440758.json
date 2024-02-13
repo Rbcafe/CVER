@@ -1,0 +1,144 @@
+{
+  "id": 440758,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NDA3NTg=",
+  "url": "https://hackerone.com/reports/440758",
+  "title": "Potential buffer overflow in demoplayer module of GoldSource Engine",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2018-11-14T15:25:50.243Z",
+  "submitted_at": "2018-11-14T15:25:50.243Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "kohtep2010",
+    "url": "/kohtep2010",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/ZLr6Jvt7ixmtsP1vjXVwpdye/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 23363,
+    "url": "https://hackerone.com/valve",
+    "handle": "valve",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/363/c78d46a7d0ea39e3a15a7c19c1a48634f2571eb9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/363/c78d46a7d0ea39e3a15a7c19c1a48634f2571eb9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Valve",
+      "twitter_handle": "",
+      "website": "https://www.valvesoftware.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "no-content",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-02-27T18:38:39.513Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-03-23T07:11:24.404Z",
+  "team_member_agreed_on_going_public_at": "2020-02-27T18:38:39.408Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "",
+  "bounty_amount": "200.0",
+  "formatted_bounty": "$200",
+  "weakness": {
+    "id": 3,
+    "name": "Classic Buffer Overflow"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 16,
+  "voters": [
+    "njbooher",
+    "a_d_a_m",
+    "securitychops",
+    "mvc",
+    "base_64",
+    "ali",
+    "romesful",
+    "johndoe1492",
+    "cryptographer",
+    "shadow87ls",
+    "and 6 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 1289,
+    "asset_type": "DOWNLOADABLE_EXECUTABLES",
+    "asset_identifier": "hl.exe",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 20449,
+      "category": "team",
+      "content": "Introduction\n\nHey. There's a potential vulnerability in the **GoldSource Engine** that allows to write data to stack of arbitrary size, thereby causing a buffer overflow and the ability to execute assembler code using **.dem** files.\n\n**Description**\n\nThe problem is located in the **DemoPlayer::ReadDemoMessage** function, which lies in **demoplayer** module, which is called when the **viewdemo** console command is executed. Since this command is not included in the filter list of the **ValidStuffText** function, and the .dem extension is not included in the filter list of the **IsSafeFileToDownload** function, the server can upload the malformed dem-file to the client and run it. Also, it is possible for hackers to spread incorrect dem-files without using HLDS, sending a malformed dem to users on web-resources or using messengers.\n\nThe following opcodes are vulnerable: **DemoCmd::PlaySound** (8), **DemoCmd::PayLoad** (9). These opcodes contain a variable responsible for the amount of data that must be read by the **BitBuffer::ReadBuf** function. Since the variable where the read result fits is located in the stack memory, it is possible to overflow the buffer and overwrite the return address on its own code.\n\nAt the moment, the vulnerability does not pose a risk, since the limit of any network packet is 4010 (**MAX_UDP_PACKET** constant), which excludes the possibility of a buffer overflow in the DemoCmd::PayLoad command (which is 32767 bytes in size). At the same time, the buffer for DemoCmd::PlaySound is 256 bytes, but this buffer is located in front of the buffer for DemoCmd::PayLoad, which will not allow rewriting the return address on the stack. However, there is a potential danger that in future recompiling of the project, the buffers may be swapped, which will cause a vulnerability for the DemoCmd::PlaySound package.\n\n**Possible Solutions**\n\nCreate conditions that don't allow to read too much data. For example:\n\n```\nsize = BitBuffer::ReadLong(buf);\nif (size > sizeof(buffer))\n  size = sizeof(buffer);\nBitBuffer::ReadBuf(buf, size, buffer);\n```\n\nImpact\n-------\nAs said before, an attacker can remotely execute arbitrary assembly code on the clients or player can run malformed dem-file himself with **viewdemo** console command.",
+      "user": {
+        "id": 279011,
+        "username": "mikela",
+        "name": "Mike L",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": "",
+        "created_at": "2018-05-17T22:06:50.780Z",
+        "url": "https://hackerone.com/mikela",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png",
+          "medium": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png",
+          "xtralarge": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

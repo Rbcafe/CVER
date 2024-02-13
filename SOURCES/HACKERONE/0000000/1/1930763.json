@@ -1,0 +1,188 @@
+{
+  "id": 1930763,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xOTMwNzYz",
+  "url": "https://hackerone.com/reports/1930763",
+  "title": "RichText parser vulnerability in scheduled posts allows XSS",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2023-04-03T12:58:42.487Z",
+  "submitted_at": "2023-04-03T12:58:42.682Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "revolte",
+    "url": "/revolte",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/15ior4tcao77c38t2acgw3gi9ufe/9a55e00ecd2cdf18a7f40678e6836e4cdc90bf95eb4b50c43f5fb775da40bb65"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 35710,
+    "url": "https://hackerone.com/reddit",
+    "handle": "reddit",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/710/c1ae53147a025b33b7c8383200432c8b4a9b839a_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/710/c1ae53147a025b33b7c8383200432c8b4a9b839a_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Reddit",
+      "twitter_handle": "reddit",
+      "website": "https://www.reddit.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2023-04-20T18:37:38.642Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-04-20T16:32:14.432Z",
+  "team_member_agreed_on_going_public_at": "2023-04-20T18:37:38.530Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nRichText parser is not filtering links when editing scheduled posts\n\n## Steps To Reproduce:\n\n  1. Create a new scheduled post with a link: {F2270188}\n  2. Intercept the request with Burp Suite/Other proxies and replace the link with javascript scheme payload: {{F2270195}\n  3. Navigate to scheduled posts and click Edit: {F2270203}\n  4. Observe the malicious link, if you click on it, the javascript will execute: {F2270204}\n\n## Root cause and possible ways leverage\nWhen submitting a scheduled post, API doesn't validate links, it happens only on the client side and the links can be forged with interception of requests. Though, it seems it is impossible to get the XSS in live post, when submitting the malicious post, reddit turns richtext to markdown and then to html, which automatically removes invalid links. Another possible way to bring it in real post, is to use Link type and also forge the link, but when submitting it will just give an error\n\n## Impact\n\nAttacker can trick admins to visit the scheduled editing page and click on malicious link, which results in XSS",
+  "bounty_amount": "5000.0",
+  "formatted_bounty": "$5,000",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 2270188,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/cinkfybkjr4015qlphqchnpweq98?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQR3LOZ34E%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143545Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIDWrw%2BabNi5FYA36SsKLXsWapZP8oD0cb6mlyJZlOiG%2BAiEA27B8%2Fr%2FSmYlcTxqwi5r8KNFFVvDYBNDLIZ1pULigN9cqsQUIdxADGgwwMTM2MTkyNzQ4NDkiDMDsoyRbmB2fznYP4SqOBZjZXRr4HW3gTNvoF6bdzvFgr1e7M%2BOpNIGjIPuSkr%2BbNv4pUSvE4S5VhqZAsWhc2lMKM6Bf9oBvU8aHtLZVKIg2nP7QY4Pi82JMTD6v83qvK6HMq%2BO0LEPP05zjE6rTFOMC7SrToKkZcVkZ3lWzUKGq18RnktiHbRvvRNy3SGBzhBvyiAFtMed%2BO0533NiNsVN7uOTlEx%2Bw85oqT87ZRrZR9w6pcBQpeDiMzh19WA9AUUYLPiP9pSiNVrB6k08wdqhTg%2FyVB0jNFS8u2WfrzSb7%2BoGsyZmsKqpmnxLnh8btcBepkwtzR216nLyuFvgTJmCzirFN8unanAFRHZ3qJFumdvVRfe2xS8p7F5u5mgBdDzv4mhKKoESpW32ogutCs2K20K1SKM12mcGO4BBQPJwaWRzmby5TkuByrfaYxMMwp%2BIaonr%2FCg5m9WOzNKLl7bFYfbyUhxz4I0CjRbrDboLzKq9FxRz2okU3iF6KQT3RP5urmkUImjbo69gl2Lhp1csaq%2BsPv4g30eibN5ZKAKi%2FV%2FkXhc26dpaQKRIjQYnYKK7m5Aauh9%2BgpNbdhx4C6VgAM8FJw5X04P4RMb13iT7njO5E8BMbTDOHhmCCnleZtu81gNCeGe1OWHLKa9s7RTS9U%2BMTFr8kOSUnSEuxr6z5F32VsdsLED6Rzoz5p6bKWccOP83MMhRHwxS21p4UPQAPVIlO1Y1GNfOJJT1bSstX%2FJ9e74s%2B6V6tqnsDjT%2B9%2Fl2%2FpzHlT3xbu8yqZ%2B0xN%2BqAJOtHaEp7LUa1yqoxiGD28i7FwsXDckebTHZyjbmZzLh4OHnFxKt8Ru2ahBhbCOSNIJI2hjT8EUGAdQ9sPkg4sAcKxEj4MgzDnDBqvDDP5a2uBjqxAXjDc1bWWv1wT0%2Fj5w4MwPmTV%2FMmryvYoNlEQArqMA%2Fo5WTEHb3sNECRCIjLuJJkv%2FU0alCBR0%2FF92NDKHPPmMRhnRlTrdW0hDQElJMPdIEBgNIvxoUaSZe1DtJHz1ZbRVRAzQDOizEnnvSgxTRbi6cGd57MGitOqp7nVl%2BEg7V302txJLPRb%2BDM8%2BVHdjgizI36AjILXohDhlS%2BQ2PBzXouPgj%2BRMrtc4nvrAA0DRZhkg%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a441896d166ce8b9d5197c7bab0c7fa262f0b072e6b8e6f110839ca831e0bca1",
+      "file_size": 36677,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 2270195,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ibj5otdws9j7q56uorvktko7mawd?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQR3LOZ34E%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143545Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIDWrw%2BabNi5FYA36SsKLXsWapZP8oD0cb6mlyJZlOiG%2BAiEA27B8%2Fr%2FSmYlcTxqwi5r8KNFFVvDYBNDLIZ1pULigN9cqsQUIdxADGgwwMTM2MTkyNzQ4NDkiDMDsoyRbmB2fznYP4SqOBZjZXRr4HW3gTNvoF6bdzvFgr1e7M%2BOpNIGjIPuSkr%2BbNv4pUSvE4S5VhqZAsWhc2lMKM6Bf9oBvU8aHtLZVKIg2nP7QY4Pi82JMTD6v83qvK6HMq%2BO0LEPP05zjE6rTFOMC7SrToKkZcVkZ3lWzUKGq18RnktiHbRvvRNy3SGBzhBvyiAFtMed%2BO0533NiNsVN7uOTlEx%2Bw85oqT87ZRrZR9w6pcBQpeDiMzh19WA9AUUYLPiP9pSiNVrB6k08wdqhTg%2FyVB0jNFS8u2WfrzSb7%2BoGsyZmsKqpmnxLnh8btcBepkwtzR216nLyuFvgTJmCzirFN8unanAFRHZ3qJFumdvVRfe2xS8p7F5u5mgBdDzv4mhKKoESpW32ogutCs2K20K1SKM12mcGO4BBQPJwaWRzmby5TkuByrfaYxMMwp%2BIaonr%2FCg5m9WOzNKLl7bFYfbyUhxz4I0CjRbrDboLzKq9FxRz2okU3iF6KQT3RP5urmkUImjbo69gl2Lhp1csaq%2BsPv4g30eibN5ZKAKi%2FV%2FkXhc26dpaQKRIjQYnYKK7m5Aauh9%2BgpNbdhx4C6VgAM8FJw5X04P4RMb13iT7njO5E8BMbTDOHhmCCnleZtu81gNCeGe1OWHLKa9s7RTS9U%2BMTFr8kOSUnSEuxr6z5F32VsdsLED6Rzoz5p6bKWccOP83MMhRHwxS21p4UPQAPVIlO1Y1GNfOJJT1bSstX%2FJ9e74s%2B6V6tqnsDjT%2B9%2Fl2%2FpzHlT3xbu8yqZ%2B0xN%2BqAJOtHaEp7LUa1yqoxiGD28i7FwsXDckebTHZyjbmZzLh4OHnFxKt8Ru2ahBhbCOSNIJI2hjT8EUGAdQ9sPkg4sAcKxEj4MgzDnDBqvDDP5a2uBjqxAXjDc1bWWv1wT0%2Fj5w4MwPmTV%2FMmryvYoNlEQArqMA%2Fo5WTEHb3sNECRCIjLuJJkv%2FU0alCBR0%2FF92NDKHPPmMRhnRlTrdW0hDQElJMPdIEBgNIvxoUaSZe1DtJHz1ZbRVRAzQDOizEnnvSgxTRbi6cGd57MGitOqp7nVl%2BEg7V302txJLPRb%2BDM8%2BVHdjgizI36AjILXohDhlS%2BQ2PBzXouPgj%2BRMrtc4nvrAA0DRZhkg%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=df22a27c69696b1909bb8d7f161e7b0f5bc2101779b3750581c721662910ca69",
+      "file_size": 50316,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 2270203,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/8fuphyf1utskcsgji17mjip524u7?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQR3LOZ34E%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143545Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIDWrw%2BabNi5FYA36SsKLXsWapZP8oD0cb6mlyJZlOiG%2BAiEA27B8%2Fr%2FSmYlcTxqwi5r8KNFFVvDYBNDLIZ1pULigN9cqsQUIdxADGgwwMTM2MTkyNzQ4NDkiDMDsoyRbmB2fznYP4SqOBZjZXRr4HW3gTNvoF6bdzvFgr1e7M%2BOpNIGjIPuSkr%2BbNv4pUSvE4S5VhqZAsWhc2lMKM6Bf9oBvU8aHtLZVKIg2nP7QY4Pi82JMTD6v83qvK6HMq%2BO0LEPP05zjE6rTFOMC7SrToKkZcVkZ3lWzUKGq18RnktiHbRvvRNy3SGBzhBvyiAFtMed%2BO0533NiNsVN7uOTlEx%2Bw85oqT87ZRrZR9w6pcBQpeDiMzh19WA9AUUYLPiP9pSiNVrB6k08wdqhTg%2FyVB0jNFS8u2WfrzSb7%2BoGsyZmsKqpmnxLnh8btcBepkwtzR216nLyuFvgTJmCzirFN8unanAFRHZ3qJFumdvVRfe2xS8p7F5u5mgBdDzv4mhKKoESpW32ogutCs2K20K1SKM12mcGO4BBQPJwaWRzmby5TkuByrfaYxMMwp%2BIaonr%2FCg5m9WOzNKLl7bFYfbyUhxz4I0CjRbrDboLzKq9FxRz2okU3iF6KQT3RP5urmkUImjbo69gl2Lhp1csaq%2BsPv4g30eibN5ZKAKi%2FV%2FkXhc26dpaQKRIjQYnYKK7m5Aauh9%2BgpNbdhx4C6VgAM8FJw5X04P4RMb13iT7njO5E8BMbTDOHhmCCnleZtu81gNCeGe1OWHLKa9s7RTS9U%2BMTFr8kOSUnSEuxr6z5F32VsdsLED6Rzoz5p6bKWccOP83MMhRHwxS21p4UPQAPVIlO1Y1GNfOJJT1bSstX%2FJ9e74s%2B6V6tqnsDjT%2B9%2Fl2%2FpzHlT3xbu8yqZ%2B0xN%2BqAJOtHaEp7LUa1yqoxiGD28i7FwsXDckebTHZyjbmZzLh4OHnFxKt8Ru2ahBhbCOSNIJI2hjT8EUGAdQ9sPkg4sAcKxEj4MgzDnDBqvDDP5a2uBjqxAXjDc1bWWv1wT0%2Fj5w4MwPmTV%2FMmryvYoNlEQArqMA%2Fo5WTEHb3sNECRCIjLuJJkv%2FU0alCBR0%2FF92NDKHPPmMRhnRlTrdW0hDQElJMPdIEBgNIvxoUaSZe1DtJHz1ZbRVRAzQDOizEnnvSgxTRbi6cGd57MGitOqp7nVl%2BEg7V302txJLPRb%2BDM8%2BVHdjgizI36AjILXohDhlS%2BQ2PBzXouPgj%2BRMrtc4nvrAA0DRZhkg%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=cf62f828d89b98889f27974b1514afd49e2e811f743016f9def8935ed94fe8c9",
+      "file_size": 26052,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 2270204,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/pk8bqe3eyp4t4jxlx28y1s33byay?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQR3LOZ34E%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143545Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIDWrw%2BabNi5FYA36SsKLXsWapZP8oD0cb6mlyJZlOiG%2BAiEA27B8%2Fr%2FSmYlcTxqwi5r8KNFFVvDYBNDLIZ1pULigN9cqsQUIdxADGgwwMTM2MTkyNzQ4NDkiDMDsoyRbmB2fznYP4SqOBZjZXRr4HW3gTNvoF6bdzvFgr1e7M%2BOpNIGjIPuSkr%2BbNv4pUSvE4S5VhqZAsWhc2lMKM6Bf9oBvU8aHtLZVKIg2nP7QY4Pi82JMTD6v83qvK6HMq%2BO0LEPP05zjE6rTFOMC7SrToKkZcVkZ3lWzUKGq18RnktiHbRvvRNy3SGBzhBvyiAFtMed%2BO0533NiNsVN7uOTlEx%2Bw85oqT87ZRrZR9w6pcBQpeDiMzh19WA9AUUYLPiP9pSiNVrB6k08wdqhTg%2FyVB0jNFS8u2WfrzSb7%2BoGsyZmsKqpmnxLnh8btcBepkwtzR216nLyuFvgTJmCzirFN8unanAFRHZ3qJFumdvVRfe2xS8p7F5u5mgBdDzv4mhKKoESpW32ogutCs2K20K1SKM12mcGO4BBQPJwaWRzmby5TkuByrfaYxMMwp%2BIaonr%2FCg5m9WOzNKLl7bFYfbyUhxz4I0CjRbrDboLzKq9FxRz2okU3iF6KQT3RP5urmkUImjbo69gl2Lhp1csaq%2BsPv4g30eibN5ZKAKi%2FV%2FkXhc26dpaQKRIjQYnYKK7m5Aauh9%2BgpNbdhx4C6VgAM8FJw5X04P4RMb13iT7njO5E8BMbTDOHhmCCnleZtu81gNCeGe1OWHLKa9s7RTS9U%2BMTFr8kOSUnSEuxr6z5F32VsdsLED6Rzoz5p6bKWccOP83MMhRHwxS21p4UPQAPVIlO1Y1GNfOJJT1bSstX%2FJ9e74s%2B6V6tqnsDjT%2B9%2Fl2%2FpzHlT3xbu8yqZ%2B0xN%2BqAJOtHaEp7LUa1yqoxiGD28i7FwsXDckebTHZyjbmZzLh4OHnFxKt8Ru2ahBhbCOSNIJI2hjT8EUGAdQ9sPkg4sAcKxEj4MgzDnDBqvDDP5a2uBjqxAXjDc1bWWv1wT0%2Fj5w4MwPmTV%2FMmryvYoNlEQArqMA%2Fo5WTEHb3sNECRCIjLuJJkv%2FU0alCBR0%2FF92NDKHPPmMRhnRlTrdW0hDQElJMPdIEBgNIvxoUaSZe1DtJHz1ZbRVRAzQDOizEnnvSgxTRbi6cGd57MGitOqp7nVl%2BEg7V302txJLPRb%2BDM8%2BVHdjgizI36AjILXohDhlS%2BQ2PBzXouPgj%2BRMrtc4nvrAA0DRZhkg%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=895d6737d76357ac410fbffe4612cf2aae24b8d252f656b4872cfb1337af0944",
+      "file_size": 23028,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 253,
+  "voters": [
+    "mr-medi",
+    "m4t35z",
+    "evanconnelly",
+    "datsuraku147",
+    "h0rus725",
+    "david96",
+    "shreyaschavhan",
+    "0xsasan",
+    "xchessy",
+    "jellebwns",
+    "and 243 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 7.5,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 18825,
+    "asset_type": "URL",
+    "asset_identifier": "www.reddit.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 282611,
+      "category": "researcher",
+      "content": "Reddit's MarkDown parser wasn't filtering hyperlinks on server-side in scheduled post feature, which lets attacker to modify a request with normal hyperlink embeding a malicious link using javascript scheme",
+      "user": {
+        "id": 1948080,
+        "username": "revolte",
+        "name": "LaRevoltage",
+        "bio": "@LaRevoltage — Telegram",
+        "cleared": false,
+        "verified": true,
+        "website": null,
+        "location": "",
+        "created_at": "2021-09-07T16:19:03.638Z",
+        "url": "https://hackerone.com/revolte",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/15ior4tcao77c38t2acgw3gi9ufe/9a55e00ecd2cdf18a7f40678e6836e4cdc90bf95eb4b50c43f5fb775da40bb65",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/15ior4tcao77c38t2acgw3gi9ufe/d9cda3948dbcdef886be5f7bc601358556d87dbd736cb28585026b898b9f4b13",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/15ior4tcao77c38t2acgw3gi9ufe/005316ebca45f723095e2b2a88226d4baddca06464cec5531fc705cb12653130"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

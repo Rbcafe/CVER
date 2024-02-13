@@ -1,0 +1,144 @@
+{
+  "id": 172698,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzI2OTg=",
+  "url": "https://hackerone.com/reports/172698",
+  "title": "Subdomain take over signup.websummit",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-09-28T18:11:57.806Z",
+  "submitted_at": "2016-09-28T18:11:57.806Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "glc",
+    "url": "/glc",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/007/824/0f41909d4ed4edf968cecd53f627f130713c99b6_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 11973,
+    "url": "https://hackerone.com/websummit",
+    "handle": "websummit",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/011/973/3423163f6fc6f425635d7f0695cf789524e11872_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/011/973/3423163f6fc6f425635d7f0695cf789524e11872_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "WebSummit",
+      "twitter_handle": "",
+      "website": "http://videos.websummit.net",
+      "about": "Videos of Web Summit Talks"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-01-29T10:01:48.916Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-12-30T10:01:34.728Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Subdomain take over\n\n\n\nHi,\n\nYou have a subdomain aka `signup.websummit.net` that point to a third party service hosted on Heroku: `wsv1.herokuapp.com`. The nslookup command shows the DNS configuration.\n\n```\n$ nslookup signup.websummit.net 8.8.8.8\nServer:\t\t8.8.8.8\nAddress:\t8.8.8.8#53\n\nNon-authoritative answer:\nsignup.websummit.net\tcanonical name = wsv1.herokuapp.com.\nwsv1.herokuapp.com\tcanonical name = us-east-1-a.route.herokuapp.com.\nName:\tus-east-1-a.route.herokuapp.com\nAddress: 23.23.94.135\n```\n\nHowever it seems that your didn't own/claim the name `wsv1` on Heroku. That means an attacker could take it and trick your users/staff by copying your primary website and design.\n\n\n**PoC:**\n\nSee the attached screenshots.\n\n\n**Risk:**\n\n- fake website\n- malicious code injection\n- users tricking\n- company impersonation\n\nSince the vulnerable subdomain is called `signup`, it's a perfect place to create a fake login/subscribe page to steal users credentials. An attacker would post links on forums or send emails and then wait for people to signup on the site he owns.\n\n\n**Remediation:**\n\nRemove the cname entry or claim the subdomain `wsv1` on Heroku.\nSee also:\nhttps://labs.detectify.com/2014/10/21/hostile-subdomain-takeover-using-herokugithubdesk-more/\nhttps://medium.com/@atom/subdomain-takeover-through-external-services-f0f7ee2b93bd#.hglqnm2gg\nhttp://yassineaboukir.com/blog/neglected-dns-records-exploited-to-takeover-subdomains/\n\n\nNote that I claimed the domain on Heroku, let me know if you want to get it back, I'll delete it soon.",
+  "weakness": {
+    "id": 57,
+    "name": "Violation of Secure Design Principles"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 123667,
+      "file_name": "subto_20160928_notfound.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/123/667/2b03f35f09c7e9322325a5ff8587aa1d49e18aad/subto_20160928_notfound.png?response-content-disposition=attachment%3B%20filename%3D%22subto_20160928_notfound.png%22%3B%20filename%2A%3DUTF-8%27%27subto_20160928_notfound.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2ILJLE6S%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122427Z&X-Amz-Expires=1935&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDJPm2BocKwYVHq6OvXN7Sjam7eo%2BSIxzA09VW0AVbp2gIhAJSEEdx%2Bwdp3lk64VEqNkIYIhXx%2FxKFpBdSyuvKn3uDQKrIFCHAQAxoMMDEzNjE5Mjc0ODQ5IgwDahPqWWM9RqpHhfIqjwWks8v1jlby6TsImaMYsudHHbH1Wx6QSFFy8DYbsq4sdNBOEyl9ATKaXjCK28W3pUZj7TyOZVii2jhReFgA81tdYD5PFfaf5uIAxYqN97CUjE9tYuC42DG8AfHfqoUrQSIYfsELneF%2FrwPpYOjej6pbEuJZgC5M%2FMSNXxJ9AkJT8ulcJ7ug2u26Vej6laJdmacOPyHhTSDRKqZ8bmU2qZkHjpllBjac8S0jwAJ%2FXOU29NjYq0HDmzg%2FtCQVuok6OwzgDb5hbqWacuN1sxtQGmO9mkyNT4Jw9z%2F%2FM2jKe5Ofp7a%2BsW7M29sPZWBmYpMpm8g2vSNBkxTCySmUy56WR33dkSWPoBYsFBFRxV0i7fuZNan6wwqSXVqlsDGcF4MC3juEMfOmDXorpSY3GLJ%2FVwB%2Fj80Xv6a%2Bp7E%2Bz60vHuZPKRdWwdUIM1%2FbZuj9lLL0UDjQ8xpD%2Bn0FK1fiDxHk1SpOsDjzEP1WahBgmwofMy3D1wpHA5KqDWaKaVFS70XROakujpAfdyfQE5PP6LUnATbGHMnn1bUwhuc0l2VVsshmhKcQ3B5C%2Br3sjG3Hmc9awv6w5zgQBLzR5VleYsLEogGPGtoOncfnHncG8bFUQeNJ22mQ5IuXzbJgMrGIr0P2mvs9lAWFZg6lDLV4JH5vHDviIh7FgcYJUEIkC%2FASSSfJ4S%2F1zmeydCzaoMWM1qaEMyyUrSw34Rs%2FNYdwqtXkMGgT8i40ddZ1ExgLoiuYapUfOH5SmgiRbbREJwXv%2FHCtjdpSUHP9m9syQLajUPFrc65NAq0WB5qVPRHnYKkJmfEG1uUTPQG95vZJq9AQRivJGj4HDlBYWgll%2B9E5Nd9B68J7QKUpyIIN7ophw%2FbOBQN8MMaXrK4GOrABPy7xOWyZjlcC8oDrt3gIH%2BpFpbBCNRA1BmLMfIgaiBMP5w4F8eLFwLZvlKhnztuddGA6O4Uh8OLKOQ2aMk5lW1Xis4FfdDyGJM6fgZBIafAGSXYrAN8T%2FOBBirnmKH3TipDF3gxk1HBgavZXNceHqfYGjmJlFOMF6p%2B60lxNvCERqm7z1BwOfKyvtKJeK4bvct0t59UMTMS%2FtySInE4heSVeslW4qBd%2FQRC4aXxUgJY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d136e4dc6f2bfaa5160e473d0dc9f8db3a28ffd62a22f34a17be023528768339",
+      "file_size": 33244,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 123668,
+      "file_name": "subto_20160928_nslookup.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/123/668/6b9627909cd6dfe16e21686f1108fe59af9cbbd7/subto_20160928_nslookup.png?response-content-disposition=attachment%3B%20filename%3D%22subto_20160928_nslookup.png%22%3B%20filename%2A%3DUTF-8%27%27subto_20160928_nslookup.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2ILJLE6S%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122427Z&X-Amz-Expires=1935&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDJPm2BocKwYVHq6OvXN7Sjam7eo%2BSIxzA09VW0AVbp2gIhAJSEEdx%2Bwdp3lk64VEqNkIYIhXx%2FxKFpBdSyuvKn3uDQKrIFCHAQAxoMMDEzNjE5Mjc0ODQ5IgwDahPqWWM9RqpHhfIqjwWks8v1jlby6TsImaMYsudHHbH1Wx6QSFFy8DYbsq4sdNBOEyl9ATKaXjCK28W3pUZj7TyOZVii2jhReFgA81tdYD5PFfaf5uIAxYqN97CUjE9tYuC42DG8AfHfqoUrQSIYfsELneF%2FrwPpYOjej6pbEuJZgC5M%2FMSNXxJ9AkJT8ulcJ7ug2u26Vej6laJdmacOPyHhTSDRKqZ8bmU2qZkHjpllBjac8S0jwAJ%2FXOU29NjYq0HDmzg%2FtCQVuok6OwzgDb5hbqWacuN1sxtQGmO9mkyNT4Jw9z%2F%2FM2jKe5Ofp7a%2BsW7M29sPZWBmYpMpm8g2vSNBkxTCySmUy56WR33dkSWPoBYsFBFRxV0i7fuZNan6wwqSXVqlsDGcF4MC3juEMfOmDXorpSY3GLJ%2FVwB%2Fj80Xv6a%2Bp7E%2Bz60vHuZPKRdWwdUIM1%2FbZuj9lLL0UDjQ8xpD%2Bn0FK1fiDxHk1SpOsDjzEP1WahBgmwofMy3D1wpHA5KqDWaKaVFS70XROakujpAfdyfQE5PP6LUnATbGHMnn1bUwhuc0l2VVsshmhKcQ3B5C%2Br3sjG3Hmc9awv6w5zgQBLzR5VleYsLEogGPGtoOncfnHncG8bFUQeNJ22mQ5IuXzbJgMrGIr0P2mvs9lAWFZg6lDLV4JH5vHDviIh7FgcYJUEIkC%2FASSSfJ4S%2F1zmeydCzaoMWM1qaEMyyUrSw34Rs%2FNYdwqtXkMGgT8i40ddZ1ExgLoiuYapUfOH5SmgiRbbREJwXv%2FHCtjdpSUHP9m9syQLajUPFrc65NAq0WB5qVPRHnYKkJmfEG1uUTPQG95vZJq9AQRivJGj4HDlBYWgll%2B9E5Nd9B68J7QKUpyIIN7ophw%2FbOBQN8MMaXrK4GOrABPy7xOWyZjlcC8oDrt3gIH%2BpFpbBCNRA1BmLMfIgaiBMP5w4F8eLFwLZvlKhnztuddGA6O4Uh8OLKOQ2aMk5lW1Xis4FfdDyGJM6fgZBIafAGSXYrAN8T%2FOBBirnmKH3TipDF3gxk1HBgavZXNceHqfYGjmJlFOMF6p%2B60lxNvCERqm7z1BwOfKyvtKJeK4bvct0t59UMTMS%2FtySInE4heSVeslW4qBd%2FQRC4aXxUgJY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bdcb2e1165bc1b2e669d8a212a94a0c8142feccd3e0a9b63f5349fc8c8b17fd6",
+      "file_size": 10696,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 123669,
+      "file_name": "subto_20160928_owned1.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/123/669/778278333fa5f12e75a3d00262774d90aa759e7d/subto_20160928_owned1.png?response-content-disposition=attachment%3B%20filename%3D%22subto_20160928_owned1.png%22%3B%20filename%2A%3DUTF-8%27%27subto_20160928_owned1.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2ILJLE6S%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122427Z&X-Amz-Expires=1935&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDJPm2BocKwYVHq6OvXN7Sjam7eo%2BSIxzA09VW0AVbp2gIhAJSEEdx%2Bwdp3lk64VEqNkIYIhXx%2FxKFpBdSyuvKn3uDQKrIFCHAQAxoMMDEzNjE5Mjc0ODQ5IgwDahPqWWM9RqpHhfIqjwWks8v1jlby6TsImaMYsudHHbH1Wx6QSFFy8DYbsq4sdNBOEyl9ATKaXjCK28W3pUZj7TyOZVii2jhReFgA81tdYD5PFfaf5uIAxYqN97CUjE9tYuC42DG8AfHfqoUrQSIYfsELneF%2FrwPpYOjej6pbEuJZgC5M%2FMSNXxJ9AkJT8ulcJ7ug2u26Vej6laJdmacOPyHhTSDRKqZ8bmU2qZkHjpllBjac8S0jwAJ%2FXOU29NjYq0HDmzg%2FtCQVuok6OwzgDb5hbqWacuN1sxtQGmO9mkyNT4Jw9z%2F%2FM2jKe5Ofp7a%2BsW7M29sPZWBmYpMpm8g2vSNBkxTCySmUy56WR33dkSWPoBYsFBFRxV0i7fuZNan6wwqSXVqlsDGcF4MC3juEMfOmDXorpSY3GLJ%2FVwB%2Fj80Xv6a%2Bp7E%2Bz60vHuZPKRdWwdUIM1%2FbZuj9lLL0UDjQ8xpD%2Bn0FK1fiDxHk1SpOsDjzEP1WahBgmwofMy3D1wpHA5KqDWaKaVFS70XROakujpAfdyfQE5PP6LUnATbGHMnn1bUwhuc0l2VVsshmhKcQ3B5C%2Br3sjG3Hmc9awv6w5zgQBLzR5VleYsLEogGPGtoOncfnHncG8bFUQeNJ22mQ5IuXzbJgMrGIr0P2mvs9lAWFZg6lDLV4JH5vHDviIh7FgcYJUEIkC%2FASSSfJ4S%2F1zmeydCzaoMWM1qaEMyyUrSw34Rs%2FNYdwqtXkMGgT8i40ddZ1ExgLoiuYapUfOH5SmgiRbbREJwXv%2FHCtjdpSUHP9m9syQLajUPFrc65NAq0WB5qVPRHnYKkJmfEG1uUTPQG95vZJq9AQRivJGj4HDlBYWgll%2B9E5Nd9B68J7QKUpyIIN7ophw%2FbOBQN8MMaXrK4GOrABPy7xOWyZjlcC8oDrt3gIH%2BpFpbBCNRA1BmLMfIgaiBMP5w4F8eLFwLZvlKhnztuddGA6O4Uh8OLKOQ2aMk5lW1Xis4FfdDyGJM6fgZBIafAGSXYrAN8T%2FOBBirnmKH3TipDF3gxk1HBgavZXNceHqfYGjmJlFOMF6p%2B60lxNvCERqm7z1BwOfKyvtKJeK4bvct0t59UMTMS%2FtySInE4heSVeslW4qBd%2FQRC4aXxUgJY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b6b9c4cac0ece56df745f2d4614564d670985cab6458093bf2f39ff90dd9600f",
+      "file_size": 19863,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 123670,
+      "file_name": "subto_20160928_owned2.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/123/670/64f01f332bd21e2245173bf636222bb2b14f543c/subto_20160928_owned2.png?response-content-disposition=attachment%3B%20filename%3D%22subto_20160928_owned2.png%22%3B%20filename%2A%3DUTF-8%27%27subto_20160928_owned2.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2ILJLE6S%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122427Z&X-Amz-Expires=1935&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDJPm2BocKwYVHq6OvXN7Sjam7eo%2BSIxzA09VW0AVbp2gIhAJSEEdx%2Bwdp3lk64VEqNkIYIhXx%2FxKFpBdSyuvKn3uDQKrIFCHAQAxoMMDEzNjE5Mjc0ODQ5IgwDahPqWWM9RqpHhfIqjwWks8v1jlby6TsImaMYsudHHbH1Wx6QSFFy8DYbsq4sdNBOEyl9ATKaXjCK28W3pUZj7TyOZVii2jhReFgA81tdYD5PFfaf5uIAxYqN97CUjE9tYuC42DG8AfHfqoUrQSIYfsELneF%2FrwPpYOjej6pbEuJZgC5M%2FMSNXxJ9AkJT8ulcJ7ug2u26Vej6laJdmacOPyHhTSDRKqZ8bmU2qZkHjpllBjac8S0jwAJ%2FXOU29NjYq0HDmzg%2FtCQVuok6OwzgDb5hbqWacuN1sxtQGmO9mkyNT4Jw9z%2F%2FM2jKe5Ofp7a%2BsW7M29sPZWBmYpMpm8g2vSNBkxTCySmUy56WR33dkSWPoBYsFBFRxV0i7fuZNan6wwqSXVqlsDGcF4MC3juEMfOmDXorpSY3GLJ%2FVwB%2Fj80Xv6a%2Bp7E%2Bz60vHuZPKRdWwdUIM1%2FbZuj9lLL0UDjQ8xpD%2Bn0FK1fiDxHk1SpOsDjzEP1WahBgmwofMy3D1wpHA5KqDWaKaVFS70XROakujpAfdyfQE5PP6LUnATbGHMnn1bUwhuc0l2VVsshmhKcQ3B5C%2Br3sjG3Hmc9awv6w5zgQBLzR5VleYsLEogGPGtoOncfnHncG8bFUQeNJ22mQ5IuXzbJgMrGIr0P2mvs9lAWFZg6lDLV4JH5vHDviIh7FgcYJUEIkC%2FASSSfJ4S%2F1zmeydCzaoMWM1qaEMyyUrSw34Rs%2FNYdwqtXkMGgT8i40ddZ1ExgLoiuYapUfOH5SmgiRbbREJwXv%2FHCtjdpSUHP9m9syQLajUPFrc65NAq0WB5qVPRHnYKkJmfEG1uUTPQG95vZJq9AQRivJGj4HDlBYWgll%2B9E5Nd9B68J7QKUpyIIN7ophw%2FbOBQN8MMaXrK4GOrABPy7xOWyZjlcC8oDrt3gIH%2BpFpbBCNRA1BmLMfIgaiBMP5w4F8eLFwLZvlKhnztuddGA6O4Uh8OLKOQ2aMk5lW1Xis4FfdDyGJM6fgZBIafAGSXYrAN8T%2FOBBirnmKH3TipDF3gxk1HBgavZXNceHqfYGjmJlFOMF6p%2B60lxNvCERqm7z1BwOfKyvtKJeK4bvct0t59UMTMS%2FtySInE4heSVeslW4qBd%2FQRC4aXxUgJY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=010dce4addd2b7b414ed131858387dd5f569f87cac79dfed4e8b81be681d1510",
+      "file_size": 20451,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-01-29T10:01:34.760Z",
+  "allow_singular_disclosure_after": -222142972.6088046,
+  "singular_disclosure_allowed": true,
+  "vote_count": 17,
+  "voters": [
+    "bl4de",
+    "spam404",
+    "ankitsingh",
+    "encrypt",
+    "term1nal",
+    "madrobot",
+    "mpz",
+    "eveeez",
+    "iblue",
+    "khizer47",
+    "and 7 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

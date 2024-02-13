@@ -1,0 +1,130 @@
+{
+  "id": 810880,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84MTA4ODA=",
+  "url": "https://hackerone.com/reports/810880",
+  "title": "Account takeover w/o interaction for a user that doesn't have 2fa enabled via 2fa linking and improper auth at /api/2fa/verify",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2020-03-04T16:47:58.615Z",
+  "submitted_at": "2020-03-04T16:47:58.615Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "w2w",
+    "url": "/w2w",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/yoctsvobzv6yn4lfpnusxzuidcr4/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 12172,
+    "url": "https://hackerone.com/helium",
+    "handle": "helium",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/012/172/c6ee5425ee5cb13a9616336667e01488d68f161f_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/012/172/c6ee5425ee5cb13a9616336667e01488d68f161f_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Helium",
+      "twitter_handle": "helium",
+      "website": "http://www.helium.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2020-07-26T16:39:15.750Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-06-26T16:39:15.552Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "##Description:\nHello, team! I found 2 vulnerabilities in your 2FA implementation:\n1) There is a possibility to link 2FA to any other account if it wasn't set up before and user ID is known on the request /api/2fa. In order to do this, after performing a request for 2FA linking, substitute the ID to the victim's ID, organization could be any.\n\n{F737177}\n\n{F737178}\n\n{F737179}\n\n2) We can log in to the account without knowing login and password, using 2FA only, ID should be known. As you can see, in this request, we. don't use tokens/cookie that could be related to the user's ID, we are using only ID a561a2de-b8fe-49f8-8943-fb42229b7b08 and valid code.\n\nThus, using these 2 bugs we can fully takeover an account that doesn't have 2FA enabled (it was skipped after the first login).\n\n##Steps to reproduce:\n1. As a `user1`, register at https://console.helium.com, skip 2FA, copy the ID.\n2. Register an account `user2`, register at https://console.helium.com, perform a 2FA request but with ID from `user1`. 2FA is enabled now on the account `user1`!\n3. Perform a request /api/2fa/verify with valid code and ID of `user1`.\n\nResult: You've successfully achieved an account takeover. In the future, you'll be able to log in again with this technique in the future, but a victim will have trouble logging in because of 2FA.\n\n## Impact\n\nIf a victim's account ID is known, we can fully takeover an account without user interaction. User ID could be disclosed at https://console.helium.com/users (if our user role has access to this directory) or by using other techniques.",
+  "weakness": {
+    "id": 27,
+    "name": "Improper Authentication - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 737179,
+      "file_name": "x0ul4.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/snbAQ36EsHH5GV4buS6vynhP?response-content-disposition=attachment%3B%20filename%3D%22x0ul4.png%22%3B%20filename%2A%3DUTF-8%27%27x0ul4.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133926Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a4dcbcace543f02ff9b5749c11f97ef5e35fe54b8d10c35f62f55e4298b4fa78",
+      "file_size": 401307,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-07-26T16:39:15.680Z",
+  "allow_singular_disclosure_after": -112050011.29400507,
+  "singular_disclosure_allowed": true,
+  "vote_count": 76,
+  "voters": [
+    "omarelfarsaoui",
+    "xploiterr",
+    "thaivu",
+    "foobar7",
+    "rook1337",
+    "w0is",
+    "xnutronex",
+    "ali",
+    "mik317",
+    "romesful",
+    "and 66 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 43253,
+    "asset_type": "URL",
+    "asset_identifier": "https://helium-console-dev.herokuapp.com/",
+    "max_severity": "high"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

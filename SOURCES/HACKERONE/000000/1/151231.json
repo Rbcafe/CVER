@@ -1,0 +1,136 @@
+{
+  "id": 151231,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTEyMzE=",
+  "url": "https://hackerone.com/reports/151231",
+  "title": "Content-type sniffing leads to stored XSS in CMS Airship on Internet Explorer ",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-07-13T22:59:29.698Z",
+  "submitted_at": "2016-07-13T22:59:29.698Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "lukasreschke",
+    "url": "/lukasreschke",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/037/891/e7fea4d5383dc07d1fe767b02f3bda2bc7639c63_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 8539,
+    "url": "https://hackerone.com/paragonie",
+    "handle": "paragonie",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/008/539/72f76fed45e5220b47ba2f679371ebf9ccb19c70_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/008/539/72f76fed45e5220b47ba2f679371ebf9ccb19c70_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Paragon Initiative Enterprises",
+      "twitter_handle": "ParagonIE",
+      "website": "https://github.com/paragonie",
+      "about": "Cryptography and Application Security Consultants - We Produce Various Open Source Libraries"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-07-14T00:40:34.379Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-07-14T00:40:34.208Z",
+  "team_member_agreed_on_going_public_at": "2016-07-14T00:40:24.235Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "# Description\nInternet Explorer has the nasty habit to perform Content-Type sniffing on delivered resources if the content-type is not known to it. Since the software isn't instructing Internet Explorer to disable content-type sniffing this leads to a stored XSS.  \n\nIn a nutshell, it is possible to trick Internet Explorer in executing arbitrary files. A more in-detail description about Internet Explorers' mimetype handling can be found at https://msdn.microsoft.com/en-us/library/ms775147(v=vs.85).aspx. Let's just phrase it as: The length to what Microsoft goes to guess the file content is insane.\n\n# Exploitation\nTo exploit this in this case we need to:\n\n- Craft the file in a way that Internet Explorer sniffs it's content\n- Control the file name delivered to Internet Explorer\n\nThis is actually a pretty easy thing to achieve, I've attached {F104817} which is a file with ZIP header that then contains a malicious HTML payload:\n\n{F104818}\n\nIt is now sufficient to upload the file as authenticated user and make another person using Internet Explorer make open the URL to said file. This will even work in IE 11 on Windows 8.1:\n\n{F104815}\n\n# Mitigation\nThe most reliable mitigation would be to use a sandboxed domain for user-uploaded content. So files would only be served from that origin and the Same-Origin-Policy would prevent this problem. \n\nSince this may not be possible in every case to enforce to users, setting the following headers in combination will mitigate content-type sniffing related problems:\n\n- `X-Content-Type-Options: nosniff` \n- `X-Download-Options: noopen` \n- `Content-Disposition: attachment; filename=\"filename.ext\"'`\n\nOne patch for [/src/Cabin/Hull/Landing/PublicFiles.php](https://github.com/paragonie/airship/blob/316a90803e6666befbee04c0a81d75abd0fc5319/src/Cabin/Hull/Landing/PublicFiles.php#L90) could look like the following:\n\n```\nFrom 42bc1760453fbfed004072929d99d9c397ab3f77 Mon Sep 17 00:00:00 2001\nFrom: Lukas Reschke <lukas@statuscode.ch>\nDate: Thu, 14 Jul 2016 00:57:26 +0200\nSubject: [PATCH] Prevent Mime Sniffing in Internet Explorer\n\n---\n src/Cabin/Hull/Landing/PublicFiles.php | 3 +++\n 1 file changed, 3 insertions(+)\n\ndiff --git a/src/Cabin/Hull/Landing/PublicFiles.php b/src/Cabin/Hull/Landing/PublicFiles.php\nindex 9fc9b1b..80ba6fa 100755\n--- a/src/Cabin/Hull/Landing/PublicFiles.php\n+++ b/src/Cabin/Hull/Landing/PublicFiles.php\n@@ -92,6 +92,9 @@ class PublicFiles extends LandingGear\n             }\n\n             // Serve the file\n+            \\header('Content-Disposition: attachment; filename=\"'.urlencode($fileData['filename']).'\"');\n+            \\header('X-Content-Type-Options: nosniff');\n+            \\header('X-Download-Options: noopen');\n             \\header('Content-Type: ' . $fileData['type']);\n             $this->airship_lens_object->sendStandardHeaders($fileData['type']);\n             \\readfile($realPath);\n--\n2.7.4 (Apple Git-66)\n```\n\nThere may be other occurrences in the code that have the same issue. Generally speaking. There is no harm in adding the `X-Content-Type-Options: nosniff` header globally over the whole web application.\n\n---\n\nIn case you need testing VMs from Microsoft, you can get them from free at http://modern.ie",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 104815,
+      "file_name": "xss-in-action.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/104/815/fc726415281b370aacb0ab3a872965cae8a4a9fa/xss-in-action.png?response-content-disposition=attachment%3B%20filename%3D%22xss-in-action.png%22%3B%20filename%2A%3DUTF-8%27%27xss-in-action.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2MPOSDGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T121809Z&X-Amz-Expires=461&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCBbMU%2B267qveSZjBTX7ems7plNjeRB6ghD4pLJYoxoNQIhAOB1OSi6O%2Fdo0XBpeF6JncYBFY%2B3LuUhN87iPIpANtG6KrIFCG8QAxoMMDEzNjE5Mjc0ODQ5IgyTVupFrPXFhTCscDcqjwX3tBGrIxV1zh7UC%2F4Jr3riyPw49dAeC5kRAlOtteJbZE7w38%2Bz4nQNyxwc0EDGaQF7ShQBfd%2BZUHPanKu9xreSHilAC48s6ipy0W6liWIA716VdwLzxs61TAwjVY5Dn5NcJX6Q3ESCcUgNOvCDp5WtNJIC8hjUvq%2FIfZNGgSU8EEE3ZhddGlH637YMsQmHoURN7ZdlmqOjTdTjp1ZmGwSf4gfCfxcBa7RWhKXxfMjNXP9W%2B7Q4lzx9iyRB9bAKQ4vzqfzKuIzUvErDi7g1BejVCAMSpc3neh6LHUPLL09kycCd7wAIkU7M%2B1YSEpwoAGZjPw1YxjIXbkUjkViJH7tHQuO4Y2MDuCX9kPdXFdl1iTN%2BQFQHzJUlJnpzreuX8gCvgxp69xs2UrjoNcSh%2FutYkUp8hxyzddNzX4DncxeeiM5bDDyE%2FiM9XoHAfxZIZotmhUdHCXdIwfJOxL0rm9j1SkozgxU5pKQ%2FMqFAw9ktT4uCJOpF4hQqSIO3Al5aEOuHYpsL%2FvTUa0CWR23BN5Oso%2FwqP4o%2BpqfE5SGocS58oIvDbg%2BUSZgbOd%2FASTpH0%2BdbT75BjpWMniqmLAdLfz%2B9HoKI4%2B%2Bu1VE9nn3tEdJdpoT8plVaCnWqo6gsxkH1xRgD3LIQnGiOB3VBJMae5D%2B3SINIj%2F02Ts9Sk9HfzDcHasyi33Rbfa2Z6Cybqm9RjGjM9NZxVc6VNJAbR65Dz9a86PbI1BXTro4UwUsRNpwkFO2dAcHb8%2BKZBxPXEAHTC%2BofM5%2BCgN25GFIFvtqv6dqg7qhR09%2B2yIbEFl3Jl0CO2tqOCuUg8fXONobnIcyzyJ5drnRry8Hja0ZBfbS5kAfZw6b00jsYTbyK27fWrclbMLiSrK4GOrABSlUIRQH7wV3jiBwm%2BeWqVFr0C9fXdkEWssmuTS38vAJfNkTBbi3JGXNRIeiEwLy8Ure25FlVwG2TP52pXfh0Nc96Cu8PlYAOMCGlg2RvQKToTUDyNjN%2FvhVk%2B2ldWDLLFAMrKgMam5Gdy5PJO6eVDmNGMuI5wUXvzyUPjR9cvsWGe75MDpFAn9K8YC%2FVr8w8lUemxqjYZSER8ZFwYOVS4G6%2BJQ0efx3tmFba4J9Wekc%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9efbc24613c9e8488413b70ea3095d454aa48683c93588cd0f7acea8177280ef",
+      "file_size": 73819,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 104817,
+      "file_name": "xss.html",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/104/817/94d2d4b53e09e4de708203458b6f0eee4aa967df/xss.html?response-content-disposition=attachment%3B%20filename%3D%22xss.html%22%3B%20filename%2A%3DUTF-8%27%27xss.html&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2MPOSDGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T121809Z&X-Amz-Expires=461&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCBbMU%2B267qveSZjBTX7ems7plNjeRB6ghD4pLJYoxoNQIhAOB1OSi6O%2Fdo0XBpeF6JncYBFY%2B3LuUhN87iPIpANtG6KrIFCG8QAxoMMDEzNjE5Mjc0ODQ5IgyTVupFrPXFhTCscDcqjwX3tBGrIxV1zh7UC%2F4Jr3riyPw49dAeC5kRAlOtteJbZE7w38%2Bz4nQNyxwc0EDGaQF7ShQBfd%2BZUHPanKu9xreSHilAC48s6ipy0W6liWIA716VdwLzxs61TAwjVY5Dn5NcJX6Q3ESCcUgNOvCDp5WtNJIC8hjUvq%2FIfZNGgSU8EEE3ZhddGlH637YMsQmHoURN7ZdlmqOjTdTjp1ZmGwSf4gfCfxcBa7RWhKXxfMjNXP9W%2B7Q4lzx9iyRB9bAKQ4vzqfzKuIzUvErDi7g1BejVCAMSpc3neh6LHUPLL09kycCd7wAIkU7M%2B1YSEpwoAGZjPw1YxjIXbkUjkViJH7tHQuO4Y2MDuCX9kPdXFdl1iTN%2BQFQHzJUlJnpzreuX8gCvgxp69xs2UrjoNcSh%2FutYkUp8hxyzddNzX4DncxeeiM5bDDyE%2FiM9XoHAfxZIZotmhUdHCXdIwfJOxL0rm9j1SkozgxU5pKQ%2FMqFAw9ktT4uCJOpF4hQqSIO3Al5aEOuHYpsL%2FvTUa0CWR23BN5Oso%2FwqP4o%2BpqfE5SGocS58oIvDbg%2BUSZgbOd%2FASTpH0%2BdbT75BjpWMniqmLAdLfz%2B9HoKI4%2B%2Bu1VE9nn3tEdJdpoT8plVaCnWqo6gsxkH1xRgD3LIQnGiOB3VBJMae5D%2B3SINIj%2F02Ts9Sk9HfzDcHasyi33Rbfa2Z6Cybqm9RjGjM9NZxVc6VNJAbR65Dz9a86PbI1BXTro4UwUsRNpwkFO2dAcHb8%2BKZBxPXEAHTC%2BofM5%2BCgN25GFIFvtqv6dqg7qhR09%2B2yIbEFl3Jl0CO2tqOCuUg8fXONobnIcyzyJ5drnRry8Hja0ZBfbS5kAfZw6b00jsYTbyK27fWrclbMLiSrK4GOrABSlUIRQH7wV3jiBwm%2BeWqVFr0C9fXdkEWssmuTS38vAJfNkTBbi3JGXNRIeiEwLy8Ure25FlVwG2TP52pXfh0Nc96Cu8PlYAOMCGlg2RvQKToTUDyNjN%2FvhVk%2B2ldWDLLFAMrKgMam5Gdy5PJO6eVDmNGMuI5wUXvzyUPjR9cvsWGe75MDpFAn9K8YC%2FVr8w8lUemxqjYZSER8ZFwYOVS4G6%2BJQ0efx3tmFba4J9Wekc%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=ff4b58affda1d316a6eef2fe809a695d78cc0ecf683b2ae97ffe1078426049c2",
+      "file_size": 281,
+      "type": "application/zip",
+      "moderated": null
+    },
+    {
+      "id": 104818,
+      "file_name": "payload-hex.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/104/818/e16132682bcfe9eac608b67a992758aaea0966be/payload-hex.png?response-content-disposition=attachment%3B%20filename%3D%22payload-hex.png%22%3B%20filename%2A%3DUTF-8%27%27payload-hex.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2MPOSDGS%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T121809Z&X-Amz-Expires=461&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCBbMU%2B267qveSZjBTX7ems7plNjeRB6ghD4pLJYoxoNQIhAOB1OSi6O%2Fdo0XBpeF6JncYBFY%2B3LuUhN87iPIpANtG6KrIFCG8QAxoMMDEzNjE5Mjc0ODQ5IgyTVupFrPXFhTCscDcqjwX3tBGrIxV1zh7UC%2F4Jr3riyPw49dAeC5kRAlOtteJbZE7w38%2Bz4nQNyxwc0EDGaQF7ShQBfd%2BZUHPanKu9xreSHilAC48s6ipy0W6liWIA716VdwLzxs61TAwjVY5Dn5NcJX6Q3ESCcUgNOvCDp5WtNJIC8hjUvq%2FIfZNGgSU8EEE3ZhddGlH637YMsQmHoURN7ZdlmqOjTdTjp1ZmGwSf4gfCfxcBa7RWhKXxfMjNXP9W%2B7Q4lzx9iyRB9bAKQ4vzqfzKuIzUvErDi7g1BejVCAMSpc3neh6LHUPLL09kycCd7wAIkU7M%2B1YSEpwoAGZjPw1YxjIXbkUjkViJH7tHQuO4Y2MDuCX9kPdXFdl1iTN%2BQFQHzJUlJnpzreuX8gCvgxp69xs2UrjoNcSh%2FutYkUp8hxyzddNzX4DncxeeiM5bDDyE%2FiM9XoHAfxZIZotmhUdHCXdIwfJOxL0rm9j1SkozgxU5pKQ%2FMqFAw9ktT4uCJOpF4hQqSIO3Al5aEOuHYpsL%2FvTUa0CWR23BN5Oso%2FwqP4o%2BpqfE5SGocS58oIvDbg%2BUSZgbOd%2FASTpH0%2BdbT75BjpWMniqmLAdLfz%2B9HoKI4%2B%2Bu1VE9nn3tEdJdpoT8plVaCnWqo6gsxkH1xRgD3LIQnGiOB3VBJMae5D%2B3SINIj%2F02Ts9Sk9HfzDcHasyi33Rbfa2Z6Cybqm9RjGjM9NZxVc6VNJAbR65Dz9a86PbI1BXTro4UwUsRNpwkFO2dAcHb8%2BKZBxPXEAHTC%2BofM5%2BCgN25GFIFvtqv6dqg7qhR09%2B2yIbEFl3Jl0CO2tqOCuUg8fXONobnIcyzyJ5drnRry8Hja0ZBfbS5kAfZw6b00jsYTbyK27fWrclbMLiSrK4GOrABSlUIRQH7wV3jiBwm%2BeWqVFr0C9fXdkEWssmuTS38vAJfNkTBbi3JGXNRIeiEwLy8Ure25FlVwG2TP52pXfh0Nc96Cu8PlYAOMCGlg2RvQKToTUDyNjN%2FvhVk%2B2ldWDLLFAMrKgMam5Gdy5PJO6eVDmNGMuI5wUXvzyUPjR9cvsWGe75MDpFAn9K8YC%2FVr8w8lUemxqjYZSER8ZFwYOVS4G6%2BJQ0efx3tmFba4J9Wekc%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=33cf5bdb5d58cc9a3792d0c5aa854b3443384eefedf5c49f64efb64417b8a8fb",
+      "file_size": 331502,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-08-13T00:40:24.334Z",
+  "allow_singular_disclosure_after": -236777865.30228943,
+  "singular_disclosure_allowed": true,
+  "vote_count": 15,
+  "voters": [
+    "lukasreschke",
+    "rubyroobs",
+    "ras-it",
+    "wkcaj",
+    "spam404",
+    "skansing",
+    "newfunction",
+    "xsam",
+    "tbehroz",
+    "gopi",
+    "and 5 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

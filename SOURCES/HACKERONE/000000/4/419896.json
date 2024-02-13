@@ -1,0 +1,172 @@
+{
+  "id": 419896,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80MTk4OTY=",
+  "url": "https://hackerone.com/reports/419896",
+  "title": "Unauthenticated user can upload an attachment to the last updated report draft",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-10-06T01:09:10.501Z",
+  "submitted_at": "2018-10-06T01:09:10.501Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jobert",
+    "url": "/jobert",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": true,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-10-09T23:55:44.633Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-10-09T23:53:52.318Z",
+  "team_member_agreed_on_going_public_at": "2018-10-09T23:55:44.496Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "The newly launched beta embedded submissions form introduced the concept of anonymous submissions. When an anonymous user starts writing a report through an embedded form, a UUID will be generated to track their submission. Any object that is created will reference this UUID. We call this a `tracer`. Because anonymous submissions also allow the person to upload attachments, we made a minor update to the controller. Here's a snippet of the controller:\n\n```ruby\nskip_before_action :authenticate_user!, only: :create\n\ndef create\n  attachment = Interactors::Attachments::Upload.interact(\n    file: params[:file],\n    attachable: report_draft,\n    as_user: current_user,\n  )\n\n  # ...\nend\n\n# ...\n\nprivate\n\ndef report_draft\n  return unless params[:tracer].present?\n  ReportDraft.find_by(tracer: params[:tracer])\nend\n```\n\nWhen a `POST` request is sent to the `/attachments` endpoint, the `create` method will be called. This method will call the `report_draft` method, which will try to load the report draft. In case a `tracer` value hasn't been given or the `tracer` value is not found, the method will return `nil`. Any report draft with a `tracer` value that is `nil` is created by an authenticated user, as we identify those based on their author, not the `tracer` value.\n\nAt first sight, this seems to be fine because of the `return unless params[:tracer].present?` check. If the parameter wouldn't be submitted, the value would be `nil`, and therefor the `present?` method would return false. However, when the user submits an array with one element that contains a null byte, the `present?` check will return true, and the ActiveRecord query will execute an `IS NULL` query. Here's a code example that shows this behavior:\n\n```\n[1] pry(main)> [\"\\x00\"].present?\n=> true\n[2] pry(main)> ReportDraft.find_by(tracer: [\"\\x00\"])\n   ReportDraft Load (1.0ms)  SELECT  \"report_drafts\".* FROM \"report_drafts\" WHERE \"report_drafts\".\"tracer\" IS NULL LIMIT $1  [[\"LIMIT\", 1]]\n=> #<ReportDraft:0x00007fcd94ae6dc0>\n```\n\nHere's a normal request that is submitted to the attachments controller when an anonymous user uploads anything:\n\n```\nPOST /attachments HTTP/1.1\nHost: localhost:8080\n...\n\n------WebKitFormBoundarylWiasZL7nPVPOJ9M\nContent-Disposition: form-data; name=\"tracer\";\n\n04b0e56b-da08-4d3e-8962-f2455cfdbd19\n------WebKitFormBoundarylWiasZL7nPVPOJ9M\nContent-Disposition: form-data; name=\"file\"; filename=\"file.txt\"\nContent-Type: text/plain\n\nfile-contents\n------WebKitFormBoundarylWiasZL7nPVPOJ9M--\n```\n\nIn order to properly inject the array containing the null byte, the hex view in Burp Suite can be used. Here is the original request in the hex editor, in which case it has a proper UUID in the `tracer` parameter:\n\n{F356266}\n\nHere is the updated request, where the `tracer` parameter has been changed to an array and the value has been changed to a null byte:\n\n{F356267}\n\n## Impact\n\nThis means that if an array with a null byte to the `/attachments` endpoint is submitted, a random report draft will be loaded that was created by an authenticated user. The attachment will then be attached to that report draft. This allows an attacker to inject attachments in other users' report drafts, before it is submitted to the program.\n\nThe vulnerability requires user interaction to be exploited. When a user submits the report form, only the attachment IDs will be submitted that are cached in the DOM. This means that the injected attachment will only be submitted when the user refreshes the page **before** submitting the report. This means that they may actually detect the injected attachment, and they will have the ability to delete it.",
+  "weakness": {
+    "id": 14,
+    "name": "Improper Null Termination"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 356266,
+      "file_name": "Screen_Shot_2018-10-05_at_6.06.40_PM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/356/266/09c4c768f1000741fa36a1867afea54f3f7241c6/Screen_Shot_2018-10-05_at_6.06.40_PM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2018-10-05_at_6.06.40_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2018-10-05_at_6.06.40_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131232Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=d569f0132a34edc0c2155ff2fde80c1aed392b625a2df1deddf9c7bf544f502a",
+      "file_size": 34709,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 356267,
+      "file_name": "Screen_Shot_2018-10-05_at_6.07.50_PM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/356/267/38bd4e96d69bdca221ee0aa1ed097d1b9707df01/Screen_Shot_2018-10-05_at_6.07.50_PM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2018-10-05_at_6.07.50_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2018-10-05_at_6.07.50_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131232Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b5d6f449087607d813e9cc04651d00019b4b723234a93dc9321c9d471b2e0c4f",
+      "file_size": 21377,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-11-08T23:53:52.460Z",
+  "allow_singular_disclosure_after": -166108719.8794661,
+  "singular_disclosure_allowed": true,
+  "vote_count": 81,
+  "voters": [
+    "smither",
+    "arneswinnen",
+    "sp1d3rs",
+    "smiegles",
+    "inhibitor181",
+    "kapytein",
+    "muon4",
+    "jobert",
+    "michiel",
+    "sameerphad72",
+    "and 71 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.3,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "high",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 3,
+    "asset_type": "URL",
+    "asset_identifier": "hackerone.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 10960,
+      "category": "team",
+      "content": "\"What, HackerOne resolved a report that was submitted by @jobert?\"\n\nAt HackerOne we often find security vulnerabilities ourselves. In most cases, we find them before new features even make it into production. Sometimes we find them when they're already in the wild. Recently we've launched a new feature called [retesting](https://docs.hackerone.com/hackers/retesting.html). Up until now, HackerOne would always retest our own findings. We're changing that. This is the first report we identified ourselves where we're expanding retesting to the community. When we identified this vulnerability, we filed a ticket to our own bug bounty program instead of filing an internal ticket. We then leveraged the community to retest the vulnerability and allow them to find a bypass.\n\nThis particular security vulnerability allowed an unauthenticated user to upload attachments and attach them to the last created report draft of other users. This was possible by sending a specially crafted request to the `/attachments` endpoint. Our investigation concluded that this was not abused.\n\nThanks to the hackers that retested this vulnerability!",
+      "user": {
+        "id": 2,
+        "username": "jobert",
+        "name": "Jobert Abma",
+        "bio": "Co-founder of HackerOne. ಠ_ಠ",
+        "cleared": true,
+        "verified": true,
+        "website": "https://hackerone.com",
+        "location": "San Francisco, CA",
+        "created_at": "2013-03-08T01:17:12.256Z",
+        "url": "https://hackerone.com/jobert",
+        "hackerone_triager": false,
+        "hackerone_employee": true,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/ht4b9SmcYNqmpbyCFXd7cxHB/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

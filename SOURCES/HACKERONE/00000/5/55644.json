@@ -1,0 +1,108 @@
+{
+  "id": 55644,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81NTY0NA==",
+  "url": "https://hackerone.com/reports/55644",
+  "title": "Lack of SSL Pinning on POS Application ( iOS )",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "none",
+  "readable_substate": "Informative",
+  "created_at": "2015-04-10T07:33:09.683Z",
+  "submitted_at": "2015-04-10T07:33:09.683Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ishikawa",
+    "url": "/ishikawa",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/019/797/dbf342ccb9d760e540ad2831da2dcf44a3f6bf2a_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 1382,
+    "url": "https://hackerone.com/shopify",
+    "handle": "shopify",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/fjjiC5585s8WoDGHv2M5okbJ/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/fjjiC5585s8WoDGHv2M5okbJ/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Shopify",
+      "twitter_handle": "",
+      "website": "https://www.shopify.com",
+      "about": "Shopify is a multi-channel commerce platform that helps people sell online, in-store, and everywhere in between."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2015-05-21T16:10:17.309Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-04-21T16:09:46.285Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "#### Description\r\n\r\nGiven that this is a POS application and handle CHD, cryptographic security is of most importance. Applications such as Square, Amazons POS, etc. have already implemented this. The iOS application is correctly checking for SSL certs using the os keychain, but due to the lack of checking for wether or not the certificate actually belongs to Sopify, the mobile app is vulnerable to MiTM attacks in which an attacker is able to install or force the user to install a certificate on the device. Given today's known issues with CAs and the lack of trust they are generating lately, Pinning on mobile devices is a technique that is becoming a standard practice. SSL Pinning is a technique for which you pin your applications or clients to one or more SSL Certificates, keys or CAs. This technique allows you to perform the normal SSL chain of trust exchange during SSL transmissions, but also checks that the SSL certificate or key within that cert is actually the one you know and trust.\r\n\r\n#### Vulnerable platform\r\n\r\niOS - entire application.\r\n\r\n#### Proof of Concept\r\n\r\nA simple way of testing this will be to use a tool like Burp Proxy and/or mitmproxy.\r\nStep 1) install the \"malicious\" cert on device and trust it. An attacker can easily trick a user to install a profile, and/or malicious applications could potentially do it as part of installation.  Step 2) Proxy all the communication through them.  Step 3) You will confirm that your application is no longer using the Certificate it should trust.\r\n\r\n#### Recommendation\r\n\r\nEven though this is not a high risk vulnerability, lack of SSL Pinning certainly creates an unnecessary risk for applications on mobile devices. It is our recommendation that Shopify implements SSL Pinning on iOS, and do not trust the os-level certificate store since other applications might have control over it and there is no guarantees they won't be maliciously altered. Additionally, you might have other types of attacks in which CA issue wild-card certificates to random entities, as it was recently seen with Google and a Chinese CA.\r\nFor more information please refer to \r\nhttps://www.owasp.org/index.php/Certificate_and_Public_Key_Pinning",
+  "weakness": {
+    "id": 32,
+    "name": "Cryptographic Issues - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2015-05-21T16:10:04.638Z",
+  "allow_singular_disclosure_after": -275599720.869177,
+  "singular_disclosure_allowed": true,
+  "vote_count": 3,
+  "voters": [
+    "sw33tlie",
+    "shazadsadiq",
+    "shivammusic"
+  ],
+  "severity": {
+    "rating": "none",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

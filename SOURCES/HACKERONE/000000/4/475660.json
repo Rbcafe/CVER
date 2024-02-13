@@ -1,0 +1,141 @@
+{
+  "id": 475660,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NzU2NjA=",
+  "url": "https://hackerone.com/reports/475660",
+  "title": "Response program can display \"eligible for bounty\" in scope area in program policy",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2019-01-07T17:45:25.309Z",
+  "submitted_at": "2019-01-07T17:45:25.309Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "kunal94",
+    "url": "/kunal94",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/vre0eel6yrdokxj27op0h2wo375f/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-01-30T02:45:18.819Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-01-30T02:45:18.700Z",
+  "team_member_agreed_on_going_public_at": "2019-01-29T19:34:18.645Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hello Hackerone Team and @jobert\n\nFirst of all, Happy new year to everyone.\n\n#Summary\nResponse program can also display \"eligible for bounty\" assets on program policy.\nIt's basically causing from backend in terms of GRAPHQL mutation query for `eligible in bounty:true` which stays forever on response program switch from h1 bounty program.\n\n\n\n#Step to Reproduce\n\n+ In setup endpoint, select h1 bounty, create a scope with  \"eligible for bounty\".\n+ In program main policy, it's going to display asset with \"eligible for bounty\".\n\n+ Now, again go to setup endpoint and this time, select hackerone response program.\n+  Now, visit again the policy page in h1 response program, you will see that eligible for bounty in assets is still displaying.\n\n#POC video\n{F402444}\n\n\n#Graphql Request\n\nGraphql request in terms of scope adding on h1 bounty is \n\n\n`{\"query\":\"mutation Create_structured_scope_mutation($input_0:CreateStructuredScopeInput!,$first_1:Int!,$types_2:[ErrorTypeEnum]!) {createStructuredScope(input:$input_0) {clientMutationId,...F1,...F2}} fragment F0 on Team {handle,id} fragment F1 on CreateStructuredScopePayload {team {_structured_scopes3wXgTb:structured_scopes(first:$first_1) {edges {node {id,_id,asset_type,asset_identifier,eligible_for_submission,eligible_for_bounty,max_severity,archived_at,instruction,reference,team {id,handle}},cursor},pageInfo {hasNextPage,hasPreviousPage}},id,...F0}} fragment F2 on CreateStructuredScopePayload {was_successful,_errors2S3JlH:errors(types:$types_2) {edges {node {type,field,message,id},cursor},pageInfo {hasNextPage,hasPreviousPage}}}\",\"variables\":{\"input_0\":{\"team_id\":\"Z2lkOi8vaGFja2Vyb25lL1RlYW0vMzYxNzE=\",\"asset_type\":\"URL\",\"asset_identifier\":\"google.com\",\"eligible_for_bounty\":true,\"eligible_for_submission\":true,\"instruction\":\"\",\"reference\":\"\",\"clientMutationId\":\"0\"},\"first_1\":250,\"types_2\":\"ARGUMENT\"}}`\n\nwhere `eligible for bounty: true` remains permanent from backend even if we switch from h1 bounty program to response program.\n\nAdding an additional automatic restriction for eligible for bounty for response program will solve the problem from the backend.\n\n\n\n\n\n\nThanks\nKunal\n\n## Impact\n\n+ Displaying eligible for bounty in assets in response program policy page and trick users.",
+  "weakness": {
+    "id": 65,
+    "name": "Business Logic Errors"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 402444,
+      "file_name": "hackerone.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/402/444/8d5503edcb489a1baa83cb50d485a49c8ad0ed6d/hackerone.mp4?response-content-disposition=attachment%3B%20filename%3D%22hackerone.mp4%22%3B%20filename%2A%3DUTF-8%27%27hackerone.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3IMMHD7U%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131611Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDckwknQq7fjHwY7%2FK9F%2BtvO9fLJDuG1NEZXXMxYw8hbwIhAM3er0SlLN2AYaRXWazeiwtSjADmim0DnY8YcGf4Y8SxKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5Igww2o2qmJ5MWkfa74sqjgUMDHXvf3xxgarNNUDSIN7iuGoSARtn65gvdJ4%2BO%2FkXeF39tTNpPNp3gbMxN08cJsUGQsiwR96l9CPUzLY7LHBxHFojvFr3ITM3J4EJtd3JktNeEkJgVr%2FsEnXuvSlNfFhDmvSEfMGUHb4UbVaVoFQ4SNJecAghbZ4R2R6eho8SeZVEYbq749PMxfWZg3uRG8JgtVyqoY1jpCk0kh4f43bzUZ6Tk0NwL6H2YD1r28GPSdM2NMS0DQHVK52MQWqHFxqvZOB0JavCD6yzZmm375qMFj70T9kjeA3ygDsQWnINhhNEokIipgBb9big4jerkxPZKXHkMEn8kTRjdpaGnqT31eS2Ap3%2BS%2B4%2BDmGqYt5cnry1J7sVtfs6SJBo2KwCm3ieX3J9ZiFPRwbpDrCFs0h81ZvXr03wFCruJw3pNftO4v61HT2vFYwafngQ66iRf4ccw2WitEv8dDqy88fiyfo8PkzIKNQIGf7F%2FGVErGB7zEj7qRAyMBXCY0PP4WHQscGLLucR9RYE1pVgzzs3BCA9j6D9M6C2DUCcO%2BW%2BQmZSaDSPS08WMv4oYHFXYggOIv%2FTINF9J4pMXNDPjCxtu2OWtH7uHoi1NNCNlUe9xnu5aYimPddy8D73j8KGddAo1w6IoKy4kpqEs8NU%2BXnLLIo%2F8OkgGBLEwmIu9T%2Bu6Oz7XkrYifOXYMDpFUfwTPN9W4JsrMXt%2F3wugpQN4Fk4kWsib7XEy1iPAo764glVM3P7J4XVtoYVee04ZiKms2%2FCu1rNFAWnpdtEP6RHFeEvOqGBX9C3g9xvfaapxWX1FccdWfkK68y%2Bh%2FMy24XhzUb14mI24ZTU9zIXOy%2BHFqYVkAOt7UQ1Gb4HE6VcsU%2B8JXcw5bStrgY6sAE07AhFgeocUOJkN2I%2Fu89%2FcNWBSx3BcejUfJX3Y1%2FMNQpv784p5QFf%2BWHp0%2BUGiFxL%2FYZ7bz0IANiUOzMv59zqaW%2FP4WOMYPVgyzZAVw3B2h%2B4laP9i2zcnD6y1B8D0yz1mg3ghUGJo8C0Z5LhCaAHi7hr3CmQatY39rwKj4%2BzrrqtAaWIIqOwkXgJ89Q5MnwR3YpKSnVnS%2BtFWl0%2BIltP2OXBDv%2Fq7N9nB1%2FEoAh%2FZA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6871346e96af05f71f9d3aa4a4c1db4ba5678c0031ea34bc590d77f29557f3d3",
+      "file_size": 19600163,
+      "type": "video/mp4",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2019-02-28T19:34:18.863Z",
+  "allow_singular_disclosure_after": -156447712.7505492,
+  "singular_disclosure_allowed": true,
+  "vote_count": 43,
+  "voters": [
+    "thaivu",
+    "sameerphad72",
+    "bl4de",
+    "spam404",
+    "ali",
+    "dhakal_ananda",
+    "mik317",
+    "dhakal_bibek",
+    "savitar0x01",
+    "bugdiscloseguys",
+    "and 33 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "score": 2.9,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "high",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "none",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 3,
+    "asset_type": "URL",
+    "asset_identifier": "hackerone.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

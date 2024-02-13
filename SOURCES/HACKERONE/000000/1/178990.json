@@ -1,0 +1,129 @@
+{
+  "id": 178990,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzg5OTA=",
+  "url": "https://hackerone.com/reports/178990",
+  "title": "The websocket traffic is not secure enough",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "medium",
+  "readable_substate": "Informative",
+  "created_at": "2016-10-30T19:17:43.941Z",
+  "submitted_at": "2016-10-30T19:17:43.941Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "arnonymous",
+    "url": "/arnonymous",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/115/966/039e3ef33791903eef67a80ca6a255b9cc7601de_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 1601,
+    "url": "https://hackerone.com/legalrobot",
+    "handle": "legalrobot",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/001/601/0f164c3d9618b04b006b859517ff032ec57ab42a_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/001/601/0f164c3d9618b04b006b859517ff032ec57ab42a_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Legal Robot",
+      "twitter_handle": "LegalRobot",
+      "website": "https://www.legalrobot.com",
+      "about": "Automated legal document review using artificial intelligence"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-08-27T11:11:43.633Z",
+  "bug_reporter_agreed_on_going_public_at": "2017-08-27T11:11:43.604Z",
+  "team_member_agreed_on_going_public_at": "2017-08-26T23:19:57.976Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "'Cross-Site WebSocket Hijacking' is possible, because the websocket connection is not secure (enough). \nThe traffic from and to the websocket can be sniffed with Chrome (see attachment), and replayed elsewhere (cross-domain). Explanation: https://www.christian-schneider.net/CrossSiteWebSocketHijacking.html\n\n**Steps**:\nAfter opening the homepage (https://app.legalrobot-uat.com) a websocket is created after a HTTP request like: https://app.legalrobot-uat.com/sockjs/689/k287_2tz/websocket, with a HTTP101 (switching protocols) response, resulting in a connection wss://app.legalrobot-uat.com/sockjs/689/k287_2tz/websocket.\n\nThis (upgrade) request can be called from an external origin.\n{F131186}\n\nAfter knowing the websocket URL, messages (captured in chrome) can be successfully sent. \n\nFor example:\nOpen a session:  [\"{\\\"msg\\\":\\\"connect\\\",\\\"version\\\":\\\"1\\\",\\\"support\\\":[\\\"1\\\",\\\"pre2\\\",\\\"pre1\\\"]}\"]\nPing:  [\"{\\\"msg\\\":\\\"ping\\\"}\"]\nLogin:  [\"{\\\"msg\\\":\\\"method\\\",\\\"method\\\":\\\"login\\\",\\\"params\\\":[{\\\"user\\\":{\\\"email\\\":\\\"arnotstacc@gmail.com\\\"},\\\"password\\\":{\\\"digest\\\":\\\"082a7a2a81c2733fd03567e47e0b6d9f09d32ec80065bda9c5cd34dd1c4f9edf\\\",\\\"algorithm\\\":\\\"sha-256\\\"}}],\\\"id\\\":\\\"7\\\"}\"]\nIt is also unnecessary, to include the password algorithm in the login message (which can be encrypted with: http://md5decrypt.net/en/Sha256/)\n\nA successful test with above messages using: http://ironwasp.org/cswsh.html (an online test tool).\n{F131189}\n\n**Suggestions to fix**:\n- Check the origin from the requester server-side and adjust the Origin header for the 'upgrade' request.\n- Add additional 'CSRF tokens'.\n- Encrypt messages, so they cannot be intercepted in Chrome\n\n**Additional references**:\nhttps://www.notsosecure.com/how-cross-site-websocket-hijacking-could-lead-to-full-session-compromise/\nhttps://www.owasp.org/index.php/Testing_WebSockets_(OTG-CLIENT-010)\nhttps://humblesoftwaredev.wordpress.com/2016/08/01/securing-websocket-sockjs-connection/\n\n\n",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 131186,
+      "file_name": "legarobot-ws-upgrade_2016-10-30_1641_001.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/131/186/172b87d930a3f23774e55c1c9e36272043209655/legarobot-ws-upgrade_2016-10-30_1641_001.png?response-content-disposition=attachment%3B%20filename%3D%22legarobot-ws-upgrade_2016-10-30_1641_001.png%22%3B%20filename%2A%3DUTF-8%27%27legarobot-ws-upgrade_2016-10-30_1641_001.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDWGU53J%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122617Z&X-Amz-Expires=718&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIEQrBbU8Jad1w5JwSX%2BtcCe%2B%2Bf2fWuM59KuP4ISMFc4wAiBo2h1%2BGY0GcS29KJV9ChmgWe9tqhKd5ZLb1WWqvprHYiqxBQhwEAMaDDAxMzYxOTI3NDg0OSIMhG92oDXEtczQPYIjKo4Fy8fG%2F18wGKWDOaZUOzqIsPg%2F2%2Bhxtkqy9tw5WM0FnO0efhz261ude9PuTQW%2F8W1XVC%2B6%2Btv%2F%2FGVnCyHPPzSf21evTkJ%2F2elUnngDFTubvtbmQMdS4Rnt0%2FU%2FuXzMknf8g%2BX5PviUKj6nGgaRnY9Hp0kLUpB9xZV%2BBUdPCVV4HR0N%2BfR1rXE7N8YpBPWLYN%2BeSFjCXMLIPUyphbmsuZkyiXQtehFKt7nJxobss3F2hvjZloveNvwrVNVWJFNQom1gLI9F7%2BIpCnOeXjEy3MSXsLuTbawl2ybmhjHZrkvOBGKRCJZ%2B2u5iwtWDz1wnMZRyFyaeTcUEvO9J6iZaOADHjWDUQ0JKmYoztclRLBYdqnFqX4GvRgDrPlxBgIXLYhik%2BmiNM0sGzn7a7dUiYYPCq%2FdAd9zf%2Bi%2F2Nc6bbCemAOnCRpYV7CfzwpAvbOTg1ETpUulaDRVq85Dx2p0leRTu%2FT%2FWnLION%2BrUWGT9LWh7WHbiRD9czkDV6jmhMSgRB%2Bl0SrMovwZEVMZSrCU%2BLZ04O9Ixjhzq%2B1Vr0XZu7DRtQOja%2FirIkVuwQiYxCdihARcXY10a6JugOVRadvNpcM%2BWrNER7eW6Ggy%2F7f6BytYoIxde%2BqacE7wj84z9DiuAc2no4T1dj4uFJ7X6msn0%2FWRzATSRapOIgtEcp4pwGfB%2BgJFOL0hN4w15UCIL%2FBVzrYd%2BXa1P5NfHNayl%2B47A6AtIllD1sc5l2BQdyjSXlYZVLP2DEDSN%2F9jemORnER%2FjuktMS4RtWWHcTnxoCzT9%2F%2FA8uQ%2FnRXtwTrFdv9agI5vhmpVKiMFBKwXX8KP59Ilg%2Fit%2BFtjLhR36yfvnmCbVRQoElpkcYZZM0YhVFqxqlVMBMJKcrK4GOrIBANrznU6BJTMtT8T9H36XK5m%2BmVr8n6tG0lGtMpTogn8GvplsC4ZKMuQxe3g9N4DP5saesTh9dqff09EBOPWaGcNb6eKu1xWMCP6%2FWNwnlhKPZDaWoTSy84GV7wvrpprkfGE6wb4T1PsZpb%2FIZElZKvxaZpFBFfT0K3jPH7QW9j17n06s2QlpvBBCJkLlXBGs%2FcA4E70Mzy6JNhXk5S%2BRjCCYfigjYp55SDrDc%2F%2FldOze%2FA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=532fe84cfe7bc19ef15ef17559386770c84fe89b7f798e6e33fbe1ad40f2b632",
+      "file_size": 50001,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 131188,
+      "file_name": "websocket_legalrobot_chrome.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/131/188/77642563f712b5477a69cd3080662612224eb863/websocket_legalrobot_chrome.png?response-content-disposition=attachment%3B%20filename%3D%22websocket_legalrobot_chrome.png%22%3B%20filename%2A%3DUTF-8%27%27websocket_legalrobot_chrome.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDWGU53J%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122617Z&X-Amz-Expires=718&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIEQrBbU8Jad1w5JwSX%2BtcCe%2B%2Bf2fWuM59KuP4ISMFc4wAiBo2h1%2BGY0GcS29KJV9ChmgWe9tqhKd5ZLb1WWqvprHYiqxBQhwEAMaDDAxMzYxOTI3NDg0OSIMhG92oDXEtczQPYIjKo4Fy8fG%2F18wGKWDOaZUOzqIsPg%2F2%2Bhxtkqy9tw5WM0FnO0efhz261ude9PuTQW%2F8W1XVC%2B6%2Btv%2F%2FGVnCyHPPzSf21evTkJ%2F2elUnngDFTubvtbmQMdS4Rnt0%2FU%2FuXzMknf8g%2BX5PviUKj6nGgaRnY9Hp0kLUpB9xZV%2BBUdPCVV4HR0N%2BfR1rXE7N8YpBPWLYN%2BeSFjCXMLIPUyphbmsuZkyiXQtehFKt7nJxobss3F2hvjZloveNvwrVNVWJFNQom1gLI9F7%2BIpCnOeXjEy3MSXsLuTbawl2ybmhjHZrkvOBGKRCJZ%2B2u5iwtWDz1wnMZRyFyaeTcUEvO9J6iZaOADHjWDUQ0JKmYoztclRLBYdqnFqX4GvRgDrPlxBgIXLYhik%2BmiNM0sGzn7a7dUiYYPCq%2FdAd9zf%2Bi%2F2Nc6bbCemAOnCRpYV7CfzwpAvbOTg1ETpUulaDRVq85Dx2p0leRTu%2FT%2FWnLION%2BrUWGT9LWh7WHbiRD9czkDV6jmhMSgRB%2Bl0SrMovwZEVMZSrCU%2BLZ04O9Ixjhzq%2B1Vr0XZu7DRtQOja%2FirIkVuwQiYxCdihARcXY10a6JugOVRadvNpcM%2BWrNER7eW6Ggy%2F7f6BytYoIxde%2BqacE7wj84z9DiuAc2no4T1dj4uFJ7X6msn0%2FWRzATSRapOIgtEcp4pwGfB%2BgJFOL0hN4w15UCIL%2FBVzrYd%2BXa1P5NfHNayl%2B47A6AtIllD1sc5l2BQdyjSXlYZVLP2DEDSN%2F9jemORnER%2FjuktMS4RtWWHcTnxoCzT9%2F%2FA8uQ%2FnRXtwTrFdv9agI5vhmpVKiMFBKwXX8KP59Ilg%2Fit%2BFtjLhR36yfvnmCbVRQoElpkcYZZM0YhVFqxqlVMBMJKcrK4GOrIBANrznU6BJTMtT8T9H36XK5m%2BmVr8n6tG0lGtMpTogn8GvplsC4ZKMuQxe3g9N4DP5saesTh9dqff09EBOPWaGcNb6eKu1xWMCP6%2FWNwnlhKPZDaWoTSy84GV7wvrpprkfGE6wb4T1PsZpb%2FIZElZKvxaZpFBFfT0K3jPH7QW9j17n06s2QlpvBBCJkLlXBGs%2FcA4E70Mzy6JNhXk5S%2BRjCCYfigjYp55SDrDc%2F%2FldOze%2FA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=eee27032659909d730742168524957511bd12d89350efd533f70c923ceda244b",
+      "file_size": 168709,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 131189,
+      "file_name": "ironwasp-test_2016-10-30_1909.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/131/189/b53c05681ff006b76690dfa606fa61eee7500b1f/ironwasp-test_2016-10-30_1909.png?response-content-disposition=attachment%3B%20filename%3D%22ironwasp-test_2016-10-30_1909.png%22%3B%20filename%2A%3DUTF-8%27%27ironwasp-test_2016-10-30_1909.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQXDWGU53J%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122617Z&X-Amz-Expires=718&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIEQrBbU8Jad1w5JwSX%2BtcCe%2B%2Bf2fWuM59KuP4ISMFc4wAiBo2h1%2BGY0GcS29KJV9ChmgWe9tqhKd5ZLb1WWqvprHYiqxBQhwEAMaDDAxMzYxOTI3NDg0OSIMhG92oDXEtczQPYIjKo4Fy8fG%2F18wGKWDOaZUOzqIsPg%2F2%2Bhxtkqy9tw5WM0FnO0efhz261ude9PuTQW%2F8W1XVC%2B6%2Btv%2F%2FGVnCyHPPzSf21evTkJ%2F2elUnngDFTubvtbmQMdS4Rnt0%2FU%2FuXzMknf8g%2BX5PviUKj6nGgaRnY9Hp0kLUpB9xZV%2BBUdPCVV4HR0N%2BfR1rXE7N8YpBPWLYN%2BeSFjCXMLIPUyphbmsuZkyiXQtehFKt7nJxobss3F2hvjZloveNvwrVNVWJFNQom1gLI9F7%2BIpCnOeXjEy3MSXsLuTbawl2ybmhjHZrkvOBGKRCJZ%2B2u5iwtWDz1wnMZRyFyaeTcUEvO9J6iZaOADHjWDUQ0JKmYoztclRLBYdqnFqX4GvRgDrPlxBgIXLYhik%2BmiNM0sGzn7a7dUiYYPCq%2FdAd9zf%2Bi%2F2Nc6bbCemAOnCRpYV7CfzwpAvbOTg1ETpUulaDRVq85Dx2p0leRTu%2FT%2FWnLION%2BrUWGT9LWh7WHbiRD9czkDV6jmhMSgRB%2Bl0SrMovwZEVMZSrCU%2BLZ04O9Ixjhzq%2B1Vr0XZu7DRtQOja%2FirIkVuwQiYxCdihARcXY10a6JugOVRadvNpcM%2BWrNER7eW6Ggy%2F7f6BytYoIxde%2BqacE7wj84z9DiuAc2no4T1dj4uFJ7X6msn0%2FWRzATSRapOIgtEcp4pwGfB%2BgJFOL0hN4w15UCIL%2FBVzrYd%2BXa1P5NfHNayl%2B47A6AtIllD1sc5l2BQdyjSXlYZVLP2DEDSN%2F9jemORnER%2FjuktMS4RtWWHcTnxoCzT9%2F%2FA8uQ%2FnRXtwTrFdv9agI5vhmpVKiMFBKwXX8KP59Ilg%2Fit%2BFtjLhR36yfvnmCbVRQoElpkcYZZM0YhVFqxqlVMBMJKcrK4GOrIBANrznU6BJTMtT8T9H36XK5m%2BmVr8n6tG0lGtMpTogn8GvplsC4ZKMuQxe3g9N4DP5saesTh9dqff09EBOPWaGcNb6eKu1xWMCP6%2FWNwnlhKPZDaWoTSy84GV7wvrpprkfGE6wb4T1PsZpb%2FIZElZKvxaZpFBFfT0K3jPH7QW9j17n06s2QlpvBBCJkLlXBGs%2FcA4E70Mzy6JNhXk5S%2BRjCCYfigjYp55SDrDc%2F%2FldOze%2FA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=18d6d87838c2dffd6c86f9dc5843abc592103917d33bf4ef8d72a5695011dba8",
+      "file_size": 77670,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 1,
+  "voters": [
+    "skansing"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

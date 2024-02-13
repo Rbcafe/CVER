@@ -1,0 +1,135 @@
+{
+  "id": 2072338,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMDcyMzM4",
+  "url": "https://hackerone.com/reports/2072338",
+  "title": "CVE-2023-38039: HTTP header allocation DOS",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2023-07-17T12:43:20.202Z",
+  "submitted_at": "2023-07-17T12:43:20.354Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "selmelc",
+    "url": "/selmelc",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/68gqya4e30aqvzh8b8hd08wrb0y4/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 35663,
+    "url": "https://hackerone.com/curl",
+    "handle": "curl",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "curl",
+      "twitter_handle": "",
+      "website": "https://curl.se",
+      "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2023-38039"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-09-13T12:43:27.619Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-09-13T12:43:27.525Z",
+  "team_member_agreed_on_going_public_at": "2023-09-13T08:52:12.725Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "It was found that curl does not currently limit the amount of HTTP headers to be received leading to a potential DOS for the users.\nIf an attacker sets up a malicious HTTP server that continuously sends new headers and keeps the socket open, curl will continuously listen on the socket and parse new received headers. This leads to the user's machine allocating more and more resources until the system is eventually exhausted.\nFrom research the vulnerable function seems to be located at https://github.com/curl/curl/blob/master/lib/transfer.c#L420.\nFor comparison, modern browsers abort the connection once they reach a threshold.\nOne potential fix to not affect functionality too much would be to set an arbitrary limit to the amount of headers to receive, which I believe is the solution adapted by most modern browsers to solve this issue.\n\n## Screenshot \n{F2513231}\nMy excuses for the French in screenshot (I'm sorting programs by RAM usage, and the top one is of course the windows terminal from which I executed curl). On there you can see my user terminal (windows) launching `curl 127.0.0.1:80` to the left, on the right we see the attacker's server (attaching full source code to this report). Throughout testing memory usage kept increasing alarmingly high.\n\n## Malicious server code extract:\n```\nvoid send_payload(int fd)\n{\n\tmemset(speedup, 'a', sizeof(speedup));\n\t//first we send the start of a valid HTTP request with status line and a few headers\n    send(fd, validreq, sizeof(validreq), MSG_MORE);\t\n\twhile (1337)\n\t{\n\t\t//this is used to speed up the dos process sending extra bytes\n\t\tsend(fd, speedup, sizeof(speedup), MSG_MORE );\n\t\t//now we're spamming the curl client with the header \"a:b\" then telling it there's more to come !\n\t\tsend(fd, \"a:b\\x0d\\x0a\", 5, MSG_MORE );\n\t}\n}\n```\n\n## Steps To Reproduce:\n  1. Compile exploit.c and execute the server binary.\nNote: depending on your system, feel free to play with the `ATTACK_SPEED` define of the code, to speed up testing.\n  2. Open up another terminal and as the victim try `curl 127.0.0.1:80`\n  3. Observe system metrics.\n\n## Impact\n\nDOS/overloading of user's system through malicious HTTP server interaction with curl's header parsing.",
+  "weakness": {
+    "id": 120,
+    "name": "Allocation of Resources Without Limits or Throttling"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 2513231,
+      "file_name": "curldos.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/1bl6kcmtncuce2tfjhrl628puqci?response-content-disposition=attachment%3B%20filename%3D%22curldos.PNG%22%3B%20filename%2A%3DUTF-8%27%27curldos.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ7M54J673%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143812Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2FaXkHLiTu6JAlK%2F%2FJnx7CoOwtccnG75tgpYUKRnE3xgIhANREYBTpCaW3JM29ZZx8LW0d5%2BVqFzsx8ObXtUngWgMGKrEFCHcQAxoMMDEzNjE5Mjc0ODQ5IgzwBTCJ7KBGPnaqS%2FQqjgW%2BcrdfIx%2FSKxGuk6AHYcF%2FIRcvLyvZdIzwBqUcKAjP1Ior%2FMqJ33yw8cq8JXOrhT3SiP%2FwM%2Bu53Kuxy8H4MN5GBSEgiuQuG9nlkTsMSDNUsrTzPunwnriT%2BxkmzARMn5ZVPc%2BhTCcYbRF8UjxBFk0hq%2FmJsuMpTaHx7%2Fxrx6%2BPmTQBxbg23iAZF%2Fmgez%2FQ2HU40CJkcQww3886u2Rv%2FTY1NnCacfJtgYyToNbHWjQSUBN3BTsjWMDL5iQrcaeEmy9jTN1cBb5E%2BthOTBZ52d8dKMXI7EfAJmd2jsi0Ux8bAoDIgy8SrRd%2F0A0Nt6YeJJIm4VnVuWJ7wMWhQYMqhXPTxbxr2ANUslwzc%2BlOd39q7aLj1zAc5w3OnoZ9C74gcepXCJ92JP9%2FQDVjhiP2vXnj77JhlvEBMSJ1sDVGA3bzPKweK9dO5kmudF8K0gLugT2w7mboMx%2BWUEL94bfsth5Cr3%2BxRK%2FmDk1N8drxhcqT9pEoB7uhRHWjm5DjKzhxX%2FxpNEKuBgcBT%2FS5Q36%2FEBBcqdj8XuOl6U67CloKyunrrCSLhTFUaFHWCV%2BD%2BTNnGJ6jCn6%2Bd6OPn%2FZfKFCmhesLQicESfEP7vHbPUbnJ3tEwrS2UXMYBpH7KGj%2FTtPckuJyKgqLNn3Oq8VDPuJQVEMHRZweP%2Fakpvr8i2%2FNvwEQ8cCR7afoYqwI4zdKjqJgB7gULg3g2%2BTI6Swrsk3ygociks6FlHqYrBQ1Ic7elsq7b59POu8SYbpJd22D27eMK20HZzu7e%2FQOFeAELWUavctR67eOKXgPPOtktzshLAVvQU7CsYPcMEKxXdEEDesgLF%2By25RCmxQ7TW%2FnC04UIMsikew1kVRdz695f3pAIREw9eetrgY6sAFt5e%2FgBb3z6GUCPSY%2BbSpvu9318kCiOKXdmT8p52LNQRSkPxHFLhbrjTKuUqpurg1d3yQ%2B54ohHL%2FGB2jRPrX7qid5WdlXO42XDSEK0e2DQkICwpWfF9dhPwkvWoqnjmBr%2BZqGJOAD%2BDKfqMr9EVwgYEKWaPjJYoY9K5062IbgoYAcuYAxM2I2rDtSBCHlbaJlRKGx9j2%2FOO74MzSF65C7Em0o7VM2NP6pIOsd16f4tQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=702ada10fec5f5342897276d6c6f2c3e89e5b253b24a59f8957fbc006647f594",
+      "file_size": 38745,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 2513271,
+      "file_name": "exploit.c",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/cqd9fn9a73176rp3dkxkzkuif5fs?response-content-disposition=attachment%3B%20filename%3D%22exploit.c%22%3B%20filename%2A%3DUTF-8%27%27exploit.c&response-content-type=text%2Fx-c%2B%2Bsrc&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ7M54J673%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143812Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2FaXkHLiTu6JAlK%2F%2FJnx7CoOwtccnG75tgpYUKRnE3xgIhANREYBTpCaW3JM29ZZx8LW0d5%2BVqFzsx8ObXtUngWgMGKrEFCHcQAxoMMDEzNjE5Mjc0ODQ5IgzwBTCJ7KBGPnaqS%2FQqjgW%2BcrdfIx%2FSKxGuk6AHYcF%2FIRcvLyvZdIzwBqUcKAjP1Ior%2FMqJ33yw8cq8JXOrhT3SiP%2FwM%2Bu53Kuxy8H4MN5GBSEgiuQuG9nlkTsMSDNUsrTzPunwnriT%2BxkmzARMn5ZVPc%2BhTCcYbRF8UjxBFk0hq%2FmJsuMpTaHx7%2Fxrx6%2BPmTQBxbg23iAZF%2Fmgez%2FQ2HU40CJkcQww3886u2Rv%2FTY1NnCacfJtgYyToNbHWjQSUBN3BTsjWMDL5iQrcaeEmy9jTN1cBb5E%2BthOTBZ52d8dKMXI7EfAJmd2jsi0Ux8bAoDIgy8SrRd%2F0A0Nt6YeJJIm4VnVuWJ7wMWhQYMqhXPTxbxr2ANUslwzc%2BlOd39q7aLj1zAc5w3OnoZ9C74gcepXCJ92JP9%2FQDVjhiP2vXnj77JhlvEBMSJ1sDVGA3bzPKweK9dO5kmudF8K0gLugT2w7mboMx%2BWUEL94bfsth5Cr3%2BxRK%2FmDk1N8drxhcqT9pEoB7uhRHWjm5DjKzhxX%2FxpNEKuBgcBT%2FS5Q36%2FEBBcqdj8XuOl6U67CloKyunrrCSLhTFUaFHWCV%2BD%2BTNnGJ6jCn6%2Bd6OPn%2FZfKFCmhesLQicESfEP7vHbPUbnJ3tEwrS2UXMYBpH7KGj%2FTtPckuJyKgqLNn3Oq8VDPuJQVEMHRZweP%2Fakpvr8i2%2FNvwEQ8cCR7afoYqwI4zdKjqJgB7gULg3g2%2BTI6Swrsk3ygociks6FlHqYrBQ1Ic7elsq7b59POu8SYbpJd22D27eMK20HZzu7e%2FQOFeAELWUavctR67eOKXgPPOtktzshLAVvQU7CsYPcMEKxXdEEDesgLF%2By25RCmxQ7TW%2FnC04UIMsikew1kVRdz695f3pAIREw9eetrgY6sAFt5e%2FgBb3z6GUCPSY%2BbSpvu9318kCiOKXdmT8p52LNQRSkPxHFLhbrjTKuUqpurg1d3yQ%2B54ohHL%2FGB2jRPrX7qid5WdlXO42XDSEK0e2DQkICwpWfF9dhPwkvWoqnjmBr%2BZqGJOAD%2BDKfqMr9EVwgYEKWaPjJYoY9K5062IbgoYAcuYAxM2I2rDtSBCHlbaJlRKGx9j2%2FOO74MzSF65C7Em0o7VM2NP6pIOsd16f4tQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c07b2f79547c1e64f6af4c207f6e04f03f5830fd1930b755f5e3240b9cf16be9",
+      "file_size": 3885,
+      "type": "text/x-c++src",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-10-13T08:52:12.807Z",
+  "allow_singular_disclosure_after": -10647959.404041944,
+  "singular_disclosure_allowed": true,
+  "vote_count": 6,
+  "voters": [
+    "shreyaschavhan",
+    "zy9ard3",
+    "cats_are_aliens",
+    "eminf",
+    "xgenosama",
+    "1vanchen"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 18844,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/curl/curl",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

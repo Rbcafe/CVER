@@ -1,0 +1,124 @@
+{
+  "id": 181319,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODEzMTk=",
+  "url": "https://hackerone.com/reports/181319",
+  "title": "Memory disclosure in mruby String#lines method",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2016-11-10T13:17:47.675Z",
+  "submitted_at": "2016-11-10T13:17:47.675Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "isra17",
+    "url": "/isra17",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15668,
+    "url": "https://hackerone.com/shopify-scripts",
+    "handle": "shopify-scripts",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "shopify-scripts",
+      "twitter_handle": "",
+      "website": "",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-12-16T20:53:52.497Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-12-16T20:53:52.464Z",
+  "team_member_agreed_on_going_public_at": "2016-12-16T20:52:29.027Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "This bug was found with `jmlb337`.\n\nHey again,\nwhile reviewing mruby for vulnerabilities, I stumble onto a case that allow an attacker to leak heap content including pointer that can be used along another vulnerability to craft a complete exploit.\n\n## Reproduction Step\n1. Allocate a string with a few lines.\n2. Call String#lines and free or reallocate the string.\n3. Allocate a few objects.\n4. The next lines will now contains the value of the newly allocated data, including pointer used by `mrb_value`s.\n\n## PoC\n```ruby\n@a = []\n$a = (\"a\"*0xf + \"\\n\") * 1000\n$a.lines do |l|\n  $a.clear\n  foo = \"UUUUUUUU\" * 1000\n  @a << l\nend\n```\nLook at `@a` to get the \"UUUU...\" `mrb_value` object and strings.\n\n## Explaination\nThe bug is triggered due to the caching of `p` at [string.c:310](https://github.com/mruby/mruby/blob/872517dff372ee6fde92c71861abf6ab9fbab958/mrbgems/mruby-string-ext/src/string.c#L310): \n```c\n  char *p = RSTRING_PTR(self), *t;\n  char *e = p + RSTRING_LEN(self);\n```\n\nHowever, while iterating on each line, the function allow the caller to provide a block to be called for each line [string.c:324](https://github.com/mruby/mruby/blob/872517dff372ee6fde92c71861abf6ab9fbab958/mrbgems/mruby-string-ext/src/string.c#L324): \n```c\n      mrb_yield_argv(mrb, blk, 1, &arg);\n```\nThis block let the attacker to update the `self` string, in which case `p` will now be a dangling pointer pointing to free memory. Allocating new objects will end up in this free location and let the next iteration read this data before giving it back to the block.\n\n## Exploitability\n\nThe vulnerability is exploitable as long as the attacker can run arbitrary ruby code in the mruby interpreter. It should cover mruby-engine case as used by Shopify.\n\n## Impact\n\nThis vulnerability comes handy to locate object address in the heap, by allowing reliable, cheap and simple memory disclosure. We would use this bug to build a complete RCE along with another reported bug in the following 1 or 2 week  (Will add a comment with the other report ID). I spoke with François Chagnon and we preferred to report the bugs as soon as possible while working on provable RCE afterward so it can get patched earlier.\n\n## Proposed Fix\nSee patch in attachment.",
+  "weakness": {
+    "id": 2,
+    "name": "Memory Corruption - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 133844,
+      "file_name": "0001-Fix-use-after-free-access-in-String-lines.patch",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/133/844/1ea2922a8273f6995bf4cdf833e269e4cc289718/0001-Fix-use-after-free-access-in-String-lines.patch?response-content-disposition=attachment%3B%20filename%3D%220001-Fix-use-after-free-access-in-String-lines.patch%22%3B%20filename%2A%3DUTF-8%27%270001-Fix-use-after-free-access-in-String-lines.patch&response-content-type=text%2Fx-diff&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSHMH2JG6%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122706Z&X-Amz-Expires=613&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIGZg1eLat8jYDu8ya39gYzlYHLKMMGOBerakTCivFOHfAiEA%2Bu8rTSPah8b0el3%2BS%2FpFwj4VtbM%2FFoDWeSjasMueeQUqsgUIbxADGgwwMTM2MTkyNzQ4NDkiDO%2B7PBDXCVoWHmbGyiqPBXsQMmX1xcmrqnlxF6nxE7BbslfpBP%2BYB7Dz2d5w4AF2fnczmhkr1cJfZ1wQ2hDVbMd5yE%2FwPDAbjXaOusFSzueQ6MRlfW%2FvZuEfbDtv8%2FE2YeH43nJH1Uv164UqRl8M8Vpf%2Bht266SWMAIpKMdZeP9dHL3c2Lb%2FT7%2BLL6TkdfamD2uVZsaa5njbmjr5bIzTJL7suC6pDkBTHkHYP7RDrmZsb68ztNhnQ%2FhF5%2FYW6JlWFjubRC7HPQFKDUBPZmsFR2YhgIYdBQTA6c%2BubLlluA6Q8uqhQU0j%2BRsJejozC3pcE0Cs9ZOgKhQ9MYoU5jr1oNtI7Np9OXeY0gMNtLJIK%2F8jfWmnD8FMV9KL0iZcnVTtzrY6j3oPiwtFfIljx7bgy7hbbf9rafbi30uc8wDaN08gFLYeib2Qgf6rC3suutYfZnWiDom69pyKh5pazkt90Jsn4MB6AC3vuaZ4Nk7B4GeGuDQHV9lqmdLmzcNVS1lvVGdNAbMpKCojixFWzIeBdaRCPVifTMRa2Tfn8KYYu%2F9B18cVeJIHikxS4TLr4YFNBsUnxtIX%2F4qnMfSYTpo1btQ0zei7TPr1%2BIQjVCldFlJyq%2BzTozG71G4YbfrSku7R0EOVfOmY2fw1BLK%2Bdyyl0HR5fiCjeA2roOKXNpXoXr2vFvw1%2Bna5GePjNuZkuCrRHv8TSD7Sb6AlGnQLxqOtxoUADwdZrthePfDcG5mSyiRiXWFsk3iTQCcYi6icViQPaLWhvEf14Z9gRZ0phJIoWuL5IEHRpxf5gaPvIS2ytDTU1FmzrWdwqv%2FMQsb%2FB%2FVgMJyIKxouhh5h%2Bm80zFunt0u9zsAcM3MZzBor1kVJeAjSrV5w2DyO4IM%2FlGuHh%2F8w15OsrgY6sQFVH5tUDXRPOjkahwbrWNRQbQlViBiuisF0oGGIUZSEM2emyhDTiKPd5NMjM0yePeIl%2BPxC4Dul%2F2On0NyXRRTTGrOIIl6Hy6Xv9vxQdDDYPJGcbS4J30GlwnahTG8BuM0KkchA2Wrwiy%2BJjPwi9JgZ9EIwHrxud41dg%2BdUjN4eH82KkANplyasAghysu3v1IW2Zck2vsJ%2FkBL4o45BwkwnHpOMCYfAgN4qXaf1GGzBmPY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=426a4ba066835524734739c2f41304fc07ecfef7a05b2d02163ea8eabf2b67fb",
+      "file_size": 2017,
+      "type": "text/x-diff",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-01-15T20:52:29.056Z",
+  "allow_singular_disclosure_after": -223313677.86687914,
+  "singular_disclosure_allowed": true,
+  "vote_count": 10,
+  "voters": [
+    "isra17",
+    "michiel",
+    "mpz",
+    "eveeez",
+    "khizer47",
+    "japz",
+    "spetr0x",
+    "scept1c",
+    "hackerjuan",
+    "jmlb1337"
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

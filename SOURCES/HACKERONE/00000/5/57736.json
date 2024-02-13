@@ -1,0 +1,105 @@
+{
+  "id": 57736,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81NzczNg==",
+  "url": "https://hackerone.com/reports/57736",
+  "title": "Missing spf flags for hackerone.com",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-04-22T11:01:56.347Z",
+  "submitted_at": "2015-04-22T11:01:56.347Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "d1pakda5",
+    "url": "/d1pakda5",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/ysajynss0xltx9t6abxg6ld8xxx1/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13,
+    "url": "https://hackerone.com/security",
+    "handle": "security",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/013/fa942b9b1cbf4faf37482bf68458e1195aab9c02_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "HackerOne",
+      "twitter_handle": "Hacker0x01",
+      "website": "https://hackerone.com",
+      "about": "Vulnerability disclosure should be safe, transparent, and rewarding."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2015-04-23T12:23:11.878Z",
+  "bug_reporter_agreed_on_going_public_at": "2015-04-23T12:23:11.140Z",
+  "team_member_agreed_on_going_public_at": "2015-04-23T08:55:52.217Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "I just checked for SPF records for the hackerone.com domain, and there are none, effectively allowing for spam(spoof) to originate from that domain. you can validate by testing yourself here: http://www.kitterman.com/spf/validate.html\r\n\r\ni want to show you an attack scenario\r\nAn attacker would send a Fake email from security@hackerone.com saying that Please change your password, The victim is aware of phishing attacks, But when he sees that the mail originated from security@hackerone.com , He has no other way than to believe it. Clicking on the link takes him to a website where certain JavaScript is executed which steals his hackerone.com id and pin (SESSION COOKIE). The results can be more dangerous.\r\n\r\n<?php\r\n$to = \"VICTIM@example.com\";\r\n$subject = \"Password Change\";\r\n$txt = \"Change your password by visiting here - [VIRUS LINK HERE]l\";\r\n$headers = \"From: security@hackerone.com\";\r\nmail($to,$subject,$txt,$headers);\r\n?>\r\n\r\nI strongly recommend you to read this article :\r\n\r\nhttps://www.digitalocean.com/community/tutorials/how-to-use-an-spf-record-to-prevent-spoofing-improve-e-mail-reliability\r\n\r\n\r\nyour spf report of hackerone.com is\r\n\r\nSPF record lookup and validation for: hackerone.com\r\nSPF records are published in DNS as TXT records.\r\n\r\nThe TXT records found for your domain are:\r\ndetectify-verification=013989914c06d6a62aa4663666920ac9\r\ngoogle-site-verification=glWWhC-27LpigyjAxBsVOVUScJgNQ23GWdC4uOWC3dc\r\ntinfoil-site-verification: 873ece466d6b512578883941b7e40f6c751bb6f0=190a4eea096ee61c4ba13b63a442cbc3dcf94811\r\ngoogle-site-verification=GObJCayWrxZLoAvYGPn8y75tF0SJk5d4iYrwMQTa23Y\r\nv=spf1 include:_spf.google.com include:sendgrid.net include:mail.zendesk.com include:spf.mandrillapp.com ~all\r\n\r\nChecking to see if there is a valid SPF record.\r\n\r\nFound v=spf1 record for hackerone.com:\r\nv=spf1 include:_spf.google.com include:sendgrid.net include:mail.zendesk.com include:spf.mandrillapp.com ~all\r\n\r\n\r\nYour SPF record is v=spf1 include:_spf.google.com include:sendgrid.net include:mail.zendesk.com include:spf.mandrillapp.com ~all\r\n\r\nIt should be v=spf1 include:_spf.google.com include:sendgrid.net include:mail.zendesk.com include:spf.mandrillapp.com ~all\r\n\r\nThe problem\r\nThe article clearly shows difference between softmail and fail you should be using fail as Softmail allows anyone to send spoofed emails from your domains. in your SPF record you should replace ~ with - at last before all , - is strict which prevents all spoofed emails except if you are sending. Your bug is that you are using ~ , you should use -\r\n",
+  "weakness": {
+    "id": 32,
+    "name": "Cryptographic Issues - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2015-05-23T08:55:53.005Z",
+  "allow_singular_disclosure_after": -275453008.91490036,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "shubham_srt",
+    "d3ad1y_b0073r",
+    "shivammusic",
+    "nikhils",
+    "dyabla"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

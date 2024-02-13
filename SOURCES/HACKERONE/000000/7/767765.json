@@ -1,0 +1,149 @@
+{
+  "id": 767765,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC83Njc3NjU=",
+  "url": "https://hackerone.com/reports/767765",
+  "title": "Account Takeover because of the mis-configuration on the Password Reset Page",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2020-01-03T16:31:39.193Z",
+  "submitted_at": "2020-01-03T16:31:39.193Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "karna__",
+    "url": "/karna__",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/46nbfbkt1em3br0dwre09h4xigxb/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 43746,
+    "url": "https://hackerone.com/clario",
+    "handle": "clario",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/t3XRtv8dYQo3cRSYWh2iL7CE/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/t3XRtv8dYQo3cRSYWh2iL7CE/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Clario",
+      "twitter_handle": "",
+      "website": "https://clario.co/",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "no-content",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-05-15T08:32:48.077Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-05-15T08:32:47.997Z",
+  "team_member_agreed_on_going_public_at": "2020-05-15T07:51:40.754Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "",
+  "bounty_amount": "300.0",
+  "formatted_bounty": "$300",
+  "weakness": {
+    "id": 65,
+    "name": "Business Logic Errors"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2020-06-14T07:51:40.843Z",
+  "allow_singular_disclosure_after": -115710171.99721643,
+  "singular_disclosure_allowed": true,
+  "vote_count": 3,
+  "voters": [
+    "exception",
+    "darkerhack",
+    "harshpshkar"
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 4.8,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "high",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "low",
+      "integrity": "low",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 42028,
+    "asset_type": "URL",
+    "asset_identifier": "api.account.opendoor.ltd",
+    "max_severity": "none"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 21710,
+      "category": "team",
+      "content": "### Summary\n`https://api.account.opendoor.ltd` has no rate-limit on the password reset's verification page. By this, I can take over any account. All I need to know is victim's email address.\n\n### Step to reproduce\n\n1. There is an endpoint -> `POST /v1/verification-code/forgot-password` which will take POST data in the format \n```\n{\n\"email\": \"koyogi9840@janmail.org\",\n\"device_id\": \"helloworld\"\n}\n```\nGive your email address and any device_id you need.\n\n2. And there is another endpoint -> `POST /v1/verification-code/auth` where the user needs to enter the verification code sent to his email address so that he can reset his password. This endpoint accepts the data as `{\"code\": \"TEST\",\"device_id\": \"helloworld\"}`. Just give the same device_id that you've given in step 1.\n\n3. I've observed that you're generating a 4 character verification code with the combination of upper-case alphabets and the numbers. So I need to generate all the possible combinations of that 4 character verification code. That will be a total of 1679616 combinations. For the sake of demonstration, I'll just take around 1000 combinations to do the attack. But it is possible to run all the 1679616 combinations on cloud services like AWS, etc, easily.\n\n4. After you make the request on `POST /v1/verification-code/forgot-password endpoint` for the victim's email address, visit `POST /v1/verification-code/auth endpoint` and enter the same `device_id entered` on `POST /v1/verification-code/auth`\n\n5. Send the request to Intruder.\n\n6. Add the attack point at the verification code.\n\n7. In the payloads section, add around 1000 combinations of 4 character verification codes. Add the correct verification code at the end so that we can prove that the bug exists. And set the thread count to a high value so that the attack will be a bit faster.\n\n8. Start the attack.\n\nAfter all those requests are made, you'll notice that, for the correct verification code, the response will be 200 OK while the wrong verification code's response will give you a 401 Unauthorized.",
+      "user": {
+        "id": 778068,
+        "username": "jair",
+        "name": "Nazarii Uniiat",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": "",
+        "created_at": "2019-10-11T11:56:52.161Z",
+        "url": "https://hackerone.com/jair",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/N18CABo2oLzv3uDAMHznVUhh/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/N18CABo2oLzv3uDAMHznVUhh/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/N18CABo2oLzv3uDAMHznVUhh/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

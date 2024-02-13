@@ -1,0 +1,114 @@
+{
+  "id": 694988,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82OTQ5ODg=",
+  "url": "https://hackerone.com/reports/694988",
+  "title": "Resource leak when using a normal site as DOH server",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "none",
+  "readable_substate": "Informative",
+  "created_at": "2019-09-14T20:45:50.296Z",
+  "submitted_at": "2019-09-14T20:45:50.296Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "pauldreik",
+    "url": "/pauldreik",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 35663,
+    "url": "https://hackerone.com/curl",
+    "handle": "curl",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "curl",
+      "twitter_handle": "",
+      "website": "https://curl.se",
+      "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-02-08T07:54:50.365Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2021-01-08T08:23:48.009Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nIf a DOH server is used, which is not really a DOH server but just a normal web server, the DNS request is sent but the reply will not be the expected DNS payload. In that case, curl correctly thinks DNS resolution failed, but it does not clean up allocated memory properly.\n\n## Steps To Reproduce:\nSee the attached demonstration program. It can use either no DOH, a valid DOH, a garbage DOH address, or a valid web server not serving DOH.\nValgrind sees that it leaks memory only in the last case, the others are cleaned up properly.\n\n### Leaking case\nThis will use https://example.com/ both as the URL to reach and as a DOH.\n```\nvalgrind ./a.out notadoh\n (snip)\n==3096== HEAP SUMMARY:\n==3096==     in use at exit: 98,252 bytes in 1,043 blocks\n==3096==   total heap usage: 101,296 allocs, 100,253 frees, 9,473,596 bytes allocated\n==3096== \n==3096== LEAK SUMMARY:\n==3096==    definitely lost: 8,564 bytes in 3 blocks\n==3096==    indirectly lost: 88,144 bytes in 995 blocks\n==3096==      possibly lost: 0 bytes in 0 blocks\n==3096==    still reachable: 1,544 bytes in 45 blocks\n==3096==         suppressed: 0 bytes in 0 blocks\n==3096== Rerun with --leak-check=full to see details of leaked memory\n```\n### Normal case - no DOH\nThis will use https://example.com/ without DOH.\n```\nvalgrind ./a.out none\n(snip)\n==3217== HEAP SUMMARY:\n==3217==     in use at exit: 1,544 bytes in 45 blocks\n==3217==   total heap usage: 37,396 allocs, 37,351 frees, 3,332,013 bytes allocated\n==3217== \n==3217== LEAK SUMMARY:\n==3217==    definitely lost: 0 bytes in 0 blocks\n==3217==    indirectly lost: 0 bytes in 0 blocks\n==3217==      possibly lost: 0 bytes in 0 blocks\n==3217==    still reachable: 1,544 bytes in 45 blocks\n==3217==         suppressed: 0 bytes in 0 blocks\n```\n### Normal case - working DOH\nThis will use https://example.com/ with cloudflare DOH.\n```\nvalgrind ./a.out cloudflare\n(snip)\n==3376== HEAP SUMMARY:\n==3376==     in use at exit: 1,656 bytes in 49 blocks\n==3376==   total heap usage: 101,564 allocs, 101,515 frees, 9,062,588 bytes allocated\n==3376== \n==3376== LEAK SUMMARY:\n==3376==    definitely lost: 0 bytes in 0 blocks\n==3376==    indirectly lost: 0 bytes in 0 blocks\n==3376==      possibly lost: 0 bytes in 0 blocks\n==3376==    still reachable: 1,656 bytes in 49 blocks\n==3376==         suppressed: 0 bytes in 0 blocks\n```\n\n## Supporting Material/References:\n\nSee the attached program.\n\n## Impact\n\nThe failed DOH is invisible to the end user, it seems to fallback to normal DNS.\nSo if the user has the wrong DOH adress (perhaps confused, or the DOH url changed slightly and now points to some generic hello page), I guess the memory leaks will add up, eventually leading to denial of service because of resource depletion.\n\nIt does not feel like a serious issue but I wanted to go through hackerone instead of filing a public report right away.",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 583031,
+      "file_name": "dohleak.c",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/qCYz8EsnyC7fW9cFfjgi3NYU?response-content-disposition=attachment%3B%20filename%3D%22dohleak.c%22%3B%20filename%2A%3DUTF-8%27%27dohleak.c&response-content-type=text%2Fx-csrc&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5DNGZVVG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T132819Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCICHLJPsWBp5sr6QP325sn3QmpUNWJkG1Rn9WpoDeqIg3AiEAiF8%2BSn1jT5ntK2r0sSCmNUGX9ZemOesqgbKFIUBuyWMqsAUIdhADGgwwMTM2MTkyNzQ4NDkiDD5dvB5yVZqhTClUciqNBapM8w3AEMj9vUut8ipBYyxkUXmIzrvgZ28gnqyQ6mhhFeeoPRU%2FpSxAJl9%2BpYrNip4ItC3BkgYDlk9abNplTrvNVi9OhutOp4ZE1wWKJlPpOzKXUOBoUe%2FRWzdh9xwCJuGDbGkQ7ngPegxy3y6LCFP5wP6sjVHLhEaT7e6L88U08XjQmZEZxAGGE5IESnoSUeW4EvOXBp5DQcR1t39zozskg4dISh5C2Ff6jgUnjDu9sYdoZA7dJgdByDPIA4VjLFdTVEjklaMXr4YtD7wTmG9hWanDSlJ11qBRruTBFPloL6Kq2YKCTOj8wC0UP9ctvuxeNwV7QKFhmu8bB6csA5mvLVxUvoelFVuLgYYhtCHZDGPo54Dzbn5soqg%2FJjzSexzqrvBtELxoPLfeuC9o2KpP0lfY7eBpdmAqxwpFPSBaxPJ66SICOozWWbpDqIqnFrnvz%2BXEMOe5z7dsDsKieBfX52kLKmUuAGG9Tv0jWo8CMlR7jOkbaaLMpho6b6rMGTGHucZmDgIYIwvcdVrd1njiiPPNTxx6qoUNz0WdZUAlGWBtiCv4fABRuY7ZjWGOAD0PFPT8FsbFoQ6mkw28XZaoMR735I%2FMJlHvafhgKlPNFVKsVzF%2F3GpLM7ECVpPoLq9VNtYgjHnuZ0U6e4r9781nElHBM1WdTrWia%2F9%2FJIwTVLKAnxWWWscJrGFA8kraj4Xrc3KPePGa2suQ5Fim1jPzWeLA%2Bfr7aEab%2FJVFYU%2F%2BIs0KPZarsTUlG%2B656GYmZcf%2Fa2gbirYZQRBwlZlZahqG0l8iMLSK0TCfJOwBIAuJd7wWISVFGCV0aYj458Ker2Pjca9HvyzcI8qiuhyhF68QiOr9MFM67rM70ExPMPHFra4GOrEB58pDHOC4avlR6xYMRYlBCOP%2F5dyV6PT6gr9Vs5I8zhf3jjEkzka6Au6GNesJTj11PvvCjC1fFqxeJeAvkQZYn2pzivrXx7RBTeI6fAxztLLN3Lu9uyUpmO1SqciT2zDRX2wO0JTz6DtjgCLlfMq%2FHCRF8EoZi0alN2KMbAkJBqtFpznpmUaem89ejwzJcKJLTQiW1rXarR6VZiM7isz2KsMf5L4b0KstHgl%2Fux6s5iUg&X-Amz-SignedHeaders=host&X-Amz-Signature=990afb404d8f1c9333f34b8927cf10740d582b28cb26f9e6a0846135ef4a6839",
+      "file_size": 2283,
+      "type": "text/x-csrc",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 1,
+  "voters": [
+    "monke"
+  ],
+  "severity": {
+    "rating": "none",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 18844,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/curl/curl",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+{
+  "id": 2212627,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMjEyNjI3",
+  "url": "https://hackerone.com/reports/2212627",
+  "title": "Delete external storage of any user",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2023-10-17T00:08:29.562Z",
+  "submitted_at": "2023-10-17T00:08:29.709Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "cx75fa",
+    "url": "/cx75fa",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2023-48239"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-11-21T09:22:22.998Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-11-21T09:22:22.917Z",
+  "team_member_agreed_on_going_public_at": "2023-11-21T05:27:32.839Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "A security vulnerability was uncovered that allowed standard users to remove external storage resources from any user account in the application. This flaw was particularly concerning because it enabled unauthorized users to delete these resources based on a system-generated ID, which automatically incremented, without requiring any special privileges. This issue didn't grant access to the data but allowed for the indiscriminate removal of external storage associated with user accounts, potentially leading to data loss and disruption of service for affected users.\n\nReproduction Steps:\n1.Begin by logging in with a standard user account and establish an external storage connection.\n2. Afterward, update the storage configuration. Observe that the following request is generated:\n```\nPUT /apps/files_external/userstorages/<storage_id> HTTP/1.1\nHost: 127.0.0.1:9090\n[REDACTED]\n\n{\"mountPoint\":\"simpleuser\",\"backend\":\"owncloud\",\"authMechanism\":\"password::logincredentials\",\"backendOptions\":{\"host\":\"cq6xxrdnw1941wu9jk4gcyfuglmfa4.oastify.com\",\"root\":\"\",\"secure\":true},\"testOnly\":true,\"id\":<storage_id>,\"mountOptions\":{\"enable_sharing\":true,\"encoding_compatibility\":false,\"encrypt\":true,\"filesystem_check_changes\":1,\"previews\":true,\"readonly\":false}}\n```\n3.Next, log in to the application with an administrative user account or any other role and establish a storage connection.\n4.Observe that each new storage created increments the ID automatically. For instance, it could become 28.\n5. Using the standard user role, issue the request once more to modify the ID linked to the administrative storage. Observe that this action leads to the removal of the storage from the administrator's account.\n\nVIDEO POC:\n{F2778950}\n\n## Impact\n\nThis finding has a huge impact on the application, including data loss, service disruption, unauthorized actions, data privacy concerns, security risks, and potential reputation damage.",
+  "weakness": {
+    "id": 26,
+    "name": "Improper Access Control - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 2778950,
+      "file_name": "delete_storage.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/6ri1dttcueld38dbdgnwfugbutp1?response-content-disposition=attachment%3B%20filename%3D%22delete_storage.mp4%22%3B%20filename%2A%3DUTF-8%27%27delete_storage.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQSE3YBQWZ%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143956Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDlVPnmhGDnF2FIqu8OeWSNu6ZCGP7K%2FIZ584pBMUGeGAIgAdqS8TdHBm9YaTgyxQyrT%2B7JTDJ2zUCM465yBI8ZrkQqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDFk9aYVaKi5NhxRkziqPBWumDGkXLiQJGUnXbGOfzB9y5GZ7sqcwFPOyBRMOMgGYeEW6C6wsENB0cveexpvlR%2FsBZRvR%2FkkHLnCFcsBrOl2TfYk46o%2BtovmWcAGZipZQWXCs88k3jTlNi8Fleqa%2FwuH3tZMCvP9JZjFgkb4ee81gm7TtzXQCU7lJ0rRBupeTzC%2B5l6uFm4v%2Fg%2F%2BswGlvpy%2FDK1JGqGjVJzYykZsNRn%2B7sga8nMtD%2FGqnDMwopI8%2FfQbqF6dairOzC85LlKs5%2BIwSpj8BGMxUkGrvsZ14LYuBr7SmbohNDoNXzKanlg4zTzpcoaznWHGhAtBfotcIWo2%2FWEgAEgLNo6UVCQ%2FB3mzBWHupyHATQudWHZl%2BgKAVy8jxkoje8v7WCZKZPk5BFkq%2Fy2E1wy779lOR4LVTAlRMNF1iNiHqXVI55PASk3hHIEKQZIqIbYQSc7h6ADuVg2IgEQWAk5BnltwvRlQMlru72ti%2FQE4fx5AWZ86meZOWdz0uTnqmMM7QXZ8d6f3huUFYhSW%2BgeQJIYQEw1L4ketxu4wfp9vOS9dceLaE74ZR2%2F1gHvHgIontS%2FSNDBxqgn92TuTNrUbTt8QKch95GV9Yln6YSTzna0qTDPOIKoKLpBa%2FKLEgu7Q1QzqvKa1kgIO38XHmf37Z%2BPQ4RyCflmNGMQ8I15GF0Vb40li%2BwZB6RW0mybr%2BKBdW9O%2BwdJlYcaLqRS7v6u6MQB1PGwCI%2FVNKUdBpvcrY0ssEU3frEAokr489TW9X04xPSxcIG7JH5ljFoe5XF6QhwrCU85thXN2yk7WckO1ctlBR%2BhE3ozmq9Yr1kBVoLdAS%2FwJlXH7ItDFw8zI2rWviwPhgqFu6%2BRbkZ2tFCDoMFwg9Mx%2FgVvwwneitrgY6sQGK3hTqL%2FYWyb0GigKD%2B%2FFXXC3k7uMsLRERvoovJXCCbrtgiFp5NZLvg1qaY%2B128LQ%2FWQvLgeZmOwY20VPjts6qGbczdARtfMQ3dS5XbQ1WoZEouLD0VTr6EnwLRX%2F9Ews0j64zrUsEcwpgPmSBDUQVSsHBxY%2Bs6EnWg3hZ6VZU6pMQJ1g%2FnHIQ52ejJAtRLVo5Q03BbXORH23pl7zd%2BiSJPGHJetpGGx%2BuZWn399yCSsA%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=6f68061ffa4b794e94d5a280d29c46f6fbc676e6830ef996d67cf41c32612e81",
+      "file_size": 16541551,
+      "type": "video/mp4",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-12-21T05:27:32.952Z",
+  "allow_singular_disclosure_after": -4698744.004790887,
+  "singular_disclosure_allowed": true,
+  "vote_count": 35,
+  "voters": [
+    "shreyaschavhan",
+    "themarkib0x0",
+    "zy9ard3",
+    "shubham_srt",
+    "unknownsh",
+    "mr_anksec",
+    "maholli",
+    "ronisec",
+    "sey194",
+    "yashlonewolf",
+    "and 25 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 8.5,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "network",
+      "attack_complexity": "low",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "changed",
+      "confidentiality": "none",
+      "integrity": "low",
+      "availability": "high"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 13,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "nextcloud/server",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

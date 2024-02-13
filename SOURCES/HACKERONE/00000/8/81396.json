@@ -1,0 +1,126 @@
+{
+  "id": 81396,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC84MTM5Ng==",
+  "url": "https://hackerone.com/reports/81396",
+  "title": "[Rails42] We can inject HTML tags when server is using strip_tags method",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2015-08-09T11:32:40.779Z",
+  "submitted_at": "2015-08-09T11:32:40.779Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "arthurnn",
+    "url": "/arthurnn",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/038/151/220f6125c2a3251b8e99de1c928aa000c47958ba_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 22,
+    "url": "https://hackerone.com/rails",
+    "handle": "rails",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/022/5e2b46658c8b86bed62f574d8e1793f353cbbc63_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/022/5e2b46658c8b86bed62f574d8e1793f353cbbc63_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Ruby on Rails",
+      "twitter_handle": "rails",
+      "website": "http://rubyonrails.org/security",
+      "about": "Web development that doesn't hurt."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "no-content",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2016-03-13T18:20:13.299Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2016-02-12T18:19:57.671Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-03-13T18:19:57.929Z",
+  "allow_singular_disclosure_after": -249931444.30722076,
+  "singular_disclosure_allowed": true,
+  "vote_count": 3,
+  "voters": [
+    "cryptographer",
+    "shivammusic",
+    "dyabla"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 1057,
+      "category": "team",
+      "content": "XSS vulnerability in rails-html-sanitizer\n\nThere is a XSS vulnerability in `Rails::Html::FullSanitizer` used by Action View's `strip_tags`.\nThis vulnerability has been assigned the CVE identifier CVE-2015-7579.\n\nVersions Affected:  1.0.2\nNot affected:       1.0.0, 1.0.1\nFixed Versions:     1.0.3\n\nImpact\n------\nDue to the way that `Rails::Html::FullSanitizer` is implemented, if an attacker\npasses an already escaped HTML entity to the input of Action View's `strip_tags`\nthese entities will be unescaped what may cause a XSS attack if used in combination\nwith `raw` or `html_safe`.\n\nFor example:\n\n    strip_tags(\"&lt;script&gt;alert('XSS')&lt;/script&gt;\")\n\nWould generate:\n\n    <script>alert('XSS')</script>\n\nAfter the fix it will generate:\n\n    &lt;script&gt;alert('XSS')&lt;/script&gt;\n\nAll users running an affected release should either upgrade or use one of the\nworkarounds immediately.\n\nReleases\n--------\nThe FIXED releases are available at the normal locations.\n\nWorkarounds\n-----------\nIf you can't upgrade, please use the following monkey patch in an initializer\nthat is loaded before your application:\n\n```\n$ cat config/initializers/strip_tags_fix.rb\nclass ActionView::Base\n  def strip_tags(html)\n    self.class.full_sanitizer.sanitize(html)\n  end\nend\n```\n\nPatches\n-------\nTo aid users who aren't able to upgrade immediately we have provided patches\nfor the two supported release series. They are in git-am format and consist\nof a single changeset.\n\n* Do-not-unescape-already-escaped-HTML-entities.patch\n\nCredits\n-------\nThank you to Arthur Neves from GitHub and Spyros Livathinos from Zendesk for\nreporting the problem and working with us to fix it.",
+      "user": {
+        "id": 4981,
+        "username": "rafaelfranca",
+        "name": "Rafael França",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": "",
+        "location": "",
+        "created_at": "2014-04-14T22:32:11.816Z",
+        "url": "https://hackerone.com/rafaelfranca",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/004/981/dd3b6bb41f9c33e3448ebbc47303f5a135f25105_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/004/981/dd3b6bb41f9c33e3448ebbc47303f5a135f25105_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/004/981/dd3b6bb41f9c33e3448ebbc47303f5a135f25105_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

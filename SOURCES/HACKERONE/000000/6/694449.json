@@ -1,0 +1,109 @@
+{
+  "id": 694449,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82OTQ0NDk=",
+  "url": "https://hackerone.com/reports/694449",
+  "title": "Buffer write overflow when forming dns over http request",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "low",
+  "readable_substate": "Informative",
+  "created_at": "2019-09-13T14:09:24.170Z",
+  "submitted_at": "2019-09-13T14:09:24.170Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "pauldreik",
+    "url": "/pauldreik",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 35663,
+    "url": "https://hackerone.com/curl",
+    "handle": "curl",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/035/663/2faf4c279d437d64bfda6d23d62ce1833813a4d9_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "curl",
+      "twitter_handle": "",
+      "website": "https://curl.se",
+      "about": "cURL is an Open Source project providing a library and command-line tool for doing internet transfers"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2021-02-08T07:55:02.375Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2021-01-08T08:24:12.337Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nIf dns over http is used, the hostname to look up is packed into a buffer to send to the dns server using the doh_encode function from the doh.c source file. By default, curl uses a 512 byte buffer. For that length,  the buffer may be overflowed with one byte, which is set to 1.\n\nNote that this happens even with the fix in https://github.com/curl/curl/pull/4345 which Daniel made after I emailed about a similar bug in the curl/doh repository.\n\n## Steps To Reproduce:\n\nBuild curl with address sanitizer, and/or add an assert\nassert(*olen <=len) ;\nright before returning from doh_encode() in doh.c https://github.com/curl/curl/blob/65f5b958c95d538a9b205e2753a476d1a7c89179/lib/doh.c#L135\n\nThen issue a curl request:\n `src/curl --doh-url https://irrelevant/ x....xxxxxxxxxxxxxxxxxxxxx.x....x.xxxxxxxxxx.xxxxxxxxx.xxxxxxxxxxx.xxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxx...xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.x.x.......xxxxxxxxxxxxxxxxxxxxxx...xxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx......xxxxxx.....xx..........xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxx..x......xxxxxxxx..xxxxxxxxxxxxxxxxxxx.x...xxxx.x.x.x...xxxxx`\n\n\n\n## Supporting Material/References:\nWhen adding the assert above, this is the output of the above command:\n\n    curl: ../../../lib/doh.c:144: DOHcode doh_encode(const char *, DNStype, unsigned char *, size_t, size_t *): Assertion `*olen <=len' failed.\n\n## Impact\n\nIf the attacker somehow can control the hostname eventually used by curl, and DOH is in use, the buffer overflow can happen.\n\nFor the common case where dnsprobe.dohbuffer is used, the overwrite may be immediately remedied by assignment to the length (see https://github.com/curl/curl/blob/65f5b958c95d538a9b205e2753a476d1a7c89179/lib/doh.c#L195 )\nThis relies on the compiler not rearranging the writes.",
+  "weakness": {
+    "id": 3,
+    "name": "Classic Buffer Overflow"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 1,
+  "voters": [
+    "monke"
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 18844,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/curl/curl",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

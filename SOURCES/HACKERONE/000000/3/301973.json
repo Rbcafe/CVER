@@ -1,0 +1,118 @@
+{
+  "id": 301973,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMDE5NzM=",
+  "url": "https://hackerone.com/reports/301973",
+  "title": "Airship: Persistent XSS via Comment",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2018-01-03T13:49:01.314Z",
+  "submitted_at": "2018-01-03T13:49:01.314Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "foobar7",
+    "url": "/foobar7",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/197/817/efb62be6777043aba724654aa495ebeccabb9e72_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 8539,
+    "url": "https://hackerone.com/paragonie",
+    "handle": "paragonie",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/008/539/72f76fed45e5220b47ba2f679371ebf9ccb19c70_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/008/539/72f76fed45e5220b47ba2f679371ebf9ccb19c70_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "paused",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Paragon Initiative Enterprises",
+      "twitter_handle": "ParagonIE",
+      "website": "https://github.com/paragonie",
+      "about": "Cryptography and Application Security Consultants - We Produce Various Open Source Libraries"
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-04-24T08:47:31.661Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-04-24T08:47:31.590Z",
+  "team_member_agreed_on_going_public_at": "2018-04-20T18:13:03.871Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Affected: Airship 2.0.0 (commit 15bdc0d)\n\nCVSS\n----\n\nMedium 6.1 https://www.first.org/cvss/calculator/3.0#CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N\n\nDescription\n-----------\n\nThe \"name\" field of a comment on a blog post is vulnerable to persistent XSS. \n\nWhen replying to a comment, the comment name is inserted into the DOM without encoding, leading to persistent XSS. \n\nBy default, comments are open to anonymous users, although that can be disabled by an administrator.\n\nMitigating Factors\n---------------------------\n\nThere are a couple of mitigating factors. \n\nAirship uses a CSP per default, which makes exploitation more difficult. The CSP can be disabled by an administrator though, and there may be attack possibilities even with the default CSP.\n\nThe attacked user has to actively click on \"reply\" for the payload to execute, meaning an attacker has to entice the user to do so.\n\nFinally, the payload is shown in plaintext in the username field, which might make the attacked user suspicious. An attacker can try to hide it by using an overly long or complicated name. \n\nDetails\n-------\n\nThe vulnerability exists in file `/static/Hull/comments.js?`, specifically these lines where the author name is read out of the DOM and inserted into it again without proper encoding:\n\n\twindow.replyTo = function(commentId, author) {\n\t\t$(\"#reply-to\").html(\n\t\t    \"<div class='blog-comment-label form-column'></div><div class='form-comment-field form-column'>\" +\n\t\t    \"<input type='hidden' name='reply_to' value='\" + commentId + \"' />\" +\n\t\t        \"Replying to \" + author + \" (Comment #\" + commentId + \")\" +\n\t\t    \"</div>\"\n\t\t);\n\t};\n\nPOC\n---\n\n0. Under bridge/admin/settings, check \"allow unsafe inline\" under javascript.\n1. Leave a comment on a blog post. As name, use:\n\t'\"><img src=no onerror=alert(1)>\n2. Click on \"Reply\". The name will be read out via javascript and inserted into the DOM.\n\n## Impact\n\nWith a successful exploitation, an attacker can among other perform arbitrary actions in the name of the attacked user, such as adding a new administrator, and thus gain full access to the application.",
+  "weakness": {
+    "id": 62,
+    "name": "Cross-site Scripting (XSS) - Stored"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 251081,
+      "file_name": "persistent_xss.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/251/081/2cc3fc622d964aeee940965b136efa28361ef7cb/persistent_xss.png?response-content-disposition=attachment%3B%20filename%3D%22persistent_xss.png%22%3B%20filename%2A%3DUTF-8%27%27persistent_xss.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125649Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=3e14074469d80698f11cf5c8504eba83d7f5bcc5e51f6a344f3e8ecaba6408c9",
+      "file_size": 86454,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-05-20T18:13:03.968Z",
+  "allow_singular_disclosure_after": -180989025.91008484,
+  "singular_disclosure_allowed": true,
+  "vote_count": 4,
+  "voters": [
+    "apapedulimu",
+    "gamliel",
+    "eveeez",
+    "666reda"
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

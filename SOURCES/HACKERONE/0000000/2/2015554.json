@@ -1,0 +1,136 @@
+{
+  "id": 2015554,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yMDE1NTU0",
+  "url": "https://hackerone.com/reports/2015554",
+  "title": "Internal Blind Server-Side Request Forgery (SSRF) allows scanning internal ports",
+  "state": "Closed",
+  "substate": "informative",
+  "severity_rating": "none",
+  "readable_substate": "Informative",
+  "created_at": "2023-06-07T08:05:58.532Z",
+  "submitted_at": "2023-06-07T08:05:58.689Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "callmed0_4",
+    "url": "/callmed0_4",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/vSZfMGUS6vuP8y2DtkwJbBCi/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 61236,
+    "url": "https://hackerone.com/mozilla_core_services",
+    "handle": "mozilla_core_services",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/0p8e6gg8xoy45dhjxs5wh4iti6k8/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/0p8e6gg8xoy45dhjxs5wh4iti6k8/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Mozilla Core Services",
+      "twitter_handle": "",
+      "website": "https://www.mozilla.org",
+      "about": "Mozilla web bug bounty program specific to encouraging security research in Mozilla's products and core services."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2024-01-12T16:35:59.521Z",
+  "bug_reporter_agreed_on_going_public_at": "2024-01-11T16:37:03.586Z",
+  "team_member_agreed_on_going_public_at": "2024-01-12T16:35:59.353Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nBlind SSRF reports on services that are designed to load resources from the internet is Out of scope but this is a Internal Blind SSRF report so should be a Valid find as I am reading the localhost not someone else server.\nI found a Blind SSRF issue that allows scanning internal ports on https://getpocket.com/saves , the server will give different response  the request to all the closed ports and  we can use this in our advantage.\nI also confirm this by doing a scan on my network for open ports and closed ports thus proving that the open and closed ports show different response \n\n## Steps To Reproduce:\n\n1. Go to https://getpocket.com/saves? as an Authenticated person\n2. Click on the Plus Icon at the Top and enter the URL \"https://127.0.0.1:1\"\n3. intercept this request using a Proxy like BURP and send the request to the Repeater Tab [Intruder Tab if you want to scan ]\n4. change the ports to see different results , You will see different  response for the different ports which shows which one is open and which one is closed.\n\nSuch as \nhttps://127.0.0.1:22 Open\nhttps://127.0.0.1:21 close\nhttps://127.0.0.1:86 Open\nhttps://127.0.0.1:88 Open\nhttps://127.0.0.1:87 close\n\n## Supporting Material/References:\nhttps://hackerone.com/reports/1300585\n\n##PoC\nScanning the Internal system\n{F2403088}\n\nProving that the Open ports gives greater then 3000 length response \n{F2403089}\n\n## Impact\n\nThis vulnerability can be used for reconnaissance. Attacker can enumerate services and launch attacks against them\nExample: Port Scan by different response from the server",
+  "weakness": {
+    "id": 68,
+    "name": "Server-Side Request Forgery (SSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 2403088,
+      "file_name": "getpocket-bssrf-internal.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/plxie51c3dymdd3i7huyvo9k8nqq?response-content-disposition=attachment%3B%20filename%3D%22getpocket-bssrf-internal.mp4%22%3B%20filename%2A%3DUTF-8%27%27getpocket-bssrf-internal.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRCRTVIE4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143719Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCeQctGyPvXnU72NvGUmvM0aB0iR%2B3ReIxYE2qLCiw2VwIgQyic82Noq%2FQNRIacH8SD9YwyMLSzJUY5PD%2BMQxm42%2BcqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDD25y2JUZlJK2OU6WyqPBbg7l2HIPDSTaxIUZJJDn8Tn6trTptA2U5ZbpvAD8y4VG9UTF74IWjDh5l48opUUNg3Ggdv3v9pPRorgEeg%2Bt0cTVcBC3Ys8DZw9zxbNGscUvnMasc%2F9jEoPGSi%2F0qA394vVOztSTMWH%2FQRDmRDVzGe3OFxSG%2FKiCccLhDQQlNz4rNDgXi84UTa%2FJIf4%2B7wo5Sl9EkosiQSbG9bQkoJ3LCJ8wo949ry1xJnm8q3NSNvhmiSoqkPYuY0L%2B2VOl9cKxyFN6OpJFga4OKej9TD%2B5Mr9tCXDx2U4PCtxvzg1hL2Qun61lgsZLsZXWc%2F64G%2BcDMMsm0TL%2F8%2FYCO0GhFuQEEE8KHX4jcyQxQ%2BXybMwMuwJwGKTeYQgtTcJf1GJd4CVc6kprwM9ROPdonqZ7dtJfnEAztxRMBvTfRaW5ao6yR%2Fu8JBGbTOt9IDtJCqWjvU16m%2B2Xu%2B1NkHIeLQSZc42z5hKqBV6TfV%2BEoPyEVoHwmSugFJGYxlFO%2Fk9DHGpdGrOSCua0MzJ4Xm8ofejJGoEo62Z2Gfa4TF77cdudEiHTttH42gVWBfO5nG1sldCBkJy7XROJmAnRjOEz5GXa2D4P80Z3%2B7b79AhZyv9wpFpH4efOyAISK%2BUO4SuPEZIEtgzMpfzbfHFxiCJadaIb6dvicqxJbWD7XbkPKUPQTvBkeeCE943JpFNhptae73cB3ht5kmPs1eumBkkaOvtfLFjTAZEHBy8VDu9DQZbXsvXwTvu0dJsQ7ofJrR8%2BwEoUsAoSnSjY7fDzJ%2FJ%2FQWK1yOgQuqVuuEYWszzzH%2B8eP8c%2FCNpNvzhbftjVLhLeHc8OUYyxPANiPV7oh4iSx1MWdK9zHhH0Su6fGdkvHp9Pnyj1Pkwo%2FGtrgY6sQGGpYHfkhc%2F8vURSuovK%2F%2By75LlcMpKqtpNNZno5zr0R%2FX3RqbysXt6ZptOpV0W2W2Z4mtk3N79Mh9ch1InfVgL%2BwzQtS9%2B%2BIdvzw4x5m1yDnpnpA9IZoAA54fDHmDQkUeA9BqYpB6wpQ%2FR%2Bh%2FiGk4bWWRP6iSQusKWzeUSUN7FFbJhU%2FacXW5iO1svwbp7%2FHDesFAT9RFD7Ji6uHPRq08cmTFvN7TosaU3np%2BACQQzbYE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=03105a4c811fb8e450d0ff0ffab9d46d4abeff886f5a238fc10736905566078a",
+      "file_size": 10930315,
+      "type": "video/mp4",
+      "moderated": null
+    },
+    {
+      "id": 2403089,
+      "file_name": "getpocket-poc-ssrf-3200.mp4",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/3wardpm835p39jhznktwmnzvpj0f?response-content-disposition=attachment%3B%20filename%3D%22getpocket-poc-ssrf-3200.mp4%22%3B%20filename%2A%3DUTF-8%27%27getpocket-poc-ssrf-3200.mp4&response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQRCRTVIE4%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143719Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQCeQctGyPvXnU72NvGUmvM0aB0iR%2B3ReIxYE2qLCiw2VwIgQyic82Noq%2FQNRIacH8SD9YwyMLSzJUY5PD%2BMQxm42%2BcqsgUIdxADGgwwMTM2MTkyNzQ4NDkiDD25y2JUZlJK2OU6WyqPBbg7l2HIPDSTaxIUZJJDn8Tn6trTptA2U5ZbpvAD8y4VG9UTF74IWjDh5l48opUUNg3Ggdv3v9pPRorgEeg%2Bt0cTVcBC3Ys8DZw9zxbNGscUvnMasc%2F9jEoPGSi%2F0qA394vVOztSTMWH%2FQRDmRDVzGe3OFxSG%2FKiCccLhDQQlNz4rNDgXi84UTa%2FJIf4%2B7wo5Sl9EkosiQSbG9bQkoJ3LCJ8wo949ry1xJnm8q3NSNvhmiSoqkPYuY0L%2B2VOl9cKxyFN6OpJFga4OKej9TD%2B5Mr9tCXDx2U4PCtxvzg1hL2Qun61lgsZLsZXWc%2F64G%2BcDMMsm0TL%2F8%2FYCO0GhFuQEEE8KHX4jcyQxQ%2BXybMwMuwJwGKTeYQgtTcJf1GJd4CVc6kprwM9ROPdonqZ7dtJfnEAztxRMBvTfRaW5ao6yR%2Fu8JBGbTOt9IDtJCqWjvU16m%2B2Xu%2B1NkHIeLQSZc42z5hKqBV6TfV%2BEoPyEVoHwmSugFJGYxlFO%2Fk9DHGpdGrOSCua0MzJ4Xm8ofejJGoEo62Z2Gfa4TF77cdudEiHTttH42gVWBfO5nG1sldCBkJy7XROJmAnRjOEz5GXa2D4P80Z3%2B7b79AhZyv9wpFpH4efOyAISK%2BUO4SuPEZIEtgzMpfzbfHFxiCJadaIb6dvicqxJbWD7XbkPKUPQTvBkeeCE943JpFNhptae73cB3ht5kmPs1eumBkkaOvtfLFjTAZEHBy8VDu9DQZbXsvXwTvu0dJsQ7ofJrR8%2BwEoUsAoSnSjY7fDzJ%2FJ%2FQWK1yOgQuqVuuEYWszzzH%2B8eP8c%2FCNpNvzhbftjVLhLeHc8OUYyxPANiPV7oh4iSx1MWdK9zHhH0Su6fGdkvHp9Pnyj1Pkwo%2FGtrgY6sQGGpYHfkhc%2F8vURSuovK%2F%2By75LlcMpKqtpNNZno5zr0R%2FX3RqbysXt6ZptOpV0W2W2Z4mtk3N79Mh9ch1InfVgL%2BwzQtS9%2B%2BIdvzw4x5m1yDnpnpA9IZoAA54fDHmDQkUeA9BqYpB6wpQ%2FR%2Bh%2FiGk4bWWRP6iSQusKWzeUSUN7FFbJhU%2FacXW5iO1svwbp7%2FHDesFAT9RFD7Ji6uHPRq08cmTFvN7TosaU3np%2BACQQzbYE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=1bbdc03be163804de9002af1d5ae8523076d3eb7da39b49f749efe563e817ebc",
+      "file_size": 13088883,
+      "type": "video/mp4",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 41,
+  "voters": [
+    "maskopatol",
+    "zy9ard3",
+    "dk4trin",
+    "trieulieuf9",
+    "exec_iq",
+    "shubham_srt",
+    "sodium_",
+    "callmed0_4",
+    "shivammusic",
+    "0xm1racle",
+    "and 31 more..."
+  ],
+  "severity": {
+    "rating": "none",
+    "author_type": "Team"
+  },
+  "structured_scope": {
+    "databaseId": 402560,
+    "asset_type": "URL",
+    "asset_identifier": "getpocket.com",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "id": 428651,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC80Mjg2NTE=",
+  "url": "https://hackerone.com/reports/428651",
+  "title": "Subdomain takeover dew to missconfigured project settings for Custom domain .",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2018-07-09T14:00:19.000Z",
+  "submitted_at": "2018-07-09T14:00:19.000Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "0xprial",
+    "url": "/0xprial",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/118/877/7f8e1265c1a3d1de0d05b614064246203b566361_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 34493,
+    "url": "https://hackerone.com/flock",
+    "handle": "flock",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/034/493/c2cb04eafffba9e736b57ff56e5185513af0f9aa_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/034/493/c2cb04eafffba9e736b57ff56e5185513af0f9aa_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "profile": {
+      "name": "Flock",
+      "twitter_handle": "flock",
+      "website": "https://flock.com/",
+      "about": ""
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": true,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2018-10-26T17:24:42.075Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": true,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "While testing flock.com I got a domain **flock.co** what is under flock company . So I stared looking at it's subdomains and got subdomain **newdev.flock.co** . When I visited the subdomain in browser I got a error like below screenshot :-\n{F365851}\nThis took my attention . So I checked the DNS record for this domain .\n\n```\nR3liGiOus_HuNt3r$ dig newdev.flock.co\n; <<>> DiG 9.10.6 <<>> newdev.flock.co\n;; global options: +cmd\n;; Got answer:\n;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 13182\n;; flags: qr rd ra; QUERY: 1, ANSWER: 4, AUTHORITY: 0, ADDITIONAL: 1\n;; OPT PSEUDOSECTION:\n; EDNS: version: 0, flags:; udp: 512\n;; QUESTION SECTION:\n;newdev.flock.co. IN A\n;; ANSWER SECTION:\nnewdev.flock.co. 299 IN CNAME cname.readme.io.\ncname.readme.io. 299 IN CNAME readme-cache-prod-1392018356.us-east-1.elb.amazonaws.com.\nreadme-cache-prod-1392018356.us-east-1.elb.amazonaws.com. 59 IN A 52.0.214.29\nreadme-cache-prod-1392018356.us-east-1.elb.amazonaws.com. 59 IN A 52.5.249.117\n;; Query time: 69 msec\n;; SERVER: 8.8.8.8#53(8.8.8.8)\n;; WHEN: Mon Jul 09 04:58:06 +06 2018\n;; MSG SIZE rcvd: 175\n```\n\nFrom above record we can say the subdomain is pointing to **CNAME cname.readme.io** . So I start looking at custom domain documents on **readme.io** website to understand how they works . From their document I understand that :-\n\n* You need a subdomain pointing to your readme.io subdomain **[yoursubdomain.readme.io]** .\n* Your subdomain should be configured in domains settings in following page **https://dash.readme.io/project/<project\n_Name>/v1.0/domains**\n\nSo to takeover I need to check if **cname.readme.io** is alreday claimed of not . But Unfortunately it was already claimed :( . But I have seen many such services doesn't force users to verify their ownership of domains by using same CNAME txt record like their service subdomain . So still there's a hope .\nI opened a account in **readme.io** and I got a subdomain **newdev.readme.io** . Then I go to **domains settings** **https://dash.readme.io/project/newdev/v1.0/domains** and in Custom Domain Field used **newdev.flock.co** as value and save changes .\nNow when I visited **newdev.flock.co** It redirected me to **http://newdev.flock.co/inactive** this page what saying now that Not Yet Active.\n\n{F365852}\n\nThis is showing as I am using a trail account . In the webpage title you will see my project name what I used while creating the project . So now this domain is serving my contents from newdev.readme.io project page .\n\n**How to avoid such issues ? :-** Always update your DNS records . remove CNAME or any other DNS records what is not in used .\n\nIf you find a security vulnerability feel free to contact them via security@flock.com\n\n You can find me on [Facebook](https://www.facebook.com/prial261) anytime .\n**My blog :-** https://medium.com/@prial261\n\nThanks for reading .",
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 365851,
+      "file_name": "Screen_Shot_2018-07-09_at_5.02.27_AM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/365/851/0a3f6979464724fbcd8ff2693788bf0c8916f344/Screen_Shot_2018-07-09_at_5.02.27_AM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2018-07-09_at_5.02.27_AM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2018-07-09_at_5.02.27_AM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131312Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a0e9423780a0f2c77373504231f0185be8dc5c8f691d9449466fed46a517aa0b",
+      "file_size": 181551,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 365852,
+      "file_name": "Screen_Shot_2018-07-09_at_5.19.43_AM.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/365/852/5709297e42fd55e1539b72235cf7ae55d4663da8/Screen_Shot_2018-07-09_at_5.19.43_AM.png?response-content-disposition=attachment%3B%20filename%3D%22Screen_Shot_2018-07-09_at_5.19.43_AM.png%22%3B%20filename%2A%3DUTF-8%27%27Screen_Shot_2018-07-09_at_5.19.43_AM.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ3H257GYG%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T131312Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGoOoD7IqdXlQSMALqfdmBHb%2FwisMvEm1NldXxdnNeYCAiARy2w%2BYbeWpCI595roGwDkus42Lbn86e5evWfxBT9NOSqyBQh1EAMaDDAxMzYxOTI3NDg0OSIMhPAKuxRXUmGeFQneKo8F3DcJJTLeqY4WL2LSYxnsh9sLc5TIBgXhMZcfnWnfMScNTJ5phuisFPjvWUDTRl2jiPdCnVNDEZTh0V%2FzIfuaRGTEFLdttdVM%2B7XRPGS6Z0DsZrpCecbEHHiNrvbSv9rEH4WRaiYG2AiT800A%2BhISire0KP%2FxWN%2Bq3fGg3S7IYi3fo9FxjeHTJXwzRwtp8p2sKp0llq1XgyIM5HcUKwfeJRLDxhXB4KjtrJm8Nl1HJjYd38Kl4OOD%2BVQ4qgxVg6S3QUXiVui8uRmS6QSomCFcHKrWwhKDdkwleR0A2DhXEcMBOpr5uZdFBRMTTLVfLJqt8b7Gn%2FP1kEndSvANJn4pKANWGSKKrLKm%2FW5SYwuMcwCwVWZkm2kI7%2FaC07CZWLriJLbb0B9h3p9uZQd2JXPcy9UJrOtHD39hJ2TSV7hqrFKdIH1VDFc1o4xN9CfMK41Iz19t%2BXB%2BiBobpQMJkamH6%2BMqlg%2BRnibesjoUaznTAKjTv04b1H2Gfup9n8qf1CYIWVaypF0psfpQ4tvZMbk6A9lrEcUCjjcacQFwHaOjcE1VoMC9x8Y3SAcSGe1fgFB6OLJLsOalgVmTZQIr2sn%2FSBi9GibFMnQs9e5r%2F7uE1BdL1f%2FCFWqUOKwCQctUsNAkTlcVSIqcZpy6Wm2pgFJXvhoksSuVTlHoBuvWUpF4GomHdrlRKMJqiHROUMKzy4%2Bellc5ulcf3UuSY1k6dZTA5MpfF5QPJ2XV03V5EhF2iFMJDrqHZ%2B%2F0jo2dVNDNDizcLLqOfvfM%2BmZ7IXWl4eYmGZQoTIUs3oLbjrHhfzw1vaH3uiu8ixoDFPI3JWnWXXw%2ByN4jhOjFQUQU%2FCtTyf5HAodU0A%2FQKW77PGnTKFcxtzDMra2uBjqyAVQAtnTFFvc7GDPSVsVDtdiaEYk9BpW%2Fv8Td%2BbCI38P1sNEwB4ogOEtNgM7ztuaNj2ZReYSVM3%2BIJgEPDNx5i2UO45PoOWvvUmsULL9KC8Xx45bNoDwGXKdZ6pe2GQq%2Fsv22h8ChmpFIOFcTfENahRl6cIPxSXPhniNCt1V5BiQ%2FiqrO5YcfhIscKvt0FrmdE0Oc8bj0IS5H4NQvWQZaNALTeEhhVoNMsjxWfsEi6d9j4XE%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=50d74e9f9078827eca02d3bd7f38c8f66e70a65c17df593b3a2410c329c28dda",
+      "file_size": 733178,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": null,
+  "vote_count": 75,
+  "voters": [
+    "overjt",
+    "sheikhrishad0",
+    "sameerphad72",
+    "remonsec",
+    "shubham_srt",
+    "root_geek",
+    "asad0x01_",
+    "savitar0x01",
+    "smshrimant",
+    "haxta4ok00",
+    "and 65 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "id": 11252,
+      "category": "researcher",
+      "content": "Subdomain takeover is a common Security issue what is actually developers mistake when they left a Unused/unclaimed 3rd party Service DNS CNAME record for a subdoamin of theirs and Hackers can claim those subdomains with the help of external services it pointing to what could lead to serious issues . You can learn more about Subdomain takeover from [detectify blog](https://labs.detectify.com/2014/10/21/hostile-subdomain-takeover-using-herokugithubdesk-more/) .",
+      "user": {
+        "id": 118877,
+        "username": "0xprial",
+        "name": "Prial Islam Khan",
+        "bio": "A teenage boy with a passion of Breaking Security.",
+        "cleared": true,
+        "verified": true,
+        "website": "https://0xprial.com",
+        "location": "Dhaka, Bangladesh",
+        "created_at": "2016-10-21T19:30:50.280Z",
+        "url": "https://hackerone.com/0xprial",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "hacker",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/118/877/7f8e1265c1a3d1de0d05b614064246203b566361_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/118/877/7f8e1265c1a3d1de0d05b614064246203b566361_original.jpg/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/118/877/7f8e1265c1a3d1de0d05b614064246203b566361_original.jpg/114764ec8f01b1a3e153599212c9f011fb3b0bce3a4fdc1f9a3c551f8c94acf8"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    }
+  ]
+}

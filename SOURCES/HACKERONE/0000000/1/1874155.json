@@ -1,0 +1,151 @@
+{
+  "id": 1874155,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xODc0MTU1",
+  "url": "https://hackerone.com/reports/1874155",
+  "title": "Biometric key is stored in Windows Credential Manager, accessible to other local unprivileged processes",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2023-02-14T17:32:51.843Z",
+  "submitted_at": "2023-02-14T17:34:40.525Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "mebeim",
+    "url": "/mebeim",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tqpueiddnft996tdk2545uu1meby/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 21024,
+    "url": "https://hackerone.com/bitwarden",
+    "handle": "bitwarden",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/uHvBgHfLjcd9SPWDmjdYVf21/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/uHvBgHfLjcd9SPWDmjdYVf21/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": false,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Bitwarden",
+      "twitter_handle": "bitwarden",
+      "website": "https://bitwarden.com",
+      "about": "Open source password management solutions for individuals, teams, and business organizations."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2023-27706"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-06-07T12:33:12.491Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-05-08T12:33:07.696Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Bitwarden Desktop on Windows allows the user to enable vault unlock through Windows Hello (under File > Settings > Unlock with Windows Hello). When this is done, a \"Biometric master key\" is generated and stored locally inside the Windows' user credential set. This is done through the \"wincred\" API, in particular through the functions [CredWrite](https://learn.microsoft.com/en-us/windows/win32/api/wincred/nf-wincred-credwritew) and [CredRead](https://learn.microsoft.com/en-us/windows/win32/api/wincred/nf-wincred-credreadw) that are called from the native module written in Rust ([here: `apps/desktop/desktop_native/src/password/windows.rs`](https://github.com/bitwarden/clients/blob/desktop-v2023.1.1/apps/desktop/desktop_native/src/password/windows.rs)). The item created in the user credential set has a name of the form `Bitwarden_biometric/<account_uuid>_masterkey_biometric`.\n\nWhen unlocking the vault through Windows Hello, the unlock operation prompts the user for authentication through Windows Hello ([here: `apps/desktop/src/main/biometric/biometric.windows.main.ts` line 45](https://github.com/bitwarden/clients/blob/desktop-v2023.1.1/apps/desktop/src/main/biometric/biometric.windows.main.ts#L45)). If the authentication succeeds, the vault is unlocked and the items are decrypted after decrypting the master keys through the keys derived from the biometric master key.\n\nHowever, the authentication through Windows Hello is unneeded. Commenting the line linked above, the vault still unlocks with no problem. The biometric master key can in fact be retrieved with a simple call to the `CredRead` windows API function, and then used to decrypt the locally saved data present in `%appdata%\\Bitwarden\\data.json`. The Windows Hello authentication prompt therefore gives a false sense of security to the user, making it seem as if authentication is *needed* to decrypt vault data, when in reality it is not.\n\nThe local data in `%appdata%\\Bitwarden\\data.json`, as well as the master biometric key, persist after the vault is locked and the Bitwarden desktop allication is closed. Both of them are easily readable by any program running in the current user session, without the need to elevate privileges. Furthermore, both are accessible to any administrator account on the same machine.\n\nGiven the above, a potentially malicious program running locally on the machine can decrypt the entirety of the user vault, i.e. all ciphers (logins, cards, notes, identities). Furthermore, since the Desktop application stores locally (still in `%appdata%\\Bitwarden\\data.json`) a refresh token and a bearer token used for authentication with the Bitwarden server, user data can easily be modified, encrypted and updated on the server on behalf of the user.\n\nThe attached proof of concept (of which a recorded video demo is also attached) consists of a Python 3 script that uses the `ctypes` module to extract the biometric master key (if any) from the current user's credential set, decrypts all cipher names stored locally, and also modifies and updates the content of a secret note with a specific (if present), sending the new data to the server through standard bitwarden API.\n\nThe setup needed before running the proof of concept script is as follows:\n\n1. Create a test account on https://vault.bitwarden.com/#/register (or use an existing one at your own risk).\n2. Login to the test account and create some items in the vault for testing purposes. In particular, among them create a *secure note* with name `Super Secret Note` and arbitrary content.\n3. Download and install the latest Bitwarden Desktop client **for Windows** from https://bitwarden.com/download/ (make sure to install on a PC that supports Windows Hello biometric authentication in order to enable it).\n3. Use the installed desktop client to log in to the test account using the master password.\n5. Enable Windows Hello authentication through File > Settings > \"Unlock with Windows Hello\". Optionally also disable \"Ask for Windows Hello on launch\".\n6. Lock the vault and close the Bitwarden desktop application.\n\nNow to run the proof of concept, follow these steps:\n\n1. Install Python 3 (recommended Python) on the machine if not already present.\n2. Install the following libraries through Pip: `pycryptodome` `Cryptography` and `requests`.\n\n   ```\n   python -m pip install pycryptodome Cryptography requests\n   ```\n\n3. Launch the Python 3 script from a CMD or Powershell prompt (running as administrator is *not* needed):\n\n   ```\n   python poc.py\n   ```\n\nThe proof of concept script output should be similar to the following:\n\n```none\nAccount: <uuid-of-the-account>\n-> Biometric master key: <bio-master-key-in-hex>\n-> Encryption key: <master-encryption-key-in-hex>\n-> HMAC key: <master-hmac-key-in-hex>\n-> Decrypted entry: Super Secret Login\n-> Decrypted entry: Super Secret Card\n-> Decrypted entry: Super Secret Note\n-> Modifying item: Super Secret Note\n-> Old content: b'This is a super secret note!'\n-> New content: b'Pwned!'\n-> Sending API request...\n-> Response: 200\n```\n\nNOTE: Python 3 was my choice for its simplicity and ease of use. The same operations could be performed by other means as well (for example through a native application).\n\n## Impact\n\nAn attacker that is able to briefly obtain local access to a machine with Bitwarden desktop installed, is able to decrypt the contents of *all* vaults that have unlock through Windows Hello enabled. On top of that, an attacker would also be able to alter their content through simple API requests to the bitwarden server, since they have the symmetric encryption and HMAC keys used to encrypt the fields of any item in the vault.\n\nFurthermore, on a multi-user Windows machine, any administrator account has the ability to perform the same operations for any other users on the same machine that is using Bitwarden desktop with Windows Hello unlock enabled. Although not implemented in the attached proof of concept, this would be possible by simply enumerating local users and accessing each user's credential set, enumerating the entries and retrieving any Bitwarden biometric master key that is present.\n\nIn conclusion, Bitwarden Desktop's biometric authentication through Windows Hello gives the user a false sense of security. While normally the vault data is locally stored encrypted *without* the master key, in case of Windows Hello authentication the biometric master key *is locally stored in plaintext as well*. This contradicts the [Bitwarden Security Whitepaper](https://bitwarden.com/help/bitwarden-security-white-paper/), which states:\n\n> We do not keep the Master Password stored locally or in memory on the Bitwarden Client. Your encryption key (Symmetric Key) is kept in memory while the app is unlocked. This is needed to decrypt data in your Vault. When the Vault is locked, this data is purged from memory. After a certain time frame of inactivity on lock screen, we reload the application processes to make sure that any leftover managed memory addresses are also purged. We do our best to ensure that any data that may be in memory for the application to function is only held in memory for as long as you need it and that memory is cleaned up whenever the application is locked. We consider the application to be completely safe while in a locked state.",
+  "weakness": {
+    "id": 33,
+    "name": "Cleartext Storage of Sensitive Information"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 2173460,
+      "file_name": "poc.py",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/ue9514zso0gwv7awab4zp5tv824i?response-content-disposition=attachment%3B%20filename%3D%22poc.py%22%3B%20filename%2A%3DUTF-8%27%27poc.py&response-content-type=text%2Fx-python&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS4CNW75T%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143429Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIDmkHYCcawy3Sb8QBlv2L9dRaTD6HSDV3TbjWBmZorWnAiEA0CZ53zGUVgh0fiMkhSU8TF%2FBE%2BtBPrZ5XHuwsr8IHVAqsQUIdxADGgwwMTM2MTkyNzQ4NDkiDE3%2BLnmDb%2B%2FPajki%2FiqOBX0%2Fqe%2BqZVy0Jp6bijwxmDvg0Xqn4XctdGV3Wm4bY188L5jul3GRvTsDvwpICTjB%2B3LT6eyrRH6gl9J4HXF9q9yqM5ZxJEVzvGNmZ9bpsMMuHRNJp7fihen9HyPWuAOqdKt%2FAv9T2%2BzEYjLeajCy53b0E%2BVb3dm%2FTsy506%2B%2BmrgB38bGZiyfeCem3eZu687lGBLoRWTsXaHR%2F5hvWPEo%2Fs5eNhWcX0VHSuk3rz0KYGaOjjFazM1Q%2BOA01kM0I05s5lza2BzzgGiAdprvEmmtS5vBOfwEHcGJMXIoCvdFolrS%2BQ1fXBVPGcm0BXNpW%2BpSYqNfnhFtJ%2FJ%2B8ChCVUfyMT9Myv5hacblnOkNNea4hBhofu5bhefF4lCXxuwPPeUqs8mWHkR4O%2B5Bo9tgctPRR%2BA%2FQCm86vxM19KtlsppB7JvYuvLiH2jizvTg62iup9GBKJyogVXrn8FRELJsSw6R0LSQTSF1XnpfBqoJWOQCG7xvVi9PfRFZPaaTkfSowjA9iuW9%2BRz%2BeUC2868SXamkT2CnFli9Q8PSppf9z2Mntillpk749wSStjy4mONIjPDP9Z4jtZBkwLw601cVbtFELajOVFM%2B7WINdclJa8sgDEqYcRbfvRSJa5ShSyVbquO15DMDt5AnV4bBcTLtykIpAivgIL0dV21r0T1ujfi3BrXjA44tYm8a9zaI2kZiyO2OoJzgvlzBny4kKYozPeso8ysmmJSOcvHrRGqFf1r64gigkTfrA6bohlUKUaqhLnC3PhtknoScEsGiWUO1eKpwg6fyHj20VycABkhP0OusmvZXR0ukV4ceMyLRKlRtzQMR2ubHzOsR4%2FQ3fNjkhoDNE6L9FLoyjtwatwQQ7WcrjD%2B3a2uBjqxAclEdJGaJgbhdDlidGgw6vzzg4gdjLmJRPj1qQeS0ZpIpxhp3%2FpvXd2qQUcJIwhK7sK6kI3Od%2B%2FV1CWvzhy6EZoJgOKe1IDwDulIA1tGcjp%2FCus6%2BIZ5r%2FaswOJxKl%2Ff3uQKGEFA2rk%2BLyHGtaDahUMuN6af70DatpL9%2B9A%2BzRNmukwOrOKIjxd7ayl57LdZ1PHcJYcqbGT%2BKAa5uzR6ojk%2F%2F1%2Bhz5frj0D9IlPJKFV8AA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=774377574d42c9dfdaa0df7d0a01d568812ff444bad5debec91d26b7126b6828",
+      "file_size": 7930,
+      "type": "text/x-python",
+      "moderated": null
+    },
+    {
+      "id": 2173536,
+      "file_name": "demo.mkv",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/6czf5youhwfzcrguewucymvhaqcl?response-content-disposition=attachment%3B%20filename%3D%22demo.mkv%22%3B%20filename%2A%3DUTF-8%27%27demo.mkv&response-content-type=video%2Fx-matroska&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQS4CNW75T%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143429Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIDmkHYCcawy3Sb8QBlv2L9dRaTD6HSDV3TbjWBmZorWnAiEA0CZ53zGUVgh0fiMkhSU8TF%2FBE%2BtBPrZ5XHuwsr8IHVAqsQUIdxADGgwwMTM2MTkyNzQ4NDkiDE3%2BLnmDb%2B%2FPajki%2FiqOBX0%2Fqe%2BqZVy0Jp6bijwxmDvg0Xqn4XctdGV3Wm4bY188L5jul3GRvTsDvwpICTjB%2B3LT6eyrRH6gl9J4HXF9q9yqM5ZxJEVzvGNmZ9bpsMMuHRNJp7fihen9HyPWuAOqdKt%2FAv9T2%2BzEYjLeajCy53b0E%2BVb3dm%2FTsy506%2B%2BmrgB38bGZiyfeCem3eZu687lGBLoRWTsXaHR%2F5hvWPEo%2Fs5eNhWcX0VHSuk3rz0KYGaOjjFazM1Q%2BOA01kM0I05s5lza2BzzgGiAdprvEmmtS5vBOfwEHcGJMXIoCvdFolrS%2BQ1fXBVPGcm0BXNpW%2BpSYqNfnhFtJ%2FJ%2B8ChCVUfyMT9Myv5hacblnOkNNea4hBhofu5bhefF4lCXxuwPPeUqs8mWHkR4O%2B5Bo9tgctPRR%2BA%2FQCm86vxM19KtlsppB7JvYuvLiH2jizvTg62iup9GBKJyogVXrn8FRELJsSw6R0LSQTSF1XnpfBqoJWOQCG7xvVi9PfRFZPaaTkfSowjA9iuW9%2BRz%2BeUC2868SXamkT2CnFli9Q8PSppf9z2Mntillpk749wSStjy4mONIjPDP9Z4jtZBkwLw601cVbtFELajOVFM%2B7WINdclJa8sgDEqYcRbfvRSJa5ShSyVbquO15DMDt5AnV4bBcTLtykIpAivgIL0dV21r0T1ujfi3BrXjA44tYm8a9zaI2kZiyO2OoJzgvlzBny4kKYozPeso8ysmmJSOcvHrRGqFf1r64gigkTfrA6bohlUKUaqhLnC3PhtknoScEsGiWUO1eKpwg6fyHj20VycABkhP0OusmvZXR0ukV4ceMyLRKlRtzQMR2ubHzOsR4%2FQ3fNjkhoDNE6L9FLoyjtwatwQQ7WcrjD%2B3a2uBjqxAclEdJGaJgbhdDlidGgw6vzzg4gdjLmJRPj1qQeS0ZpIpxhp3%2FpvXd2qQUcJIwhK7sK6kI3Od%2B%2FV1CWvzhy6EZoJgOKe1IDwDulIA1tGcjp%2FCus6%2BIZ5r%2FaswOJxKl%2Ff3uQKGEFA2rk%2BLyHGtaDahUMuN6af70DatpL9%2B9A%2BzRNmukwOrOKIjxd7ayl57LdZ1PHcJYcqbGT%2BKAa5uzR6ojk%2F%2F1%2Bhz5frj0D9IlPJKFV8AA%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=aaac834f444b0854eec03845dbc65249d33c80fceb3d1600b05b03942773b939",
+      "file_size": 4446675,
+      "type": "video/x-matroska",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-06-07T12:33:07.807Z",
+  "allow_singular_disclosure_after": -21693681.8783228,
+  "singular_disclosure_allowed": true,
+  "vote_count": 17,
+  "voters": [
+    "zy9ard3",
+    "shubham_srt",
+    "secopsmaestro",
+    "shivammusic",
+    "pixl8d3d",
+    "4n0n0n3",
+    "carlosway23",
+    "gingerrr",
+    "0x3lioo",
+    "kaball30",
+    "and 7 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 6.2,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "local",
+      "attack_complexity": "low",
+      "privileges_required": "none",
+      "user_interaction": "none",
+      "scope": "unchanged",
+      "confidentiality": "high",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 6478,
+    "asset_type": "DOWNLOADABLE_EXECUTABLES",
+    "asset_identifier": "https://github.com/bitwarden/desktop/releases/latest",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

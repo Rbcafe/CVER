@@ -1,0 +1,125 @@
+{
+  "id": 317931,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8zMTc5MzE=",
+  "url": "https://hackerone.com/reports/317931",
+  "title": "Bypassing Homograph Attack Using /@ [ Tested On Windows ]",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "low",
+  "readable_substate": "Resolved",
+  "created_at": "2018-02-20T16:51:53.302Z",
+  "submitted_at": "2018-02-20T16:51:53.302Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "apapedulimu",
+    "url": "/apapedulimu",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/158/407/aeaf392e2bc7283dea36aa24392b2f2d1ceee72c_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 15688,
+    "url": "https://hackerone.com/brave",
+    "handle": "brave",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/015/688/2aad5641af643ee4f4402896e4747293f6e9c5ca_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Brave Software",
+      "twitter_handle": "brave",
+      "website": "https://brave.com",
+      "about": ""
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2018-02-23T06:03:51.214Z",
+  "bug_reporter_agreed_on_going_public_at": "2018-02-21T22:40:48.563Z",
+  "team_member_agreed_on_going_public_at": "2018-02-23T06:03:51.138Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\n\n__Bypassing Homograph Attack Using /@__\n\nI look at on my previous report on #268984 and see patch code in the github https://github.com/brave/browser-laptop/commit/f2e438d6158fbc62e2641458b6002a72d223c366 I look at code at \n\n```\nit('returns the punycode URL when given a valid URL', function () {\n        assert.equal(urlUtil.getPunycodeUrl('http://brave:brave@ebаy.com:1234/brave#brave'), 'http://brave:brave@xn--eby-7cd.com:1234/brave#brave')\n })\n```\nAnd i think the punycode will return to ASCII just after `@` before it is not checked. And i give the try. and got some homograph attack. ( Correct Me If I Wrong )\n\n## Products affected: \n\n * Brave\t0.20.27 ( Windows )\n\n## Steps To Reproduce:\n\nThis is punycode URL ebаy.com@ebаy.com = xn--eby-7cd.com@xn--eby-7cd.com\nAdd to homepage.\n```\nAttempt : \n- ebаy.com@ebаy.com it'll become = ebаy.com@xn--eby-7cd.com \n- ebаy.com/ebаy.com it'll become = xn--eby-7cd.xn--com/eby-7fg.com\n- ebаy.com/@ebay.com it'll become = ebаy.com/@xn--eby-7cd.com\n```\nif user input `ebаy.com/@brave.com` user will be redirect to `xn--eby-7cd.com` \npunycode failed return to ascii because brave just check after `@` not all of URL \n\n## Supporting Material/References:\n\nVideo : https://youtu.be/Zz7KV_R0Wp8\n\nSS : \n{F265262}\n\nThanks\n\n## Impact\n\nUser will be tricked by attacker to visit malicious link with punycode inside it.",
+  "weakness": {
+    "id": 57,
+    "name": "Violation of Secure Design Principles"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 265262,
+      "file_name": "Screenshot_307.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/265/262/31490a8c1a3071752628efa81d60f15025fb7722/Screenshot_307.png?response-content-disposition=attachment%3B%20filename%3D%22Screenshot_307.png%22%3B%20filename%2A%3DUTF-8%27%27Screenshot_307.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQZ4ABT4GR%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T125910Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIBy6B6CaeGOQsHQEVf6mmFMeFsyrU6xwojWydbGY7RrjAiEAt098VbuwY4XR0q%2FhT1%2BwOM5SQIHiByhn7YH5ul9I%2Bn0qsQUIdRADGgwwMTM2MTkyNzQ4NDkiDFBaVga66U2cxXTWDSqOBZ9tNE39KmDEn1M4BXloMcPBeBllafRlZWXN4mbzGTLJ8XKW77G1i6rQMiYeX0mALiTgT6%2BCHJg%2FXOkgcCoWTiU8AGVS8ygbrG6Rmef84ITNYSRHXYOiAmAtLriRM0FNkbvdPDxzRHKptbdJe%2FxQx6iHxnF4Wbz2d%2BiPKmLG1dOUk9Wd5PcY6e%2FpFK3MQHhbP60DtFaNSQZiLijq7McbVpknudWszl6E666zMtQlGzHcdmQhcfLUGV%2Fh2eQIW07Q8StsP0DnifOlRfH5wmBWZeOVGiQmAiu4vix6Kx70b5sEUa60B8XEzX3iLRbRpvoMJI2iFfwEhBUfyAO2kQFI891jfDtZMWBRAeJzS2TDBSZOFWdllL1Ku5BlluxzcTwgDBcj6U9BeRoIR%2FE%2F%2FzJhFrI6sO4C9sHXlsgFD4n6%2BV%2BMht3eSvRmwlqvwAGbQgoXg1TnmoDMTwU9bHj7KKScAqVQBI8hZ2NsP8SjJg8QJ0z%2BQTTuA8uOznjEUpW73jDmEQTBVhmpeZcwxP4%2BU6nQB8LguHWkl5NBmrNRrQGJGWsRxHHT40HVpMkdUBcHLz%2BE4kW3xThQV2%2FnlNJrQbkP9idnhRNm421huVhZIih2gBVsmfHNfFtpBWAgyhZal1fyaA5PfM8x1h1HAwbgAbx5pWpwX6P35EkSqglhC9hYX4Mx81Hh8c9ng5X9OnjAGOW2svJkxKq9ucSCCtD2ch3QThvWYUo6MweIyhK%2Fc7x1IsUKbcstBILZpn1l%2BukPwZKsmW0eclxFPYN5toUHjUictBuWWthA5Xkwhoewwr4uhuDUwpqTTEYBtxfAUMWwC9b4A0nNdO5YVjG1Et5gL7AXZuOawjRSr2cgQxq4C6b5gjDCs62uBjqxAShKZyKgt2m88YD0Vj8P6tXU495dvL8RKU8No53RBpg%2B0AGbaXTXUqyqWqfJgpK4Oo5BMDBxlCeUem5zsmh5i1y96ARljDRINVqBbClSxSFkigseR0xhxtkfysRfAXQQYk56acdX1y%2FUUtxG304UkKPWzZsl%2FZfaTuT815tCTUHh387Az8zDogkBD5OMCSblOcOAbl2D84THnFg9dMo8QXW7aVKysLeRwOxI5twdQX9Gug%3D%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=a6196adf4ab843c3d64bad02ec43379064ec238ce85eed3e04949a0940ae6bba",
+      "file_size": 7826,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2018-03-23T22:40:48.644Z",
+  "allow_singular_disclosure_after": -185984301.8055603,
+  "singular_disclosure_allowed": true,
+  "vote_count": 15,
+  "voters": [
+    "apapedulimu",
+    "michan",
+    "whitesector",
+    "r3y",
+    "eveeez",
+    "rugb",
+    "japz",
+    "scraps",
+    "ghoibsec",
+    "namansahore",
+    "and 5 more..."
+  ],
+  "severity": {
+    "rating": "low",
+    "author_type": "User"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

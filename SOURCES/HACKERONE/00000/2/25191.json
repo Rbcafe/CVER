@@ -1,0 +1,101 @@
+{
+  "id": 25191,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8yNTE5MQ==",
+  "url": "https://hackerone.com/reports/25191",
+  "title": "SMTP protection not used (please read carefully )",
+  "state": "Closed",
+  "substate": "informative",
+  "readable_substate": "Informative",
+  "created_at": "2014-08-19T01:15:21.614Z",
+  "submitted_at": "2014-08-19T01:15:21.614Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "ashesh",
+    "url": "/ashesh",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/003/791/220e701eb9be549162dfdb1da9b1a1b72ee2dd08_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 312,
+    "url": "https://hackerone.com/greenhouse",
+    "handle": "greenhouse",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/hoqjkry2eprkz6vwyizdw59ry7ps/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/hoqjkry2eprkz6vwyizdw59ry7ps/f4a495c04fdb224bac8ec64587537e511aa8c4925e7955bee0a19e0ed7d891dc"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Greenhouse.io",
+      "twitter_handle": "",
+      "website": "https://app.greenhouse.io",
+      "about": "Software to optimize your entire recruiting and onboarding process."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2014-12-07T15:22:49.750Z",
+  "bug_reporter_agreed_on_going_public_at": "2014-11-07T15:22:36.661Z",
+  "team_member_agreed_on_going_public_at": null,
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Details:\r\nCompanies like Coinbase, Yahoo,Google,Facebook and even hackerone  implemented a strict email security policy (combining SPF, DKIM, and DMARC) but I don't see taht from mailgreenhouse.ioru , You should apply strict SMPT policy to stop spoofed email sending from your domain. POC is attached.\r\n\r\nExploit scenario:\r\n-----------------------\r\nAn attacker would send a Fake email from support@greenhouse.io saying that Please change your password, The victim is aware of phishing attacks, But when he sees that the mail originated from support@greenhouse.io , He has no other way than to believe it. Clicking on the link takes him to a website where certain JavaScript is executed which steals his greenhouse.io id and password (SESSION COOKIE). The results can be more dangerous.\r\n\r\n\r\nCode to Exploit:\r\n-------------------\r\n    <?php\r\n    $to = \"VICTIM@example.com\";\r\n    $subject = \"Password Change\";\r\n    $txt = \"Change your password by visiting here - [VIRUS LINK HERE]l\";\r\n    $headers = \"From: support@greenhouse.io\";\r\n    mail($to,$subject,$txt,$headers);\r\n    ?>\r\n\r\nYou should do the fix (see the fix below) To prevent misunderstanding and to protect your users.\r\nFIX\r\n----------\r\n\r\nYour SPF record is `dig +short greenhouse.io txt\r\n\"v=spf1 include:sendgrid.net include:spf.recurly.com include:mailgun.org include:servers.mcsv.net ~all`\r\n\r\nIt should be `dig +short greenhouse.io txt\r\n\"v=spf1 include:sendgrid.net include:spf.recurly.com include:mailgun.org include:servers.mcsv.net   -all`\r\n\r\nI **strongly** recommend you to read this article :\r\n\r\nhttps://www.digitalocean.com/community/tutorials/how-to-use-an-spf-record-to-prevent-spoofing-improve-e-mail-reliability\r\n\r\n**The problem**\r\nThe article clearly shows difference between softmail and fail you should be using fail as Softmail allows anyone to send spoofed emails from your domains. in your SPF record you should replace `~` with `-` at last before all , `-` is strict which prevents all spoofed emails except if you are sending. Your bug is that you are using`~` , you should use `-`\r\n\r\n",
+  "weakness": {
+    "id": 27,
+    "name": "Improper Authentication - Generic"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2014-12-07T15:22:36.852Z",
+  "allow_singular_disclosure_after": -289858138.95286787,
+  "singular_disclosure_allowed": true,
+  "vote_count": 1,
+  "voters": [
+    "cuso4"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "id": 1767503,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC8xNzY3NTAz",
+  "url": "https://hackerone.com/reports/1767503",
+  "title": "Reference caching can leak data to unauthorized users",
+  "state": "Closed",
+  "substate": "resolved",
+  "severity_rating": "medium",
+  "readable_substate": "Resolved",
+  "created_at": "2022-11-08T22:00:44.155Z",
+  "submitted_at": "2022-11-08T22:00:44.238Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "systemkeeper",
+    "url": "/systemkeeper",
+    "profile_picture_urls": {
+      "small": "/assets/avatars/default-25f7248a18bdf9e2dc8310319b148d66cff430fa0fade6c5f25fee1b8d7f27ed.png"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 13291,
+    "url": "https://hackerone.com/nextcloud",
+    "handle": "nextcloud",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/tnqlkt8d6fcch8hj8brdjp8nw864/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Nextcloud",
+      "twitter_handle": "nextclouders",
+      "website": "https://nextcloud.com",
+      "about": "Access, share and protect your files, calendars, contacts, communication & more at home and in your enterprise."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [
+    "CVE-2023-22469"
+  ],
+  "singular_disclosure_disabled": false,
+  "disclosed_at": "2023-01-13T08:39:06.107Z",
+  "bug_reporter_agreed_on_going_public_at": "2023-01-13T08:39:06.013Z",
+  "team_member_agreed_on_going_public_at": "2023-01-09T05:45:31.726Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "## Summary:\nThe [ReferenceManager](https://github.com/nextcloud/server/blob/master/lib/private/Collaboration/Reference/ReferenceManager.php) uses a cache to store information about previously accessed references. The used `cachePrefix` in deck ([see here](https://github.com/nextcloud/deck/blob/e55b3a0a26a65a01fae8cfdf83b1066616bfa6ee/lib/Reference/CardReferenceProvider.php#L154-L166)) is independent of the user. If User1 has access to a deck card and the reference data is stored in the cache, any user with knowledge of the boardId/cardId can access the information of that deck card.\n\n## Steps To Reproduce:\n  1. User1 has a deck card and shares the link in a talk conversation\n  2. Any user of that conversation (or with knowledge of the link) is able to see the deck card, if the call to the reference provider was done for user1 before\n\n\n## Supporting Material/References:\nUser \"Admin\":\n{F2025386}\n\nUser \"Test\":\n{F2025389}\n\n## Impact\n\nI think the impact should be minimal, because multiple things need to happen to leak information (the reference needs to be cached, another user needs to know the url, etc.).\nThe GitHub-Integration uses the `userId` as a cachePrefix, this so this shouldn't be a issue in that case, [see here](https://github.com/nextcloud/integration_github/blob/bb443c47fc8a9b0ba090456461040136a93c9214/lib/Reference/GithubReferenceProvider.php#L175-L182).\nI haven't looked at other reference providers.",
+  "weakness": {
+    "id": 101,
+    "name": "Insecure Storage of Sensitive Information"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [
+    {
+      "id": 2025386,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/q6392ogs4luc2nc8f00fok0fl857?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVBHFY2S7%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143226Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQC9GwGscRwJFAMoDL4f0PgHCafPcoKiw%2BdMVBZsejK%2FowIhAKhtlIOx9XBt1W%2BbJb1zofyOZVXyTdfjP7HaJtGmM8VEKrIFCHcQAxoMMDEzNjE5Mjc0ODQ5IgyxgNWh10s%2BvzOdA2IqjwUD%2BgaXbPhfJg1vwZSLpSSO42BtO5Jh0nNKD2CGIMVzdNMrQ2kGVGC%2BJUeiI7K6DckSwtVRTt892323G6IbL82IflLFfijrFvapIKU8a1otURJl0nYHfsGACuGyIXm5kB61pIgiGA%2FeE%2FX7n9p4BLXPAwwKCKDmH0qQI8VJ81wh1GiHYjb0lNqTmWIro28N0KPWqBgxhmM3DvACwGT7DpOyYB9yWLqC4Ai5uvKohIl8fMZpIuUJZoEewxNzGHvvCvJgnIb287LNuarbXrEteIFpoa9sfV09w5nfwf8QNFZZ8PSR%2BXVokOzyV%2F1PTZmle0G9Mv5E9APcw4OhpYd044bK0T98Ff6Fh2sGYMPgGeAVNqoe5SB%2B43XJVBBZu%2BlNVKMo3PXRB%2BloslQLdfbUljsEmBfrb0cqUZbcQXT3A08JdWVOudPCEgD6j9K2BAcJNtVo5xabmzElen90gxJQrDR4wHLW73ueBkeejBPNRJbFEm1ezNFrRNsMr7JgyuyPjWMo772bTR96s43UN5RlcNrqrSpuSWFyu2xs0xvGOQUckaoVWPgimGNx3tB%2FV6fM%2BoM2m3C5pVP1SYaYJ7kE1lcEJVaoBskQmDzi9C5JjAydPuoNQRw43U5%2B32HD7aURCtpEa1s48LCl1ZdWB78N4aSdPRFRsWj6AMTXh58luiANfACaqM%2BH1q7%2B2zIOWK2r7ERmCMvAjELcUsQZZ0fRiQSN4ZnTffmYel8M%2BGQ0z8TkBY0J9mymB1MVE0MuSyCFmw2oEuPAuuBFj2vRfjKZ0BI3D%2F92%2Fvw%2F19ko20%2BPGFa8wMsPjh6ZqXgNJ1r9m%2Fbg3IVIGRcen5pJAKZEUIQwDKyFnjHA0dIjJEVuqYQOvztVMIDera4GOrABuKna6%2Bj%2FNjOYj4RQJLOnftwizyrXBx%2FmP5%2B2sf2RnOzkJeucfAyMxQgfK6z5L0I8pIpMwwOgx7P82CfuFlu%2BKyaf1uaJyN8K5oy9gS2e%2F4QGtx5jXWxC1dY2RQ7EBPZcNTqP4B0O1Tp3QEDPJHrTYA3sMD3DFYHunCTfRHRNisnUu47GiWlRWYqOfyQSXFP%2BhODsCBYsF4kov2o3FcpOrEYJnddAlKtyKxWly2XzUW0%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=88876c201fcff5423b66342322c70ec329e4be1adbef5b19dd3b11a76d899639",
+      "file_size": 27187,
+      "type": "image/png",
+      "moderated": null
+    },
+    {
+      "id": 2025389,
+      "file_name": "image.png",
+      "expiring_url": "https://hackerone-us-west-2-production-attachments.s3.us-west-2.amazonaws.com/rvf130bfyh68vokob9tr4012af8z?response-content-disposition=attachment%3B%20filename%3D%22image.png%22%3B%20filename%2A%3DUTF-8%27%27image.png&response-content-type=image%2Fpng&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAQGK6FURQVBHFY2S7%2F20240213%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20240213T143226Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ7%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQC9GwGscRwJFAMoDL4f0PgHCafPcoKiw%2BdMVBZsejK%2FowIhAKhtlIOx9XBt1W%2BbJb1zofyOZVXyTdfjP7HaJtGmM8VEKrIFCHcQAxoMMDEzNjE5Mjc0ODQ5IgyxgNWh10s%2BvzOdA2IqjwUD%2BgaXbPhfJg1vwZSLpSSO42BtO5Jh0nNKD2CGIMVzdNMrQ2kGVGC%2BJUeiI7K6DckSwtVRTt892323G6IbL82IflLFfijrFvapIKU8a1otURJl0nYHfsGACuGyIXm5kB61pIgiGA%2FeE%2FX7n9p4BLXPAwwKCKDmH0qQI8VJ81wh1GiHYjb0lNqTmWIro28N0KPWqBgxhmM3DvACwGT7DpOyYB9yWLqC4Ai5uvKohIl8fMZpIuUJZoEewxNzGHvvCvJgnIb287LNuarbXrEteIFpoa9sfV09w5nfwf8QNFZZ8PSR%2BXVokOzyV%2F1PTZmle0G9Mv5E9APcw4OhpYd044bK0T98Ff6Fh2sGYMPgGeAVNqoe5SB%2B43XJVBBZu%2BlNVKMo3PXRB%2BloslQLdfbUljsEmBfrb0cqUZbcQXT3A08JdWVOudPCEgD6j9K2BAcJNtVo5xabmzElen90gxJQrDR4wHLW73ueBkeejBPNRJbFEm1ezNFrRNsMr7JgyuyPjWMo772bTR96s43UN5RlcNrqrSpuSWFyu2xs0xvGOQUckaoVWPgimGNx3tB%2FV6fM%2BoM2m3C5pVP1SYaYJ7kE1lcEJVaoBskQmDzi9C5JjAydPuoNQRw43U5%2B32HD7aURCtpEa1s48LCl1ZdWB78N4aSdPRFRsWj6AMTXh58luiANfACaqM%2BH1q7%2B2zIOWK2r7ERmCMvAjELcUsQZZ0fRiQSN4ZnTffmYel8M%2BGQ0z8TkBY0J9mymB1MVE0MuSyCFmw2oEuPAuuBFj2vRfjKZ0BI3D%2F92%2Fvw%2F19ko20%2BPGFa8wMsPjh6ZqXgNJ1r9m%2Fbg3IVIGRcen5pJAKZEUIQwDKyFnjHA0dIjJEVuqYQOvztVMIDera4GOrABuKna6%2Bj%2FNjOYj4RQJLOnftwizyrXBx%2FmP5%2B2sf2RnOzkJeucfAyMxQgfK6z5L0I8pIpMwwOgx7P82CfuFlu%2BKyaf1uaJyN8K5oy9gS2e%2F4QGtx5jXWxC1dY2RQ7EBPZcNTqP4B0O1Tp3QEDPJHrTYA3sMD3DFYHunCTfRHRNisnUu47GiWlRWYqOfyQSXFP%2BhODsCBYsF4kov2o3FcpOrEYJnddAlKtyKxWly2XzUW0%3D&X-Amz-SignedHeaders=host&X-Amz-Signature=bc32152d8ba55244e3a3315bd02ea1d8d162e28e0d85885ed0325fa9453f7e45",
+      "file_size": 32144,
+      "type": "image/png",
+      "moderated": null
+    }
+  ],
+  "allow_singular_disclosure_at": "2023-02-08T05:45:31.861Z",
+  "allow_singular_disclosure_after": -31999614.75402507,
+  "singular_disclosure_allowed": true,
+  "vote_count": 13,
+  "voters": [
+    "shreyaschavhan",
+    "zy9ard3",
+    "shubham_srt",
+    "kerolesmagdy",
+    "shivammusic",
+    "ahmed__solangi",
+    "ishansinghal3",
+    "b4d160b25dd7d514bcfe355",
+    "vidivinivici",
+    "ahmedmhesham12",
+    "and 3 more..."
+  ],
+  "severity": {
+    "rating": "medium",
+    "score": 5.4,
+    "author_type": "Team",
+    "metrics": {
+      "attack_vector": "adjacent",
+      "attack_complexity": "high",
+      "privileges_required": "low",
+      "user_interaction": "required",
+      "scope": "changed",
+      "confidentiality": "high",
+      "integrity": "none",
+      "availability": "none"
+    }
+  },
+  "structured_scope": {
+    "databaseId": 72103,
+    "asset_type": "SOURCE_CODE",
+    "asset_identifier": "nextcloud/deck",
+    "max_severity": "critical"
+  },
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "id": 235618,
+      "category": "team",
+      "content": "Security advisory at https://github.com/nextcloud/security-advisories/security/advisories/GHSA-8fjp-w9gp-j5hq",
+      "user": {
+        "id": 89223,
+        "username": "nickvergessen",
+        "name": "Joas Schilling",
+        "bio": "",
+        "cleared": false,
+        "verified": false,
+        "website": null,
+        "location": "Germany",
+        "created_at": "2016-07-01T08:17:59.061Z",
+        "url": "https://hackerone.com/nickvergessen",
+        "hackerone_triager": false,
+        "hackerone_employee": false,
+        "user_type": "company",
+        "profile_picture_urls": {
+          "small": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+          "medium": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937",
+          "xtralarge": "https://profile-photos.hackerone-user-content.com/variants/5DBbeB7om4ZiKgskrEoeTyGH/60f411638706d89ae3052af6fe8b88fa9a798e291deee40f6a22e81418d78d5f"
+        }
+      },
+      "can_view?": true,
+      "can_create?": false,
+      "attachments": []
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}

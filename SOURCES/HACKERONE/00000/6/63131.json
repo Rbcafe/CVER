@@ -1,0 +1,104 @@
+{
+  "id": 63131,
+  "global_id": "Z2lkOi8vaGFja2Vyb25lL1JlcG9ydC82MzEzMQ==",
+  "url": "https://hackerone.com/reports/63131",
+  "title": "Changeable model ids on vanilla update can lead to severely bad side-effects",
+  "state": "Closed",
+  "substate": "informative",
+  "readable_substate": "Informative",
+  "created_at": "2015-05-20T19:16:40.094Z",
+  "submitted_at": "2015-05-20T19:16:40.094Z",
+  "is_member_of_team?": false,
+  "is_organization_group_member?": false,
+  "reporter": {
+    "disabled": false,
+    "username": "zachaysan",
+    "url": "/zachaysan",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/031/532/16e5bbc6b959f5fa626a222b1a9361c7678a5cbf_original.jpg/3c7b305354c9073c106ae3d1701798defaaf5be844fb8fdfa49ca62f991a2c2c"
+    },
+    "is_me?": false,
+    "cleared": false,
+    "verified": false,
+    "hackerone_triager": false,
+    "hacker_mediation": false
+  },
+  "team": {
+    "id": 22,
+    "url": "https://hackerone.com/rails",
+    "handle": "rails",
+    "profile_picture_urls": {
+      "small": "https://profile-photos.hackerone-user-content.com/variants/000/000/022/5e2b46658c8b86bed62f574d8e1793f353cbbc63_original.png/d3dc6b2d7e2dc3657e8861b0d7e2dfca1a6d513dd784c613f4e56738907cea98",
+      "medium": "https://profile-photos.hackerone-user-content.com/variants/000/000/022/5e2b46658c8b86bed62f574d8e1793f353cbbc63_original.png/5136ed9b2fa7c4d4abbf39fb971047c62d98ec4740a88eb55d7e26373250a937"
+    },
+    "permissions": [],
+    "submission_state": "open",
+    "default_currency": "usd",
+    "awards_miles": false,
+    "offers_bounties": true,
+    "state": "public_mode",
+    "only_cleared_hackers": false,
+    "pentest_feature_enabled?": false,
+    "profile": {
+      "name": "Ruby on Rails",
+      "twitter_handle": "rails",
+      "website": "http://rubyonrails.org/security",
+      "about": "Web development that doesn't hurt."
+    }
+  },
+  "has_bounty?": false,
+  "in_validation?": false,
+  "can_view_team": true,
+  "can_view_report": true,
+  "is_external_bug": false,
+  "is_published": false,
+  "is_participant": false,
+  "has_collaborators": false,
+  "submitted_by_team_member": false,
+  "stage": 4,
+  "public": true,
+  "visibility": "full",
+  "cve_ids": [],
+  "singular_disclosure_disabled": true,
+  "disclosed_at": "2016-02-12T18:05:34.617Z",
+  "bug_reporter_agreed_on_going_public_at": null,
+  "team_member_agreed_on_going_public_at": "2015-06-08T17:45:33.066Z",
+  "comments_closed?": false,
+  "facebook_team?": false,
+  "team_private?": false,
+  "vulnerability_information": "Proof of concept\r\n\r\n`User.find(1).update!(id: 1701)`\r\n\r\n> But strong params!\r\n\r\nDisagree. There are cases where less experienced users will allow \"id\" as a param for a subnested resource and then copy and past that code into that subnested resource's own controller, forgetting to remove the \"id\".\r\n\r\nI consider this bug extremely severe since it is a very common pattern in most Rails JSON APIs and by setting the id to the maximum value may lead to the database to refuse to create new records OR in better databases like Postgres, an attacker can continue to stay just ahead of of the id sequence which will issue this error:\r\n\r\n`DETAIL:  Key (id)=(1701) already exists.`\r\n\r\nThis effectively stops any new content from being created with a very small number of attackers.\r\n\r\nI have also tried to think of a way that a user could gain access to information with this, but I think that it would have to be in a very weird way. For example a multiple associations table where both tables save their associations to each other then one of them gets deleted. Too unlikely to be a major concern.\r\n\r\nProposed solution:\r\n\r\nMake a special flag or special method for updating a model with a model id, but by default ignore \"id\" as a param. The reason I say \"ignore\" and not \"raise exception\" is that it is more convenient to not have to strip ids out of everything.",
+  "weakness": {
+    "id": 57,
+    "name": "Violation of Secure Design Principles"
+  },
+  "original_report_id": null,
+  "original_report_url": null,
+  "attachments": [],
+  "allow_singular_disclosure_at": "2015-07-08T17:45:33.347Z",
+  "allow_singular_disclosure_after": -271446910.1164401,
+  "singular_disclosure_allowed": true,
+  "vote_count": 4,
+  "voters": [
+    "sw33tlie",
+    "cryptographer",
+    "shivammusic",
+    "arifbastian2017"
+  ],
+  "structured_scope": null,
+  "abilities": {
+    "assignable_team_members": [],
+    "assignable_team_member_groups": []
+  },
+  "summaries": [
+    {
+      "category": "team",
+      "can_view?": true,
+      "can_create?": false
+    },
+    {
+      "category": "researcher",
+      "can_view?": true,
+      "can_create?": false
+    }
+  ]
+}
