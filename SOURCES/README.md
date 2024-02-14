@@ -2,7 +2,9 @@
 
 ## FOLDERS : structure.
 
-- EXPLOITDB : The "EXPLOITDB" fetched elements.
+- EXPLOITDB : The "EXPLOITDB / FETCHED" elements.
+- EXPLOITDB-EXP : The "EXPLOITDB / EXPLOITS" elements.
+- EXPLOITDB-GHDB : THE "EXPLOITDB / GOOGLE DORKING" elements.
 - HACKERONE : The "HACKERONE" published reports.
 - NVD : The "NVD" sources from "2002" to "2024".
 - SPLOITUS : The "SPLOITUS" fetched elements.
