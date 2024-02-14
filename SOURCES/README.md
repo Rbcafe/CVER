@@ -12,6 +12,7 @@
 - https://www.exploit-db.com
 - https://github.com
 - https://github.com/Rbcafe/CVER
+- https://gitlab.com/exploit-database/exploitdb
 - https://www.hackerone.com
 - https://nvd.nist.gov
 - https://sploitus.com
