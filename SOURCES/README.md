@@ -7,7 +7,6 @@
 - EXPLOITDB-GHDB : THE "EXPLOITDB / GOOGLE DORKING" elements.
 - EXPLOITDB-SC : THE "EXPLOITDB / SHELL CODES" elements.
 - EXPLOITDB : The "EXPLOITDB / FETCHED" elements.
-- HACK-TRICKS : The "HACK TRICKS" elements.
 - HACKERONE : The "HACKERONE" published reports.
 - NVD : The "NVD" sources from "2002" to "2024".
 - SPLOITUS : The "SPLOITUS" fetched elements.
@@ -24,6 +23,5 @@
 ## GitHub.
 
 - https://github.com
-- https://github.com/carlospolop/hacktricks
 - https://github.com/fastfire/deepdarkCTI
 - https://github.com/Rbcafe/CVER
