@@ -1,12 +1,9 @@
-# CVER : CVE.
+# CVER : SOURCES.
 
 ## FOLDERS : structure.
 
-- DEEPDARK-CTI : "The "DEEPDARK / CTI" elements.
-- EXPLOITDB-EXP : The "EXPLOITDB / EXPLOITS" elements.
-- EXPLOITDB-GHDB : THE "EXPLOITDB / GOOGLE DORKING" elements.
-- EXPLOITDB-SC : THE "EXPLOITDB / SHELL CODES" elements.
-- EXPLOITDB : The "EXPLOITDB / FETCHED" elements.
+- DARK : "The "DARK" elements.
+- EXPLOITDB : The "EXPLOITDB" elements.
 - HACKERONE : The "HACKERONE" published reports.
 - NVD : The "NVD" sources from "2002" to "2024".
 - SPLOITUS : The "SPLOITUS" fetched elements.

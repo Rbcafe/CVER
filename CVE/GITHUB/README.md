@@ -26,8 +26,10 @@
 
 ## Tools.
 
-- https://github.com
-- https://github.com/Rbcafe/CVER
 - https://cve.mitre.org
 - https://nvd.nist.gov
-- https://sploitus.com
+
+## GitHub.
+
+- https://github.com
+- https://github.com/Rbcafe/CVER
