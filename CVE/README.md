@@ -2,6 +2,7 @@
 
 ## FOLDERS : structure.
 
+- FIRST : The "FIRST" folder related to the "CVSS" representation.
 - GITHUB : The "GITHUB" related to the "CVE".
 - NVD : The "NVD" related to the "CVE".
 - SPLOITUS : The "SPLOITUS" related to the "CVE".
@@ -11,6 +12,7 @@
 
 - https://nvd.nist.gov
 - https://sploitus.com
+- https://www.first.org/cvss/data-representations
 
 ## GitHub.
 
